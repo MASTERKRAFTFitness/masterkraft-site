@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
+import FernwoodFeature from "@/components/marketing/FernwoodFeature";
 import { fitouts, getFitout } from "@/lib/fitouts";
 
 export function generateStaticParams() {
@@ -77,6 +78,9 @@ export default async function FitoutTypePage({
 
       {/* Boutique fitness: showcase the real REVL studio fit-out as proof. */}
       {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
+
+      {/* Commercial gym: showcase Fernwood custom-branded equipment as proof. */}
+      {f.slug === "commercial-gym-fitout" && <FernwoodFeature />}
     </>
   );
 }
