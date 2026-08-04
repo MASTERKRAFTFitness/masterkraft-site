@@ -16,7 +16,7 @@ export default function FernwoodFeature() {
           <h2 className="font-display text-4xl lg:text-5xl uppercase leading-[0.95]">Fernwood Fitness</h2>
           <p className="mt-6 text-ash text-lg leading-relaxed max-w-xl">
             Custom-branded equipment for one of Australia&apos;s largest women&apos;s fitness networks.
-            MasterKraft produces Fernwood&apos;s fixed barbells, bumper plates and Olympic plates in their
+            MasterKraft produces Fernwood&apos;s dumbbells, fixed barbells and Olympic plates in their
             signature colours, delivered club-ready across the network.
           </p>
           <ul className="mt-8 space-y-3">
@@ -41,8 +41,8 @@ export default function FernwoodFeature() {
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2 relative aspect-[2/1] bg-white border border-line overflow-hidden">
             <Image
-              src="/fernwood/barbell.png"
-              alt="Fernwood-branded fixed barbell"
+              src="/fernwood/curl-barbell.png"
+              alt="Fernwood-branded fixed curl barbell"
               fill
               className="object-contain p-6"
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -50,8 +50,8 @@ export default function FernwoodFeature() {
           </div>
           <div className="relative aspect-square bg-white border border-line overflow-hidden">
             <Image
-              src="/fernwood/bumper-plate.jpg"
-              alt="Fernwood-branded bumper plate"
+              src="/fernwood/dumbbell.png"
+              alt="Fernwood-branded round dumbbell"
               fill
               className="object-contain p-5"
               sizes="(max-width: 1024px) 50vw, 25vw"
