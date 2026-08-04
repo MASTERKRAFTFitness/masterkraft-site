@@ -1,0 +1,250 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import PageHero from "@/components/marketing/PageHero";
+import ProductCard from "@/components/shop/ProductCard";
+import SortSelect from "@/components/shop/SortSelect";
+import PriceRangeFilter from "@/components/shop/PriceRangeFilter";
+import { categories, getCategory } from "@/lib/categories";
+import {
+  getProductsByCategory,
+  getAllProductsByCategory,
+  getCategoryChildren,
+  type WcProduct,
+  type WcCategoryChild,
+} from "@/lib/woocommerce";
+import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
+
+export function generateStaticParams() {
+  return categories.map((c) => ({ category: c.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}): Promise<Metadata> {
+  const { category } = await params;
+  const c = getCategory(category);
+  if (!c) return { title: "Equipment" };
+  return {
+    title: `${c.label}`,
+    description: c.blurb,
+    alternates: { canonical: `/equipment/${c.slug}` },
+  };
+}
+
+const WC_ORDER: Record<string, { orderby: string; order: "asc" | "desc" }> = {
+  featured: { orderby: "menu_order", order: "asc" },
+  "name-asc": { orderby: "title", order: "asc" },
+  "name-desc": { orderby: "title", order: "desc" },
+  newest: { orderby: "date", order: "desc" },
+};
+
+const PER_PAGE = 24;
+
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ category: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; sub?: string; min?: string; max?: string }>;
+}) {
+  const { category } = await params;
+  const c = getCategory(category);
+  if (!c) notFound();
+
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const sort = sp.sort ?? "featured";
+  const subSlug = sp.sub;
+  const priceMin = sp.min && !isNaN(parseFloat(sp.min)) ? parseFloat(sp.min) : undefined;
+  const priceMax = sp.max && !isNaN(parseFloat(sp.max)) ? parseFloat(sp.max) : undefined;
+
+  const unleashed = await getUnleashedMap().catch(() => ({}));
+  const children = await getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]);
+  const activeSub = subSlug ? children.find((s) => s.slug === subSlug) : undefined;
+  const targetId = activeSub?.id ?? c.wcId;
+
+  let cards: { product: WcProduct; enriched: EnrichedProduct }[] = [];
+  let total = 0;
+  let totalPages = 1;
+  let failed = false;
+
+  const priceSort = sort === "price-asc" || sort === "price-desc";
+  const needsFullFetch = priceSort || priceMin !== undefined || priceMax !== undefined;
+
+  try {
+    if (needsFullFetch) {
+      // Fetch all, enrich (incl. variable "From"), then filter/sort on CORRECTED
+      // prices and paginate in-memory.
+      const all = await getAllProductsByCategory(targetId);
+      let enrichedAll = await Promise.all(
+        all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
+      );
+      if (priceMin !== undefined) {
+        enrichedAll = enrichedAll.filter((x) => x.enriched.priceValue >= priceMin);
+      }
+      if (priceMax !== undefined) {
+        enrichedAll = enrichedAll.filter(
+          (x) => x.enriched.priceValue > 0 && x.enriched.priceValue <= priceMax
+        );
+      }
+      if (priceSort) {
+        enrichedAll.sort((a, b) => {
+          const av = a.enriched.priceValue;
+          const bv = b.enriched.priceValue;
+          if (av === 0 && bv === 0) return 0;
+          if (av === 0) return 1; // POA always last
+          if (bv === 0) return -1;
+          return sort === "price-asc" ? av - bv : bv - av;
+        });
+      } else if (sort === "name-asc" || sort === "name-desc") {
+        enrichedAll.sort((a, b) =>
+          sort === "name-asc"
+            ? a.product.name.localeCompare(b.product.name)
+            : b.product.name.localeCompare(a.product.name)
+        );
+      }
+      total = enrichedAll.length;
+      totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+      cards = enrichedAll.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+    } else {
+      const { orderby, order } = WC_ORDER[sort] ?? WC_ORDER.featured;
+      const res = await getProductsByCategory(targetId, { page, perPage: PER_PAGE, orderby, order });
+      total = res.total;
+      totalPages = res.totalPages;
+      cards = await Promise.all(
+        res.data.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
+      );
+    }
+  } catch {
+    failed = true;
+  }
+
+  const buildHref = (patch: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    const sub = patch.sub === undefined ? subSlug : patch.sub || undefined;
+    const s = patch.sort === undefined ? (sort !== "featured" ? sort : undefined) : patch.sort;
+    const pg = patch.page;
+    if (sub) p.set("sub", sub);
+    if (s) p.set("sort", s);
+    if (priceMin !== undefined) p.set("min", String(priceMin));
+    if (priceMax !== undefined) p.set("max", String(priceMax));
+    if (pg) p.set("page", pg);
+    const qs = p.toString();
+    return `/equipment/${c.slug}${qs ? `?${qs}` : ""}`;
+  };
+
+  return (
+    <>
+      <PageHero
+        eyebrow="Equipment"
+        title={c.label}
+        subtitle={c.blurb}
+        image={c.image}
+        breadcrumbs={[
+          { name: "Home", href: "/" },
+          { name: "Equipment", href: "/all-equipment" },
+          { name: c.label, href: `/equipment/${c.slug}` },
+        ]}
+      />
+
+      <section className="container-mk py-16">
+        {failed ? (
+          <Fallback label={c.label} />
+        ) : (
+          <>
+            {/* Filter + sort bar */}
+            <div className="mb-10 space-y-4">
+              {children.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={buildHref({ sub: "", page: undefined })}
+                    className={`px-3 py-1.5 text-xs font-mono uppercase tracking-widest border transition-colors ${
+                      !activeSub ? "border-accent text-accent-600" : "border-line text-ash hover:border-ash"
+                    }`}
+                  >
+                    All
+                  </Link>
+                  {children.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={buildHref({ sub: s.slug, page: undefined })}
+                      className={`px-3 py-1.5 text-xs font-mono uppercase tracking-widest border transition-colors ${
+                        activeSub?.id === s.id ? "border-accent text-accent-600" : "border-line text-ash hover:border-ash"
+                      }`}
+                    >
+                      {s.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between border-t border-line pt-4">
+                <PriceRangeFilter min={sp.min} max={sp.max} />
+                <SortSelect value={sort} />
+              </div>
+            </div>
+
+            {cards.length === 0 ? (
+              <Fallback label={c.label} empty />
+            ) : (
+              <>
+                <p className="font-mono text-xs tracking-widest text-ash uppercase mb-8">
+                  {total} product{total === 1 ? "" : "s"}
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+                  {cards.map(({ product, enriched }) => (
+                    <ProductCard key={product.id} product={product} enriched={enriched} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="mt-14 flex items-center justify-center gap-4 font-mono text-sm uppercase tracking-widest">
+                    {page > 1 ? (
+                      <Link href={buildHref({ page: String(page - 1) })} className="btn btn-out !text-ink">
+                        ← Prev
+                      </Link>
+                    ) : (
+                      <span className="btn btn-out opacity-40 !text-ink pointer-events-none">← Prev</span>
+                    )}
+                    <span className="text-ash">Page {page} of {totalPages}</span>
+                    {page < totalPages ? (
+                      <Link href={buildHref({ page: String(page + 1) })} className="btn btn-out !text-ink">
+                        Next →
+                      </Link>
+                    ) : (
+                      <span className="btn btn-out opacity-40 !text-ink pointer-events-none">Next →</span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </section>
+    </>
+  );
+}
+
+function Fallback({ label, empty }: { label: string; empty?: boolean }) {
+  return (
+    <div className="text-center max-w-2xl mx-auto py-8">
+      <p className="font-mono text-xs tracking-widest text-accent uppercase">Catalogue</p>
+      <h2 className="mt-4 text-2xl font-bold">
+        {empty ? `No ${label.toLowerCase()} products to show right now` : "Products are loading"}
+      </h2>
+      <p className="mt-4 text-ash leading-relaxed">
+        Get in touch and we&apos;ll send specs, pricing and availability for the {label.toLowerCase()} range.
+      </p>
+      <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <Link href="/contact" className="btn btn-accent">
+          Enquire <span aria-hidden>→</span>
+        </Link>
+        <Link href="/all-equipment" className="btn btn-out !text-ink">
+          All Equipment
+        </Link>
+      </div>
+    </div>
+  );
+}

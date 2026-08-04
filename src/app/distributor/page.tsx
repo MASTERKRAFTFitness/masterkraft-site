@@ -1,0 +1,66 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import PageHero from "@/components/marketing/PageHero";
+import StatsBand from "@/components/marketing/StatsBand";
+import UspGrid from "@/components/marketing/UspGrid";
+
+export const metadata: Metadata = {
+  title: "Become a Distributor",
+  description:
+    "Partner with MasterKraft. Premium design, custom branding, global logistics and full-service support for distributors worldwide.",
+};
+
+const advantages = [
+  ["High Quality", "A full range of fitness equipment that boasts premium design and functionality."],
+  ["Bespoke", "In-house engineers and designers customise equipment and branding - MasterKraft or your own."],
+  ["Competitive Advantage", "Strong relationships with international suppliers and partner factories to maximise your margin."],
+  ["Logistics", "Global delivery via streamlined processes, stock consolidation and central warehousing - direct to your door."],
+  ["Experience", "Key people who know the fitness industry, with 20+ years of importing and exporting worldwide."],
+  ["Full Service", "Supply & logistics, QC, warranty management, in-house design and an online ordering & payment portal."],
+];
+
+export default function DistributorPage() {
+  return (
+    <>
+      <PageHero
+        eyebrow="Wholesale"
+        title="Become a Distributor"
+        subtitle="Strength, durability and premium quality are the hallmarks of MasterKraft. Partner with us to supply the world's most demanding fitness markets."
+        image="/home/distributor.jpg"
+      />
+
+      <StatsBand />
+
+      {/* Global advantage */}
+      <section className="container-mk py-20">
+        <div className="max-w-2xl mb-14">
+          <h2 className="text-3xl lg:text-4xl font-bold">The MasterKraft Global Advantage</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line">
+          {advantages.map(([title, body]) => (
+            <div key={title} className="bg-white p-8">
+              <h3 className="text-lg font-bold">{title}</h3>
+              <p className="mt-3 text-ash leading-relaxed text-sm">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <UspGrid eyebrow="Why Partner With Us" title="One partner behind your whole operation" />
+
+      {/* CTA */}
+      <section className="bg-ink text-white">
+        <div className="container-mk py-20 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold">Ready to talk distribution?</h2>
+          <p className="mt-4 text-white/70 max-w-2xl mx-auto">
+            Tell us about your market and we&apos;ll build a partnership around it - from a pilot
+            order to a full territory.
+          </p>
+          <Link href="/contact" className="btn btn-accent mt-8">
+            Enquire Now <span aria-hidden>→</span>
+          </Link>
+        </div>
+      </section>
+    </>
+  );
+}

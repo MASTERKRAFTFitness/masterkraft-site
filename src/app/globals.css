@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette - black / white base with a vivid magenta accent */
+ --color-ink: #111113;
+ --color-charcoal: #1b1b1e;
+ --color-carbon: #0a0a0b;
+ --color-accent: #ef0474;        /* primary accent - magenta pop */
+ --color-accent-600: #c9035f;    /* deeper accent for hairlines/hover on light */
+ --color-smoke: #f4f4f5;
+ --color-ash: #6b6b70;
+ --color-line: #e5e5e7;
+
+ --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+ --font-display: var(--font-oswald), var(--font-inter), sans-serif;
+ --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+  /* Visible keyboard focus for all interactive elements */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 1rem 1.6rem;
+    border: 1px solid transparent;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  /* Accent block - the signature "pop": magenta fill, white text */
+  .btn-accent {
+    background-color: var(--color-accent);
+    color: #fff;
+  }
+  .btn-accent:hover {
+    background-color: var(--color-ink);
+    color: var(--color-accent);
+  }
+  .btn-dark {
+    background-color: var(--color-ink);
+    color: #fff;
+  }
+  .btn-dark:hover {
+    background-color: var(--color-accent);
+    color: #fff;
+  }
+  .btn-outline {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: #fff;
+  }
+  .btn-outline:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+  /* Outline button that adapts to the current text colour (header light/dark) */
+  .btn-out {
+    background-color: transparent;
+    color: currentColor;
+    border-color: color-mix(in srgb, currentColor 40%, transparent);
+  }
+  .btn-out:hover {
+    border-color: currentColor;
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  .container-mk {
+    width: 100%;
+    max-width: 83.75rem; /* 1340px - matches the liked reference */
+    margin-inline: auto;
+    padding-inline: 1.375rem; /* 22px on mobile */
+  }
+  @media (min-width: 768px) {
+    .container-mk {
+      padding-inline: 2.5rem; /* 40px - the whitespace the team liked */
+    }
+  }
+
+  /* Monospace nav link with animated underline (from the liked reference) */
+  .nav-link {
+    position: relative;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    padding: 0.25rem 0;
+    transition: color 0.2s ease;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1px;
+    width: 0;
+    background-color: var(--color-accent);
+    transition: width 0.25s ease;
+  }
+  .nav-link:hover::after {
+    width: 100%;
+  }
+}
+
+/* Accent gradient fades (brand "colour fade" language) */
+.mk-fade-accent {
+  background-image: linear-gradient(105deg, var(--color-accent) 0%, #ff8fc4 45%, #ffffff 100%);
+}
+.mk-glow {
+  background:
+    radial-gradient(60% 80% at 15% 20%, rgba(239, 4, 116, 0.22) 0%, transparent 60%),
+    radial-gradient(50% 70% at 100% 100%, rgba(239, 4, 116, 0.14) 0%, transparent 65%);
+}
+
+/* Embedded HubSpot form wrapper. The form renders in a cross-origin iframe
+   (its theme is configured in HubSpot, not stylable here), so we only own the
+   surrounding frame: full width and a min-height to limit layout shift while
+   the iframe loads and self-resizes. */
+.mk-hsform {
+  font-family: var(--font-sans);
+  min-height: 320px;
+}
+.mk-hsform iframe {
+  width: 100% !important;
+  border: 0;
+}
+
+/* Continuous marquee ("ENGINEERED FOR FITNESS" band) */
+@keyframes mk-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.mk-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: mk-marquee 30s linear infinite;
+}
