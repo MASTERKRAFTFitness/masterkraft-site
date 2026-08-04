@@ -18,7 +18,8 @@ export default function RevlLanding() {
         eyebrow="Partnership"
         title="REVL Training Fitouts"
         subtitle="Founded in 2020, REVL Training revolutionises group fitness through performance-based training. MasterKraft is proud to supply and fit out REVL studios across Australia."
-        image="/category/rigs-racks.jpg"
+        image="/revl/full-studio.jpg"
+        imagePosition="center 40%"
       />
 
       <section className="container-mk py-20">

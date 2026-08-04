@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
+import RevlFeature from "@/components/marketing/RevlFeature";
 import { fitouts, getFitout } from "@/lib/fitouts";
 
 export function generateStaticParams() {
@@ -73,6 +74,9 @@ export default async function FitoutTypePage({
           </ul>
         </aside>
       </section>
+
+      {/* Boutique fitness: showcase the real REVL studio fit-out as proof. */}
+      {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
     </>
   );
 }
