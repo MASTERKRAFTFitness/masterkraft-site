@@ -8,39 +8,47 @@ export const metadata: Metadata = {
     "Buyer's guides, installation guides and product manuals for MasterKraft equipment.",
 };
 
-const groups: { category: string; items: string[] }[] = [
+// `href` = a working PDF (hosted locally so it can't break). Items without an
+// href are manuals not currently available as a file; they link to Contact so
+// a customer can request them rather than hitting a dead download.
+type Item = { name: string; href?: string };
+
+const groups: { category: string; items: Item[] }[] = [
   {
     category: "Flooring",
-    items: ["Rubber Tile Installation Guide", "Flooring Technical Brochure"],
+    items: [
+      { name: "Rubber Tile Installation Guide", href: "/manuals/rubber-tile-installation-guide.pdf" },
+      { name: "Flooring Technical Brochure", href: "/manuals/flooring-technical-brochure.pdf" },
+    ],
   },
   {
     category: "Cardio - Ski & Row",
     items: [
-      "Ski Trainer Elite - Owner's Manual",
-      "Ski Trainer Elite - Console Manual",
-      "Ski Trainer Pro - Owner's Manual",
-      "Air Rower Elite - Owner's Manual",
-      "Air Rower Pro - Owner's Manual",
-      "Air Rower Pro - Console Manual",
+      { name: "Ski Trainer Elite - Owner's Manual" },
+      { name: "Ski Trainer Elite - Console Manual" },
+      { name: "Ski Trainer Pro - Owner's Manual" },
+      { name: "Air Rower Elite - Owner's Manual" },
+      { name: "Air Rower Pro - Owner's Manual" },
+      { name: "Air Rower Pro - Console Manual" },
     ],
   },
   {
     category: "Cardio - Bikes",
     items: [
-      "Air Bike Elite - Owner's Manual",
-      "Air Bike Pro - Owner's Manual",
-      "Air Bike Classic - Owner's Manual",
-      "Air Cycle Pro - Owner's Manual",
-      "Air Cycle Elite - Owner's Manual",
+      { name: "Air Bike Elite - Owner's Manual" },
+      { name: "Air Bike Pro - Owner's Manual" },
+      { name: "Air Bike Classic - Owner's Manual" },
+      { name: "Air Cycle Pro - Owner's Manual" },
+      { name: "Air Cycle Elite - Owner's Manual" },
     ],
   },
   {
     category: "Cardio - Treadmills",
     items: [
-      "Curved Treadmill Pro - Assembly Guide",
-      "Curved Treadmill Pro - Console Manual",
-      "Curved Treadmill Elite - Assembly Manual",
-      "Curved Treadmill Elite - Part List",
+      { name: "Curved Treadmill Pro - Assembly Guide", href: "/manuals/curved-treadmill-pro-assembly-guide.pdf" },
+      { name: "Curved Treadmill Pro - Console Manual" },
+      { name: "Curved Treadmill Elite - Assembly Manual" },
+      { name: "Curved Treadmill Elite - Part List" },
     ],
   },
 ];
@@ -61,23 +69,41 @@ export default function ResourcesPage() {
             <div key={g.category}>
               <h2 className="text-xl font-bold border-b border-line pb-3">{g.category}</h2>
               <ul className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {g.items.map((item) => (
-                  <li key={item}>
-                    <a
-                      href="#"
-                      className="flex items-center justify-between gap-3 border border-line px-4 py-3.5 hover:border-accent hover:text-accent-600 transition-colors group"
-                    >
-                      <span className="text-sm">{item}</span>
-                      <DownloadIcon />
-                    </a>
-                  </li>
-                ))}
+                {g.items.map((item) =>
+                  item.href ? (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between gap-3 border border-line px-4 py-3.5 hover:border-accent hover:text-accent-600 transition-colors group"
+                      >
+                        <span className="text-sm">{item.name}</span>
+                        <DownloadIcon />
+                      </a>
+                    </li>
+                  ) : (
+                    <li key={item.name}>
+                      <a
+                        href="/contact"
+                        className="flex items-center justify-between gap-3 border border-line px-4 py-3.5 hover:border-accent transition-colors group"
+                        title="Request this manual"
+                      >
+                        <span className="text-sm text-ash group-hover:text-ink transition-colors">{item.name}</span>
+                        <span className="shrink-0 font-mono text-[10px] tracking-widest uppercase text-ash group-hover:text-accent-600">
+                          Request →
+                        </span>
+                      </a>
+                    </li>
+                  )
+                )}
               </ul>
             </div>
           ))}
         </div>
         <p className="mt-14 text-ash text-sm">
-          Can&apos;t find what you need?{" "}
+          Can&apos;t find what you need, or need a manual marked{" "}
+          <span className="font-mono text-[10px] tracking-widest uppercase">Request</span>?{" "}
           <a href="/contact" className="underline decoration-accent-600 underline-offset-2">
             Contact us
           </a>{" "}
