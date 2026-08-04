@@ -15,9 +15,9 @@ export default function RevlFeature() {
           </Eyebrow>
           <h2 className="font-display text-4xl lg:text-5xl uppercase leading-[0.95]">REVL Training</h2>
           <p className="mt-6 text-white/75 text-lg leading-relaxed max-w-xl">
-            A complete boutique fit-out delivered end-to-end across REVL&apos;s Brighton and Campbelltown
-            studios: rigs, functional zones, conditioning gear, storage and branded flooring, coordinated to
-            REVL&apos;s identity and built for back-to-back group classes.
+            MasterKraft has fitted out every REVL studio across the Asia-Pacific, delivering each complete
+            floor (rigs, functional zones, conditioning gear, storage and branded flooring) in a single
+            container, coordinated to REVL&apos;s identity and built for back-to-back group classes.
           </p>
           <div className="mt-9 flex flex-wrap gap-4">
             <Link href="/revl-fitouts" className="btn btn-accent">
