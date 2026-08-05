@@ -8,7 +8,7 @@ import { revlSites } from "@/lib/revl";
 export const metadata: Metadata = {
   title: "REVL Fitouts",
   description:
-    "MasterKraft supplies and fits out REVL Training studios across the Asia-Pacific - premium boutique performance gyms, delivered complete in a single container.",
+    "MasterKraft supplies and fits out REVL Training studios across Australia and Singapore - premium boutique performance gyms, delivered complete in a single container.",
   alternates: { canonical: "/revl-fitouts" },
 };
 
@@ -18,7 +18,7 @@ export default function RevlLanding() {
       <PageHero
         eyebrow="Partnership"
         title="REVL Training Fitouts"
-        subtitle="Founded in 2020, REVL Training revolutionises group fitness through performance-based training. MasterKraft supplies and fits out every REVL studio across the Asia-Pacific, delivered complete in a single container."
+        subtitle="Founded in 2020, REVL Training revolutionises group fitness through performance-based training. MasterKraft supplies and fits out every REVL studio across Australia and Singapore, delivered complete in a single container."
         image="/revl/full-studio.jpg"
         imagePosition="center 40%"
       />

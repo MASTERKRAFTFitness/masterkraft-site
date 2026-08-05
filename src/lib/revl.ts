@@ -32,6 +32,18 @@ export const revlSites: RevlSite[] = [
       "One partner, one point of contact, and a floor built to perform from day one.",
     ],
   },
+  {
+    slug: "revl-singapore",
+    name: "REVL Singapore",
+    location: "Singapore",
+    blurb: "The REVL fit-out delivered beyond Australia, into the Asia-Pacific.",
+    image: "/revl/wide-studio.jpg",
+    body: [
+      "REVL Singapore took the REVL model beyond Australia. MasterKraft delivered the full studio fit-out to Singapore, shipped complete in a single coordinated container.",
+      "Same spec sheet, same quality, the same branding REVL runs across its network, so members get a consistent REVL experience whether they train in Australia or Singapore.",
+      "One accountable partner, one delivery and a floor built to perform from day one, delivered internationally.",
+    ],
+  },
 ];
 
 export function getRevlSite(slug: string) {
