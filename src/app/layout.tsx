@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CookieConsent from "@/components/layout/CookieConsent";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, ALLOW_INDEX } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -42,6 +42,8 @@ export const metadata: Metadata = {
     locale: "en_AU",
   },
   twitter: { card: "summary_large_image" },
+  // Off until launch, so the preview + staging domains are never indexed.
+  robots: ALLOW_INDEX ? undefined : { index: false, follow: false },
 };
 
 export default function RootLayout({

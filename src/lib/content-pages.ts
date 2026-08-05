@@ -1,4 +1,5 @@
 import type { ContentPageData } from "@/components/marketing/ContentPage";
+import { legalContent } from "./legal-content";
 
 // Info / support / legal page copy. Placeholder-but-professional wording the
 // client can refine - structure and routes match masterkraft.com.
@@ -239,3 +240,14 @@ export const contentPages: Record<string, ContentPageData> = {
     ],
   },
 };
+
+// Replace the placeholder body of the legal / policy pages with the real copy
+// taken verbatim from the live masterkraft.com pages. Keeps the page header
+// (eyebrow/title/subtitle); drops the placeholder intro so only the real text shows.
+for (const [slug, sections] of Object.entries(legalContent)) {
+  const page = contentPages[slug];
+  if (page) {
+    page.sections = sections;
+    delete page.intro;
+  }
+}

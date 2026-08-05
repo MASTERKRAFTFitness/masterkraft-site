@@ -6,6 +6,11 @@ export const SITE_URL =
 
 export const SITE_NAME = "MASTERKRAFT";
 
+// Search-engine indexing is OFF by default so the Vercel preview and any staging
+// subdomain are never indexed. Set NEXT_PUBLIC_ALLOW_INDEX=true only on the final
+// production domain at launch.
+export const ALLOW_INDEX = process.env.NEXT_PUBLIC_ALLOW_INDEX === "true";
+
 // The partner portal is a separate app (one codebase, re-skinned per brand).
 // Set NEXT_PUBLIC_PORTAL_URL to its domain (e.g. https://portal.masterkraft.com)
 // to hand off Portal Login to it. Until then, links fall back to the on-site
