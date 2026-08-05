@@ -4,6 +4,7 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { fitouts } from "@/lib/fitouts";
+import { locations } from "@/lib/locations";
 
 export const metadata: Metadata = {
   title: "Gym Fitouts | Design, Supply & Install",
@@ -63,6 +64,32 @@ export default function FitoutLanding() {
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* Fitouts by location */}
+      <section className="border-t border-line">
+        <div className="container-mk py-16">
+          <div className="flex flex-col items-center text-center mb-10">
+            <Eyebrow className="mb-3">By Location</Eyebrow>
+            <h2 className="text-3xl lg:text-4xl font-bold">Gym Fitouts Across Australia</h2>
+            <p className="mt-3 text-ash max-w-2xl">
+              We design, supply and install complete gym fit-outs in every major Australian city,
+              delivered as a single coordinated container.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {locations.map((l) => (
+              <Link
+                key={l.slug}
+                href={`/gym-fitouts/${l.slug}`}
+                className="flex items-center justify-between border border-line px-4 py-4 font-display uppercase tracking-wide hover:border-accent hover:text-accent-600 transition-colors group"
+              >
+                {l.city}
+                <span aria-hidden className="text-accent">→</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

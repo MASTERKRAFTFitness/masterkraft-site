@@ -3,6 +3,7 @@ import { SITE_URL } from "@/lib/site";
 import { categories } from "@/lib/categories";
 import { fitouts } from "@/lib/fitouts";
 import { revlSites } from "@/lib/revl";
+import { locations } from "@/lib/locations";
 import { getAllProductSlugs } from "@/lib/woocommerce";
 
 export const revalidate = 86400; // rebuild sitemap daily
@@ -40,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const c of categories) entries.push({ url: `${SITE_URL}/equipment/${c.slug}`, changeFrequency: "weekly", priority: 0.8 });
   for (const f of fitouts) entries.push({ url: `${SITE_URL}/fitout/${f.slug}`, changeFrequency: "monthly", priority: 0.7 });
+  for (const l of locations) entries.push({ url: `${SITE_URL}/gym-fitouts/${l.slug}`, changeFrequency: "monthly", priority: 0.8 });
   for (const r of revlSites) entries.push({ url: `${SITE_URL}/revl-fitouts/${r.slug}`, changeFrequency: "monthly", priority: 0.5 });
 
   try {
