@@ -114,6 +114,60 @@ export const locations: Location[] = [
     ],
   },
   {
+    slug: "gold-coast",
+    city: "Gold Coast",
+    state: "Queensland",
+    stateAbbr: "QLD",
+    meta: "Gym fitouts on the Gold Coast by MasterKraft. Complete boutique and commercial gym fit-outs designed, supplied and installed from Southport to Coolangatta.",
+    intro: [
+      "The Gold Coast runs one of the densest fitness scenes in the country, and MasterKraft delivers complete gym fit-outs right across it, from Southport and Surfers Paradise down to Burleigh and Coolangatta.",
+      "Boutique studios, PT studios and full commercial floors, all designed, supplied and installed as one coordinated project, finished in your brand and built to hold up to constant, year-round use.",
+    ],
+    delivery:
+      "Your whole fit-out ships to the Gold Coast as a single coordinated container and is installed on schedule, so nothing holds up your opening.",
+    faqs: [
+      {
+        q: "Do you fit out gyms on the Gold Coast?",
+        a: "Yes. We design, supply and install complete fit-outs across the Gold Coast, from Southport to Coolangatta.",
+      },
+      {
+        q: "Do you work with boutique and PT studios?",
+        a: "We do. The Gold Coast's boutique and PT studio scene is a big part of our work, alongside full commercial floors.",
+      },
+      {
+        q: "Can you match our studio branding?",
+        a: "Yes. Our in-house team produces custom-branded equipment and flooring, so the floor is finished in your identity rather than a generic spec.",
+      },
+    ],
+  },
+  {
+    slug: "sunshine-coast",
+    city: "Sunshine Coast",
+    state: "Queensland",
+    stateAbbr: "QLD",
+    meta: "Gym fitouts on the Sunshine Coast by MasterKraft. Complete gym fit-outs designed, supplied and installed from Caloundra to Noosa.",
+    intro: [
+      "The Sunshine Coast is one of the fastest-growing regions in Queensland, and new studios and gyms are opening to match. MasterKraft delivers complete fit-outs across the region, from Caloundra and Maroochydore up to Noosa.",
+      "From a single boutique studio to a full commercial floor, we design, supply and install the whole project, coordinated to your brand and built to last.",
+    ],
+    delivery:
+      "One coordinated container, delivered and installed across the Sunshine Coast on schedule, with one team accountable from design to handover.",
+    faqs: [
+      {
+        q: "Do you deliver to the Sunshine Coast?",
+        a: "Yes. We design, supply and install complete fit-outs across the Sunshine Coast, from Caloundra to Noosa.",
+      },
+      {
+        q: "Is the range the same as the capital cities?",
+        a: "Exactly the same range, spec and custom branding, delivered as one complete fit-out.",
+      },
+      {
+        q: "Do you handle design and layout too?",
+        a: "Yes. We can take a project from floor-plan and layout through to supply, delivery and installation.",
+      },
+    ],
+  },
+  {
     slug: "perth",
     city: "Perth",
     state: "Western Australia",
@@ -165,6 +219,132 @@ export const locations: Location[] = [
         q: "Do you handle the design as well as supply?",
         a: "Yes. We can take a project from floor-plan and layout through to supply, delivery and installation.",
       },
+    ],
+  },
+  {
+    slug: "canberra",
+    city: "Canberra",
+    state: "the ACT",
+    stateAbbr: "ACT",
+    meta: "Gym fitouts in Canberra by MasterKraft. Complete commercial and performance gym fit-outs designed, supplied and installed across the ACT.",
+    intro: [
+      "MasterKraft designs, supplies and installs complete gym fit-outs across Canberra and the ACT, from boutique and PT studios to full performance floors.",
+      "The capital has a strong performance and functional-training culture, and we build for it: rigs, strength, conditioning and flooring, coordinated to your brand and specified to take heavy, daily use.",
+    ],
+    delivery:
+      "Your whole floor ships to Canberra as a single coordinated container and is installed on schedule.",
+    faqs: [
+      { q: "Do you fit out gyms in Canberra?", a: "Yes. We design, supply and install complete fit-outs across Canberra and the ACT." },
+      { q: "Do you build performance and functional gyms?", a: "We do. Rigs, platforms, strength and conditioning are core to what we deliver." },
+      { q: "Do you supply only, or install as well?", a: "Both, from supply-only through to a full turnkey fit-out." },
+    ],
+  },
+  {
+    slug: "newcastle",
+    city: "Newcastle",
+    state: "New South Wales",
+    stateAbbr: "NSW",
+    meta: "Gym fitouts in Newcastle by MasterKraft. Complete gym fit-outs designed, supplied and installed across Newcastle and the Hunter.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs across Newcastle and the Hunter, designed, supplied and installed as one coordinated project.",
+      "Newcastle's boutique and functional-training scene is growing fast. We deliver full floors built to hold up to constant use, coordinated to your brand from day one.",
+    ],
+    delivery:
+      "One coordinated container, delivered and installed across Newcastle and the Hunter on schedule.",
+    faqs: [
+      { q: "Do you fit out gyms in Newcastle?", a: "Yes, across Newcastle and the wider Hunter region." },
+      { q: "Do you cover the Hunter Valley?", a: "We do. The single-container model reaches right across the Hunter." },
+      { q: "Can you brand the equipment?", a: "Yes, custom-branded to your studio's identity." },
+    ],
+  },
+  {
+    slug: "wollongong",
+    city: "Wollongong",
+    state: "New South Wales",
+    stateAbbr: "NSW",
+    meta: "Gym fitouts in Wollongong by MasterKraft. Complete gym fit-outs designed, supplied and installed across Wollongong and the Illawarra.",
+    intro: [
+      "MasterKraft designs, supplies and installs complete gym fit-outs across Wollongong and the Illawarra.",
+      "From coastal boutique studios to full commercial floors, we deliver the whole project, coordinated to your brand and built to last through constant, daily training.",
+    ],
+    delivery:
+      "Your fit-out ships to Wollongong as a single coordinated container and is installed on schedule.",
+    faqs: [
+      { q: "Do you deliver to Wollongong?", a: "Yes, across Wollongong and the Illawarra." },
+      { q: "Do you fit out boutique studios?", a: "We do, alongside full commercial floors." },
+      { q: "Do you design as well as supply?", a: "Yes, from layout through to install." },
+    ],
+  },
+  {
+    slug: "geelong",
+    city: "Geelong",
+    state: "Victoria",
+    stateAbbr: "VIC",
+    meta: "Gym fitouts in Geelong by MasterKraft. Complete gym fit-outs designed, supplied and installed across Geelong and the Surf Coast.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs across Geelong and the Surf Coast, designed, supplied and installed as one coordinated project.",
+      "Victoria's second city is growing quickly, and its gyms with it. We deliver full floors, from boutique studios to commercial facilities, coordinated to your brand and built for heavy use.",
+    ],
+    delivery:
+      "One coordinated container, delivered and installed across Geelong and the Surf Coast on schedule. As a Victorian team, we are close by.",
+    faqs: [
+      { q: "Do you fit out gyms in Geelong?", a: "Yes. As a Victorian team we deliver and install complete fit-outs across Geelong and the Surf Coast." },
+      { q: "Do you cover the Surf Coast and Bellarine?", a: "We do, right across the region." },
+      { q: "Supply only, or install too?", a: "Both, up to a full turnkey fit-out." },
+    ],
+  },
+  {
+    slug: "hobart",
+    city: "Hobart",
+    state: "Tasmania",
+    stateAbbr: "TAS",
+    meta: "Gym fitouts in Hobart by MasterKraft. Complete gym fit-outs delivered and installed across Tasmania, shipped as a single coordinated container.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs to Hobart and across Tasmania.",
+      "Freight across Bass Strait is the usual sticking point for a Tasmanian fit-out. We solve it the same way we deliver internationally: your entire floor is specified once and shipped as a single coordinated container, so a Hobart build runs as smoothly as a mainland one.",
+    ],
+    delivery:
+      "One container across Bass Strait, one delivery, one install, coordinated end to end.",
+    faqs: [
+      { q: "Can you fit out a gym in Hobart?", a: "Yes, in Hobart and across Tasmania." },
+      { q: "How do you handle freight to Tasmania?", a: "Your whole floor is specified once and shipped as a single coordinated container across Bass Strait." },
+      { q: "Is the range the same in Tasmania?", a: "Exactly the same range, spec and custom branding." },
+    ],
+  },
+  {
+    slug: "darwin",
+    city: "Darwin",
+    state: "the Northern Territory",
+    stateAbbr: "NT",
+    meta: "Gym fitouts in Darwin by MasterKraft. Complete gym fit-outs delivered and installed across the Northern Territory, shipped as a single coordinated container.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs to Darwin and across the Northern Territory.",
+      "Distance is the challenge in the Top End, and it is exactly what our single-container model is built for. Your whole floor is specified once and delivered complete, so you get the full spec and quality without managing freight from the other side of the country.",
+    ],
+    delivery:
+      "One container, delivered and installed in Darwin on schedule, coordinated from our end.",
+    faqs: [
+      { q: "Can you deliver a gym fit-out to Darwin?", a: "Yes, to Darwin and across the Northern Territory." },
+      { q: "How does delivery to the NT work?", a: "Everything ships as one coordinated container, so there is no piecing together freight interstate." },
+      { q: "Same range as the capital cities?", a: "Identical range, spec and custom branding." },
+    ],
+  },
+  {
+    slug: "central-coast",
+    city: "Central Coast",
+    state: "New South Wales",
+    stateAbbr: "NSW",
+    meta: "Gym fitouts on the Central Coast by MasterKraft. Complete gym fit-outs designed, supplied and installed from Gosford to Wyong.",
+    intro: [
+      "MasterKraft designs, supplies and installs complete gym fit-outs across the NSW Central Coast, from Gosford and Wyong through the surrounding region.",
+      "The Central Coast is one of the state's fastest-growing corridors, and new studios and gyms are opening across it. We deliver full floors, coordinated to your brand and built to last.",
+    ],
+    delivery:
+      "Your fit-out ships to the Central Coast as a single coordinated container and is installed on schedule.",
+    faqs: [
+      { q: "Do you deliver to the Central Coast?", a: "Yes, from Gosford to Wyong and across the region." },
+      { q: "Do you work with new studio openings?", a: "We do. A lot of our Central Coast work is new studios opening their doors." },
+      { q: "Do you handle design and install?", a: "Yes, from layout through to a full turnkey fit-out." },
     ],
   },
 ];

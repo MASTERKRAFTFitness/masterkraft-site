@@ -37,7 +37,7 @@ export const revlSites: RevlSite[] = [
     name: "REVL Singapore",
     location: "Singapore",
     blurb: "The REVL fit-out delivered beyond Australia, into the Asia-Pacific.",
-    image: "/revl/wide-studio.jpg",
+    image: "/revl/singapore.jpg",
     body: [
       "REVL Singapore took the REVL model beyond Australia. MasterKraft delivered the full studio fit-out to Singapore, shipped complete in a single coordinated container.",
       "Same spec sheet, same quality, the same branding REVL runs across its network, so members get a consistent REVL experience whether they train in Australia or Singapore.",
