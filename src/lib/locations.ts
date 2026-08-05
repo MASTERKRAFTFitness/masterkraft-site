@@ -8,8 +8,12 @@ export type LocationFaq = { q: string; a: string };
 export type Location = {
   slug: string;
   city: string;
-  state: string;
-  stateAbbr: string;
+  // State / region for Australian entries; a country descriptor or omitted for
+  // international ones.
+  state?: string;
+  stateAbbr?: string;
+  // International markets are grouped separately from the Australian list.
+  international?: boolean;
   // Meta description for the page.
   meta: string;
   // 2-3 unique intro paragraphs.
@@ -345,6 +349,75 @@ export const locations: Location[] = [
       { q: "Do you deliver to the Central Coast?", a: "Yes, from Gosford to Wyong and across the region." },
       { q: "Do you work with new studio openings?", a: "We do. A lot of our Central Coast work is new studios opening their doors." },
       { q: "Do you handle design and install?", a: "Yes, from layout through to a full turnkey fit-out." },
+    ],
+  },
+  {
+    slug: "dubai",
+    city: "Dubai",
+    state: "the UAE",
+    international: true,
+    meta: "Gym fitouts in Dubai by MasterKraft. Complete gym fit-outs designed, supplied and delivered across Dubai and the UAE as a single coordinated container.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs to Dubai and across the UAE, designed, supplied and installed as one coordinated project.",
+      "Fitting out internationally is core to what we do, with equipment already in place across 12 countries and 229 sites. Your entire floor is specified once and shipped as a single coordinated container, so a Dubai build gets the full spec, quality and branding without a fragmented supply chain.",
+    ],
+    delivery:
+      "Your complete fit-out is shipped to Dubai as a single coordinated container, coordinated from our end.",
+    faqs: [
+      { q: "Do you deliver gym fit-outs to Dubai?", a: "Yes. International delivery is core to our business, with equipment across 12 countries and 229 sites." },
+      { q: "How does international delivery work?", a: "Your whole floor is specified once and shipped as a single coordinated container, so nothing is pieced together on the ground." },
+      { q: "Can you match our brand?", a: "Yes, custom-branded equipment and flooring finished to your identity." },
+    ],
+  },
+  {
+    slug: "south-korea",
+    city: "South Korea",
+    international: true,
+    meta: "Gym fitouts in South Korea by MasterKraft. Complete gym fit-outs designed, supplied and shipped as a single coordinated container.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs across South Korea, designed, supplied and shipped as one coordinated project.",
+      "As part of our work across 12 countries and 229 sites, we specify your entire floor once and deliver it complete, so a Korean fit-out arrives to the same spec, quality and branding as anywhere in our network.",
+    ],
+    delivery:
+      "Your complete fit-out is shipped to South Korea as a single coordinated container.",
+    faqs: [
+      { q: "Do you deliver to South Korea?", a: "Yes, as part of our international fit-out work across 12 countries and 229 sites." },
+      { q: "Is the quality the same as your home market?", a: "Identical. Same spec sheet, same quality, same custom branding." },
+      { q: "Do you supply and coordinate installation?", a: "Yes. We supply the complete floor and coordinate installation." },
+    ],
+  },
+  {
+    slug: "malaysia",
+    city: "Malaysia",
+    international: true,
+    meta: "Gym fitouts in Malaysia by MasterKraft. Complete gym fit-outs designed, supplied and shipped as a single coordinated container.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs across Malaysia, from Kuala Lumpur through the wider market, designed and supplied as one coordinated project.",
+      "International delivery is what we are built for. With equipment in place across 12 countries and 229 sites, we specify your floor once and ship it complete, so nothing is compromised by distance.",
+    ],
+    delivery:
+      "Your complete fit-out is shipped to Malaysia as a single coordinated container.",
+    faqs: [
+      { q: "Do you deliver to Malaysia?", a: "Yes, across Malaysia including Kuala Lumpur." },
+      { q: "How is a fit-out delivered internationally?", a: "The whole floor is specified once and shipped as a single coordinated container." },
+      { q: "Can you brand the equipment?", a: "Yes, custom-branded to your identity." },
+    ],
+  },
+  {
+    slug: "vietnam",
+    city: "Vietnam",
+    international: true,
+    meta: "Gym fitouts in Vietnam by MasterKraft. Complete gym fit-outs designed, supplied and shipped as a single coordinated container.",
+    intro: [
+      "MasterKraft delivers complete gym fit-outs across Vietnam, from Ho Chi Minh City and Hanoi through the wider market.",
+      "Vietnam's fitness market is expanding fast. As part of our work across 12 countries and 229 sites, we specify your floor once and ship it complete in a single coordinated container, delivered to the same spec and branding as the rest of our network.",
+    ],
+    delivery:
+      "Your complete fit-out is shipped to Vietnam as a single coordinated container.",
+    faqs: [
+      { q: "Do you deliver to Vietnam?", a: "Yes, including Ho Chi Minh City and Hanoi." },
+      { q: "Is the range the same as elsewhere?", a: "Exactly the same range, spec and custom branding." },
+      { q: "Do you supply and coordinate installation?", a: "Yes, we supply the full floor and coordinate installation." },
     ],
   },
 ];

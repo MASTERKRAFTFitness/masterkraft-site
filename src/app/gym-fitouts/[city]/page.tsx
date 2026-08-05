@@ -44,13 +44,14 @@ export default async function LocationPage({
   const loc = getLocation(city);
   if (!loc) notFound();
 
+  const areaName = loc.state ? `${loc.city}, ${loc.state}` : loc.city;
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
     serviceType: "Gym fit-out",
     name: `Gym Fitouts ${loc.city}`,
     description: loc.meta,
-    areaServed: { "@type": "City", name: `${loc.city}, ${loc.state}` },
+    areaServed: { "@type": "Place", name: areaName },
     provider: { "@type": "Organization", name: "MasterKraft", url: SITE_URL },
   };
 
@@ -72,7 +73,11 @@ export default async function LocationPage({
       <PageHero
         eyebrow="Gym Fitouts"
         title={`Gym Fitouts ${loc.city}`}
-        subtitle={`Design, supply and install across ${loc.city} and ${loc.state}.`}
+        subtitle={
+          loc.state
+            ? `Design, supply and install across ${loc.city} and ${loc.state}.`
+            : `Design, supply and deliver complete fit-outs across ${loc.city}.`
+        }
         image="/revl/full-studio.jpg"
         imagePosition="center 45%"
         breadcrumbs={[

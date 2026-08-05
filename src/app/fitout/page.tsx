@@ -72,23 +72,43 @@ export default function FitoutLanding() {
         <div className="container-mk py-16">
           <div className="flex flex-col items-center text-center mb-10">
             <Eyebrow className="mb-3">By Location</Eyebrow>
-            <h2 className="text-3xl lg:text-4xl font-bold">Gym Fitouts Across Australia</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold">Gym Fitouts, Australia &amp; Beyond</h2>
             <p className="mt-3 text-ash max-w-2xl">
-              We design, supply and install complete gym fit-outs in cities and regions across Australia,
-              delivered as a single coordinated container.
+              We design, supply and install complete gym fit-outs across Australia and internationally,
+              each delivered as a single coordinated container.
             </p>
           </div>
+
+          <h3 className="font-mono text-xs tracking-widest uppercase text-accent mb-4">Australia</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {locations.map((l) => (
-              <Link
-                key={l.slug}
-                href={`/gym-fitouts/${l.slug}`}
-                className="flex items-center justify-between border border-line px-4 py-4 font-display uppercase tracking-wide hover:border-accent hover:text-accent-600 transition-colors group"
-              >
-                {l.city}
-                <span aria-hidden className="text-accent">→</span>
-              </Link>
-            ))}
+            {locations
+              .filter((l) => !l.international)
+              .map((l) => (
+                <Link
+                  key={l.slug}
+                  href={`/gym-fitouts/${l.slug}`}
+                  className="flex items-center justify-between border border-line px-4 py-4 font-display uppercase tracking-wide hover:border-accent hover:text-accent-600 transition-colors group"
+                >
+                  {l.city}
+                  <span aria-hidden className="text-accent">→</span>
+                </Link>
+              ))}
+          </div>
+
+          <h3 className="font-mono text-xs tracking-widest uppercase text-accent mt-10 mb-4">International</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {locations
+              .filter((l) => l.international)
+              .map((l) => (
+                <Link
+                  key={l.slug}
+                  href={`/gym-fitouts/${l.slug}`}
+                  className="flex items-center justify-between border border-line px-4 py-4 font-display uppercase tracking-wide hover:border-accent hover:text-accent-600 transition-colors group"
+                >
+                  {l.city}
+                  <span aria-hidden className="text-accent">→</span>
+                </Link>
+              ))}
           </div>
         </div>
       </section>
