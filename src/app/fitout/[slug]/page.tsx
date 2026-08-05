@@ -20,8 +20,9 @@ export async function generateMetadata({
   const f = getFitout(slug);
   if (!f) return { title: "Fitouts" };
   return {
-    title: `${f.name} Fitouts`,
+    title: `${f.name} Fitouts | Design, Supply & Install`,
     description: f.blurb,
+    alternates: { canonical: `/fitout/${f.slug}` },
   };
 }
 
@@ -38,7 +39,17 @@ export default async function FitoutTypePage({
 
   return (
     <>
-      <PageHero eyebrow={`${f.name} Fitouts`} title={f.name} subtitle={f.blurb} image={f.image} />
+      <PageHero
+        eyebrow={`${f.name} Fitouts`}
+        title={f.name}
+        subtitle={f.blurb}
+        image={f.image}
+        breadcrumbs={[
+          { name: "Home", href: "/" },
+          { name: "Fitouts", href: "/fitout" },
+          { name: f.name, href: `/fitout/${f.slug}` },
+        ]}
+      />
 
       <section className="container-mk py-20 grid lg:grid-cols-3 gap-14">
         <div className="lg:col-span-2">

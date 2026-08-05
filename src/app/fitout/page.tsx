@@ -6,9 +6,10 @@ import Eyebrow from "@/components/ui/Eyebrow";
 import { fitouts } from "@/lib/fitouts";
 
 export const metadata: Metadata = {
-  title: "Gym Fitouts",
+  title: "Gym Fitouts | Design, Supply & Install",
   description:
     "Transform your training space. Made by fitness professionals for fitness professionals - boutique, commercial, elite sports, home, PT studio and education fitouts.",
+  alternates: { canonical: "/fitout" },
 };
 
 const valueProps = [

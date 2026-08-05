@@ -8,7 +8,8 @@ import { revlSites } from "@/lib/revl";
 export const metadata: Metadata = {
   title: "REVL Fitouts",
   description:
-    "MasterKraft proudly supplies and fits out REVL Training studios across Australia - premium boutique performance gyms.",
+    "MasterKraft supplies and fits out REVL Training studios across the Asia-Pacific - premium boutique performance gyms, delivered complete in a single container.",
+  alternates: { canonical: "/revl-fitouts" },
 };
 
 export default function RevlLanding() {

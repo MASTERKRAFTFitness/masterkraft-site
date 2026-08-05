@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Hero from "@/components/home/Hero";
@@ -11,22 +12,32 @@ import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site";
 import { shopByCategory } from "@/lib/nav";
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 const orgSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "MasterKraft",
   legalName: "MasterKraft Pty Ltd",
+  alternateName: "MasterKraft Fitness",
   url: SITE_URL,
   logo: `${SITE_URL}/brand/logo-circle.svg`,
-  identifier: {
-    "@type": "PropertyValue",
-    propertyID: "ABN",
-    value: "84 659 220 274",
-  },
+  image: `${SITE_URL}/brand/logo-circle.svg`,
+  slogan: "Engineered for Fitness",
+  description:
+    "MasterKraft designs, engineers and supplies commercial and home gym equipment and delivers complete custom gym fit-outs across Australia and the Asia-Pacific.",
+  areaServed: [
+    { "@type": "Country", name: "Australia" },
+    { "@type": "Place", name: "Asia-Pacific" },
+  ],
   contactPoint: {
     "@type": "ContactPoint",
     telephone: "+61-3-9044-9575",
     contactType: "sales",
+    areaServed: "AU",
+    availableLanguage: "English",
   },
   sameAs: [
     "https://www.instagram.com/masterkraft.equipment/",

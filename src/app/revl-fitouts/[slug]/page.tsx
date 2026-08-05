@@ -16,7 +16,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const s = getRevlSite(slug);
   if (!s) return { title: "REVL Fitouts" };
-  return { title: `${s.name}`, description: s.blurb };
+  return {
+    title: `${s.name} | REVL Fit-Out`,
+    description: s.blurb,
+    alternates: { canonical: `/revl-fitouts/${s.slug}` },
+  };
 }
 
 export default async function RevlSitePage({
@@ -30,7 +34,17 @@ export default async function RevlSitePage({
 
   return (
     <>
-      <PageHero eyebrow={s.location} title={s.name} subtitle={s.blurb} image={s.image} />
+      <PageHero
+        eyebrow={s.location}
+        title={s.name}
+        subtitle={s.blurb}
+        image={s.image}
+        breadcrumbs={[
+          { name: "Home", href: "/" },
+          { name: "REVL Fitouts", href: "/revl-fitouts" },
+          { name: s.name, href: `/revl-fitouts/${s.slug}` },
+        ]}
+      />
 
       <section className="container-mk py-20 max-w-3xl">
         <div className="space-y-5 text-lg text-ash leading-relaxed">

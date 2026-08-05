@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "All Equipment",
   description:
     "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.",
+  alternates: { canonical: "/all-equipment" },
 };
 
 export default function AllEquipmentPage() {
