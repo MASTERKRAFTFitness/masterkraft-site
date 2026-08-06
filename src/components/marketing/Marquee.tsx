@@ -23,7 +23,7 @@ export default function Marquee({
                 }`}
               >
                 Engineered for Fitness
-                <span className="text-accent">◆</span>
+                <span className="text-accent" aria-hidden="true">◆</span>
               </span>
             ))}
           </div>

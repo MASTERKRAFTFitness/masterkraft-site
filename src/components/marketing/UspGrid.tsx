@@ -17,7 +17,7 @@ export default function UspGrid({
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line">
         {usps.map((u) => (
           <div key={u.n} className="bg-white p-8 group">
-            <span className="font-mono text-sm text-accent tracking-widest">{u.n}</span>
+            <span className="font-mono text-sm text-accent-600 tracking-widest">{u.n}</span>
             <h3 className="mt-4 text-xl font-bold">{u.title}</h3>
             <p className="mt-3 text-ash leading-relaxed">{u.body}</p>
           </div>

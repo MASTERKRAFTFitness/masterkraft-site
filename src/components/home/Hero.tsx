@@ -115,16 +115,21 @@ export default function Hero() {
       </button>
 
       {/* Progress dots */}
-      <div className="absolute bottom-8 right-5 lg:right-10 z-20 flex gap-2">
+      <div className="absolute bottom-8 right-5 lg:right-10 z-20 flex gap-1">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`h-2 rounded-full transition-all ${
-              i === current ? "w-8 bg-accent" : "w-2 bg-white/50 hover:bg-white/80"
-            }`}
-          />
+            aria-current={i === current ? "true" : undefined}
+            className="group grid place-items-center h-6 px-1"
+          >
+            <span
+              className={`h-2 rounded-full transition-all block ${
+                i === current ? "w-8 bg-accent" : "w-2 bg-white/50 group-hover:bg-white/80"
+              }`}
+            />
+          </button>
         ))}
       </div>
     </section>

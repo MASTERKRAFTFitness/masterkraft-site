@@ -12,7 +12,7 @@ export default function Eyebrow({
   return (
     <p
       className={`inline-flex items-center gap-2.5 font-display uppercase tracking-[0.3em] text-xs font-semibold ${
-        tone === "dark" ? "text-accent" : "text-ink"
+        tone === "dark" ? "text-accent-300" : "text-ink"
       } ${className}`}
     >
       <span className="h-2.5 w-2.5 bg-accent shrink-0" aria-hidden />
