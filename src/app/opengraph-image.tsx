@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "MASTERKRAFT — Engineered for Fitness";
+export const alt = "MASTERKRAFT: Engineered for Fitness";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

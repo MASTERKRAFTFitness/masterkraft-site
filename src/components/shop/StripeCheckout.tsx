@@ -38,6 +38,10 @@ export default function StripeCheckout() {
   const { items, subtotal } = useCart();
   const [phase, setPhase] = useState<"details" | "payment">("details");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // The authoritative total the PaymentIntent was created for (server-repriced).
+  // This is what Stripe actually charges — always display THIS, never the cart
+  // subtotal, which can be stale relative to live Unleashed pricing.
+  const [serverTotal, setServerTotal] = useState<number | null>(null);
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +73,7 @@ export default function StripeCheckout() {
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
       setBilling(b);
       setClientSecret(data.clientSecret);
+      setServerTotal(typeof data.amount === "number" ? data.amount : null);
       setPhase("payment");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -117,7 +122,13 @@ export default function StripeCheckout() {
             stripe={getStripe()}
             options={{ clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#ef0474" } } }}
           >
-            <PayForm billing={billing} items={items} subtotal={subtotal} onBack={() => setPhase("details")} />
+            <PayForm
+              billing={billing}
+              items={items}
+              subtotal={subtotal}
+              serverTotal={serverTotal}
+              onBack={() => setPhase("details")}
+            />
           </Elements>
         )}
       </div>
@@ -146,7 +157,7 @@ export default function StripeCheckout() {
         </div>
         <div className="flex justify-between font-mono text-base py-3 mt-2 border-t border-line font-semibold">
           <span>Total</span>
-          <span>{aud.format(subtotal)}</span>
+          <span>{aud.format(serverTotal ?? subtotal)}</span>
         </div>
       </aside>
     </div>
@@ -157,11 +168,13 @@ function PayForm({
   billing,
   items,
   subtotal,
+  serverTotal,
   onBack,
 }: {
   billing: Billing;
   items: CartItem[];
   subtotal: number;
+  serverTotal: number | null;
   onBack: () => void;
 }) {
   const stripe = useStripe();
@@ -170,6 +183,12 @@ function PayForm({
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ number: string } | null>(null);
+
+  // What Stripe will actually charge (server-repriced). Falls back to the cart
+  // subtotal only if the server didn't return an amount.
+  const charge = serverTotal ?? subtotal;
+  // Cart price drifted from live pricing — tell the customer before they pay.
+  const priceChanged = serverTotal !== null && Math.abs(serverTotal - subtotal) >= 0.01;
 
   async function pay(e: React.FormEvent) {
     e.preventDefault();
@@ -221,11 +240,11 @@ function PayForm({
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Order could not be recorded.");
-      track("purchase", { currency: "AUD", value: subtotal, transaction_id: data.orderNumber });
+      track("purchase", { currency: "AUD", value: charge, transaction_id: data.orderNumber });
       clear();
       setDone({ number: data.orderNumber });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Order failed after payment — we'll follow up.");
+      setError(err instanceof Error ? err.message : "Order failed after payment, we'll follow up.");
     } finally {
       setPaying(false);
     }
@@ -236,7 +255,7 @@ function PayForm({
       <div className="border border-accent bg-accent/5 p-10 text-center">
         <p className="font-display uppercase tracking-wide text-2xl">Order confirmed</p>
         <p className="mt-3 text-ash">
-          Thanks — your order <strong>#{done.number}</strong> is in. You&apos;ll get a confirmation email shortly.
+          Thanks, your order <strong>#{done.number}</strong> is in. You&apos;ll get a confirmation email shortly.
         </p>
         <Link href="/all-equipment" className="btn btn-accent mt-8">
           Keep Shopping
@@ -248,11 +267,18 @@ function PayForm({
   return (
     <form onSubmit={pay} className="space-y-6">
       <h2 className="font-display uppercase tracking-wide text-lg">Payment</h2>
+      {priceChanged && (
+        <p className="text-sm border border-line bg-smoke px-4 py-3">
+          Pricing updated since you added to cart. The current total is{" "}
+          <strong>{aud.format(charge)}</strong> (was {aud.format(subtotal)}). You will be
+          charged the current total.
+        </p>
+      )}
       <PaymentElement />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <div className="flex flex-wrap gap-4">
         <button type="submit" disabled={!stripe || paying} className="btn btn-accent disabled:opacity-60">
-          {paying ? "Processing…" : `Pay ${aud.format(subtotal)}`}
+          {paying ? "Processing…" : `Pay ${aud.format(charge)}`}
         </button>
         <button type="button" onClick={onBack} className="btn btn-out !text-ink">
           ← Back

@@ -97,7 +97,7 @@ export default function VariantSelector({
           type="button"
           className="btn btn-accent"
           onClick={() => {
-            const name = `${productName} — ${selected.label}`;
+            const name = `${productName} - ${selected.label}`;
             add(
               {
                 id: selected.id,

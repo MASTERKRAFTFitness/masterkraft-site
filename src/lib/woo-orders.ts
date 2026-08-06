@@ -24,18 +24,21 @@ export async function resolveOrderLines(
         getVariation(r.productId, r.variationId),
         getProductById(r.productId),
       ]);
-      if (!v || !parent) continue;
+      // Fail closed: never silently drop a line from a cart we're about to charge.
+      // A missing product here means we'd price/charge for a subset (pre-payment)
+      // or mismatch the PaymentIntent and fail after the card was charged (post-payment).
+      if (!v || !parent) throw new Error(`Unresolvable line item: product ${r.productId} variation ${r.variationId}`);
       const label = v.attributes?.map((a) => a.option).filter(Boolean).join(" / ");
       lines.push({
         productId: r.productId,
         variationId: r.variationId,
         quantity: qty,
         unitPrice: enrich(v, map).priceValue,
-        name: `${parent.name}${label ? ` — ${label}` : ""}`,
+        name: `${parent.name}${label ? ` - ${label}` : ""}`,
       });
     } else {
       const p = await getProductById(r.productId);
-      if (!p) continue;
+      if (!p) throw new Error(`Unresolvable line item: product ${r.productId}`);
       lines.push({ productId: r.productId, quantity: qty, unitPrice: enrich(p, map).priceValue, name: p.name });
     }
   }

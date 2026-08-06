@@ -115,6 +115,21 @@ export async function getAllProductsByCategory(categoryId: number): Promise<WcPr
 
 export type WcCategoryChild = { id: number; slug: string; name: string; count: number };
 
+// WooCommerce returns category names HTML-encoded (e.g. "Chest &amp; Shoulder").
+// Rendering them directly double-encodes in React (shows a literal "&amp;"), so
+// decode the handful of entities WC emits back to their characters first.
+export function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&#x27;|&apos;/g, "'")
+    .replace(/&#8211;|&ndash;/g, "-")
+    .replace(/&#8217;|&rsquo;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
 export async function getCategoryChildren(parentId: number): Promise<WcCategoryChild[]> {
   const { data } = await wcGet<WcCategoryChild[]>("/products/categories", {
     parent: parentId,
@@ -124,7 +139,7 @@ export async function getCategoryChildren(parentId: number): Promise<WcCategoryC
     order: "desc",
     _fields: "id,slug,name,count",
   });
-  return data;
+  return data.map((c) => ({ ...c, name: decodeEntities(c.name) }));
 }
 
 export async function searchProducts(
@@ -140,18 +155,28 @@ export async function searchProducts(
   });
 }
 
+// WooCommerce returns some text fields (notably category names) HTML-encoded.
+// Decode name + category names so they don't double-encode when rendered.
+function normalizeProduct(p: WcProduct): WcProduct {
+  return {
+    ...p,
+    name: decodeEntities(p.name),
+    categories: p.categories?.map((c) => ({ ...c, name: decodeEntities(c.name) })) ?? p.categories,
+  };
+}
+
 export async function getProductBySlug(slug: string): Promise<WcProduct | null> {
   const { data } = await wcGet<WcProduct[]>("/products", {
     slug,
     _fields: PRODUCT_FIELDS,
   });
-  return data[0] ?? null;
+  return data[0] ? normalizeProduct(data[0]) : null;
 }
 
 export async function getProductById(id: number): Promise<WcProduct | null> {
   try {
     const { data } = await wcGet<WcProduct>(`/products/${id}`, { _fields: PRODUCT_FIELDS });
-    return data;
+    return normalizeProduct(data);
   } catch {
     return null;
   }

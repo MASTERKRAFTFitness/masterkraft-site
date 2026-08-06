@@ -19,10 +19,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Cart is empty" }, { status: 400 });
   }
 
-  const { lines, total, hasPoa } = await resolveOrderLines(items);
+  let lines, total, hasPoa;
+  try {
+    ({ lines, total, hasPoa } = await resolveOrderLines(items));
+  } catch (e) {
+    console.error("[payment-intent] repricing failed", e);
+    return NextResponse.json(
+      { ok: false, error: "We couldn't price one or more items. Please refresh your cart or request a quote." },
+      { status: 422 }
+    );
+  }
   if (lines.length === 0 || total <= 0 || hasPoa) {
     return NextResponse.json(
-      { ok: false, error: "One or more items are priced on application — please request a quote." },
+      { ok: false, error: "One or more items are priced on application. Please request a quote." },
       { status: 422 }
     );
   }

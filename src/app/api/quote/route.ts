@@ -93,13 +93,13 @@ async function sendEmail(
 
   const html = `
     <h2>New quote request</h2>
-    <p><strong>${escape(contact.name ?? "")}</strong>${contact.company ? ` — ${escape(contact.company)}` : ""}<br/>
+    <p><strong>${escape(contact.name ?? "")}</strong>${contact.company ? ` (${escape(contact.company)})` : ""}<br/>
     ${escape(contact.email ?? "")}${contact.phone ? ` · ${escape(contact.phone)}` : ""}<br/>
     ${contact.location ? `Delivery: ${escape(contact.location)}` : ""}</p>
     ${contact.notes ? `<p><em>${escape(contact.notes)}</em></p>` : ""}
     <table style="border-collapse:collapse;margin-top:12px"><tbody>${rows}</tbody></table>
     <p style="margin-top:12px"><strong>Indicative subtotal (inc. GST): ${money(subtotal)}</strong><br/>
-    <span style="color:#666">Prices are indicative RRP — confirm freight and final pricing.</span></p>
+    <span style="color:#666">Prices are indicative RRP. Confirm freight and final pricing.</span></p>
   `;
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -109,7 +109,7 @@ async function sendEmail(
       from,
       to: [to],
       reply_to: contact.email,
-      subject: `Quote request — ${contact.name}${contact.company ? ` (${contact.company})` : ""}`,
+      subject: `Quote request: ${contact.name}${contact.company ? ` (${contact.company})` : ""}`,
       html,
     }),
   });

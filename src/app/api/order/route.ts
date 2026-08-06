@@ -32,8 +32,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Order creation is not enabled" }, { status: 503 });
   }
 
-  // Re-price on the server.
-  const { lines, total, hasPoa } = await resolveOrderLines(items);
+  // Re-price on the server. By this point the customer has already confirmed
+  // payment client-side, so a repricing failure means money may be captured —
+  // surface a reconciliation message rather than a bare "invalid cart".
+  let lines, total, hasPoa;
+  try {
+    ({ lines, total, hasPoa } = await resolveOrderLines(items));
+  } catch (e) {
+    console.error("[order] repricing failed after payment", e);
+    return NextResponse.json(
+      { ok: false, error: "Payment received, but we couldn't record the order. Our team will follow up." },
+      { status: 500 }
+    );
+  }
   if (lines.length === 0 || total <= 0 || hasPoa) {
     return NextResponse.json({ ok: false, error: "Invalid cart" }, { status: 422 });
   }
