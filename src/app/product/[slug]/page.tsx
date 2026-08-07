@@ -153,7 +153,7 @@ export default async function ProductPage({
 
         <div>
           {cat && (
-            <p className="font-mono text-xs tracking-widest text-accent uppercase">{cat.name}</p>
+            <p className="font-mono text-xs tracking-widest text-accent-600 uppercase">{cat.name}</p>
           )}
           <h1 className="mt-3 text-3xl lg:text-4xl font-bold">{product.name}</h1>
 

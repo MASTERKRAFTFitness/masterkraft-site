@@ -61,7 +61,7 @@ export default function ContactForm() {
         <input name="phone" aria-label="Phone" placeholder="Phone" className={fieldClass} />
       </div>
       <input name="company" aria-label="Company / gym name" placeholder="Company / gym name" className={fieldClass} />
-      <select name="topic" className={fieldClass} defaultValue="">
+      <select name="topic" aria-label="Enquiry topic" className={fieldClass} defaultValue="">
         <option value="" disabled>
           I&apos;m enquiring about…
         </option>

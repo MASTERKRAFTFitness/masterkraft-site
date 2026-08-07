@@ -25,7 +25,7 @@ export default function NewsletterForm() {
   }
 
   if (done) {
-    return <p className="font-display uppercase tracking-wide text-accent">You&apos;re subscribed. Welcome aboard.</p>;
+    return <p className="font-display uppercase tracking-wide text-accent-300">You&apos;re subscribed. Welcome aboard.</p>;
   }
 
   return (

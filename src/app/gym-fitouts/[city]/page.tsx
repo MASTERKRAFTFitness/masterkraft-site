@@ -98,7 +98,7 @@ export default async function LocationPage({
             ))}
           </div>
 
-          <h2 className="mt-12 text-sm font-mono tracking-widest uppercase text-accent">
+          <h2 className="mt-12 text-sm font-mono tracking-widest uppercase text-accent-600">
             What we deliver
           </h2>
           <ul className="mt-5 grid sm:grid-cols-2 gap-x-8 gap-y-3">
@@ -112,7 +112,7 @@ export default async function LocationPage({
 
           {loc.project && (
             <div className="mt-12 border border-line p-6 sm:p-7">
-              <p className="font-mono text-[11px] tracking-widest uppercase text-accent">
+              <p className="font-mono text-[11px] tracking-widest uppercase text-accent-600">
                 Recent project near you
               </p>
               <h3 className="mt-2 text-xl font-bold">{loc.project.name}</h3>
@@ -129,7 +129,7 @@ export default async function LocationPage({
 
         <aside className="lg:sticky lg:top-28 self-start space-y-8">
           <div className="bg-cloud border border-line p-6">
-            <h2 className="font-mono text-xs tracking-widest uppercase text-accent">
+            <h2 className="font-mono text-xs tracking-widest uppercase text-accent-600">
               Delivery to {loc.city}
             </h2>
             <p className="mt-3 text-ash leading-relaxed">{loc.delivery}</p>

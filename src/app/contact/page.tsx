@@ -27,13 +27,13 @@ export default function ContactPage() {
 
         <aside className="space-y-8">
           <div>
-            <h3 className="font-mono text-xs tracking-widest text-accent uppercase">Phone</h3>
+            <h3 className="font-mono text-xs tracking-widest text-accent-600 uppercase">Phone</h3>
             <a href="tel:+61390449575" className="mt-2 block text-lg hover:text-accent-600 transition-colors">
               03 9044 9575
             </a>
           </div>
           <div>
-            <h3 className="font-mono text-xs tracking-widest text-accent uppercase">Wholesale & Distribution</h3>
+            <h3 className="font-mono text-xs tracking-widest text-accent-600 uppercase">Wholesale & Distribution</h3>
             <p className="mt-2 text-ash leading-relaxed">
               Existing partners can sign in to the{" "}
               <a href={portalLoginHref} className="underline decoration-accent-600 underline-offset-2">
