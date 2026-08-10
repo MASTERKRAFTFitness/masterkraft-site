@@ -24,9 +24,10 @@ This is the real gate on go-live; everything else is quick once decided.
 - [x] **Checkout hardening done + verified** (2026-08-10): order idempotency,
       cart-lock/snapshot during payment, free-shipping/total guard, legible Stripe
       errors, post-payment confirmation-screen fix.
-- [ ] **Michael:** Resend API key → `RESEND_API_KEY` (quote-request emails; forms
-      already post to HubSpot). Until this lands, the "Request a Quote" flow emails
-      nothing (it still posts to HubSpot, so leads aren't lost).
+- [x] **Resend live (2026-08-10):** `RESEND_API_KEY` + `QUOTE_FROM_EMAIL`
+      (`quotes@masterkraft.com`) + `QUOTE_TO_EMAIL` (`steve@masterkraft.com`) set on
+      staging; verified a quote submission emails Steve (`email:"sent"`). Domain
+      `masterkraft.com` verified in Resend (SPF/DKIM/MX; DMARC optional, still open).
 - [ ] **Michael:** GA4 Measurement ID (`G-…`) → `NEXT_PUBLIC_GA_ID` (analytics,
       already consent-gated).
 
