@@ -7,6 +7,9 @@ import { getProductById, getVariation } from "@/lib/woocommerce";
 import { getUnleashedMap, enrich } from "@/lib/unleashed";
 
 const STORE = process.env.WC_STORE_URL;
+// The store has GST (10%) enabled and adds it on top of submitted line totals.
+// Our unitPrice is GST-INCLUSIVE, so we divide it back out before submitting.
+const GST = 1.1;
 
 export type CartRef = { productId: number; variationId?: number; quantity: number };
 
@@ -100,14 +103,16 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
   if (!ordersEnabled()) throw new Error("WC order creation is disabled (WC_WRITE_ENABLED)");
 
   const line_items = input.lines.map((l) => {
-    const lineTotal = (l.unitPrice * l.quantity).toFixed(2);
+    // Submit the EX-GST amount: the store re-adds 10% GST, landing back on the
+    // GST-inclusive price we actually charged, and records a correct GST line on
+    // the order. Submitting the inclusive price here would double-count GST.
+    const lineTotalExGst = ((l.unitPrice * l.quantity) / GST).toFixed(2);
     return {
       product_id: l.productId,
       ...(l.variationId ? { variation_id: l.variationId } : {}),
       quantity: l.quantity,
-      // Explicit prices → WooCommerce should use these, not the (broken) product price.
-      subtotal: lineTotal,
-      total: lineTotal,
+      subtotal: lineTotalExGst,
+      total: lineTotalExGst,
     };
   });
 
@@ -117,7 +122,6 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
     set_paid: true,
     status: "processing",
     currency: "AUD",
-    prices_include_tax: true,
     billing: input.billing,
     shipping: input.shipping ?? input.billing,
     line_items,
