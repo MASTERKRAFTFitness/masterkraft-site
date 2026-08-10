@@ -70,5 +70,6 @@ hardening items (order idempotency, cart-lock during payment, free-shipping-on-c
   product/contact/error/404/city templates; contact form label. A11y ~89→~96.
 - **Staging live** at `web.test.masterkraft.com` (noindex, all above deployed).
 - **Pre-launch route sweep**: all 25 key routes 200, unknown URLs correctly 404.
-- **Version control**: local git (16 commits); remote set to
-  `MASTERKRAFTFitness/masterkraft-site` (push pending Michael's PAT).
+- **Version control**: pushed to `MASTERKRAFTFitness/masterkraft-site` (main).
+  First push needed `http.postBuffer` raised (HTTP 400 otherwise). Note: the
+  website deploys via the Vercel CLI, not via git push.
