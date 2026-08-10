@@ -25,6 +25,11 @@ type CartContextType = {
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
+  // Locked while a payment is in flight — the cart the customer is paying for
+  // must not change under them (it's already priced into the PaymentIntent).
+  locked: boolean;
+  lock: () => void;
+  unlock: () => void;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -34,6 +39,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -53,6 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<CartContextType>(() => {
     const add: CartContextType["add"] = (item, qty = 1) => {
+      if (locked) return;
       setItems((prev) => {
         const existing = prev.find((i) => i.id === item.id);
         if (existing) {
@@ -63,16 +70,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setDrawerOpen(true); // slide the mini-cart open on add
     };
 
-    const setQty: CartContextType["setQty"] = (id, qty) =>
+    const setQty: CartContextType["setQty"] = (id, qty) => {
+      if (locked) return;
       setItems((prev) =>
         qty <= 0
           ? prev.filter((i) => i.id !== id)
           : prev.map((i) => (i.id === id ? { ...i, qty } : i))
       );
+    };
 
-    const remove: CartContextType["remove"] = (id) =>
+    const remove: CartContextType["remove"] = (id) => {
+      if (locked) return;
       setItems((prev) => prev.filter((i) => i.id !== id));
+    };
 
+    // clear() is intentionally NOT lock-guarded — the post-payment success path
+    // empties the cart while it's still locked.
     const clear = () => setItems([]);
 
     const count = items.reduce((n, i) => n + i.qty, 0);
@@ -90,8 +103,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       drawerOpen,
       openDrawer: () => setDrawerOpen(true),
       closeDrawer: () => setDrawerOpen(false),
+      locked,
+      lock: () => setLocked(true),
+      unlock: () => setLocked(false),
     };
-  }, [items, ready, drawerOpen]);
+  }, [items, ready, drawerOpen, locked]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

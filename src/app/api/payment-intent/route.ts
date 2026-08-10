@@ -36,12 +36,23 @@ export async function POST(request: Request) {
     );
   }
 
-  const intent = await stripe.paymentIntents.create({
-    amount: Math.round(total * 100), // cents
-    currency: "aud",
-    automatic_payment_methods: { enabled: true },
-    metadata: { source: "masterkraft-site", line_count: String(lines.length) },
-  });
+  // A misconfigured/rejected Stripe key throws here. Catch it so the client gets
+  // a legible error instead of a bare 500 (which is what masked a bad key earlier).
+  let intent;
+  try {
+    intent = await stripe.paymentIntents.create({
+      amount: Math.round(total * 100), // cents
+      currency: "aud",
+      automatic_payment_methods: { enabled: true },
+      metadata: { source: "masterkraft-site", line_count: String(lines.length) },
+    });
+  } catch (e) {
+    console.error("[payment-intent] Stripe create failed", e);
+    return NextResponse.json(
+      { ok: false, error: "We couldn't start the payment. Please try again shortly." },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json({ ok: true, clientSecret: intent.client_secret, amount: total });
 }

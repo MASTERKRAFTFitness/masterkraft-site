@@ -80,6 +80,9 @@ export type CreateOrderInput = {
   lines: OrderLine[];
   paymentIntentId?: string;
   customerNote?: string;
+  // The GST-inclusive amount the card was actually charged (the PaymentIntent
+  // total). Used to sanity-check that WooCommerce computed the same order total.
+  chargedTotal?: number;
 };
 
 export type WooOrderResult = {
@@ -118,6 +121,8 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
     billing: input.billing,
     shipping: input.shipping ?? input.billing,
     line_items,
+    // Shipping is always free on card orders — send it explicitly so WooCommerce
+    // never computes and adds a shipping cost the customer wasn't charged for.
     shipping_lines: [
       { method_id: "free_shipping", method_title: "Free shipping", total: "0.00" },
     ],
@@ -142,5 +147,20 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
     throw new Error(`WC order create ${res.status}: ${text.slice(0, 300)}`);
   }
   const order = (await res.json()) as WooOrderResult;
+
+  // Reconciliation guard: WooCommerce recomputes the order total from its own
+  // tax/shipping config. If that differs from what Stripe actually charged, the
+  // customer paid a different amount than the order records — log it loudly so
+  // it can be caught, without failing (the payment already went through).
+  if (typeof input.chargedTotal === "number") {
+    const wcCents = Math.round(parseFloat(order.total) * 100);
+    const chargedCents = Math.round(input.chargedTotal * 100);
+    if (Number.isFinite(wcCents) && wcCents !== chargedCents) {
+      console.warn(
+        `[order] total mismatch: charged ${chargedCents}c but WC order ${order.id} totals ${wcCents}c`
+      );
+    }
+  }
+
   return { id: order.id, number: order.number, status: order.status, total: order.total };
 }

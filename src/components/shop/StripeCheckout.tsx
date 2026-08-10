@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
@@ -34,10 +34,16 @@ function refsFrom(items: CartItem[]) {
   }));
 }
 
-export default function StripeCheckout() {
-  const { items, subtotal } = useCart();
+type OrderRef = { productId: number; variationId?: number; quantity: number };
+
+export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: string) => void }) {
+  const { items, subtotal, lock, unlock } = useCart();
   const [phase, setPhase] = useState<"details" | "payment">("details");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Snapshot of the cart taken when the PaymentIntent was created. The order is
+  // created from THIS, not the live cart, so nothing the customer does mid-payment
+  // can desync what they pay from what the order records.
+  const [orderRefs, setOrderRefs] = useState<OrderRef[]>([]);
   // The authoritative total the PaymentIntent was created for (server-repriced).
   // This is what Stripe actually charges — always display THIS, never the cart
   // subtotal, which can be stale relative to live Unleashed pricing.
@@ -45,6 +51,10 @@ export default function StripeCheckout() {
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Safety net: never leave the cart locked if the customer navigates away
+  // mid-payment (unmount) without going back or completing.
+  useEffect(() => unlock, [unlock]);
 
   async function startPayment(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,18 +73,21 @@ export default function StripeCheckout() {
       postcode: String(f.get("postcode") ?? ""),
       country: "AU",
     };
+    const refs = refsFrom(items);
     try {
       const res = await fetch("/api/payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: refsFrom(items) }),
+        body: JSON.stringify({ items: refs }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
       setBilling(b);
+      setOrderRefs(refs);
       setClientSecret(data.clientSecret);
       setServerTotal(typeof data.amount === "number" ? data.amount : null);
       setPhase("payment");
+      lock(); // freeze the cart while this payment is in flight
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -124,10 +137,14 @@ export default function StripeCheckout() {
           >
             <PayForm
               billing={billing}
-              items={items}
+              orderRefs={orderRefs}
               subtotal={subtotal}
               serverTotal={serverTotal}
-              onBack={() => setPhase("details")}
+              onPaid={onPaid}
+              onBack={() => {
+                unlock();
+                setPhase("details");
+              }}
             />
           </Elements>
         )}
@@ -166,15 +183,17 @@ export default function StripeCheckout() {
 
 function PayForm({
   billing,
-  items,
+  orderRefs,
   subtotal,
   serverTotal,
+  onPaid,
   onBack,
 }: {
   billing: Billing;
-  items: CartItem[];
+  orderRefs: OrderRef[];
   subtotal: number;
   serverTotal: number | null;
+  onPaid?: (orderNumber: string) => void;
   onBack: () => void;
 }) {
   const stripe = useStripe();
@@ -232,7 +251,7 @@ function PayForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: refsFrom(items),
+          items: orderRefs,
           billing,
           shipping: billing,
           paymentIntentId: paymentIntent?.id,
@@ -241,6 +260,10 @@ function PayForm({
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Order could not be recorded.");
       track("purchase", { currency: "AUD", value: charge, transaction_id: data.orderNumber });
+      // Hand the confirmation up to the page BEFORE clearing the cart: clearing
+      // flips the page's canPay gate and unmounts this component, so the page
+      // must own the "order confirmed" screen for it to survive.
+      onPaid?.(String(data.orderNumber));
       clear();
       setDone({ number: data.orderNumber });
     } catch (err) {

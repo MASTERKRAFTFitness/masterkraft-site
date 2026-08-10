@@ -32,6 +32,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Order creation is not enabled" }, { status: 503 });
   }
 
+  // Verify payment first — we need the PaymentIntent both to authorise the order
+  // and to enforce idempotency below.
+  if (!stripe || !paymentIntentId) {
+    return NextResponse.json({ ok: false, error: "Payment not verified" }, { status: 402 });
+  }
+  let intent;
+  try {
+    intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+  } catch (e) {
+    console.error("[order] PaymentIntent retrieve failed", e);
+    return NextResponse.json({ ok: false, error: "Payment not verified" }, { status: 402 });
+  }
+  if (intent.status !== "succeeded") {
+    return NextResponse.json({ ok: false, error: "Payment not completed" }, { status: 402 });
+  }
+
+  // Idempotency: if we already created an order for this PaymentIntent, return it
+  // instead of creating a duplicate. Guards against retries and double-submits,
+  // where the same succeeded payment would otherwise mint a second WC order.
+  if (intent.metadata?.wc_order_id) {
+    return NextResponse.json({
+      ok: true,
+      orderId: Number(intent.metadata.wc_order_id),
+      orderNumber: intent.metadata.wc_order_number || intent.metadata.wc_order_id,
+      idempotent: true,
+    });
+  }
+
   // Re-price on the server. By this point the customer has already confirmed
   // payment client-side, so a repricing failure means money may be captured —
   // surface a reconciliation message rather than a bare "invalid cart".
@@ -49,21 +77,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid cart" }, { status: 422 });
   }
 
-  // Verify payment before creating the order.
-  if (!stripe || !paymentIntentId) {
-    return NextResponse.json({ ok: false, error: "Payment not verified" }, { status: 402 });
-  }
-  const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-  if (intent.status !== "succeeded") {
-    return NextResponse.json({ ok: false, error: "Payment not completed" }, { status: 402 });
-  }
   if (intent.amount_received !== Math.round(total * 100) || intent.currency !== "aud") {
     return NextResponse.json({ ok: false, error: "Payment amount mismatch" }, { status: 409 });
   }
 
+  let order;
   try {
-    const order = await createWooOrder({ billing, shipping, lines, paymentIntentId, customerNote });
-    return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.number });
+    order = await createWooOrder({ billing, shipping, lines, paymentIntentId, customerNote, chargedTotal: total });
   } catch (e) {
     console.error("[order] create failed", e);
     // Payment succeeded but order failed — surface clearly so it can be reconciled.
@@ -72,4 +92,17 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // Record the order on the PaymentIntent so a retry short-circuits above rather
+  // than creating a duplicate. Best-effort: the order already exists, so never
+  // fail the response if this write doesn't land.
+  try {
+    await stripe.paymentIntents.update(paymentIntentId, {
+      metadata: { wc_order_id: String(order.id), wc_order_number: String(order.number) },
+    });
+  } catch (e) {
+    console.warn("[order] could not tag PaymentIntent with order id", e);
+  }
+
+  return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.number });
 }

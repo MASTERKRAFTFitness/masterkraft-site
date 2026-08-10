@@ -21,6 +21,9 @@ export default function CheckoutPage() {
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Card order number, once paid. Held at the page level so the confirmation
+  // survives the cart being cleared (which unmounts StripeCheckout).
+  const [paidOrder, setPaidOrder] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,13 +65,24 @@ export default function CheckoutPage() {
       <div className="bg-carbon text-white pt-32 pb-12">
         <div className="container-mk">
           <p className="font-mono text-xs tracking-widest text-accent uppercase mb-3">Checkout</p>
-          <h1 className="text-4xl lg:text-5xl font-bold">{canPay ? "Checkout" : "Request a Quote"}</h1>
+          <h1 className="text-4xl lg:text-5xl font-bold">{paidOrder || canPay ? "Checkout" : "Request a Quote"}</h1>
         </div>
       </div>
 
       <section className="container-mk py-16">
-        {canPay ? (
-          <StripeCheckout />
+        {paidOrder ? (
+          <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
+            <p className="font-display uppercase tracking-wide text-2xl">Order confirmed</p>
+            <p className="mt-3 text-ash">
+              Thanks, your order <strong>#{paidOrder}</strong> is in. You&apos;ll get a
+              confirmation email shortly.
+            </p>
+            <Link href="/all-equipment" className="btn btn-accent mt-8">
+              Keep Shopping
+            </Link>
+          </div>
+        ) : canPay ? (
+          <StripeCheckout onPaid={(num) => setPaidOrder(num)} />
         ) : done ? (
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
             <p className="font-display uppercase tracking-wide text-2xl">Quote requested</p>

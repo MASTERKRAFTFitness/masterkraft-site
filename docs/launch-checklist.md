@@ -20,6 +20,10 @@ This is the real gate on go-live; everything else is quick once decided.
       for the staging trial. → **Michael** sets `STRIPE_SECRET_KEY` +
       `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in Vercel (financial secret, not Claude's
       to handle).
+      - ⚠️ Staging was briefly wired with **live** Stripe keys (`pk_live`), which
+        would attempt real charges. For the staging checkout trial, use **test-mode**
+        keys (`pk_test_…` / `sk_test_…`) from the SAME Stripe account that will take
+        real payments. **Swap back to the live keys at go-live** (section 3).
 - [ ] **Michael:** Resend API key → `RESEND_API_KEY` (quote-request emails; forms
       already post to HubSpot).
 - [ ] **Michael:** GA4 Measurement ID (`G-…`) → `NEXT_PUBLIC_GA_ID` (analytics,
@@ -39,6 +43,8 @@ hardening items (order idempotency, cart-lock during payment, free-shipping-on-c
       domains if inline embed is wanted (otherwise the CTA-to-hosted-form works).
 
 ## 3. Go-live flip (Claude runs, once the above land)
+- [ ] **Swap Stripe back to live keys** (`pk_live` / `sk_live`) — staging runs on
+      test keys (see section 1). Real payments won't work until this is done.
 - [ ] Move WP store to subdomain + update `WC_STORE_URL` (see section 0).
 - [ ] Set `NEXT_PUBLIC_SITE_URL` = real domain; flip `NEXT_PUBLIC_ALLOW_INDEX=true`
       (turns on indexing + real robots/sitemap; canonicals stop pointing at vercel.app).
@@ -48,6 +54,14 @@ hardening items (order idempotency, cart-lock during payment, free-shipping-on-c
 ---
 
 ## Already done ✅ (2026-08-06)
+- **Checkout verified end-to-end (2026-08-10)** on staging with Stripe **test** keys:
+  PaymentIntent create → confirm (test card) → real WooCommerce order created
+  (#490099). Confirms server repricing + amount check + WC write key.
+- **Checkout hardening shipped + verified (2026-08-10):** legible Stripe-error
+  handling, order idempotency (PI-metadata guard, re-verified live: a repeat
+  /api/order returned the same order #490100, no duplicate), cart-lock + cart
+  snapshot during payment, free-shipping/total-match guard, and a fix for the
+  post-payment "Order confirmed" screen unmounting when the cart cleared.
 - Marketing + info/legal pages, the live shop, SEO (schema/canonicals/sitemap),
   cookie-gated GA4+HubSpot, forms wired to HubSpot.
 - **Checkout hardening** (charged-amount display bug + fail-closed repricing).
