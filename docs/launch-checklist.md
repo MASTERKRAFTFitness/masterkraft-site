@@ -56,6 +56,14 @@ This is the real gate on go-live; everything else is quick once decided.
 - **Checkout verified end-to-end (2026-08-10)** on staging with Stripe **test** keys:
   PaymentIntent create → confirm (test card) → real WooCommerce order created
   (#490099). Confirms server repricing + amount check + WC write key.
+- **GST double-count bug fixed + verified (2026-08-10):** the store adds 10% GST
+  on top of submitted line totals, so sending our GST-inclusive price recorded an
+  order total 10% high (charged $779 → order $856.90). Fix: submit ex-GST line
+  prices; WC re-adds GST → order total equals the charge, with a correct GST line.
+  Verified: order #490102 total $779.00 = charged $779.00 (GST $70.82). Caught by
+  the total-match guard + the variable-product test.
+- **Variable-product checkout verified (2026-08-10):** order #490101, variation SKU
+  resolved correctly.
 - **Checkout hardening shipped + verified (2026-08-10):** legible Stripe-error
   handling, order idempotency (PI-metadata guard, re-verified live: a repeat
   /api/order returned the same order #490100, no duplicate), cart-lock + cart
