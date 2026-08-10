@@ -14,22 +14,21 @@ Vercel site, that would kill the API it depends on.
 This is the real gate on go-live; everything else is quick once decided.
 
 ## 1. Keys to switch on the shop (client-supplied)
-- [ ] **Paul:** WooCommerce REST API key with **Read/Write** (we have read-only).
-      → then **Claude:** set `WC_CONSUMER_KEY`/`SECRET`, flip `WC_WRITE_ENABLED=true`.
-- [ ] **Steve/Gaetana/Paul:** Stripe keys (publishable + secret). Test-mode first
-      for the staging trial. → **Michael** sets `STRIPE_SECRET_KEY` +
-      `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in Vercel (financial secret, not Claude's
-      to handle).
+- [x] **WooCommerce Read/Write key** set, `WC_WRITE_ENABLED=true` — verified by a
+      real order created on staging (2026-08-10).
+- [x] **Stripe keys (staging):** sandbox **test-mode** keys in Vercel, checkout
+      verified end-to-end (2026-08-10).
       - ⚠️ Staging was briefly wired with **live** Stripe keys (`pk_live`), which
-        would attempt real charges. For the staging checkout trial, use **test-mode**
-        keys (`pk_test_…` / `sk_test_…`) from the SAME Stripe account that will take
-        real payments. **Swap back to the live keys at go-live** (section 3).
+        would attempt real charges. Staging now runs **test-mode** keys from the
+        MasterKraft sandbox. **Swap back to the live keys at go-live** (section 3).
+- [x] **Checkout hardening done + verified** (2026-08-10): order idempotency,
+      cart-lock/snapshot during payment, free-shipping/total guard, legible Stripe
+      errors, post-payment confirmation-screen fix.
 - [ ] **Michael:** Resend API key → `RESEND_API_KEY` (quote-request emails; forms
-      already post to HubSpot).
+      already post to HubSpot). Until this lands, the "Request a Quote" flow emails
+      nothing (it still posts to HubSpot, so leads aren't lost).
 - [ ] **Michael:** GA4 Measurement ID (`G-…`) → `NEXT_PUBLIC_GA_ID` (analytics,
       already consent-gated).
-Once Stripe + write-WC land → **Claude:** verify checkout end-to-end + finish the 3
-hardening items (order idempotency, cart-lock during payment, free-shipping-on-card).
 
 ## 2. Client sign-offs / content
 - [ ] **Michael/Steve:** confirm the ABN — live Terms says `62 623 086 064`; the
