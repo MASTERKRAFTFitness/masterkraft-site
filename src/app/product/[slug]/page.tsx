@@ -6,6 +6,7 @@ import { getProductBySlug, getProductVariations, getProductsByCategory } from "@
 import { getUnleashedMap, enrich, enrichCard, lookupBySku } from "@/lib/unleashed";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
+import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site";
@@ -149,6 +150,7 @@ export default async function ProductPage({
       </div>
 
       <section className="container-mk py-14 grid lg:grid-cols-2 gap-12 lg:gap-16">
+        <ViewItemTracker id={product.id} name={product.name} price={enriched.priceValue} />
         <ProductGallery images={product.images ?? []} name={product.name} />
 
         <div>

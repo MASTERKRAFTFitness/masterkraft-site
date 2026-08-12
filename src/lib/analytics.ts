@@ -23,3 +23,27 @@ export function trackAddToCart(item: { id: number; name: string; price: number }
     items: [{ item_id: item.id, item_name: item.name, price: item.price, quantity: qty }],
   });
 }
+
+export function trackViewItem(item: { id: number; name: string; price: number }) {
+  track("view_item", {
+    currency: "AUD",
+    value: item.price,
+    items: [{ item_id: item.id, item_name: item.name, price: item.price }],
+  });
+}
+
+export function trackBeginCheckout(
+  items: { id: number; name: string; price: number; qty: number }[],
+  value: number,
+) {
+  track("begin_checkout", {
+    currency: "AUD",
+    value,
+    items: items.map((i) => ({
+      item_id: i.id,
+      item_name: i.name,
+      price: i.price,
+      quantity: i.qty,
+    })),
+  });
+}

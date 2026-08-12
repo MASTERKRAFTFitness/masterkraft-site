@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
-import { track } from "@/lib/analytics";
+import { track, trackBeginCheckout } from "@/lib/analytics";
 import { paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout from "@/components/shop/StripeCheckout";
 
@@ -24,6 +24,17 @@ export default function CheckoutPage() {
   // Card order number, once paid. Held at the page level so the confirmation
   // survives the cart being cleared (which unmounts StripeCheckout).
   const [paidOrder, setPaidOrder] = useState<string | null>(null);
+
+  // Fire GA4 `begin_checkout` once, when the cart has loaded with items.
+  const beganCheckout = useRef(false);
+  useEffect(() => {
+    if (beganCheckout.current || !ready || items.length === 0) return;
+    beganCheckout.current = true;
+    trackBeginCheckout(
+      items.map((i) => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+      subtotal,
+    );
+  }, [ready, items, subtotal]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
