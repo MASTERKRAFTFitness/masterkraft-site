@@ -39,6 +39,9 @@ export default function ProductCard({
       <h3 className="mt-4 text-sm font-semibold leading-snug group-hover:text-accent-600 transition-colors line-clamp-2">
         {product.name}
       </h3>
+      {product.sku && (
+        <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-ash">{product.sku}</p>
+      )}
       <div className="mt-1.5 flex items-baseline gap-2 font-mono text-sm">
         {enriched.compareAtLabel && (
           <span className="text-ash line-through">{enriched.compareAtLabel}</span>

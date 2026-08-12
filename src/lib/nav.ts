@@ -1,7 +1,9 @@
 // Central navigation + taxonomy config, mirroring masterkraft.com
 
-export type NavLink = { label: string; href: string };
+export type NavLink = { label: string; href: string; highlight?: boolean };
 
+// Equipment dropdown: All Equipment first, then alphabetical, Clearance last
+// (highlighted so it stands out).
 export const equipmentCategories: NavLink[] = [
   { label: "All Equipment", href: "/all-equipment" },
   { label: "Body Weight", href: "/equipment/body-weight" },
@@ -9,11 +11,11 @@ export const equipmentCategories: NavLink[] = [
   { label: "Equipment Storage", href: "/equipment/equipment-storage" },
   { label: "Flooring", href: "/equipment/flooring" },
   { label: "Mixed Implements", href: "/equipment/mixed-implements" },
+  { label: "Packages", href: "/equipment/packages" },
   { label: "Rigs & Racks", href: "/equipment/rigs-racks" },
   { label: "Strength", href: "/equipment/strength" },
   { label: "Weightlifting", href: "/equipment/weightlifting" },
-  { label: "Packages", href: "/equipment/packages" },
-  { label: "Clearance", href: "/equipment/clearance" },
+  { label: "Clearance", href: "/equipment/clearance", highlight: true },
 ];
 
 export const fitoutLinks: NavLink[] = [

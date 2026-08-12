@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
-import ProductCard from "@/components/shop/ProductCard";
+import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
 import PriceRangeFilter from "@/components/shop/PriceRangeFilter";
 import { categories, getCategory } from "@/lib/categories";
 import {
-  getProductsByCategory,
   getAllProductsByCategory,
   getCategoryChildren,
   type WcProduct,
@@ -33,13 +32,6 @@ export async function generateMetadata({
     alternates: { canonical: `/equipment/${c.slug}` },
   };
 }
-
-const WC_ORDER: Record<string, { orderby: string; order: "asc" | "desc" }> = {
-  featured: { orderby: "menu_order", order: "asc" },
-  "name-asc": { orderby: "title", order: "asc" },
-  "name-desc": { orderby: "title", order: "desc" },
-  newest: { orderby: "date", order: "desc" },
-};
 
 const PER_PAGE = 24;
 
@@ -72,12 +64,12 @@ export default async function CategoryPage({
   let failed = false;
 
   const priceSort = sort === "price-asc" || sort === "price-desc";
-  const needsFullFetch = priceSort || priceMin !== undefined || priceMax !== undefined;
 
   try {
-    if (needsFullFetch) {
-      // Fetch all, enrich (incl. variable "From"), then filter/sort on CORRECTED
-      // prices and paginate in-memory.
+    {
+      // Always fetch the full (M/N-filtered) category, enrich (incl. variable
+      // "From"), then filter/sort on CORRECTED prices and paginate in-memory.
+      // Full-fetch keeps product counts correct after the brand-SKU filter.
       const all = await getAllProductsByCategory(targetId);
       let enrichedAll = await Promise.all(
         all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
@@ -109,14 +101,6 @@ export default async function CategoryPage({
       total = enrichedAll.length;
       totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
       cards = enrichedAll.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-    } else {
-      const { orderby, order } = WC_ORDER[sort] ?? WC_ORDER.featured;
-      const res = await getProductsByCategory(targetId, { page, perPage: PER_PAGE, orderby, order });
-      total = res.total;
-      totalPages = res.totalPages;
-      cards = await Promise.all(
-        res.data.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
-      );
     }
   } catch {
     failed = true;
@@ -190,14 +174,7 @@ export default async function CategoryPage({
               <Fallback label={c.label} empty />
             ) : (
               <>
-                <p className="font-mono text-xs tracking-widest text-ash uppercase mb-8">
-                  {total} product{total === 1 ? "" : "s"}
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
-                  {cards.map(({ product, enriched }) => (
-                    <ProductCard key={product.id} product={product} enriched={enriched} />
-                  ))}
-                </div>
+                <ProductListing items={cards} total={total} />
 
                 {totalPages > 1 && (
                   <div className="mt-14 flex items-center justify-center gap-4 font-mono text-sm uppercase tracking-widest">

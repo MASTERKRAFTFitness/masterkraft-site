@@ -28,8 +28,10 @@ This is the real gate on go-live; everything else is quick once decided.
       (`quotes@masterkraft.com`) + `QUOTE_TO_EMAIL` (`steve@masterkraft.com`) set on
       staging; verified a quote submission emails Steve (`email:"sent"`). Domain
       `masterkraft.com` verified in Resend (SPF/DKIM/MX; DMARC optional, still open).
-- [ ] **Michael:** GA4 Measurement ID (`G-…`) → `NEXT_PUBLIC_GA_ID` (analytics,
-      already consent-gated).
+- [x] **GA4 live (2026-08-12):** `NEXT_PUBLIC_GA_ID=G-86MEH5QL99` set on the
+      Production scope + redeployed. Verified on prod: gtag loads after consent,
+      page_view + view_item transmit. Events wired: search / view_item /
+      add_to_cart / begin_checkout / generate_lead / purchase.
 
 ## 2. Client sign-offs / content
 - [ ] **Michael/Steve:** confirm the ABN — live Terms says `62 623 086 064`; the

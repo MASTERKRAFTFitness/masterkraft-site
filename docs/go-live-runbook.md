@@ -13,7 +13,7 @@ final card test. *Claude* = Vercel env + deploy + DNS records + verification.
 ## Preconditions (must all be true before starting)
 - [ ] Steve/Gaetana content + legal sign-off done; ABN confirmed.
 - [ ] Resend domain verified + `RESEND_API_KEY` + `QUOTE_FROM_EMAIL` set (quote email works on staging).
-- [ ] GA4 Measurement ID set (`NEXT_PUBLIC_GA_ID`).
+- [x] GA4 Measurement ID set (`NEXT_PUBLIC_GA_ID=G-86MEH5QL99`, Production, verified live 2026-08-12).
 - [ ] Stripe **live** keys available (not yet installed — step 3).
 - [ ] A maintenance window agreed (do it in a quiet trading period).
 

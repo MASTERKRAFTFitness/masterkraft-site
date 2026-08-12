@@ -11,8 +11,8 @@ export const categories: Category[] = [
   { slug: "rigs-racks", label: "Rigs & Racks", image: "/category/rigs-racks.jpg", blurb: "Power racks, rigs and squat stands engineered to last.", wcId: 231 },
   { slug: "strength", label: "Strength", image: "/category/strength.jpg", blurb: "Plate-loaded and selectorised strength machines.", wcId: 52 },
   { slug: "weightlifting", label: "Weightlifting", image: "/category/weightlifting.jpg", blurb: "Barbells, bumper plates, benches and platforms.", wcId: 53 },
-  { slug: "packages", label: "Packages", image: "/category/rigs-racks.jpg", blurb: "Curated equipment packages for a complete setup.", wcId: 275 },
-  { slug: "clearance", label: "Clearance", image: "/category/strength.jpg", blurb: "Ex-display and end-of-line equipment at reduced prices.", wcId: 356 },
+  { slug: "packages", label: "Packages", image: "/category/packages.jpg", blurb: "Curated equipment packages for a complete setup.", wcId: 275 },
+  { slug: "clearance", label: "Clearance", image: "/category/clearance.jpg", blurb: "Ex-display and end-of-line equipment at reduced prices.", wcId: 356 },
 ];
 
 export function getCategory(slug: string) {

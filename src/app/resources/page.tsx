@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 
@@ -13,9 +14,10 @@ export const metadata: Metadata = {
 // a customer can request them rather than hitting a dead download.
 type Item = { name: string; href?: string };
 
-const groups: { category: string; items: Item[] }[] = [
+const groups: { category: string; image: string; items: Item[] }[] = [
   {
     category: "Flooring",
+    image: "/category/flooring.jpg",
     items: [
       { name: "Rubber Tile Installation Guide", href: "/manuals/rubber-tile-installation-guide.pdf" },
       { name: "Flooring Technical Brochure", href: "/manuals/flooring-technical-brochure.pdf" },
@@ -23,6 +25,7 @@ const groups: { category: string; items: Item[] }[] = [
   },
   {
     category: "Cardio - Ski & Row",
+    image: "/category/cardio.jpg",
     items: [
       { name: "Ski Trainer Elite - Owner's Manual" },
       { name: "Ski Trainer Elite - Console Manual" },
@@ -34,6 +37,7 @@ const groups: { category: string; items: Item[] }[] = [
   },
   {
     category: "Cardio - Bikes",
+    image: "/category/cardio.jpg",
     items: [
       { name: "Air Bike Elite - Owner's Manual" },
       { name: "Air Bike Pro - Owner's Manual" },
@@ -44,6 +48,7 @@ const groups: { category: string; items: Item[] }[] = [
   },
   {
     category: "Cardio - Treadmills",
+    image: "/category/cardio.jpg",
     items: [
       { name: "Curved Treadmill Pro - Assembly Guide", href: "/manuals/curved-treadmill-pro-assembly-guide.pdf" },
       { name: "Curved Treadmill Pro - Console Manual" },
@@ -76,9 +81,10 @@ export default function ResourcesPage() {
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-3 border border-line px-4 py-3.5 hover:border-accent hover:text-accent-600 transition-colors group"
+                        className="flex items-center gap-3 border border-line p-3 hover:border-accent hover:text-accent-600 transition-colors group"
                       >
-                        <span className="text-sm">{item.name}</span>
+                        <Image src={g.image} alt="" width={48} height={48} className="w-12 h-12 object-cover shrink-0" />
+                        <span className="text-sm flex-1">{item.name}</span>
                         <DownloadIcon />
                       </a>
                     </li>
@@ -86,10 +92,11 @@ export default function ResourcesPage() {
                     <li key={item.name}>
                       <a
                         href="/contact"
-                        className="flex items-center justify-between gap-3 border border-line px-4 py-3.5 hover:border-accent transition-colors group"
+                        className="flex items-center gap-3 border border-line p-3 hover:border-accent transition-colors group"
                         title="Request this manual"
                       >
-                        <span className="text-sm text-ash group-hover:text-ink transition-colors">{item.name}</span>
+                        <Image src={g.image} alt="" width={48} height={48} className="w-12 h-12 object-cover shrink-0 opacity-80" />
+                        <span className="text-sm flex-1 text-ash group-hover:text-ink transition-colors">{item.name}</span>
                         <span className="shrink-0 font-mono text-[10px] tracking-widest uppercase text-ash group-hover:text-accent-600">
                           Request →
                         </span>

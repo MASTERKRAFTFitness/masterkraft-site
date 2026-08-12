@@ -15,7 +15,6 @@ type MenuKey = "equipment" | "fitouts" | null;
 
 const primaryNav = [
   { label: "Equipment", href: "/all-equipment", menu: "equipment" as const },
-  { label: "Clearance", href: "/equipment/clearance" },
   { label: "Fitouts", href: "/fitout", menu: "fitouts" as const },
   { label: "Resources", href: "/resources" },
   { label: "Our Story", href: "/our-story" },
@@ -24,7 +23,6 @@ const primaryNav = [
 
 const NAV_MATCH: Record<string, string[]> = {
   "/all-equipment": ["/all-equipment", "/equipment/", "/product/", "/search"],
-  "/equipment/clearance": ["/equipment/clearance"],
   "/fitout": ["/fitout"],
   "/resources": ["/resources"],
   "/our-story": ["/our-story"],
@@ -34,7 +32,6 @@ const NAV_MATCH: Record<string, string[]> = {
 function useIsActive() {
   const pathname = usePathname();
   return (href: string) => {
-    if (href === "/all-equipment" && pathname.startsWith("/equipment/clearance")) return false;
     return (NAV_MATCH[href] ?? [href]).some((m) =>
       m.endsWith("/") ? pathname.startsWith(m) : pathname === m || pathname.startsWith(m + "/") || pathname === m
     );
@@ -228,7 +225,7 @@ function MegaPanel({
   columns,
   onNavigate,
 }: {
-  columns: { label: string; href: string }[];
+  columns: { label: string; href: string; highlight?: boolean }[];
   onNavigate: () => void;
 }) {
   return (
@@ -237,7 +234,13 @@ function MegaPanel({
         <ul className="grid grid-cols-3 gap-x-10 gap-y-3">
           {columns.map((c) => (
             <li key={c.href}>
-              <Link href={c.href} onClick={onNavigate} className="nav-link text-ash hover:text-ink">
+              <Link
+                href={c.href}
+                onClick={onNavigate}
+                className={`nav-link ${
+                  c.highlight ? "text-accent-600 font-semibold hover:text-accent" : "text-ash hover:text-ink"
+                }`}
+              >
                 {c.label}
               </Link>
             </li>

@@ -53,13 +53,37 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Finance",
     subtitle: "Flexible ways to fund your equipment and fit-out.",
     intro:
-      "Spread the cost of your equipment or fit-out with finance options designed for gyms, studios and clinics.",
+      "MasterKraft has researched the best financiers for fitness equipment and partnered with those that offer a range of flexible finance options, enabling you to get your equipment faster and at the most competitive finance rates. If you need assistance, contact us on 03 9044 9575 and we will provide advice on a tailored finance solution.",
     sections: [
       {
-        heading: "Business finance & leasing",
+        heading: "Afterpay (coming soon)",
         body: [
-          "We can connect you with finance and leasing partners so you can equip your space now and pay over time - preserving cash flow while you build your operation.",
-          "Talk to us about the right structure for your project, from a single purchase to a multi-site rollout.",
+          "Lending limit: up to $2,000. Loan type: personal. Interest terms: interest free. Repayments: four equal instalments paid fortnightly. Establishment fee: none. Approval: instant. Use online and in-store.",
+          "Train hard now, pay later with Afterpay for purchases up to $2,000.",
+        ],
+      },
+      {
+        heading: "Zip Money (coming soon)",
+        body: [
+          "Lending limit: up to $8,000. Loan type: personal. Interest terms: interest free for the first 3 months. Repayments: weekly, fortnightly or monthly instalments. Establishment fee: one-off account establishment fee. Approval: 3 minute approval. Use online and in-store.",
+          "Own it now, pay later. Zip Money is a smarter way to pay for larger purchases over time, on your terms. Every time you make a purchase Zip adds it to your account, then at the start of the month sends you a statement of what you spent and paid. Pay it back in full at the end of the month, or pay over time from as little as $40 a month, interest free.",
+          "Account limit: over $1,000. Interest free period: 0% for 12 months. Establishment fee: $0 to $99. Minimum repayments: from $40/month. Account fee: $6/month, waived if you have no balance. See terms.",
+        ],
+      },
+      {
+        heading: "GRENKE (business leasing, over $75,000)",
+        body: [
+          "Lending limit: up to $75,000 low doc, and beyond. Leasing type: business (leasing). Repayments: monthly or quarterly, 1 to 5 years. Establishment fee: one-off account establishment fee. Approval: 20 minutes or less. Possibly tax deductible, with electronic signature.",
+          "MasterKraft has partnered with GRENKE to offer smarter finance for purchases up to $75,000 low doc and beyond. As a valued customer you can access market-leading rates; leasing with the option of no early termination fees or payout penalties; no monthly account keeping fees; several finance structures tailored to your business needs; and no-financials, low-doc options.",
+        ],
+      },
+      {
+        heading: "What is the process?",
+        body: [
+          "Obtain a quote from MasterKraft for your required gym and fitness equipment.",
+          "Contact us to apply today. The application is done over the phone in approximately 10 minutes.",
+          "Once approved, the paperwork is sent via DocuSign for signature.",
+          "Once signed, the equipment is released to you (pending availability).",
         ],
       },
       {

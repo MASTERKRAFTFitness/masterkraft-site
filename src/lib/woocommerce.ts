@@ -28,7 +28,97 @@ export type WcProduct = {
   description: string;
   images: WcImage[];
   categories: WcTerm[];
+  meta_data?: WcMeta[];
 };
+
+export type WcMeta = { key: string; value: unknown };
+
+// Structured product detail pulled from the store's ACF meta fields (the same
+// data the old site rendered: full overview, features, and a real spec table).
+export type ProductDetail = {
+  overviewShort?: string;
+  overviewDescription?: string;
+  features: string[];
+  specs: { label: string; value: string }[];
+  packageInclusions?: string;
+};
+
+// Only M/N-prefixed SKUs are MasterKraft's own products; the store also holds
+// other brands (REVL "R", "S", "A" …) that the site must not list.
+export const BRAND_SKU_RE = /^[MN]/i;
+export function isBrandSku(sku?: string): boolean {
+  return !!sku && BRAND_SKU_RE.test(sku.trim());
+}
+export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
+  return items.filter((i) => isBrandSku(i.sku));
+}
+
+const metaStr = (meta: WcMeta[] | undefined, key: string): string => {
+  const v = meta?.find((m) => m.key === key)?.value;
+  return typeof v === "string" ? v.trim() : v != null ? String(v) : "";
+};
+
+// Parse the ACF meta bag into the overview / features / specs the product page
+// renders. Missing fields simply drop out (unknown is never shown as blank/0).
+export function parseProductDetail(p: WcProduct): ProductDetail {
+  const m = p.meta_data;
+  const features: string[] = [];
+  const count = parseInt(metaStr(m, "features"), 10);
+  const max = Number.isFinite(count) && count > 0 ? count : 6;
+  for (let i = 0; i < max; i++) {
+    const t = metaStr(m, `features_${i}_text`);
+    if (t) features.push(t);
+  }
+
+  const specs: { label: string; value: string }[] = [];
+  const push = (label: string, value: string, unit = "") => {
+    const v = value.trim();
+    if (v) specs.push({ label, value: unit ? `${v}${unit}` : v });
+  };
+  const dims = (l: string, w: string, h: string, d: string) => {
+    const parts = [
+      l && `L ${l}`,
+      w && `W ${w}`,
+      h && `H ${h}`,
+      d && `D ${d}`,
+    ].filter(Boolean);
+    return parts.length ? `${parts.join(" × ")} mm` : "";
+  };
+  push(
+    "Assembled size",
+    dims(
+      metaStr(m, "assembled_size_length"),
+      metaStr(m, "assembled_size_width"),
+      metaStr(m, "assembled_size_height"),
+      metaStr(m, "assembled_size_depth"),
+    ),
+  );
+  push("Colour", metaStr(m, "colour"));
+  push("Material", metaStr(m, "material"));
+  push("Net weight", metaStr(m, "net_weight"), "kg");
+  push("Gross weight", metaStr(m, "gross_weight"), "kg");
+  push(
+    "Packing size",
+    dims(
+      metaStr(m, "packing_size_length"),
+      metaStr(m, "packing_size_width"),
+      metaStr(m, "packing_size_height"),
+      "",
+    ),
+  );
+  push("Warranty", metaStr(m, "warranty"));
+
+  const showPkg = metaStr(m, "show_package_inclusions");
+  const pkgText = metaStr(m, "package_inclusion_text");
+
+  return {
+    overviewShort: metaStr(m, "product_overview_short") || undefined,
+    overviewDescription: metaStr(m, "product_overview_description") || undefined,
+    features,
+    specs,
+    packageInclusions: showPkg === "1" && pkgText ? pkgText : undefined,
+  };
+}
 
 export type WcVariation = {
   id: number;
@@ -95,7 +185,8 @@ export async function getProductsByCategory(
   });
 }
 
-// Full category fetch (all pages) — used for price sorting on corrected prices.
+// Full category fetch (all pages), ordered by menu_order (the store's "featured"
+// order) and filtered to MasterKraft's own M/N SKUs.
 export async function getAllProductsByCategory(categoryId: number): Promise<WcProduct[]> {
   const out: WcProduct[] = [];
   for (let page = 1; page <= 6; page++) {
@@ -104,13 +195,35 @@ export async function getAllProductsByCategory(categoryId: number): Promise<WcPr
       per_page: 100,
       page,
       status: "publish",
+      orderby: "menu_order",
+      order: "asc",
       _fields: PRODUCT_FIELDS,
     });
     if (!data.length) break;
     out.push(...data);
     if (data.length < 100) break;
   }
-  return out;
+  return filterBrandSku(out);
+}
+
+// The full catalogue (all categories), ordered by menu_order and filtered to
+// MasterKraft's own M/N SKUs. Backs the "All Equipment" all-products landing.
+export async function getAllProducts(): Promise<WcProduct[]> {
+  const out: WcProduct[] = [];
+  for (let page = 1; page <= 8; page++) {
+    const { data } = await wcGet<WcProduct[]>("/products", {
+      per_page: 100,
+      page,
+      status: "publish",
+      orderby: "menu_order",
+      order: "asc",
+      _fields: PRODUCT_FIELDS,
+    });
+    if (!data.length) break;
+    out.push(...data.map(normalizeProduct));
+    if (data.length < 100) break;
+  }
+  return filterBrandSku(out);
 }
 
 export type WcCategoryChild = { id: number; slug: string; name: string; count: number };
@@ -135,8 +248,8 @@ export async function getCategoryChildren(parentId: number): Promise<WcCategoryC
     parent: parentId,
     per_page: 100,
     hide_empty: "true",
-    orderby: "count",
-    order: "desc",
+    orderby: "name",
+    order: "asc",
     _fields: "id,slug,name,count",
   });
   return data.map((c) => ({ ...c, name: decodeEntities(c.name) }));
@@ -146,13 +259,15 @@ export async function searchProducts(
   query: string,
   { page = 1, perPage = 24 }: { page?: number; perPage?: number } = {}
 ): Promise<FetchResult<WcProduct[]>> {
-  return wcGet<WcProduct[]>("/products", {
+  const res = await wcGet<WcProduct[]>("/products", {
     search: query,
     per_page: perPage,
     page,
     status: "publish",
     _fields: PRODUCT_FIELDS,
   });
+  const data = filterBrandSku(res.data);
+  return { data, total: data.length, totalPages: res.totalPages };
 }
 
 // WooCommerce returns some text fields (notably category names) HTML-encoded.
@@ -168,7 +283,8 @@ function normalizeProduct(p: WcProduct): WcProduct {
 export async function getProductBySlug(slug: string): Promise<WcProduct | null> {
   const { data } = await wcGet<WcProduct[]>("/products", {
     slug,
-    _fields: PRODUCT_FIELDS,
+    // meta_data carries the ACF overview/features/specs the product page renders.
+    _fields: `${PRODUCT_FIELDS},meta_data`,
   });
   return data[0] ? normalizeProduct(data[0]) : null;
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/shop/ProductGallery";
-import { getProductBySlug, getProductVariations, getProductsByCategory } from "@/lib/woocommerce";
+import { getProductBySlug, getProductVariations, getProductsByCategory, parseProductDetail, filterBrandSku } from "@/lib/woocommerce";
 import { getUnleashedMap, enrich, enrichCard, lookupBySku } from "@/lib/unleashed";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
@@ -43,6 +43,7 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const cat = product.categories?.[0];
+  const detail = parseProductDetail(product);
   const unleashed = await getUnleashedMap().catch(() => ({}));
   const enriched = enrich(product, unleashed);
   const inStock = enriched.inStock;
@@ -113,8 +114,8 @@ export default async function ProductPage({
   // Related products from the same category
   let related: { product: typeof product; enriched: Awaited<ReturnType<typeof enrichCard>> }[] = [];
   if (cat) {
-    const rel = await getProductsByCategory(cat.id, { perPage: 9 }).catch(() => null);
-    const others = (rel?.data ?? []).filter((p) => p.id !== product.id).slice(0, 4);
+    const rel = await getProductsByCategory(cat.id, { perPage: 24 }).catch(() => null);
+    const others = filterBrandSku(rel?.data ?? []).filter((p) => p.id !== product.id).slice(0, 4);
     related = await Promise.all(
       others.map(async (p) => ({ product: p, enriched: await enrichCard(p, unleashed) }))
     );
@@ -158,6 +159,12 @@ export default async function ProductPage({
             <p className="font-mono text-xs tracking-widest text-accent-600 uppercase">{cat.name}</p>
           )}
           <h1 className="mt-3 text-3xl lg:text-4xl font-bold">{product.name}</h1>
+
+          {product.sku && (
+            <p className="mt-2 font-mono text-xs uppercase tracking-widest text-ash">
+              Code: {product.sku}
+            </p>
+          )}
 
           {product.short_description && (
             <div
@@ -212,13 +219,52 @@ export default async function ProductPage({
         </div>
       </section>
 
-      {product.description && (
+      {(detail.overviewDescription || detail.features.length > 0 || product.description) && (
+        <section className="container-mk pb-14 max-w-3xl">
+          <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Product Overview</h2>
+          {detail.overviewDescription ? (
+            <p className="text-ash leading-relaxed mb-6">{detail.overviewDescription}</p>
+          ) : (
+            product.description && (
+              <div
+                className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_strong]:text-ink [&_img]:my-4"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            )
+          )}
+          {detail.features.length > 0 && (
+            <>
+              <h3 className="font-semibold text-ink mt-2 mb-3">Features</h3>
+              <ul className="list-disc pl-5 space-y-2 text-ash leading-relaxed">
+                {detail.features.map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
+      {detail.specs.length > 0 && (
         <section className="container-mk pb-20 max-w-3xl">
-          <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Description</h2>
-          <div
-            className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_strong]:text-ink [&_img]:my-4"
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
+          <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Specifications</h2>
+          <dl className="divide-y divide-line">
+            {detail.specs.map((s, i) => (
+              <div key={i} className="grid grid-cols-3 gap-4 py-3">
+                <dt className="font-mono text-xs uppercase tracking-widest text-ash">{s.label}</dt>
+                <dd className="col-span-2 text-ink leading-relaxed">{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {detail.packageInclusions && (
+            <div className="mt-8">
+              <h3 className="font-semibold text-ink mb-3">Package inclusions</h3>
+              <div
+                className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-3"
+                dangerouslySetInnerHTML={{ __html: detail.packageInclusions }}
+              />
+            </div>
+          )}
         </section>
       )}
 

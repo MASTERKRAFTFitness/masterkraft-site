@@ -39,5 +39,5 @@ export const stats = [
   { value: "12", label: "Countries", detail: "Global capability, local delivery" },
   { value: "229", label: "Sites fitted out", detail: "Gyms, clinics & studios" },
   { value: "72hr", label: "Service SLA", detail: "Response & resolution, in writing" },
-  { value: "Whole", label: "Fit-out scope", detail: "Equipment, flooring & storage" },
+  { value: "Complete", label: "Fit-out scope", detail: "Equipment, flooring & storage" },
 ];

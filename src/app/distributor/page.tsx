@@ -46,6 +46,52 @@ export default function DistributorPage() {
         </div>
       </section>
 
+      {/* A global opportunity */}
+      <section className="container-mk pb-4 max-w-3xl">
+        <h2 className="text-2xl lg:text-3xl font-bold">A global opportunity</h2>
+        <div className="mt-6 space-y-4 text-ash leading-relaxed">
+          <p>
+            Not surprisingly, people dedicated to self-improvement through fitness respond to premium
+            products. Little wonder that what began as an Australian enterprise is now operating on a
+            global scale.
+          </p>
+          <p>
+            As MasterKraft expands to meet demand, we need distribution agents to bridge the gap
+            between our manufacturers and our customers, both existing and potential, for the hundreds
+            of items we produce.
+          </p>
+          <p>
+            A passion for fitness, an understanding of international distribution, and a willingness to
+            venture into new markets are what we want in our global team. If you feel you are up for the
+            challenge, we would love to hear from you. This opportunity is open to individuals or
+            businesses throughout the world.
+          </p>
+        </div>
+      </section>
+
+      {/* Join our distribution partners */}
+      <section className="container-mk py-14 max-w-3xl">
+        <h2 className="text-2xl lg:text-3xl font-bold">Join our distribution partners</h2>
+        <div className="mt-6 space-y-4 text-ash leading-relaxed">
+          <p>
+            MasterKraft welcomes enquiries regarding distributorship of our premium gym and fitness
+            products, from sports stores, fitness equipment specialists and beyond, as we are constantly
+            looking for opportunities to expand our global reach.
+          </p>
+          <p>
+            To best assess your experience and suitability, we ask distributor applicants to complete an
+            application. Please be aware that the number of distributor opportunities is limited and not
+            all applicants will be successful.
+          </p>
+          <p>
+            MasterKraft reserves the right to accept or reject any application. Finalisation of any
+            distributorship will only occur after further consultation, examination of trade references,
+            mutual acceptance of terms and conditions, and signing of a formal Distribution Agreement.
+            All information is treated with the strictest confidence.
+          </p>
+        </div>
+      </section>
+
       <UspGrid eyebrow="Why Partner With Us" title="One partner behind your whole operation" />
 
       {/* CTA */}
