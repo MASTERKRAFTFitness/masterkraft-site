@@ -74,7 +74,7 @@ export default async function RevlSitePage({
               {s.gallery.map((src, i) => (
                 <div
                   key={src}
-                  className="relative aspect-[4/3] overflow-hidden bg-carbon"
+                  className="relative aspect-square overflow-hidden bg-carbon"
                 >
                   <Image
                     src={src}

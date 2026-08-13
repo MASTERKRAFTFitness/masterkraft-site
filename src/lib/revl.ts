@@ -5,14 +5,13 @@ export type RevlSite = {
   blurb: string;
   image: string;
   body: string[];
-  // Up to 6 photos for the club page gallery. Computed at module load from the
-  // hero + any location-specific shots + the shared REVL training pool.
+  // Up to 6 real photos of this specific studio, sourced from the club's own
+  // Instagram (used with REVL's permission). Empty for studios without an
+  // account yet (e.g. Taipei) — the gallery section is hidden in that case.
   gallery: string[];
 };
 
-// Raw site data authored below; `extras` are location-specific photos (e.g. the
-// Singapore studios) that should appear ahead of the generic pool in a gallery.
-type RawRevlSite = Omit<RevlSite, "gallery"> & { extras?: string[] };
+type RawRevlSite = Omit<RevlSite, "gallery">;
 
 const rawSites: RawRevlSite[] = [
   {
@@ -76,7 +75,6 @@ const rawSites: RawRevlSite[] = [
     location: "Singapore",
     blurb: "The REVL fit-out delivered beyond Australia, into the Asia-Pacific.",
     image: "/revl/gallery/cityhall.jpg",
-    extras: ["/revl/singapore.jpg", "/revl/singapore-2.jpg", "/revl/gallery/raffles-place.jpg"],
     body: [
       "REVL City Hall took the REVL model into Singapore. MasterKraft delivered the full studio fit-out, shipped complete in a single coordinated container.",
       "Same spec sheet, same quality, the same branding REVL runs across its network - one accountable partner and a floor built to perform from day one, delivered internationally.",
@@ -88,7 +86,6 @@ const rawSites: RawRevlSite[] = [
     location: "Singapore",
     blurb: "A second Singapore studio, delivered to the same REVL spec.",
     image: "/revl/gallery/lower-pierce.jpg",
-    extras: ["/revl/singapore-2.jpg", "/revl/gallery/raffles-place.jpg", "/revl/singapore.jpg"],
     body: [
       "MasterKraft fitted out REVL Lower Pierce to the identical specification REVL runs worldwide, delivered complete and installation-ready.",
       "Repeatable quality across borders - the same REVL floor, wherever members train.",
@@ -129,46 +126,29 @@ const rawSites: RawRevlSite[] = [
   },
 ];
 
-// Shared REVL training/studio photography (used under MasterKraft's collateral
-// agreement with REVL). These generic shots fill out each club gallery after the
-// hero and any location-specific extras.
-const GENERIC_SHOTS: string[] = [
-  "/revl/full-studio.jpg",
-  "/revl/wide-studio.jpg",
-  "/revl/rigs.jpg",
-  "/revl/branded-bikes.jpg",
-  "/revl/branded-wall.jpg",
-  "/revl/people.jpg",
-  "/revl/gallery/shot-1.jpg",
-  "/revl/gallery/shot-4.jpg",
-  "/revl/gallery/shot-6.jpg",
-  "/revl/gallery/skierg.jpg",
-  "/revl/gallery/rowers-bw.jpg",
-  "/revl/gallery/shot-2.png",
-  "/revl/gallery/shot-3.png",
-];
+// Real per-studio photos pulled from each club's own Instagram (with REVL's
+// permission), stored under /public/revl/ig/<slug>/NN.jpg. The number is how
+// many good studio/training/community shots that account yielded; studios with
+// no account yet (Taipei) are omitted and simply show no gallery.
+const igPhotos = (slug: string, count: number): string[] =>
+  Array.from({ length: count }, (_, i) => `/revl/ig/${slug}/${String(i + 1).padStart(2, "0")}.jpg`);
 
-// Build a de-duplicated gallery of up to 6 images: hero first, then any
-// location-specific extras, then the generic pool rotated by `index` so adjacent
-// club pages don't show an identical run of photos.
-function buildGallery(hero: string, extras: string[], index: number): string[] {
-  const offset = index % GENERIC_SHOTS.length;
-  const rotated = [...GENERIC_SHOTS.slice(offset), ...GENERIC_SHOTS.slice(0, offset)];
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const src of [hero, ...extras, ...rotated]) {
-    if (seen.has(src)) continue;
-    seen.add(src);
-    out.push(src);
-    if (out.length === 6) break;
-  }
-  return out;
-}
+const IG_PHOTOS: Record<string, string[]> = {
+  "revl-brighton": igPhotos("revl-brighton", 4),
+  "revl-bondi": igPhotos("revl-bondi", 5),
+  "revl-burleigh": igPhotos("revl-burleigh", 5),
+  "revl-collingwood": igPhotos("revl-collingwood", 5),
+  "revl-campbelltown": igPhotos("revl-campbelltown", 5),
+  "revl-singapore": igPhotos("revl-singapore", 4),
+  "revl-lower-pierce": igPhotos("revl-lower-pierce", 5),
+  "revl-kuala-lumpur": igPhotos("revl-kuala-lumpur", 4),
+  "revl-ho-chi-minh-city": igPhotos("revl-ho-chi-minh-city", 4),
+};
 
-export const revlSites: RevlSite[] = rawSites.map((s, i) => {
-  const { extras, ...rest } = s;
-  return { ...rest, gallery: buildGallery(s.image, extras ?? [], i) };
-});
+export const revlSites: RevlSite[] = rawSites.map((s) => ({
+  ...s,
+  gallery: IG_PHOTOS[s.slug] ?? [],
+}));
 
 export function getRevlSite(slug: string) {
   return revlSites.find((s) => s.slug === slug);
