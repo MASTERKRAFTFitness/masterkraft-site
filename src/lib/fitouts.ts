@@ -77,7 +77,7 @@ export const fitouts: Fitout[] = [
     slug: "schools-university-fitout",
     name: "Schools & University",
     blurb: "Safe, durable and inclusive training spaces for education and campus facilities.",
-    image: "/category/flooring.jpg",
+    image: "/fitout/school-gym.jpg",
     intro:
       "Education facilities need equipment that is safe, robust and suitable for a wide range of users. We deliver inclusive spaces built to institutional standards.",
     points: [
