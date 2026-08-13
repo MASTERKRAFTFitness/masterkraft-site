@@ -1,99 +1,126 @@
-# MasterKraft Handoff (updated 10 Aug 2026)
+# MasterKraft website — handover (2026-08-13)
 
-## What this is
-Headless **Next.js storefront** rebuild of masterkraft.com. Reads live products, prices and
-stock from the existing **WooCommerce** store + **Unleashed** ERP. The site is built and the
-shop is fully working and tested end to end. Launch is gated on a hosting cutover (Paul) and a
-few client sign-offs.
+New Next.js e-commerce site for masterkraft.com. This handoff covers the current
+state after a large client-feedback round. For the original go-live plan see
+`docs/launch-checklist.md` and `docs/go-live-runbook.md` (still valid).
 
-- **Client:** MasterKraft (Steve, Gaetana). Billed via Part Time CMO. Web dev partner = eFront (Paul).
-- **DNS:** Web Central (theconsole.webcentral.au, login GYM-116), NOT Cloudflare.
+## Repo / environments
+- Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS,
+  Tailwind, headless WooCommerce + Unleashed.
+- Dev server: `npm run dev` on **:3100** (or use the preview tools).
+- **Review/staging URL: https://masterkraft-site-pi.vercel.app** (noindex; the
+  real domain isn't pointed at Vercel yet — that's the Paul gate below).
+- GitHub: `MASTERKRAFTFitness/masterkraft-site`, branch `main`. All work below is
+  committed + pushed (last commit `6737d80`).
 
-## Projects
-- **Website:** `~/Desktop/masterkraft-site` — Next.js 16 / React 19 / App Router / TS / Tailwind v4, `src/` dir.
-  - Staging: `web.test.masterkraft.com` (noindex). Dev server port **3100** (use the preview tools, never bash).
-  - **Deploys via Vercel CLI:** `npx vercel deploy --prod --yes --scope masterkraft` (NOT git-triggered).
-  - Repo: `MASTERKRAFTFitness/masterkraft-site`. Public alias: `masterkraft-site-pi.vercel.app`.
-- **Partner portal:** `~/Desktop/snap-portal` — multi-tenant (Snap/Fernwood/demo/REVL), npm workspaces (`@mkp/core|data|ui`).
-  - **Deploys via git push to main** (auto-deploys partner + franchisee). Repo: `MASTERKRAFTFitness/snap-portal`.
-- Both repos are under the `MASTERKRAFTFitness` GitHub org. First push needed `git config http.postBuffer 524288000`.
-- Default **Node runtime** on all routes (ignore CLAUDE.md text claiming `edge` — that's CareLocate's file). `timeout` is not installed on this Mac.
+## DEPLOY — read this first
+- **A git push does NOT deploy.** Deploy with the Vercel CLI from the project dir:
+  ```bash
+  npx --yes vercel@latest deploy --prod --yes
+  ```
+  It's authed on this machine as **marketing-8481**; project is linked via
+  `.vercel/project.json`. Build ~1 min. Serves on `masterkraft-site-pi.vercel.app`.
+- It also assigns the alias `staging.masterkraft.com`, but that DNS is **not set
+  up (NXDOMAIN)** — always share the `masterkraft-site-pi.vercel.app` URL.
+- `NEXT_PUBLIC_*` env vars are **build-time inlined** — changing them in Vercel
+  does nothing until a redeploy. To confirm one landed, grep the deployed client
+  chunks for the literal value.
 
-## Data / pricing gotcha
-- Products, categories, orders come from the **WooCommerce REST API**.
-- The WC `price` field is **distorted by the Wholesale Pro plugin** — do NOT trust it. Use **Unleashed**
-  price (or `regular_price`) **× 1.1** for GST. Unmatched SKUs fall back to "contact for pricing".
-- **The store adds 10% GST on top of submitted line totals.** Our `unitPrice` is GST-inclusive, so
-  `createWooOrder` submits **ex-GST** line prices (`unitPrice / 1.1`) and lets WC re-add GST, so the
-  order total equals the amount charged with a correct GST line. (Fixed 10 Aug; see below.)
+## What was shipped this round (all live on the staging URL)
+**Products / equipment**
+- **M/N SKU filter** catalogue-wide (only MasterKraft's own products show; 512 →
+  221). Helpers in `src/lib/woocommerce.ts` (`filterBrandSku`). Category pages
+  full-fetch + filter so counts stay right.
+- **Product code (SKU)** shown on product pages + cards.
+- **Full Overview + Specifications** on product pages, from WooCommerce **ACF
+  meta** (`parseProductDetail` in woocommerce.ts): `product_overview_description`,
+  `features_N_text`, and discrete specs (assembled size, colour, material,
+  warranty, weights, packing size).
+- **All Equipment → all products** landing (`getAllProducts`) with category
+  dropdown, sort, pagination. **Grid/list view toggle** (`ProductListing.tsx`).
+- Sub-categories **alphabetical**; **brand loading spinner** (see below).
+- **Product tiles = `#e6e6e6`** to match the product photos' own grey background
+  (the exact grey was sampled from the M-prefix photos).
+- **Category SEO copy**: each category page renders its WooCommerce category
+  `description` below the grid under an "About <category>" heading
+  (`getCategoryDescription`). OPEN DECISION: client may also want a short intro
+  line up in the hero banner (old-site style) — not done yet.
 
-## Done + verified this session (10 Aug)
-- **Checkout works end to end** on staging (Stripe test keys + WC write): PaymentIntent → confirm
-  (test card) → real WooCommerce order, for both simple AND variable products.
-- **GST double-count bug FIXED** (`src/lib/woo-orders.ts`) — orders were recording totals 10% high;
-  now ex-GST line prices. Verified order #490102 total $779.00 == charged.
-- **Checkout hardening shipped** (the three old open items, now done): order idempotency (PI metadata
-  `wc_order_id`), cart-lock + cart snapshot during payment, free-shipping/total-match guard, plus
-  legible Stripe errors (no more blank 500s) and a fix for the post-payment confirmation screen
-  unmounting when the cart clears.
-- **Resend quote email LIVE:** `RESEND_API_KEY` + `QUOTE_FROM_EMAIL` (`quotes@masterkraft.com`) +
-  `QUOTE_TO_EMAIL` (`steve@masterkraft.com`) set in Vercel; verified `email:"sent"`. Domain verified
-  in Resend (SPF/DKIM/MX; DMARC still optional/open).
-- **Portal SKU-prefix gating** shipped (`apps/partner/src/lib/data/index.ts`, `visibleTo`): snap → codes
-  `S|N`, fernwood → `F|N`, demo/HQ unfiltered, REVL rule unchanged.
-- **Repo pushed to GitHub** (was empty before). Docs added: `docs/launch-checklist.md`, `docs/go-live-runbook.md`.
+**Nav / home**
+- Removed "Clearance" from the top menu; Equipment dropdown reordered
+  (All Equipment, alphabetical, Clearance last in pink).
+- "Whole" stat → "Complete". **FeatureBlock band reversed out to white.**
+- **Stat count-up** on scroll (`CountUp.tsx`). **"Thinking" cursor** + brand
+  spinner on navigation (`NavProgress.tsx` + `BrandSpinner.tsx`, uses
+  `/brand/logo-circle.svg` + `.mk-spin`). NOTE: both the count-up and the nav
+  spinner only animate in a real browser (the headless preview pane runs the tab
+  as "hidden", which pauses rAF/short timers) — verify them by eye on staging.
+- **Category images** replaced with the real ones from the WC category `image`
+  field (fixed weightlifting/flooring/packages/clearance duplicates).
 
-## Key gotchas
-- **Stripe: staging is on SANDBOX TEST keys** (`pk_test`/`sk_test`). MUST swap to live at go-live
-  (runbook §3). A bad/typo'd secret key = blank 500 on `/api/payment-intent`. Env changes need a REDEPLOY.
-- **Testing checkout without the flaky browser pane:** node script that pulls `pk_test` from the deployed
-  `/_next/static/chunks/*.js`, POSTs `/api/payment-intent`, confirms the PI via Stripe API with
-  `pm_card_visa`, POSTs `/api/order`, then reads the order back via WC REST. Each run makes a REAL WC
-  order (test card, no money) to delete after. (Pattern reusable; WC/Unleashed creds in `.env.local`.)
-- **Quote submissions create a pending WC order by design** (plus email + HubSpot). Not a bug.
-- **Unleashed tiered pricing:** structure exists (10 tiers; **Tier8=REVL-FRAN, Tier9=REVL-HQ** map to
-  portal tenants) but values just mirror the online price (no real discount entered). API exposes
-  `SellPriceTier1..10 {Name,Value}`. Portal stays on "online − 10%" until real tier prices are populated,
-  then wire portal to read Tier8/9.
-- **Portal Fernwood is empty:** its ~52 F-prefixed products exist in Unleashed but aren't published to
-  WooCommerce (portal reads WC); "N" prefix exists nowhere. Michael said leave as-is for now.
+**Content**
+- **Finance + Distributor**: full old-site copy ported (scraped the live pages;
+  WP REST is 401). Finance copy lives in `src/lib/content-pages.ts`; Distributor
+  copy is inline in `src/app/distributor/page.tsx`.
+- **Resources**: thumbnail image beside each doc.
+- **Schools & University** fitout hero: generic school-gym stock photo
+  (Unsplash, free commercial licence) at `public/fitout/school-gym.jpg`.
 
-## Key files
-- `src/lib/woo-orders.ts` — server repricing + `createWooOrder` (ex-GST line prices, idempotency guard)
-- `src/app/api/{payment-intent,order,quote}/route.ts` — checkout + quote endpoints
-- `src/components/shop/StripeCheckout.tsx` — checkout UI (cart snapshot + lock, confirmation via `onPaid`)
-- `src/components/cart/CartProvider.tsx` — cart with `lock`/`unlock`
-- `src/lib/unleashed.ts` — Unleashed price/stock map (HMAC auth; `SellPriceTier` fields available)
-- `src/lib/site.ts` — `SITE_URL`, `ALLOW_INDEX` env gates
-- `docs/launch-checklist.md` (status) / `docs/go-live-runbook.md` (ordered cutover)
-- Portal: `apps/partner/src/lib/data/index.ts` — `visibleTo` tenant gating
+**REVL page (`/revl-fitouts`)**
+- **Featured Studios = 10**, covering every AU state (NSW: Bondi, Campbelltown;
+  QLD: Burleigh; SA: Brighton; VIC: Collingwood) and every operating country
+  (Singapore: City Hall + Lower Pierce; Malaysia: KL; Vietnam: HCMC; Taiwan:
+  Taipei). Each has an image + detail-page copy. Data in `src/lib/revl.ts`
+  (`revlSites`). Brighton's state fixed (was wrongly VIC → SA).
+- **Global Network** section: all 8 markets grouped by country (47 named
+  studios); Korea/Canada/Indonesia + **United States** shown "Coming soon";
+  **Dubai excluded** per client (`revlNetwork`).
+- **10 REVL photos** in `public/revl/gallery/` scraped from REVL's own sites
+  (under MK's collateral agreement with REVL). **City Hall + Lower Pierce are the
+  actual SG studios; the rest are representative REVL fit-out photos** (REVL
+  doesn't publish a unique photo per studio). Swap in exact photos if the client
+  provides them. The `revlGallery` export is now unused (the standalone gallery
+  was consolidated into the featured grid).
+- Home "Powered by MasterKraft" copy → "fitted out REVL Training studios around
+  the world, including Australia, Singapore, Malaysia, Vietnam and Taiwan".
+- **GA4** is live (`NEXT_PUBLIC_GA_ID=G-86MEH5QL99`, Production).
 
-## Env / config
-- `NEXT_PUBLIC_SITE_URL` — canonical origin (set to real domain at launch)
-- `NEXT_PUBLIC_ALLOW_INDEX` — must be `true` to allow indexing + real robots/sitemap. Currently OFF.
-- `WC_STORE_URL`, `WC_CONSUMER_KEY/SECRET`, `WC_WRITE_ENABLED=true`; Stripe test keys; Resend vars; Unleashed keys — in `.env.local` / Vercel.
+## How data flows (useful for future edits)
+- Product/category data: WooCommerce REST (`src/lib/woocommerce.ts`), creds in
+  `.env.local` (`WC_STORE_URL`, `WC_CONSUMER_KEY/SECRET`). Prices are distorted by
+  a wholesale plugin — always derive from `regular_price × 1.1` (GST), not `price`.
+- Unleashed = price/stock (`src/lib/unleashed.ts`).
+- Handy probes in the session scratchpad pattern: WC category `image` +
+  `description`, product `meta_data` ACF, and REVL image scraping = fetch a
+  page's raw HTML in the in-app browser and regex `wp-content/uploads/...(jpe?g|png)`
+  (REVL sites lazy-load, so the DOM only has SVG placeholders — the raw HTML has
+  the real URLs).
 
-## Conventions / preferences
-- **No em-dashes ("—") in copy.** Use commas, colons, or parens.
-- **REVL always uppercase.** Banner images: crop people IN, not out.
-- No public email address on the site ("Contact us" instead). Server components by default; `'use client'` only when needed.
+## Email drafts ready to send
+- `docs/email-paul-subdomain.md` — the WooCommerce-to-subdomain ask (the go-live
+  gate).
+- `docs/email-steve-gaetana-update.md` — client update on the feedback round
+  (drop in the `masterkraft-site-pi.vercel.app` link before sending).
 
-## Blocked on others / launch gates
-1. **Paul (the launch gate):** move WordPress/WooCommerce to a subdomain (e.g. `shop.masterkraft.com`)
-   so the new site keeps reading live data → then update `WC_STORE_URL`. Draft email ready.
-2. **Steve/Gaetana:** content + legal sign-off; confirm **ABN** (live Terms say `62 623 086 064`, the
-   `84 659 220 274` given earlier is unconfirmed); confirm displayed pricing (`regular_price × 1.1`).
-3. **Unleashed admin:** populate REVL (and other) tier prices → then flip portal to live tier pricing.
-4. **Michael:** GA4 Measurement ID (`NEXT_PUBLIC_GA_ID`); optional DMARC record (`_dmarc` TXT `v=DMARC1; p=none;`) at Web Central.
-5. **HubSpot:** add the production domain to allowed domains if inline embed of the delivery form is wanted.
+## Open / blocked (needs client input or assets)
+- **Paul (go-live gate):** move WooCommerce to a subdomain (e.g. shop.), then set
+  `WC_STORE_URL` + redeploy. Everything else in go-live waits on this.
+- **Stripe:** still on test keys — swap to live at go-live (`docs/go-live-runbook.md`).
+- **REVL:** exact per-studio photos if they want them; the coming-soon markets'
+  named studios when they open.
+- **Fitouts content:** K2 Max Northcote, international list edits, better Fernwood
+  images, Elite Sport/PT/School examples. **Home-gym photos coming from Steve.**
+- **Bold hero images** for the Equipment/Clearance/Fitouts/Resources/Our Story/
+  Contact landing pages.
+- **Decisions:** logo size ("should it be larger?"), USP duplication (hero vs
+  "Why operators choose MK"), category copy hero-intro (see above).
+- **Confirmations:** ABN (live Terms say `62 623 086 064`), displayed pricing
+  (regular_price × 1.1).
+- **HubSpot:** newsletter form GUID is empty; confirm server HubSpot env vars are
+  on Vercel Production. **DMARC** record (optional, better before bulk email).
 
-## Immediate next actions (when inputs land)
-- Paul confirms subdomain → set `WC_STORE_URL`, redeploy, verify reads still show live prices.
-- Then run `docs/go-live-runbook.md`: swap Stripe live keys, flip `NEXT_PUBLIC_SITE_URL` + `NEXT_PUBLIC_ALLOW_INDEX=true`,
-  add apex/www domains to Vercel + point DNS at Web Central, live checkout smoke test (real card + refund).
-
-## Housekeeping
-- Test orders **#490100–#490103** and HubSpot contact `quote-test@example.com` to delete (Michael handling).
-
-## Billing rule (hard)
-A **MasterKraft invoice lists MasterKraft work only** — never reference CareLocate or any other project on it.
+## Conventions
+- **No em-dashes ("—") in copy.** Use commas / spaced hyphens " - ".
+- **REVL** always uppercase. No public email address on the site.
+- Server components by default; `'use client'` only when needed.
+- Verify changes on the staging URL after deploying — don't ask the client to check.
