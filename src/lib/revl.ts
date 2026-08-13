@@ -50,7 +50,17 @@ export function getRevlSite(slug: string) {
   return revlSites.find((s) => s.slug === slug);
 }
 
-export type RevlMarket = { country: string; flag: string; studios: string[] };
+export type RevlMarket = { country: string; flag: string; studios: string[]; comingSoon?: boolean };
+
+// REVL studio + training photography (used under MasterKraft's collateral
+// agreement with REVL). Sourced from REVL's own marketing imagery.
+export const revlGallery: { src: string; alt: string }[] = [
+  { src: "/revl/gallery/shot-6.jpg", alt: "Inside a REVL Training studio fitted out by MasterKraft" },
+  { src: "/revl/gallery/shot-1.jpg", alt: "Athlete training on an air bike at REVL Training" },
+  { src: "/revl/gallery/shot-4.jpg", alt: "REVL Training studio floor with rigs, bikes and rowers" },
+  { src: "/revl/gallery/shot-2.png", alt: "Deadlift session at a REVL Training studio" },
+  { src: "/revl/gallery/shot-3.png", alt: "Conditioning workout at REVL Training" },
+];
 
 // The full REVL Training network MasterKraft has fitted out, grouped by market.
 // Named studios sourced from REVL's regional websites (2026); markets without
@@ -81,7 +91,8 @@ export const revlNetwork: RevlMarket[] = [
   { country: "Malaysia", flag: "🇲🇾", studios: ["Kuala Lumpur (KLCC)"] },
   { country: "Vietnam", flag: "🇻🇳", studios: ["Ho Chi Minh City"] },
   { country: "Taiwan", flag: "🇹🇼", studios: ["Taipei"] },
-  { country: "South Korea", flag: "🇰🇷", studios: [] },
-  { country: "Canada", flag: "🇨🇦", studios: [] },
-  { country: "Indonesia", flag: "🇮🇩", studios: [] },
+  { country: "South Korea", flag: "🇰🇷", studios: [], comingSoon: true },
+  { country: "Canada", flag: "🇨🇦", studios: [], comingSoon: true },
+  { country: "Indonesia", flag: "🇮🇩", studios: [], comingSoon: true },
+  { country: "United States", flag: "🇺🇸", studios: [], comingSoon: true },
 ];

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
-import { revlSites, revlNetwork } from "@/lib/revl";
+import { revlSites, revlNetwork, revlGallery } from "@/lib/revl";
 
 export const metadata: Metadata = {
   title: "REVL Fitouts",
@@ -22,6 +22,29 @@ export default function RevlLanding() {
         image="/revl/full-studio.jpg"
         imagePosition="center 40%"
       />
+
+      {/* Photo gallery */}
+      <section className="container-mk pt-16 pb-4">
+        <Eyebrow className="mb-8">Inside REVL</Eyebrow>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+          {revlGallery.map((g, i) => (
+            <div
+              key={g.src}
+              className={`relative overflow-hidden bg-carbon ${
+                i === 0 ? "col-span-2 aspect-square lg:row-span-2 lg:aspect-auto" : "aspect-square"
+              }`}
+            >
+              <Image
+                src={g.src}
+                alt={g.alt}
+                fill
+                className="object-cover transition-transform duration-500 hover:scale-105"
+                sizes="(max-width: 1024px) 50vw, 25vw"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="container-mk py-20">
         <Eyebrow className="mb-10">Featured Studios</Eyebrow>
@@ -78,6 +101,10 @@ export default function RevlLanding() {
                 <div className="md:col-span-3">
                   {m.studios.length > 0 ? (
                     <p className="text-ash text-sm leading-relaxed">{m.studios.join(" · ")}</p>
+                  ) : m.comingSoon ? (
+                    <span className="inline-block font-mono text-[10px] tracking-widest uppercase text-accent-600 border border-accent-600/40 px-2.5 py-1">
+                      Coming soon
+                    </span>
                   ) : (
                     <p className="text-ash text-sm">Studios operating</p>
                   )}
