@@ -186,8 +186,13 @@ export async function getProductsByCategory(
 }
 
 // Full category fetch (all pages), ordered by menu_order (the store's "featured"
-// order) and filtered to MasterKraft's own M/N SKUs.
-export async function getAllProductsByCategory(categoryId: number): Promise<WcProduct[]> {
+// order). By default filtered to MasterKraft's own M/N SKUs, but Clearance is
+// ex-display / end-of-line stock (A-prefixed SKUs), so it passes brandFilter:
+// false to show that stock rather than being emptied by the M/N filter.
+export async function getAllProductsByCategory(
+  categoryId: number,
+  opts?: { brandFilter?: boolean }
+): Promise<WcProduct[]> {
   const out: WcProduct[] = [];
   for (let page = 1; page <= 6; page++) {
     const { data } = await wcGet<WcProduct[]>("/products", {
@@ -203,7 +208,7 @@ export async function getAllProductsByCategory(categoryId: number): Promise<WcPr
     out.push(...data);
     if (data.length < 100) break;
   }
-  return filterBrandSku(out);
+  return (opts?.brandFilter ?? true) ? filterBrandSku(out) : out;
 }
 
 // The full catalogue (all categories), ordered by menu_order and filtered to

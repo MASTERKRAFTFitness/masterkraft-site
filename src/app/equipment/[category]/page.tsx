@@ -72,7 +72,11 @@ export default async function CategoryPage({
       // Always fetch the full (M/N-filtered) category, enrich (incl. variable
       // "From"), then filter/sort on CORRECTED prices and paginate in-memory.
       // Full-fetch keeps product counts correct after the brand-SKU filter.
-      const all = await getAllProductsByCategory(targetId);
+      // Clearance is ex-display / end-of-line stock with A-prefixed SKUs, so it
+      // opts out of the M/N brand-SKU filter that the branded categories use.
+      const all = await getAllProductsByCategory(targetId, {
+        brandFilter: c.slug !== "clearance",
+      });
       let enrichedAll = await Promise.all(
         all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
       );
