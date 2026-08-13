@@ -30,14 +30,14 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
         type="button"
         onClick={() => main && setZoom(true)}
         aria-label="Zoom image"
-        className="relative block w-full aspect-square bg-smoke border border-line overflow-hidden cursor-zoom-in group"
+        className="relative block w-full aspect-square bg-[#e6e6e6] border border-line overflow-hidden cursor-zoom-in group"
       >
         {main ? (
           <Image
             src={main.src}
             alt={main.alt || name}
             fill
-            className="object-contain p-6 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+            className="object-contain p-6 transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
@@ -53,11 +53,11 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
               key={i}
               onClick={() => setActive(i)}
               aria-label={`View image ${i + 1}`}
-              className={`relative aspect-square bg-smoke border overflow-hidden transition-colors ${
+              className={`relative aspect-square bg-[#e6e6e6] border overflow-hidden transition-colors ${
                 i === active ? "border-accent" : "border-line hover:border-ash"
               }`}
             >
-              <Image src={img.src} alt="" fill className="object-contain p-2 mix-blend-multiply" sizes="15vw" />
+              <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
             </button>
           ))}
         </div>
