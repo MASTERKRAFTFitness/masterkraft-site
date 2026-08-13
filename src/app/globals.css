@@ -147,6 +147,43 @@
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
+
+/* ---------------------------------------------------------------------------
+   Hot Gradient replaces the solid accent EVERYWHERE the accent utilities are
+   used - fills, text and borders all render the magenta->orange gradient.
+   Text is scoped to :not(:has(*)) (leaf elements only) so gradient text on a
+   container link never turns its child text transparent via color inheritance.
+   Exceptions CSS can't gradient: focus outlines and text-decoration underlines
+   (decoration-accent-600) stay solid magenta.
+   --------------------------------------------------------------------------- */
+.bg-accent,
+.bg-accent-600,
+.hover\:bg-accent:hover,
+.btn-dark:hover,
+.btn-outline:hover {
+  background-image: var(--gradient-hot);
+}
+.nav-link:hover::after {
+  background-image: var(--gradient-hot);
+}
+
+.text-accent:not(:has(*)),
+.text-accent-600:not(:has(*)),
+.text-accent-300:not(:has(*)),
+.hover\:text-accent-600:hover:not(:has(*)),
+.group:hover .group-hover\:text-accent-600:not(:has(*)) {
+  background-image: var(--gradient-hot);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.border-accent,
+.border-accent-600,
+.hover\:border-accent:hover {
+  border-image: var(--gradient-hot) 1;
+}
 .mk-glow {
   background:
     radial-gradient(60% 80% at 15% 20%, rgba(239, 4, 116, 0.22) 0%, transparent 60%),
