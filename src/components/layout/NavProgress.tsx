@@ -1,39 +1,64 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import BrandSpinner from "@/components/ui/BrandSpinner";
 
-// Signals "the site is thinking" during page navigations by switching the
-// cursor to `progress` from the moment an internal link is clicked until the new
-// route settles (pathname change). A safety timeout clears it if a click never
-// results in navigation.
+// Signals "the site is thinking" during page navigations: a `progress` cursor
+// immediately, and the spinning MasterKraft wheel if the navigation takes long
+// enough to be worth showing (a short delay avoids flashing it on instant,
+// cached navigations). Everything clears once the new route settles.
 export default function NavProgress() {
   const pathname = usePathname();
+  const [busy, setBusy] = useState(false);
+  const showTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const safetyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Route settled -> stop showing the busy cursor.
-  useEffect(() => {
+  const stop = () => {
+    clearTimeout(showTimer.current);
+    clearTimeout(safetyTimer.current);
+    setBusy(false);
     document.documentElement.classList.remove("nav-busy");
+  };
+
+  // Route settled -> stop.
+  useEffect(() => {
+    stop();
   }, [pathname]);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = (e.target as HTMLElement | null)?.closest?.("a");
       if (!a) return;
       const href = a.getAttribute("href");
-      if (!href || !href.startsWith("/") || a.getAttribute("target") === "_blank") return;
-      if (href === pathname || href.startsWith("#")) return;
+      if (!href || !href.startsWith("/") || href.startsWith("#") || href === pathname) return;
+      if (a.getAttribute("target") === "_blank") return;
       document.documentElement.classList.add("nav-busy");
-      clearTimeout(timer);
-      timer = setTimeout(() => document.documentElement.classList.remove("nav-busy"), 5000);
+      clearTimeout(showTimer.current);
+      clearTimeout(safetyTimer.current);
+      showTimer.current = setTimeout(() => setBusy(true), 140);
+      safetyTimer.current = setTimeout(stop, 8000);
     };
     document.addEventListener("click", onClick, true);
     return () => {
       document.removeEventListener("click", onClick, true);
-      clearTimeout(timer);
+      clearTimeout(showTimer.current);
+      clearTimeout(safetyTimer.current);
     };
   }, [pathname]);
 
-  return null;
+  if (!busy) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[200] grid place-items-center pointer-events-none"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="rounded-2xl bg-carbon/85 backdrop-blur-sm px-6 py-5 shadow-xl">
+        <BrandSpinner size={44} />
+      </div>
+    </div>
+  );
 }

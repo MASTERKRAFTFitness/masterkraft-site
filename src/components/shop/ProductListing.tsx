@@ -68,7 +68,7 @@ export default function ProductListing({ items, total }: { items: Item[]; total:
           {items.map(({ product, enriched }) => (
             <li key={product.id} className="border-b border-line">
               <Link href={`/product/${product.slug}`} className="flex items-center gap-4 sm:gap-6 py-4 group">
-                <div className="relative w-20 h-20 shrink-0 bg-white border border-line">
+                <div className="relative w-20 h-20 shrink-0 bg-[#e6e6e6] border border-line">
                   {product.images?.[0] ? (
                     <Image src={product.images[0].src} alt={product.images[0].alt || product.name} fill className="object-contain p-1.5" sizes="80px" />
                   ) : (

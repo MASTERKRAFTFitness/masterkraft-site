@@ -1,12 +1,12 @@
-import ProductGridSkeleton from "@/components/shop/ProductGridSkeleton";
+import BrandSpinner from "@/components/ui/BrandSpinner";
 
 export default function Loading() {
   return (
     <>
       <div className="bg-carbon h-56" />
-      <section className="container-mk py-16">
-        <ProductGridSkeleton count={8} />
-      </section>
+      <div className="container-mk py-28 flex justify-center">
+        <BrandSpinner size={56} />
+      </div>
     </>
   );
 }

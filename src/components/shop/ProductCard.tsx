@@ -13,7 +13,7 @@ export default function ProductCard({
   const img = product.images?.[0];
   return (
     <Link href={`/product/${product.slug}`} className="group flex flex-col">
-      <div className="relative aspect-square overflow-hidden bg-white border border-line">
+      <div className="relative aspect-square overflow-hidden bg-[#e6e6e6] border border-line">
         {img ? (
           <Image
             src={img.src}
