@@ -1,7 +1,22 @@
 // Headless WooCommerce client - reads the existing masterkraft.com store via the
 // WC REST API (read-only key). Cart/checkout use the public Store API (task 6).
 
+import imageOverrides from "./product-image-overrides.json";
+
 const BASE = `${process.env.WC_STORE_URL}/wp-json/wc/v3`;
+
+// A few product lines were shot on an off-shade studio-grey background rather
+// than the shop tile grey. scripts/normalize-product-bg.py recolours those to
+// #e6e6e6 (into /public/product-bg/) and records sku -> local paths here; we swap
+// the WooCommerce image URLs for the normalized local copies at fetch time.
+const IMAGE_OVERRIDES = imageOverrides as Record<string, string[]>;
+
+function applyImageOverride(p: WcProduct): WcProduct {
+  const sku = (p.sku ?? "").trim();
+  const paths = sku ? IMAGE_OVERRIDES[sku] : undefined;
+  if (!paths?.length) return p;
+  return { ...p, images: paths.map((src, i) => ({ src, alt: p.images?.[i]?.alt ?? p.name })) };
+}
 
 function authHeader() {
   const ck = process.env.WC_CONSUMER_KEY ?? "";
@@ -174,7 +189,7 @@ export async function getProductsByCategory(
     order = "asc",
   }: { page?: number; perPage?: number; orderby?: string; order?: "asc" | "desc" } = {}
 ): Promise<FetchResult<WcProduct[]>> {
-  return wcGet<WcProduct[]>("/products", {
+  const res = await wcGet<WcProduct[]>("/products", {
     category: categoryId,
     per_page: perPage,
     page,
@@ -183,6 +198,7 @@ export async function getProductsByCategory(
     order,
     _fields: PRODUCT_FIELDS,
   });
+  return { ...res, data: res.data.map(applyImageOverride) };
 }
 
 // Full category fetch (all pages), ordered by menu_order (the store's "featured"
@@ -208,7 +224,7 @@ export async function getAllProductsByCategory(
     out.push(...data);
     if (data.length < 100) break;
   }
-  return (opts?.brandFilter ?? true) ? filterBrandSku(out) : out;
+  return ((opts?.brandFilter ?? true) ? filterBrandSku(out) : out).map(applyImageOverride);
 }
 
 // The full catalogue (all categories), ordered by menu_order and filtered to
@@ -284,18 +300,18 @@ export async function searchProducts(
     status: "publish",
     _fields: PRODUCT_FIELDS,
   });
-  const data = filterBrandSku(res.data);
+  const data = filterBrandSku(res.data).map(applyImageOverride);
   return { data, total: data.length, totalPages: res.totalPages };
 }
 
 // WooCommerce returns some text fields (notably category names) HTML-encoded.
 // Decode name + category names so they don't double-encode when rendered.
 function normalizeProduct(p: WcProduct): WcProduct {
-  return {
+  return applyImageOverride({
     ...p,
     name: decodeEntities(p.name),
     categories: p.categories?.map((c) => ({ ...c, name: decodeEntities(c.name) })) ?? p.categories,
-  };
+  });
 }
 
 export async function getProductBySlug(slug: string): Promise<WcProduct | null> {
@@ -361,7 +377,7 @@ export async function getFeaturedProducts(perPage = 8): Promise<WcProduct[]> {
     status: "publish",
     _fields: PRODUCT_FIELDS,
   });
-  return data;
+  return data.map(applyImageOverride);
 }
 
 const audFormatter = new Intl.NumberFormat("en-AU", {
