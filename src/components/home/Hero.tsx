@@ -78,7 +78,7 @@ export default function Hero() {
       {/* Slide copy - anchored bottom-left like the liked reference */}
       <div className="relative z-10 h-full container-mk flex flex-col justify-end pb-20 lg:pb-24">
         <div className="max-w-2xl">
-          <p className="font-mono text-xs tracking-[0.25em] uppercase text-accent mb-5">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-gradient-hot mb-5 w-fit">
             {slides[current].tag}
           </p>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[0.95]">

@@ -15,7 +15,7 @@ export default function Eyebrow({
         tone === "dark" ? "text-accent-300" : "text-ink"
       } ${className}`}
     >
-      <span className="h-2.5 w-2.5 bg-accent shrink-0" aria-hidden />
+      <span className="h-2.5 w-2.5 bg-gradient-hot shrink-0" aria-hidden />
       {children}
     </p>
   );

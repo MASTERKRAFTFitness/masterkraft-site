@@ -26,7 +26,7 @@ export default function OgImage() {
             fontSize: 40,
             letterSpacing: 6,
             textTransform: "uppercase",
-            color: "#2e9bff",
+            color: "#ef0474",
             fontWeight: 700,
           }}
         >
