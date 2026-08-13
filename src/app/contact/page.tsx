@@ -29,7 +29,7 @@ export default function ContactPage() {
           <div>
             <h3 className="font-mono text-xs tracking-widest text-accent-600 uppercase">Phone</h3>
             <a href="tel:+61390449575" className="mt-2 block text-lg hover:text-accent-600 transition-colors">
-              03 9044 9575
+              +61 3 9044 9575
             </a>
           </div>
           <div>

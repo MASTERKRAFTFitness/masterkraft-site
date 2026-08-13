@@ -5,9 +5,16 @@ export type RevlSite = {
   blurb: string;
   image: string;
   body: string[];
+  // Up to 6 photos for the club page gallery. Computed at module load from the
+  // hero + any location-specific shots + the shared REVL training pool.
+  gallery: string[];
 };
 
-export const revlSites: RevlSite[] = [
+// Raw site data authored below; `extras` are location-specific photos (e.g. the
+// Singapore studios) that should appear ahead of the generic pool in a gallery.
+type RawRevlSite = Omit<RevlSite, "gallery"> & { extras?: string[] };
+
+const rawSites: RawRevlSite[] = [
   {
     slug: "revl-brighton",
     name: "REVL Brighton",
@@ -69,6 +76,7 @@ export const revlSites: RevlSite[] = [
     location: "Singapore",
     blurb: "The REVL fit-out delivered beyond Australia, into the Asia-Pacific.",
     image: "/revl/gallery/cityhall.jpg",
+    extras: ["/revl/singapore.jpg", "/revl/singapore-2.jpg", "/revl/gallery/raffles-place.jpg"],
     body: [
       "REVL City Hall took the REVL model into Singapore. MasterKraft delivered the full studio fit-out, shipped complete in a single coordinated container.",
       "Same spec sheet, same quality, the same branding REVL runs across its network - one accountable partner and a floor built to perform from day one, delivered internationally.",
@@ -80,6 +88,7 @@ export const revlSites: RevlSite[] = [
     location: "Singapore",
     blurb: "A second Singapore studio, delivered to the same REVL spec.",
     image: "/revl/gallery/lower-pierce.jpg",
+    extras: ["/revl/singapore-2.jpg", "/revl/gallery/raffles-place.jpg", "/revl/singapore.jpg"],
     body: [
       "MasterKraft fitted out REVL Lower Pierce to the identical specification REVL runs worldwide, delivered complete and installation-ready.",
       "Repeatable quality across borders - the same REVL floor, wherever members train.",
@@ -119,6 +128,47 @@ export const revlSites: RevlSite[] = [
     ],
   },
 ];
+
+// Shared REVL training/studio photography (used under MasterKraft's collateral
+// agreement with REVL). These generic shots fill out each club gallery after the
+// hero and any location-specific extras.
+const GENERIC_SHOTS: string[] = [
+  "/revl/full-studio.jpg",
+  "/revl/wide-studio.jpg",
+  "/revl/rigs.jpg",
+  "/revl/branded-bikes.jpg",
+  "/revl/branded-wall.jpg",
+  "/revl/people.jpg",
+  "/revl/gallery/shot-1.jpg",
+  "/revl/gallery/shot-4.jpg",
+  "/revl/gallery/shot-6.jpg",
+  "/revl/gallery/skierg.jpg",
+  "/revl/gallery/rowers-bw.jpg",
+  "/revl/gallery/shot-2.png",
+  "/revl/gallery/shot-3.png",
+];
+
+// Build a de-duplicated gallery of up to 6 images: hero first, then any
+// location-specific extras, then the generic pool rotated by `index` so adjacent
+// club pages don't show an identical run of photos.
+function buildGallery(hero: string, extras: string[], index: number): string[] {
+  const offset = index % GENERIC_SHOTS.length;
+  const rotated = [...GENERIC_SHOTS.slice(offset), ...GENERIC_SHOTS.slice(0, offset)];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const src of [hero, ...extras, ...rotated]) {
+    if (seen.has(src)) continue;
+    seen.add(src);
+    out.push(src);
+    if (out.length === 6) break;
+  }
+  return out;
+}
+
+export const revlSites: RevlSite[] = rawSites.map((s, i) => {
+  const { extras, ...rest } = s;
+  return { ...rest, gallery: buildGallery(s.image, extras ?? [], i) };
+});
 
 export function getRevlSite(slug: string) {
   return revlSites.find((s) => s.slug === slug);

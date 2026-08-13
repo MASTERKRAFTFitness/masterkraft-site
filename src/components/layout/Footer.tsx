@@ -21,7 +21,7 @@ export default function Footer() {
           </p>
           <div className="mt-6 space-y-1.5 text-sm">
             <a href="tel:+61390449575" className="block text-white/80 hover:text-accent transition-colors">
-              03 9044 9575
+              +61 3 9044 9575
             </a>
             <Link href="/contact" className="block text-white/80 hover:text-accent transition-colors">
               Contact us

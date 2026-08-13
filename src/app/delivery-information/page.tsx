@@ -58,7 +58,7 @@ export default function DeliveryInformationPage() {
             <p className="text-sm text-ash">
               Not sure about something? Call{" "}
               <a href="tel:+61390449575" className="underline decoration-accent-600 underline-offset-2">
-                03 9044 9575
+                +61 3 9044 9575
               </a>{" "}
               or{" "}
               <a href="/contact" className="underline decoration-accent-600 underline-offset-2">

@@ -22,7 +22,7 @@ export const contentPages: Record<string, ContentPageData> = {
         heading: "Making a claim",
         body: [
           "To lodge a warranty claim, contact us with your order details and a description of the issue. Our team manages warranty claims directly, with a committed response and resolution SLA.",
-          "Call 03 9044 9575 or reach us through our Contact page to get started.",
+          "Call +61 3 9044 9575 or reach us through our Contact page to get started.",
         ],
       },
     ],
@@ -53,7 +53,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Finance",
     subtitle: "Flexible ways to fund your equipment and fit-out.",
     intro:
-      "MasterKraft has researched the best financiers for fitness equipment and partnered with those that offer a range of flexible finance options, enabling you to get your equipment faster and at the most competitive finance rates. If you need assistance, contact us on 03 9044 9575 and we will provide advice on a tailored finance solution.",
+      "MasterKraft has researched the best financiers for fitness equipment and partnered with those that offer a range of flexible finance options, enabling you to get your equipment faster and at the most competitive finance rates. If you need assistance, contact us on +61 3 9044 9575 and we will provide advice on a tailored finance solution.",
     sections: [
       {
         heading: "Afterpay (coming soon)",
@@ -87,7 +87,7 @@ export const contentPages: Record<string, ContentPageData> = {
         ],
       },
       {
-        body: ["To discuss finance, call 03 9044 9575 or reach us through our Contact page."],
+        body: ["To discuss finance, call +61 3 9044 9575 or reach us through our Contact page."],
       },
     ],
   },

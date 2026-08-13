@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
+import Eyebrow from "@/components/ui/Eyebrow";
 import { revlSites, getRevlSite } from "@/lib/revl";
 
 export function generateStaticParams() {
@@ -63,6 +65,31 @@ export default async function RevlSitePage({
           </Link>
         </div>
       </section>
+
+      {s.gallery.length > 0 && (
+        <section className="bg-smoke border-t border-line">
+          <div className="container-mk py-20">
+            <Eyebrow className="mb-10">Inside {s.name}</Eyebrow>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {s.gallery.map((src, i) => (
+                <div
+                  key={src}
+                  className="relative aspect-[4/3] overflow-hidden bg-carbon"
+                >
+                  <Image
+                    src={src}
+                    alt={`${s.name} fit-out by MasterKraft`}
+                    fill
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    priority={i === 0}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }

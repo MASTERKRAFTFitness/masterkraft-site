@@ -37,7 +37,7 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
             src={main.src}
             alt={main.alt || name}
             fill
-            className="object-contain p-6 transition-transform duration-300 group-hover:scale-105"
+            className="object-contain p-6 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
@@ -57,7 +57,7 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
                 i === active ? "border-accent" : "border-line hover:border-ash"
               }`}
             >
-              <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
+              <Image src={img.src} alt="" fill className="object-contain p-2 mix-blend-multiply" sizes="15vw" />
             </button>
           ))}
         </div>
