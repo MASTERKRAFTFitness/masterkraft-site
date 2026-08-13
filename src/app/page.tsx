@@ -156,9 +156,10 @@ export default function Home() {
             <Eyebrow className="mb-4">Partnership</Eyebrow>
             <h2 className="text-3xl lg:text-4xl font-bold">Powered by MasterKraft</h2>
             <p className="mt-5 text-ash leading-relaxed">
-              We proudly supply and fit out REVL Training studios across Australia -
-              a testament to equipment trusted by fast-scaling boutique brands. When
-              performance and consistency matter, operators choose MasterKraft.
+              MasterKraft has fitted out REVL Training studios around the world, including
+              Australia, Singapore, Malaysia, Vietnam and Taiwan - a testament to equipment
+              trusted by fast-scaling boutique brands. When performance and consistency
+              matter, operators choose MasterKraft.
             </p>
             <Link href="/revl-fitouts" className="btn btn-dark mt-8">
               View REVL Fitouts
