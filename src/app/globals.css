@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand palette - black / white base with a vivid magenta accent */
+  /* Brand palette - black / white base with a vivid blue accent */
  --color-ink: #111113;
  --color-charcoal: #1b1b1e;
  --color-carbon: #0a0a0b;
- --color-accent: #ef0474;        /* primary accent - magenta pop (fills, borders, large text) */
- --color-accent-600: #c9035f;    /* deeper accent - AA text on LIGHT bg + button fills (white text) */
- --color-accent-300: #fb3a8b;    /* lighter accent - AA pink TEXT on DARK bg (#0a0a0b/#111113) */
+ --color-accent: #2e9bff;        /* primary accent - blue pop (fills, borders, large text) */
+ --color-accent-600: #0f6fdc;    /* deeper accent - AA text on LIGHT bg + button fills (white text) */
+ --color-accent-300: #66b2ff;    /* lighter accent - AA blue TEXT on DARK bg (#0a0a0b/#111113) */
  --color-smoke: #f4f4f5;
  --color-ash: #6b6b70;
  --color-line: #e5e5e7;
@@ -50,16 +50,16 @@
     border: 1px solid transparent;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  /* Accent block - the signature "pop": magenta fill, white text.
-     Fill uses accent-600 so white label text clears WCAG AA (5.7:1 vs 4.25:1
-     on the brighter accent). Visually a hair deeper; still the magenta pop. */
+  /* Accent block - the signature "pop": blue fill, white text.
+     Fill uses accent-600 so white label text clears WCAG AA (~4.9:1 vs ~2.6:1
+     on the brighter accent). Visually a hair deeper; still the blue pop. */
   .btn-accent {
     background-color: var(--color-accent-600);
     color: #fff;
   }
   .btn-accent:hover {
     background-color: var(--color-ink);
-    color: var(--color-accent-300); /* pink-on-dark: use the light shade for AA */
+    color: var(--color-accent-300); /* blue-on-dark: use the light shade for AA */
   }
   .btn-dark {
     background-color: var(--color-ink);
@@ -129,7 +129,7 @@
 
 /* Accent gradient fades (brand "colour fade" language) */
 .mk-fade-accent {
-  background-image: linear-gradient(105deg, var(--color-accent) 0%, #ff8fc4 45%, #ffffff 100%);
+  background-image: linear-gradient(105deg, var(--color-accent) 0%, #8fc4ff 45%, #ffffff 100%);
 }
 .mk-glow {
   background:
