@@ -243,6 +243,19 @@ export function decodeEntities(s: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
+// The category's own description (rich HTML) from WooCommerce — the SEO copy the
+// old site showed on each category landing page. Empty string if none/failed.
+export async function getCategoryDescription(id: number): Promise<string> {
+  try {
+    const { data } = await wcGet<{ description?: string }>(`/products/categories/${id}`, {
+      _fields: "description",
+    });
+    return data?.description ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export async function getCategoryChildren(parentId: number): Promise<WcCategoryChild[]> {
   const { data } = await wcGet<WcCategoryChild[]>("/products/categories", {
     parent: parentId,

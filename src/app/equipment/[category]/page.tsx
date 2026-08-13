@@ -9,6 +9,7 @@ import { categories, getCategory } from "@/lib/categories";
 import {
   getAllProductsByCategory,
   getCategoryChildren,
+  getCategoryDescription,
   type WcProduct,
   type WcCategoryChild,
 } from "@/lib/woocommerce";
@@ -55,6 +56,7 @@ export default async function CategoryPage({
 
   const unleashed = await getUnleashedMap().catch(() => ({}));
   const children = await getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]);
+  const categoryDescription = await getCategoryDescription(c.wcId).catch(() => "");
   const activeSub = subSlug ? children.find((s) => s.slug === subSlug) : undefined;
   const targetId = activeSub?.id ?? c.wcId;
 
@@ -196,6 +198,16 @@ export default async function CategoryPage({
                   </div>
                 )}
               </>
+            )}
+
+            {categoryDescription && (
+              <div className="mt-16 pt-10 border-t border-line max-w-3xl">
+                <h2 className="text-xl font-bold mb-5">About {c.label}</h2>
+                <div
+                  className="text-ash leading-relaxed [&_p]:mb-4 [&_strong]:text-ink [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_a]:text-accent-600 [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: categoryDescription }}
+                />
+              </div>
             )}
           </>
         )}
