@@ -146,15 +146,25 @@ export type EnrichedProduct = {
 // already shows for products with no Unleashed SKU match. Works for both
 // products and variations (anything with sku + price fields).
 export function enrich(item: Priceable, map: UnleashedMap): EnrichedProduct {
-  const u = lookupBySku(map, item.sku);
-  if (u && u.price > 0) {
-    return {
-      priceLabel: formatPrice(u.price),
-      priceValue: u.price,
-      inStock: u.stock > 0,
-      stockQty: u.stock,
-      source: "unleashed",
-    };
+  const regular = parseFloat(item.regular_price || "0");
+  const sale = parseFloat(item.sale_price || "0");
+  const onSale = sale > 0 && sale < regular;
+
+  // An explicit WooCommerce sale (e.g. Clearance markdowns) wins over the standard
+  // Unleashed price, so the crossed-out RRP + reduced price show exactly as the
+  // old site does. Unleashed carries no sale concept, so we only defer to it when
+  // the item isn't marked down.
+  if (!onSale) {
+    const u = lookupBySku(map, item.sku);
+    if (u && u.price > 0) {
+      return {
+        priceLabel: formatPrice(u.price),
+        priceValue: u.price,
+        inStock: u.stock > 0,
+        stockQty: u.stock,
+        source: "unleashed",
+      };
+    }
   }
   const wc = getPricing(item);
   return {
