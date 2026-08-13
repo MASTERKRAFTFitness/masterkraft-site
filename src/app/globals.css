@@ -160,3 +160,9 @@
   white-space: nowrap;
   animation: mk-marquee 30s linear infinite;
 }
+
+/* "Site is thinking" cursor during page navigation (toggled by NavProgress). */
+html.nav-busy,
+html.nav-busy * {
+  cursor: progress !important;
+}

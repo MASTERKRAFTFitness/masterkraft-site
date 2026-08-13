@@ -3,12 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
-import { revlSites } from "@/lib/revl";
+import { revlSites, revlNetwork } from "@/lib/revl";
 
 export const metadata: Metadata = {
   title: "REVL Fitouts",
   description:
-    "MasterKraft supplies and fits out REVL Training studios across Australia and Singapore - premium boutique performance gyms, delivered complete in a single container.",
+    "MasterKraft is the exclusive global equipment supplier to REVL Training, fitting out studios across Australia, Singapore, Malaysia, Vietnam, Taiwan and beyond - delivered complete in a single container.",
   alternates: { canonical: "/revl-fitouts" },
 };
 
@@ -18,7 +18,7 @@ export default function RevlLanding() {
       <PageHero
         eyebrow="Partnership"
         title="REVL Training Fitouts"
-        subtitle="Founded in 2020, REVL Training revolutionises group fitness through performance-based training. MasterKraft supplies and fits out every REVL studio across Australia and Singapore, delivered complete in a single container."
+        subtitle="Founded in 2020, REVL Training revolutionises group fitness through performance-based training. As REVL's exclusive global equipment supplier, MasterKraft fits out every REVL studio worldwide, delivered complete in a single container."
         image="/revl/full-studio.jpg"
         imagePosition="center 40%"
       />
@@ -46,6 +46,45 @@ export default function RevlLanding() {
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* Global network */}
+      <section className="bg-smoke border-t border-line">
+        <div className="container-mk py-20">
+          <Eyebrow className="mb-4">Global Network</Eyebrow>
+          <h2 className="text-3xl lg:text-4xl font-bold max-w-2xl">
+            Every REVL studio, fitted out by MasterKraft
+          </h2>
+          <p className="mt-4 text-ash max-w-2xl leading-relaxed">
+            As REVL Training&apos;s exclusive global equipment supplier since 2023, MasterKraft has
+            fitted out its studios across eight markets worldwide - each delivered to the same spec,
+            the same quality and the same branding.
+          </p>
+
+          <div className="mt-12 divide-y divide-line border-t border-line">
+            {revlNetwork.map((m) => (
+              <div key={m.country} className="grid md:grid-cols-4 gap-2 md:gap-6 py-6">
+                <div className="md:col-span-1">
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <span aria-hidden>{m.flag}</span> {m.country}
+                  </h3>
+                  {m.studios.length > 0 && (
+                    <p className="mt-1 font-mono text-xs tracking-widest text-ash uppercase">
+                      {m.studios.length} studio{m.studios.length === 1 ? "" : "s"}
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-3">
+                  {m.studios.length > 0 ? (
+                    <p className="text-ash text-sm leading-relaxed">{m.studios.join(" · ")}</p>
+                  ) : (
+                    <p className="text-ash text-sm">Studios operating</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </>

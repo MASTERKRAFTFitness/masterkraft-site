@@ -25,16 +25,16 @@ export default function FeatureBlock({
         <Image src={image} alt={title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
       </div>
       <div
-        className={`flex items-center bg-ink text-white ${reverse ? "md:order-1" : ""}`}
+        className={`flex items-center bg-white text-ink ${reverse ? "md:order-1" : ""}`}
       >
         <div className="p-10 lg:p-16 max-w-lg">
           {eyebrow && (
-            <Eyebrow tone="dark" className="mb-4">
+            <Eyebrow className="mb-4">
               {eyebrow}
             </Eyebrow>
           )}
           <h2 className="text-3xl lg:text-4xl font-bold">{title}</h2>
-          <p className="mt-5 text-white/70 leading-relaxed">{body}</p>
+          <p className="mt-5 text-ash leading-relaxed">{body}</p>
           <Link href={href} className="btn btn-accent mt-8">
             {cta}
           </Link>

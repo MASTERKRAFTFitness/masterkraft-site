@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CookieConsent from "@/components/layout/CookieConsent";
+import NavProgress from "@/components/layout/NavProgress";
 import { SITE_URL, ALLOW_INDEX } from "@/lib/site";
 
 const inter = Inter({
@@ -58,6 +59,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white text-ink">
         <CartProvider>
+          <NavProgress />
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:fixed focus:z-[100] focus:top-3 focus:left-3 focus:bg-ink focus:text-white focus:px-4 focus:py-2 focus:font-mono focus:text-sm"

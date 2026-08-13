@@ -49,3 +49,39 @@ export const revlSites: RevlSite[] = [
 export function getRevlSite(slug: string) {
   return revlSites.find((s) => s.slug === slug);
 }
+
+export type RevlMarket = { country: string; flag: string; studios: string[] };
+
+// The full REVL Training network MasterKraft has fitted out, grouped by market.
+// Named studios sourced from REVL's regional websites (2026); markets without
+// individually named studios are shown as operating. Dubai is excluded per the
+// client. Keep this list current as REVL opens new studios.
+export const revlNetwork: RevlMarket[] = [
+  {
+    country: "Australia",
+    flag: "🇦🇺",
+    studios: [
+      "Albury", "Bondi", "Brighton", "Brookvale", "Burleigh", "Caloundra",
+      "Campbelltown", "Collingwood", "Erina", "Frankston", "Greenslopes",
+      "Kincumber", "Loganholme", "Maroochydore", "Mile End", "Mordialloc",
+      "Mount Barker", "Mount Gambier", "Neutral Bay", "Norwood", "Plympton",
+      "Port Melbourne", "Prahran", "Prospect", "Sippy Downs", "St Marys", "Unley",
+    ],
+  },
+  {
+    country: "Singapore",
+    flag: "🇸🇬",
+    studios: [
+      "Balestier", "Bukit Timah", "City Hall", "Harbourfront", "Katong",
+      "Lower Pierce", "Potong Pasir", "Punggol", "Raffles Place", "River Valley",
+      "Rochester", "Seletar", "Serangoon", "Tampines", "Thomson", "Tiong Bahru",
+      "Yishun",
+    ],
+  },
+  { country: "Malaysia", flag: "🇲🇾", studios: ["Kuala Lumpur (KLCC)"] },
+  { country: "Vietnam", flag: "🇻🇳", studios: ["Ho Chi Minh City"] },
+  { country: "Taiwan", flag: "🇹🇼", studios: ["Taipei"] },
+  { country: "South Korea", flag: "🇰🇷", studios: [] },
+  { country: "Canada", flag: "🇨🇦", studios: [] },
+  { country: "Indonesia", flag: "🇮🇩", studios: [] },
+];
