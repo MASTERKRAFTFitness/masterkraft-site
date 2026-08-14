@@ -352,24 +352,6 @@ export const locations: Location[] = [
     ],
   },
   {
-    slug: "dubai",
-    city: "Dubai",
-    state: "the UAE",
-    international: true,
-    meta: "Gym fitouts in Dubai by MasterKraft. Complete gym fit-outs designed, supplied and delivered across Dubai and the UAE as a single coordinated container.",
-    intro: [
-      "MasterKraft delivers complete gym fit-outs to Dubai and across the UAE, designed, supplied and installed as one coordinated project.",
-      "Fitting out internationally is core to what we do, with equipment already in place across 12 countries and 229 sites. Your entire floor is specified once and shipped as a single coordinated container, so a Dubai build gets the full spec, quality and branding without a fragmented supply chain.",
-    ],
-    delivery:
-      "Your complete fit-out is shipped to Dubai as a single coordinated container, coordinated from our end.",
-    faqs: [
-      { q: "Do you deliver gym fit-outs to Dubai?", a: "Yes. International delivery is core to our business, with equipment across 12 countries and 229 sites." },
-      { q: "How does international delivery work?", a: "Your whole floor is specified once and shipped as a single coordinated container, so nothing is pieced together on the ground." },
-      { q: "Can you match our brand?", a: "Yes, custom-branded equipment and flooring finished to your identity." },
-    ],
-  },
-  {
     slug: "south-korea",
     city: "South Korea",
     international: true,
@@ -425,3 +407,7 @@ export const locations: Location[] = [
 export function getLocation(slug: string) {
   return locations.find((l) => l.slug === slug);
 }
+
+// Markets MasterKraft is expanding into but has no live gym sites in yet - shown
+// as "coming soon" tiles (no landing page) alongside the international locations.
+export const comingSoonMarkets: string[] = ["Canada", "United States"];

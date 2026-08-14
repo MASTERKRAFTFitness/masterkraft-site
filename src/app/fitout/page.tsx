@@ -4,7 +4,7 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { fitouts } from "@/lib/fitouts";
-import { locations } from "@/lib/locations";
+import { locations, comingSoonMarkets } from "@/lib/locations";
 
 export const metadata: Metadata = {
   title: "Gym Fitouts | Design, Supply & Install",
@@ -109,6 +109,17 @@ export default function FitoutLanding() {
                   <span aria-hidden className="text-accent">→</span>
                 </Link>
               ))}
+            {comingSoonMarkets.map((m) => (
+              <div
+                key={m}
+                className="flex items-center justify-between border border-line/70 px-4 py-4 font-display uppercase tracking-wide text-ash"
+              >
+                {m}
+                <span className="font-mono text-[10px] tracking-widest normal-case text-accent-600 border border-accent-600/40 px-2 py-0.5">
+                  Coming soon
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </section>

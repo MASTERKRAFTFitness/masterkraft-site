@@ -4,8 +4,9 @@ import PageHero from "@/components/marketing/PageHero";
 import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
 import CategoryJumpNav from "@/components/shop/CategoryJumpNav";
-import { getAllProducts, type WcProduct } from "@/lib/woocommerce";
+import { getAllProducts, getCategoryChildren, type WcProduct } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
+import { categories } from "@/lib/categories";
 
 export const metadata: Metadata = {
   title: "All Equipment",
@@ -27,6 +28,14 @@ export default async function AllEquipmentPage({
   const priceSort = sort === "price-asc" || sort === "price-desc";
 
   const unleashed = await getUnleashedMap().catch(() => ({}));
+  // Category dropdown groups (each category + its sub-categories from WooCommerce).
+  const jumpGroups = await Promise.all(
+    categories.map(async (c) => ({
+      label: c.label,
+      slug: c.slug,
+      children: await getCategoryChildren(c.wcId).catch(() => []),
+    }))
+  );
   let all: WcProduct[] = [];
   let failed = false;
   try {
@@ -99,7 +108,7 @@ export default async function AllEquipmentPage({
         ) : (
           <>
             <div className="mb-10 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between border-b border-line pb-4">
-              <CategoryJumpNav />
+              <CategoryJumpNav groups={jumpGroups} />
               <SortSelect value={sort} />
             </div>
 
