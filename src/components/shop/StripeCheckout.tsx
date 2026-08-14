@@ -133,7 +133,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
         {phase === "payment" && clientSecret && billing && (
           <Elements
             stripe={getStripe()}
-            options={{ clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#ef0474" } } }}
+            options={{ clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#cf3a28" } } }}
           >
             <PayForm
               billing={billing}
