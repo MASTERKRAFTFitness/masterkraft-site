@@ -3,91 +3,226 @@
     "name": "Rubber Tile Installation Guide",
     "sub": "Flooring Guide",
     "thumb": "/resources/rubber-tile-installation-guide.jpg",
-    "download": "/manuals/rubber-tile-installation-guide.pdf",
-    "external": false
+    "manuals": [
+      {
+        "label": "Rubber Tile Installation Guide",
+        "download": "/manuals/rubber-tile-installation-guide.pdf",
+        "external": false
+      }
+    ]
   },
   {
     "name": "Flooring Brochure",
     "sub": "Technical Information",
     "thumb": "/resources/flooring-brochure.jpg",
-    "download": "/manuals/flooring-brochure.pdf",
-    "external": false
+    "manuals": [
+      {
+        "label": "Flooring Brochure",
+        "download": "/manuals/flooring-brochure.pdf",
+        "external": false
+      }
+    ]
   },
   {
     "name": "Ski Trainer Elite",
     "sub": "MCSTAR02",
     "thumb": "/resources/ski-trainer-elite.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCSTAR02-OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owners Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCSTAR02-OWNERS-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCSTAR02-CONSOLE-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Bike Elite",
     "sub": "MCBIAR03",
     "thumb": "/resources/air-bike-elite.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR03-OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owners Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR03-OWNERS-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR03-CONSOLE-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Cycle Pro",
     "sub": "MCBIAR04",
     "thumb": "/resources/air-cycle-pro.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR04-OWNERS-MANUALca.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owners Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR04-OWNERS-MANUALca.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR04-CONSOLE-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Rower Elite",
     "sub": "MCRWAR03",
     "thumb": "/resources/air-rower-elite.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCRWAR03-OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owner\u2019s Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCRWAR03-OWNERS-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Ski Trainer Pro",
     "sub": "MCSTAR01",
     "thumb": "/resources/ski-trainer-pro.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCSTAR01-OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owner\u2019s Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCSTAR01-OWNERS-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCSTAR01-CONSOLE-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Curved Treadmill Pro",
     "sub": "MCTMSP01",
     "thumb": "/resources/curved-treadmill-pro.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP01-CONSOLE-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP01-CONSOLE-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Exploded Drawing",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP01-EXPLODED-DRAWING-1.pdf",
+        "external": true
+      },
+      {
+        "label": "Part List",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP01-PART-LIST.pdf",
+        "external": true
+      },
+      {
+        "label": "Assembly Guide",
+        "download": "/manuals/curved-treadmill-pro-assembly-guide.pdf",
+        "external": false
+      }
+    ]
   },
   {
     "name": "Curved Treadmill Elite",
     "sub": "MCTMSP02",
     "thumb": "/resources/curved-treadmill-elite.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP02-OWNERS-MANUAL-ASSEMBLY.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owners Manual Assembly",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP02-OWNERS-MANUAL-ASSEMBLY.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP02CONSOLE-MANUAL.pdf",
+        "external": true
+      },
+      {
+        "label": "Exploded Drawing",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP02-EXPLODED-DRAWING-1-1.pdf",
+        "external": true
+      },
+      {
+        "label": "Part List",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCTMSP02PART-LISTCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Rower Pro",
     "sub": "MCRWAR01",
     "thumb": "/resources/air-rower-pro.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCRWAR01-Owners-Manual.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owners Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCRWAR01-Owners-Manual.pdf",
+        "external": true
+      },
+      {
+        "label": "Owners Manual 2",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCRWAR01-CONSOLE-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Bike Pro",
     "sub": "MCBIAR02",
     "thumb": "/resources/air-bike-pro.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR02-OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owner\u2019s Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR02-OWNERS-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR02-CONSOLE-MANUALCA-1.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Bike Classic",
     "sub": "MCBIAR01",
     "thumb": "/resources/air-bike-classic.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR01-OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owner\u2019s Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR01-OWNERS-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR01-CONSOLE-MANUALCA-1.pdf",
+        "external": true
+      }
+    ]
   },
   {
     "name": "Air Cycle Elite",
     "sub": "MCBIAR05",
     "thumb": "/resources/air-cycle-elite.jpg",
-    "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR05OWNERS-MANUALCA.pdf",
-    "external": true
+    "manuals": [
+      {
+        "label": "Owner\u2019s Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR05OWNERS-MANUALCA.pdf",
+        "external": true
+      },
+      {
+        "label": "Console Manual",
+        "download": "https://masterkraft.com/wp-content/uploads/2021/03/MCBIAR05-CONSOLE-MANUALCA.pdf",
+        "external": true
+      }
+    ]
   }
 ]
