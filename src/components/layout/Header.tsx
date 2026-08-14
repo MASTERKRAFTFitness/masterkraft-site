@@ -149,7 +149,7 @@ export default function Header() {
 
       {/* Mega menu panels */}
       {openMenu === "equipment" && (
-        <MegaPanel columns={equipmentCategories} onNavigate={() => setOpenMenu(null)} />
+        <EquipmentMegaPanel onNavigate={() => setOpenMenu(null)} />
       )}
       {openMenu === "fitouts" && (
         <MegaPanel columns={fitoutLinks} onNavigate={() => setOpenMenu(null)} />
@@ -218,6 +218,68 @@ export default function Header() {
         </div>
       )}
     </header>
+  );
+}
+
+// Equipment mega-menu: categories on the left; hovering one reveals its
+// sub-categories in the middle column, with the category's image on the right.
+function EquipmentMegaPanel({ onNavigate }: { onNavigate: () => void }) {
+  const firstWithKids = equipmentCategories.find((c) => c.children?.length);
+  const [active, setActive] = useState(firstWithKids ?? equipmentCategories[0]);
+  return (
+    <div className="hidden xl:block absolute inset-x-0 top-full bg-white text-ink border-t border-line shadow-lg">
+      <div className="container-mk grid grid-cols-[1fr_1.3fr_1.4fr] gap-8 py-8 min-h-[22rem]">
+        {/* Categories */}
+        <ul className="flex flex-col gap-y-1.5 border-r border-line pr-6">
+          {equipmentCategories.map((c) => (
+            <li key={c.href} onMouseEnter={() => c.children?.length && setActive(c)}>
+              <Link
+                href={c.href}
+                onClick={onNavigate}
+                className={`nav-link ${
+                  active.href === c.href
+                    ? "text-ink font-semibold"
+                    : c.highlight
+                      ? "text-accent-600 font-semibold hover:text-accent"
+                      : "text-ash hover:text-ink"
+                }`}
+              >
+                {c.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* Sub-categories of the active category */}
+        <ul className="flex flex-col gap-y-1.5 content-start">
+          <li>
+            <Link href={active.href} onClick={onNavigate} className="nav-link text-ink font-semibold">
+              Show All
+            </Link>
+          </li>
+          {active.children?.map((s) => (
+            <li key={s.href}>
+              <Link href={s.href} onClick={onNavigate} className="nav-link text-ash hover:text-accent-600">
+                {s.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* Category image */}
+        <Link href={active.href} onClick={onNavigate} className="relative block overflow-hidden bg-carbon">
+          {active.image && (
+            <Image
+              src={active.image}
+              alt={active.label}
+              fill
+              className="object-cover opacity-90 transition-opacity hover:opacity-100"
+              sizes="30vw"
+            />
+          )}
+        </Link>
+      </div>
+    </div>
   );
 }
 
