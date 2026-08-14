@@ -231,7 +231,7 @@ function MegaPanel({
   return (
     <div className="hidden xl:block absolute inset-x-0 top-full bg-white text-ink border-t border-line shadow-lg">
       <div className="container-mk py-8">
-        <ul className="grid grid-cols-3 gap-x-10 gap-y-3">
+        <ul className="flex flex-col gap-y-2.5 max-w-xs">
           {columns.map((c) => (
             <li key={c.href}>
               <Link

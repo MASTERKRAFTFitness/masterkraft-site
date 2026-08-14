@@ -69,7 +69,19 @@ export default async function RevlSitePage({
       {s.gallery.length > 0 && (
         <section className="bg-smoke border-t border-line">
           <div className="container-mk py-20">
-            <Eyebrow className="mb-10">Inside {s.name}</Eyebrow>
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+              <Eyebrow>Inside {s.name}</Eyebrow>
+              {s.instagram && (
+                <a
+                  href={`https://www.instagram.com/${s.instagram}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-ash hover:text-accent-600 transition-colors"
+                >
+                  <InstagramIcon />@{s.instagram}
+                </a>
+              )}
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               {s.gallery.map((src, i) => (
                 <div
@@ -91,5 +103,15 @@ export default async function RevlSitePage({
         </section>
       )}
     </>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
   );
 }

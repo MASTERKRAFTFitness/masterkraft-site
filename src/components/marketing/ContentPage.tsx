@@ -1,4 +1,5 @@
 import PageHero from "@/components/marketing/PageHero";
+import AccordionSections from "@/components/marketing/AccordionSections";
 
 export type ContentSection = { heading?: string; body: string[] };
 export type ContentPageData = {
@@ -7,14 +8,19 @@ export type ContentPageData = {
   subtitle?: string;
   intro?: string;
   sections: ContentSection[];
+  // When true, sections render as an expand/collapse accordion (concertina).
+  collapsible?: boolean;
 };
 
-export default function ContentPage({ eyebrow, title, subtitle, intro, sections }: ContentPageData) {
+export default function ContentPage({ eyebrow, title, subtitle, intro, sections, collapsible }: ContentPageData) {
   return (
     <>
       <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} />
       <section className="container-mk max-w-3xl py-16">
         {intro && <p className="text-xl text-ink leading-relaxed mb-10">{intro}</p>}
+        {collapsible && sections.every((s) => s.heading) ? (
+          <AccordionSections sections={sections} />
+        ) : (
         <div className="space-y-10">
           {sections.map((s, i) => (
             <div key={i}>
@@ -29,6 +35,7 @@ export default function ContentPage({ eyebrow, title, subtitle, intro, sections 
             </div>
           ))}
         </div>
+        )}
       </section>
     </>
   );

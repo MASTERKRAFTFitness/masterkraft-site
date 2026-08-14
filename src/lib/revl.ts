@@ -9,6 +9,8 @@ export type RevlSite = {
   // Instagram (used with REVL's permission). Empty for studios without an
   // account yet (e.g. Taipei) — the gallery section is hidden in that case.
   gallery: string[];
+  // The studio's own Instagram handle (no @), if it has an account.
+  instagram?: string;
 };
 
 type RawRevlSite = Omit<RevlSite, "gallery">;
@@ -145,9 +147,23 @@ const IG_PHOTOS: Record<string, string[]> = {
   "revl-ho-chi-minh-city": igPhotos("revl-ho-chi-minh-city", 4),
 };
 
+// Each studio's own Instagram handle (naming is inconsistent across the network).
+const IG_HANDLES: Record<string, string> = {
+  "revl-brighton": "revl.training.brighton.sa",
+  "revl-bondi": "revltraining.bondi",
+  "revl-burleigh": "revltraining.burleigh",
+  "revl-collingwood": "revl.training.collingwood",
+  "revl-campbelltown": "revl.training.campbelltown",
+  "revl-singapore": "revl.training.cityhall",
+  "revl-lower-pierce": "revl.training.lowerpeirce",
+  "revl-kuala-lumpur": "revl.training.klcc",
+  "revl-ho-chi-minh-city": "revl.training.thaodien",
+};
+
 export const revlSites: RevlSite[] = rawSites.map((s) => ({
   ...s,
   gallery: IG_PHOTOS[s.slug] ?? [],
+  instagram: IG_HANDLES[s.slug],
 }));
 
 export function getRevlSite(slug: string) {
