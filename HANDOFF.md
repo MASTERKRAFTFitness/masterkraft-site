@@ -85,6 +85,25 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   assembly), hosted locally. `src/lib/resource-docs.json` drives it. **Re-add
   products when the real PDFs are supplied** (structure is ready).
 
+## Product images — where they come from (+ the cutover risk)
+- The site is **already headless WooCommerce**: it reads catalogue/price/stock via
+  the WC REST API and does NOT use the old WordPress storefront. But **WooCommerce
+  is a WordPress plugin** — product data + image files physically live in that one
+  install (`wp-content/uploads`). You can't use "WooCommerce without WordPress";
+  keep the install running as a hidden backend on a subdomain (`cms.`/`shop.`).
+- **Exposure (live catalogue, 221 M/N products shown):** **191 (86%) load images
+  from the WordPress backend** (`masterkraft.com/wp-content/…`, absolute URLs);
+  **30** use local `/public/product-bg/` overrides; **0** have no image.
+- **Cutover requirement** (else all 191 images break, same failure as the resources
+  PDFs): move WordPress to a subdomain, set its **Site Address** to that subdomain
+  (so WC emits subdomain image URLs), point `WC_STORE_URL` there, and add the
+  subdomain to `remotePatterns` in `next.config.ts`.
+- **DECISION PENDING — image mirror:** recommended to mirror all 191 images into
+  `/public` (extend `product-image-overrides.json` via a `normalize-product-bg.py`
+  variant) so images are immune to anything on the WordPress side while WC still
+  drives live price/stock. Michael has NOT yet approved — next action to confirm.
+  Michael's steer: keep WooCommerce running; don't migrate off it.
+
 ## Open / blocked (needs Michael/Steve or assets)
 - **Missing manual PDFs** — 22 equipment manuals need re-uploading (or send to
   Claude to host locally). Then re-populate `resource-docs.json`.
