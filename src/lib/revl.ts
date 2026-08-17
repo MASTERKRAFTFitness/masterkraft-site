@@ -63,7 +63,7 @@ const rawSites: RawRevlSite[] = [
   {
     slug: "revl-campbelltown-aus",
     name: "REVL Campbelltown",
-    location: "Campbelltown, NSW",
+    location: "Campbelltown, SA",
     blurb: "Another premium REVL studio delivered end-to-end by MasterKraft.",
     image: "/revl/gallery/shot-2.png",
     body: [
@@ -172,6 +172,62 @@ export function getRevlSite(slug: string) {
 
 export type RevlMarket = { country: string; flag: string; studios: string[]; comingSoon?: boolean };
 
+// Every REVL club in Australia, with the suburb it actually trades in and the
+// /gym-fitouts/[city] page it belongs to. Verified against REVL's own locations
+// directory (revltraining.com.au) - several clubs are named for one suburb but
+// sit in another (Brighton is in Hove, Mile End in Torrensville, St Marys in
+// Melrose Park), and Brighton + Campbelltown are BOTH South Australian, not the
+// Victorian / NSW suburbs of the same name.
+export type RevlClub = {
+  name: string;
+  suburb: string;
+  state: "NSW" | "QLD" | "SA" | "VIC";
+  // Slug of the city/region fit-out page this club sits in. Omitted for clubs
+  // outside any city page's catchment (e.g. Albury, Mount Gambier).
+  region?: string;
+  // Regional rather than metro - listed separately on the city page.
+  regional?: boolean;
+};
+
+export const revlClubsAu: RevlClub[] = [
+  // New South Wales
+  { name: "Albury", suburb: "Thurgoona", state: "NSW", region: "sydney", regional: true },
+  { name: "Bondi", suburb: "Bondi Beach", state: "NSW", region: "sydney" },
+  { name: "Brookvale", suburb: "Brookvale", state: "NSW", region: "sydney" },
+  { name: "Neutral Bay", suburb: "Neutral Bay", state: "NSW", region: "sydney" },
+  { name: "Erina", suburb: "Erina", state: "NSW", region: "central-coast" },
+  { name: "Kincumber", suburb: "Kincumber", state: "NSW", region: "central-coast" },
+  // Queensland
+  { name: "Greenslopes", suburb: "Greenslopes", state: "QLD", region: "brisbane" },
+  { name: "Loganholme", suburb: "Loganholme", state: "QLD", region: "brisbane" },
+  { name: "Burleigh", suburb: "Burleigh Heads", state: "QLD", region: "gold-coast" },
+  { name: "Caloundra", suburb: "Caloundra", state: "QLD", region: "sunshine-coast" },
+  { name: "Maroochydore", suburb: "Maroochydore", state: "QLD", region: "sunshine-coast" },
+  { name: "Sippy Downs", suburb: "Sippy Downs", state: "QLD", region: "sunshine-coast" },
+  // South Australia
+  { name: "Brighton", suburb: "Hove", state: "SA", region: "adelaide" },
+  { name: "Campbelltown", suburb: "Campbelltown", state: "SA", region: "adelaide" },
+  { name: "Mile End", suburb: "Torrensville", state: "SA", region: "adelaide" },
+  { name: "Norwood", suburb: "Norwood", state: "SA", region: "adelaide" },
+  { name: "Plympton", suburb: "North Plympton", state: "SA", region: "adelaide" },
+  { name: "Prospect", suburb: "Prospect", state: "SA", region: "adelaide" },
+  { name: "St Marys", suburb: "Melrose Park", state: "SA", region: "adelaide" },
+  { name: "Unley", suburb: "Parkside", state: "SA", region: "adelaide" },
+  { name: "Mount Barker", suburb: "Aston Hills", state: "SA", region: "adelaide", regional: true },
+  { name: "Mount Gambier", suburb: "Mount Gambier", state: "SA", region: "adelaide", regional: true },
+  // Victoria
+  { name: "Collingwood", suburb: "Collingwood", state: "VIC", region: "melbourne" },
+  { name: "Frankston", suburb: "Frankston", state: "VIC", region: "melbourne" },
+  { name: "Mordialloc", suburb: "Mordialloc", state: "VIC", region: "melbourne" },
+  { name: "Port Melbourne", suburb: "Port Melbourne", state: "VIC", region: "melbourne" },
+  { name: "Prahran", suburb: "Prahran", state: "VIC", region: "melbourne" },
+];
+
+// The REVL clubs shown on a given /gym-fitouts/[city] page.
+export function revlClubsForRegion(slug: string): RevlClub[] {
+  return revlClubsAu.filter((c) => c.region === slug);
+}
+
 // REVL studio + training photography (used under MasterKraft's collateral
 // agreement with REVL). Sourced from REVL's own marketing imagery.
 export const revlGallery: { src: string; alt: string }[] = [
@@ -190,13 +246,9 @@ export const revlNetwork: RevlMarket[] = [
   {
     country: "Australia",
     flag: "🇦🇺",
-    studios: [
-      "Albury", "Bondi", "Brighton", "Brookvale", "Burleigh", "Caloundra",
-      "Campbelltown", "Collingwood", "Erina", "Frankston", "Greenslopes",
-      "Kincumber", "Loganholme", "Maroochydore", "Mile End", "Mordialloc",
-      "Mount Barker", "Mount Gambier", "Neutral Bay", "Norwood", "Plympton",
-      "Port Melbourne", "Prahran", "Prospect", "Sippy Downs", "St Marys", "Unley",
-    ],
+    // Derived from revlClubsAu so the network list and the per-city lists can
+    // never drift apart.
+    studios: revlClubsAu.map((c) => c.name).sort((a, b) => a.localeCompare(b)),
   },
   {
     country: "Singapore",

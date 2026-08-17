@@ -34,14 +34,14 @@ export const locations: Location[] = [
     meta: "Gym fitouts in Melbourne, designed, supplied and installed by MasterKraft. Complete commercial and boutique fit-outs across metro Melbourne and regional Victoria.",
     intro: [
       "Melbourne is MasterKraft's home ground. We design, supply and install complete gym fit-outs right across the metro area and regional Victoria, from boutique studios in the inner suburbs to full commercial floors.",
-      "It is where a lot of our work lives. We delivered the entire fit-out for REVL's Brighton studio and we produce the custom-branded equipment used across Fernwood's Victorian clubs. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",
+      "It is where a lot of our work lives. We delivered the entire fit-out for REVL's Collingwood studio and we produce the custom-branded equipment used across Fernwood's Victorian clubs. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",
     ],
     delivery:
       "Fast delivery and installation across Melbourne and regional Victoria, with your whole floor arriving coordinated and on schedule.",
     project: {
-      name: "REVL Brighton",
-      href: "/revl-fitouts/revl-brighton",
-      blurb: "A full boutique performance fit-out delivered floor to ceiling in Brighton.",
+      name: "REVL Collingwood",
+      href: "/revl-fitouts/revl-collingwood",
+      blurb: "A full boutique performance fit-out delivered floor to ceiling in Collingwood.",
     },
     faqs: [
       {
@@ -50,7 +50,7 @@ export const locations: Location[] = [
       },
       {
         q: "Can I see a MasterKraft fit-out near me?",
-        a: "REVL Brighton is one of our Melbourne fit-outs, delivered floor to ceiling. We also produce the custom-branded equipment used across Fernwood's Victorian clubs.",
+        a: "REVL Collingwood is one of our Melbourne fit-outs, delivered floor to ceiling. We also produce the custom-branded equipment used across Fernwood's Victorian clubs.",
       },
       {
         q: "How quickly can you fit out a Melbourne gym?",
@@ -66,14 +66,14 @@ export const locations: Location[] = [
     meta: "Gym fitouts in Sydney by MasterKraft. Complete commercial and boutique fit-outs designed, supplied and installed across Sydney and New South Wales.",
     intro: [
       "MasterKraft delivers complete gym fit-outs across Sydney and New South Wales, designed, supplied and installed as one coordinated project.",
-      "We know the NSW market. We delivered REVL's Campbelltown studio end to end, matching the exact spec and branding REVL runs interstate. Whether it is a boutique studio in the Inner West or a commercial floor in Western Sydney, you get one accountable partner from design to handover.",
+      "We know the NSW market. We delivered REVL's Bondi studio end to end, matching the exact spec and branding REVL runs interstate. Whether it is a boutique studio in the Inner West or a commercial floor in Western Sydney, you get one accountable partner from design to handover.",
     ],
     delivery:
       "Your entire fit-out ships to Sydney in a single container and is installed by one coordinated crew, so there is no juggling separate suppliers across the build.",
     project: {
-      name: "REVL Campbelltown",
-      href: "/revl-fitouts/revl-campbelltown-aus",
-      blurb: "A premium REVL studio delivered end to end in Sydney's south west.",
+      name: "REVL Bondi",
+      href: "/revl-fitouts/revl-bondi",
+      blurb: "A premium REVL studio delivered end to end in Sydney's eastern suburbs.",
     },
     faqs: [
       {
@@ -82,7 +82,7 @@ export const locations: Location[] = [
       },
       {
         q: "Have you delivered Sydney projects?",
-        a: "REVL Campbelltown was delivered by MasterKraft end to end, on the same spec sheet and branding REVL uses across its network.",
+        a: "REVL Bondi was delivered by MasterKraft end to end, on the same spec sheet and branding REVL uses across its network.",
       },
       {
         q: "Do you deliver to regional NSW?",
@@ -206,10 +206,15 @@ export const locations: Location[] = [
     meta: "Gym fitouts in Adelaide by MasterKraft. Complete boutique and commercial gym fit-outs designed, supplied and installed across Adelaide and South Australia.",
     intro: [
       "MasterKraft designs, supplies and installs gym fit-outs across Adelaide and South Australia.",
-      "From boutique and PT studios to full commercial floors, we deliver complete, cohesive fit-outs to Adelaide, coordinated to your brand and built to hold up to constant use.",
+      "South Australia is REVL's largest market, and we have fitted out every one of its clubs, from Brighton and Unley through to Mount Gambier. From boutique and PT studios to full commercial floors, we deliver complete, cohesive fit-outs to Adelaide, coordinated to your brand and built to hold up to constant use.",
     ],
     delivery:
       "Your whole floor ships to Adelaide as a single coordinated container and is installed on schedule, with one team accountable from design to handover.",
+    project: {
+      name: "REVL Brighton",
+      href: "/revl-fitouts/revl-brighton",
+      blurb: "A full boutique performance fit-out delivered floor to ceiling at Brighton.",
+    },
     faqs: [
       {
         q: "Do you deliver gym fit-outs to Adelaide?",

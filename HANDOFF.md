@@ -1,13 +1,17 @@
-# MasterKraft website — handover (2026-08-14)
+# MasterKraft website — handover (2026-08-17)
 
 New Next.js e-commerce site for masterkraft.com (headless WooCommerce + Unleashed).
-This handoff reflects the state after a large second feedback round. **Launch
+This handoff reflects the state after a third feedback round. **Launch
 gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 
 ## Repo / environments
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.
 - Dev server: use the preview tools, or `npm run dev` (defaults to :3100). Note a
   Fernwood portal sometimes squats :3100 — run on another port (e.g. `-p 3102`).
+- **A stale `.next` makes EVERY route 404.** Symptom: `next dev` starts fine and
+  serves the site's own 404 page for `/` and everything else, with **no "Compiling …"
+  lines** in the log. That is a leftover production build, not a routing bug. Fix:
+  stop the server, `rm -rf .next`, restart. Don't debug it as a code problem.
 - **Review/staging URLs:** `https://masterkraft-site-pi.vercel.app` and
   `https://web.test.masterkraft.com` (both **noindex** — see indexing gate below).
 - GitHub: `MASTERKRAFTFitness/masterkraft-site`, branch `main`. Everything below is
@@ -32,17 +36,56 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   derive from `regular_price × 1.1` (GST). `getPricing`/`enrich` handle this.
 - **Unleashed** = correct price/stock (`src/lib/unleashed.ts`); `enrich()` prefers
   Unleashed **unless** an item is on WooCommerce sale (then WC sale wins → clearance).
-- **M/N SKU filter** (`filterBrandSku`, `/^[MN]/i`): only MasterKraft's own products
-  show catalogue-wide. **Clearance opts out** (A-prefixed SKUs) via
+- **Brand SKU filter** (`filterBrandSku`, `BRAND_SKU_RE = /^(?:[MN]|SC)/i`): only
+  MasterKraft's own M/N products show catalogue-wide, **plus the Concept2 ("C2")
+  range**, which is named "C2 …" but carries `SC` SKUs (`SCRWAR04`, `SCSTAR03`,
+  `SCSTACC04` — `SC` is used by nothing else). No SKU in the store actually starts
+  with the characters "C2". **Clearance opts out** (A-prefixed SKUs) via
   `getAllProductsByCategory(id, { brandFilter: false })`. **If a category shows 0
-  products, suspect this filter first.**
+  products, suspect this filter first.** Catalogue is 512 products → **224 shown**.
 
-## What this session shipped (all live on staging)
+## Shipped 2026-08-17 (feedback round 3) — NOT yet deployed
+Committed locally; run `npx vercel --prod` to put these on staging.
+
+- **Concept2 ("C2") products now show.** The brand filter was `/^[MN]/i`; it is now
+  `/^(?:[MN]|SC)/i`. See the brand-SKU note above for why `SC` is the right match.
+  Catalogue 221 → 224. Verified in Cardio, in search, and on the product pages.
+- **Product specs now render for 78 more products.** Those products keep their spec
+  table in a legacy ACF HTML blob (`specification_text`) instead of the discrete
+  `assembled_size_*` / `colour` / … fields the site read, so their spec table came out
+  empty (this was the client's "still not pulling" report, e.g.
+  `/product/3-in-1-foam-plyometric-box-34kg`). `parseSpecBlob()` in `woocommerce.ts`
+  parses the blob; **discrete fields still win**, the blob only fills gaps. The markup
+  is uniform across all 221 products that carry it (one "Assembled Size" heading, a
+  fixed 9-label set, zero malformed rows). Covered by `src/lib/spec-blob.test.ts`.
+- **REVL club states fixed — this was a real content error, not a label typo.**
+  Brighton (trades in Hove) and Campbelltown are **both South Australian**, but the
+  site used REVL Brighton as the *Melbourne* case study and REVL Campbelltown as the
+  *Sydney* one. Melbourne now leads with REVL Collingwood, Sydney with REVL Bondi, and
+  Adelaide gained a real local project (it had none, despite being REVL's biggest
+  market). The Campbelltown case study itself said "Campbelltown, NSW".
+- **Every city page now lists its REVL clubs.** New `revlClubsAu` + `revlClubsForRegion`
+  in `src/lib/revl.ts`, rendered on `/gym-fitouts/[city]`. Verified against REVL's own
+  locations directory: **SA 10, NSW 6, QLD 6, VIC 5**. Several clubs trade under a
+  different suburb than their name (Brighton→Hove, Mile End→Torrensville,
+  St Marys→Melrose Park), so both are stored and the suburb is shown in brackets.
+  Albury and Mount Gambier sit under an "Also in [state]" heading. `revlNetwork`'s
+  Australia list is now **derived** from `revlClubsAu` so the two cannot drift.
+- **Accent recoloured** to crimson `#f7373a` (see Brand / design below).
+- Fixed "Request **a** Adelaide fit-out" (vowel cities).
+
+## What the earlier session shipped (all live on staging)
 **Brand / design**
-- **Accent = solid coral red** `#f94d3f` (`-600 #cf3a28` button fills / AA white text,
-  `-300 #ff8574` on dark). One token trio in `src/app/globals.css`. History this
-  session: magenta → blue → magenta+Hot Gradient → **coral red** (gradient removed).
-  To recolour the whole site, change those 3 vars + OG image + Stripe colorPrimary.
+- **Accent = solid crimson red** `#f7373a` (`-600 #c52b28` button fills / AA white text
+  5.6:1, `-300 #fe706b` on dark 7.3:1). One token trio in `src/app/globals.css`.
+  History: magenta → blue → magenta+Hot Gradient → coral red `#f94d3f` →
+  **crimson `#f7373a`** (2026-08-17, the RGB midpoint of `#FF6900` and `#EF0474`).
+  To recolour the whole site, change those 3 vars + OG image + Stripe colorPrimary
+  (3 files: `globals.css`, `opengraph-image.tsx`, `StripeCheckout.tsx` — grep the old
+  hexes to confirm none are left). Derive `-600`/`-300` by keeping the existing HSL
+  deltas off the new base, then check `-600` clears 4.5:1 against white and `-300`
+  clears 4.5:1 on `#0a0a0b`/`#111113`. **The OG image is build-time — the social
+  preview keeps the old colour until a redeploy runs.**
 
 **Navigation**
 - **Header Equipment mega-menu** (`EquipmentMegaPanel` in `Header.tsx`): categories
@@ -107,6 +150,14 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 ## Open / blocked (needs Michael/Steve or assets)
 - **Missing manual PDFs** — 22 equipment manuals need re-uploading (or send to
   Claude to host locally). Then re-populate `resource-docs.json`.
+- **Home gym photos** — Michael is sending these through (2026-08-17).
+- **REVL studio assets** — Michael is contacting each club directly. Per club we need:
+  6-10 landscape photos of the fitted-out floor at full resolution (originals, not
+  Instagram re-uploads), confirmation of trading suburb + street address, opening year
+  and whether it was our original fit-out or a later refit, written OK to use the
+  photos on masterkraft.com, and their current Instagram handle. Nice to have: floor
+  area in sqm and any before/after shots. Drop photos into `/public/revl/ig/<slug>/`
+  and wire via `IG_PHOTOS` in `revl.ts`.
 - **Stripe is in TEST mode** but `paymentsConfigured` is on (publishable key present)
   → checkout would show a card form that rejects real cards. Decide: **quote-only**
   (remove Stripe keys) or **live** (swap to live keys + WC write key + verify the
@@ -116,9 +167,13 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 - **Domain / indexing cutover** (the big gate) — move the WordPress/WooCommerce
   backend to a subdomain, point the real domain at Vercel, then flip
   `NEXT_PUBLIC_ALLOW_INDEX=true` + set `NEXT_PUBLIC_SITE_URL`. Full steps in `LAUNCH.md`.
-- **Product features/specs data gap** — 57% of products have full ACF
-  overview/features/specs; the rest are missing fields in WooCommerce (content task,
-  not a bug). Can export the missing list on request.
+- **Product FEATURES data gap** — **64 of 224** products have no `features_N_text`
+  values in WooCommerce at all, so the Features section stays hidden on those pages.
+  Content-entry task, not a bug. (Specs are no longer part of this gap — see the
+  spec-blob fallback below. 2 products have neither specs source.)
+- **Warranty typos in WooCommerce** — some warranty fields are malformed at source,
+  e.g. the 34kg plyo box reads "Cover: 3 monthsmonths". Renders as entered; needs a
+  pass over the warranty fields in WordPress.
 
 ## Env vars (verified against prod)
 Set + working: `WC_*`, `UNLEASHED_*`, `NEXT_PUBLIC_GA_ID` (G-86MEH5QL99),

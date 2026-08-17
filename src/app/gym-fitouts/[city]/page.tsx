@@ -6,6 +6,7 @@ import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site";
 import { locations, getLocation } from "@/lib/locations";
+import { revlClubsForRegion } from "@/lib/revl";
 
 export function generateStaticParams() {
   return locations.map((l) => ({ city: l.slug }));
@@ -45,6 +46,9 @@ export default async function LocationPage({
   if (!loc) notFound();
 
   const areaName = loc.state ? `${loc.city}, ${loc.state}` : loc.city;
+  const revlClubs = revlClubsForRegion(loc.slug);
+  const metroClubs = revlClubs.filter((c) => !c.regional);
+  const regionalClubs = revlClubs.filter((c) => c.regional);
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -110,6 +114,56 @@ export default async function LocationPage({
             ))}
           </ul>
 
+          {revlClubs.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-sm font-mono tracking-widest uppercase text-accent-600">
+                REVL clubs we have fitted out in {loc.city}
+              </h2>
+              {metroClubs.length > 0 && (
+                <>
+                  <p className="mt-3 text-ash leading-relaxed">
+                    {metroClubs.length === 1
+                      ? `A REVL studio in ${loc.city}, delivered on the same spec sheet REVL runs across its network.`
+                      : `${metroClubs.length} REVL studios across ${loc.city}, each delivered on the same spec sheet REVL runs across its network.`}
+                  </p>
+                  <ul className="mt-5 grid sm:grid-cols-2 gap-x-8 gap-y-3">
+                    {metroClubs.map((c) => (
+                      <li key={c.name} className="flex gap-3 text-ash leading-relaxed">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden />
+                        <span>
+                          REVL {c.name}
+                          {c.suburb !== c.name && (
+                            <span className="text-ash/70"> ({c.suburb})</span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {regionalClubs.length > 0 && (
+                <>
+                  <p className="mt-6 font-mono text-[11px] tracking-widest uppercase text-ash">
+                    Also in {loc.state ?? loc.city}
+                  </p>
+                  <ul className="mt-3 grid sm:grid-cols-2 gap-x-8 gap-y-3">
+                    {regionalClubs.map((c) => (
+                      <li key={c.name} className="flex gap-3 text-ash leading-relaxed">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden />
+                        <span>
+                          REVL {c.name}
+                          {c.suburb !== c.name && (
+                            <span className="text-ash/70"> ({c.suburb})</span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+
           {loc.project && (
             <div className="mt-12 border border-line p-6 sm:p-7">
               <p className="font-mono text-[11px] tracking-widest uppercase text-accent-600">
@@ -136,7 +190,8 @@ export default async function LocationPage({
           </div>
           <div>
             <Link href="/contact" className="btn btn-accent w-full">
-              Request a {loc.city} Fit-Out <span aria-hidden>→</span>
+              Request {/^[AEIOU]/i.test(loc.city) ? "an" : "a"} {loc.city} Fit-Out{" "}
+              <span aria-hidden>→</span>
             </Link>
             <Link href="/fitout" className="btn btn-out !text-ink w-full mt-3">
               Explore fit-out types

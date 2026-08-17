@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand palette - black / white base with a coral red accent */
+  /* Brand palette - black / white base with a crimson red accent */
  --color-ink: #111113;
  --color-charcoal: #1b1b1e;
  --color-carbon: #0a0a0b;
- --color-accent: #f94d3f;        /* primary accent - coral red pop (fills, borders, large text) */
- --color-accent-600: #cf3a28;    /* deeper accent - AA text on LIGHT bg + button fills (white text ~4.9:1) */
- --color-accent-300: #ff8574;    /* lighter accent - AA coral TEXT on DARK bg (#0a0a0b/#111113) */
+ --color-accent: #f7373a;        /* primary accent - crimson red pop (fills, borders, large text) */
+ --color-accent-600: #c52b28;    /* deeper accent - AA text on LIGHT bg + button fills (white text ~5.6:1) */
+ --color-accent-300: #fe706b;    /* lighter accent - AA crimson TEXT on DARK bg (#0a0a0b/#111113) */
  --color-smoke: #f4f4f5;
  --color-ash: #6b6b70;
  --color-line: #e5e5e7;
@@ -50,15 +50,15 @@
     border: 1px solid transparent;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  /* Accent block - the signature "pop": coral red fill, white text.
-     Fill uses accent-600 so white label text clears WCAG AA (~4.9:1). */
+  /* Accent block - the signature "pop": crimson red fill, white text.
+     Fill uses accent-600 so white label text clears WCAG AA (~5.6:1). */
   .btn-accent {
     background-color: var(--color-accent-600);
     color: #fff;
   }
   .btn-accent:hover {
     background-color: var(--color-ink);
-    color: var(--color-accent-300); /* coral-on-dark: use the light shade for AA */
+    color: var(--color-accent-300); /* accent-on-dark: use the light shade for AA */
   }
   .btn-dark {
     background-color: var(--color-ink);
