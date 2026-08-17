@@ -71,12 +71,19 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   Albury and Mount Gambier sit under an "Also in [state]" heading. `revlNetwork`'s
   Australia list is now **derived** from `revlClubsAu` so the two cannot drift.
 - **Accent recoloured** twice: to crimson `#f7373a`, then to the brochure coral `#ef5350` (see Brand / design below). Also fixed `.mk-glow`, which had a hardcoded `rgba(249,77,63)` left over from the ORIGINAL coral and so had silently stopped tracking the accent; it now uses `color-mix()` off `--color-accent`.
+- **Buttons refilled with the exact brochure coral** (label switched to ink to keep AA).
+- Added `reports/wc-content-gaps.csv` - the WooCommerce content punch list.
 - Fixed "Request **a** Adelaide fit-out" (vowel cities).
 
-## What the earlier session shipped (all live on staging)
+## What the earlier sessions shipped (all live on staging)
 **Brand / design**
-- **Accent = the brochure coral red** `#ef5350` (`-600 #c73e37` button fills / AA white text
-  5.0:1, `-300 #f88a82` on dark 8.4:1). One token trio in `src/app/globals.css`.
+- **Accent = the brochure coral red** `#ef5350`, with `-600 #c73e37` and `-300 #f88a82`
+  (8.4:1 on dark). One token trio in `src/app/globals.css`.
+- **Buttons (`.btn-accent`) are filled with the BASE accent and use INK labels**, so they
+  match the printed brochure exactly. White on `#ef5350` is only 3.49:1 and fails AA;
+  ink on it is 5.41:1. **Do not switch the label back to white without darkening the
+  fill again.** `-600` is still used where white/small text sits on the accent (cart
+  count badge, eyebrow text on light backgrounds) and must stay dark enough for AA.
   History: magenta → blue → magenta+Hot Gradient → coral red `#f94d3f` →
   crimson `#f7373a` → **coral `#ef5350`** (2026-08-17), sampled from the vector fills in `MasterKraft_Franchise_Brochure_A5.pdf` (49 uses, the brochure accent).
   To recolour the whole site, change those 3 vars + OG image + Stripe colorPrimary
@@ -173,6 +180,18 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   photos on masterkraft.com, and their current Instagram handle. Nice to have: floor
   area in sqm and any before/after shots. Drop photos into `/public/revl/ig/<slug>/`
   and wire via `IG_PHOTOS` in `revl.ts`.
+- **FREIGHT CONTRADICTION (undecided, raised 2026-08-17).** The Stripe checkout
+  summary hardcodes **"Shipping: Free"** (`StripeCheckout.tsx`, the Shipping row),
+  but every other surface says freight is quoted: the cart says "Freight and lead
+  times are confirmed on quote", the quote checkout says the same, and the Shipping
+  page says "Freight is calculated by weight, volume and destination". So a card-
+  paying customer is promised free freight on heavy goods. **Currently harmless only
+  because Stripe is in test mode** - it goes live the moment card payments are turned
+  on. Options put to Michael: (1) change the line to "Calculated on quote" - smallest
+  safe fix, recommended regardless; (2) actually calculate freight by weight/volume/
+  destination (net + gross weight already exist in WooCommerce for most products);
+  (3) go quote-only and drop the card path, which removes the question. **No decision
+  yet.**
 - **Stripe is in TEST mode** but `paymentsConfigured` is on (publishable key present)
   → checkout would show a card form that rejects real cards. Decide: **quote-only**
   (remove Stripe keys) or **live** (swap to live keys + WC write key + verify the
@@ -185,7 +204,14 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 - **Product FEATURES data gap** — **64 of 224** products have no `features_N_text`
   values in WooCommerce at all, so the Features section stays hidden on those pages.
   Content-entry task, not a bug. (Specs are no longer part of this gap — see the
-  spec-blob fallback below. 2 products have neither specs source.)
+  spec-blob fallback above. 2 products have neither specs source.) Concentrated in
+  4 categories: Equipment Storage 18, Body Weight 12, Packages 9, Barbells 8 = 47 of
+  the 64. **Full punch list committed at `reports/wc-content-gaps.csv`** (tagged
+  `no_features` / `warranty_typo` / `no_specs`), regenerate anytime with the probe
+  approach in that file's columns.
+- **Warranty typos: exactly 2** (`MBPB3I101`, `MSCMDU01`) both reading "3 monthsmonths".
+  The other 73 warranties written as "12months" need NO action - the spec parser adds
+  the space automatically.
 - **Warranty typos in WooCommerce** — some warranty fields are malformed at source,
   e.g. the 34kg plyo box reads "Cover: 3 monthsmonths". Renders as entered; needs a
   pass over the warranty fields in WordPress.
