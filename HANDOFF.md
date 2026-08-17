@@ -15,7 +15,7 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 - **Review/staging URLs:** `https://masterkraft-site-pi.vercel.app` and
   `https://web.test.masterkraft.com` (both **noindex** — see indexing gate below).
 - GitHub: `MASTERKRAFTFitness/masterkraft-site`, branch `main`. Everything below is
-  committed + pushed (last commit `9d46386`).
+  committed + pushed (main, deployed via the Vercel CLI).
 
 ## DEPLOY — read this first
 - **A git push does NOT deploy Vercel prod.** Michael deploys from the project dir:
@@ -44,8 +44,7 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   `getAllProductsByCategory(id, { brandFilter: false })`. **If a category shows 0
   products, suspect this filter first.** Catalogue is 512 products → **224 shown**.
 
-## Shipped 2026-08-17 (feedback round 3) — NOT yet deployed
-Committed locally; run `npx vercel --prod` to put these on staging.
+## Shipped 2026-08-17 (feedback round 3) — committed, pushed AND deployed
 
 - **Concept2 ("C2") products now show.** The brand filter was `/^[MN]/i`; it is now
   `/^(?:[MN]|SC)/i`. See the brand-SKU note above for why `SC` is the right match.
@@ -71,15 +70,15 @@ Committed locally; run `npx vercel --prod` to put these on staging.
   St Marys→Melrose Park), so both are stored and the suburb is shown in brackets.
   Albury and Mount Gambier sit under an "Also in [state]" heading. `revlNetwork`'s
   Australia list is now **derived** from `revlClubsAu` so the two cannot drift.
-- **Accent recoloured** to crimson `#f7373a` (see Brand / design below).
+- **Accent recoloured** twice: to crimson `#f7373a`, then to the brochure coral `#ef5350` (see Brand / design below). Also fixed `.mk-glow`, which had a hardcoded `rgba(249,77,63)` left over from the ORIGINAL coral and so had silently stopped tracking the accent; it now uses `color-mix()` off `--color-accent`.
 - Fixed "Request **a** Adelaide fit-out" (vowel cities).
 
 ## What the earlier session shipped (all live on staging)
 **Brand / design**
-- **Accent = solid crimson red** `#f7373a` (`-600 #c52b28` button fills / AA white text
-  5.6:1, `-300 #fe706b` on dark 7.3:1). One token trio in `src/app/globals.css`.
+- **Accent = the brochure coral red** `#ef5350` (`-600 #c73e37` button fills / AA white text
+  5.0:1, `-300 #f88a82` on dark 8.4:1). One token trio in `src/app/globals.css`.
   History: magenta → blue → magenta+Hot Gradient → coral red `#f94d3f` →
-  **crimson `#f7373a`** (2026-08-17, the RGB midpoint of `#FF6900` and `#EF0474`).
+  crimson `#f7373a` → **coral `#ef5350`** (2026-08-17), sampled from the vector fills in `MasterKraft_Franchise_Brochure_A5.pdf` (49 uses, the brochure accent).
   To recolour the whole site, change those 3 vars + OG image + Stripe colorPrimary
   (3 files: `globals.css`, `opengraph-image.tsx`, `StripeCheckout.tsx` — grep the old
   hexes to confirm none are left). Derive `-600`/`-300` by keeping the existing HSL
