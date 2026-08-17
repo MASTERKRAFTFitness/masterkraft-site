@@ -50,11 +50,13 @@
     border: 1px solid transparent;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  /* Accent block - the signature "pop": coral red fill, white text.
-     Fill uses accent-600 so white label text clears WCAG AA (~5.0:1). */
+  /* Accent block - the signature "pop", filled with the exact brochure coral so
+     the buttons match the printed brand. White labels on that coral are only
+     3.49:1 (fails AA), so the label is ink instead, which clears AA at 5.41:1.
+     Do NOT switch this back to white text without darkening the fill again. */
   .btn-accent {
-    background-color: var(--color-accent-600);
-    color: #fff;
+    background-color: var(--color-accent);
+    color: var(--color-ink);
   }
   .btn-accent:hover {
     background-color: var(--color-ink);
