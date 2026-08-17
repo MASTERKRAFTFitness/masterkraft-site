@@ -1,12 +1,284 @@
 [
   {
-    "name": "Rubber Tile Installation Guide",
-    "sub": "Flooring Guide",
-    "thumb": "/resources/rubber-tile-installation-guide.jpg",
+    "name": "Adjustable Utility Weight Bench Pro",
+    "sub": "MSWBFW02",
+    "thumb": "/resources/mswbfw02.jpg",
     "manuals": [
       {
-        "label": "Rubber Tile Installation Guide",
-        "download": "/manuals/rubber-tile-installation-guide.pdf",
+        "label": "Product Guide",
+        "download": "/manuals/mswbfw02-adjustable-utility-weight-bench.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Bike Classic",
+    "sub": "MCBIAR01",
+    "thumb": "/resources/mcbiar01.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcbiar01-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcbiar01-owners-manual.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Bike Elite",
+    "sub": "MCBIAR03",
+    "thumb": "/resources/mcbiar03.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcbiar03-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcbiar03-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mcbiar03-maintenance.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Bike Pro",
+    "sub": "MCBIAR02",
+    "thumb": "/resources/mcbiar02.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcbiar02-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcbiar02-owners-manual.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Cycle Elite",
+    "sub": "MCBIAR05",
+    "thumb": "/resources/mcbiar05.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcbiar05-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcbiar05-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mcbiar05-maintenance.pdf",
+        "external": false
+      },
+      {
+        "label": "Noise Checking Procedure",
+        "download": "/manuals/mcbiar05-noise-checking-procedure.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Cycle Pro",
+    "sub": "MCBIAR04",
+    "thumb": "/resources/mcbiar04.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcbiar04-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcbiar04-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mcbiar04-maintenance.pdf",
+        "external": false
+      },
+      {
+        "label": "Noise Checking Procedure",
+        "download": "/manuals/mcbiar04-noise-checking-procedure.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Rower Elite",
+    "sub": "MCRWAR03",
+    "thumb": "/resources/mcrwar03.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcrwar03-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcrwar03-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mcrwar03-maintenance.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Air Rower Pro",
+    "sub": "MCRWAR01",
+    "thumb": "/resources/mcrwar01.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcrwar01-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcrwar01-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mcrwar01-maintenance.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "All-In-One Trainer",
+    "sub": "MRSPSE01",
+    "thumb": "/resources/mrspse01.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/mrspse01-all-in-one-trainer.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Curved Treadmill Elite",
+    "sub": "MCTMSP02",
+    "thumb": "/resources/mctmsp02.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mctmsp02-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mctmsp02-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Exploded Drawing",
+        "download": "/manuals/mctmsp02-exploded-drawing.pdf",
+        "external": false
+      },
+      {
+        "label": "Part List",
+        "download": "/manuals/mctmsp02-part-list.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mctmsp02-maintenance.pdf",
+        "external": false
+      },
+      {
+        "label": "AirPlus Lever Replacement",
+        "download": "/manuals/mctmsp02-airplus-lever-replacement.pdf",
+        "external": false
+      },
+      {
+        "label": "Greasing the Magnet Axle",
+        "download": "/manuals/mctmsp02-greasing-the-magnet-axle.pdf",
+        "external": false
+      },
+      {
+        "label": "Replacing the Spring",
+        "download": "/manuals/mctmsp02-replacing-the-spring.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Curved Treadmill Pro",
+    "sub": "MCTMSP01",
+    "thumb": "/resources/mctmsp01.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mctmsp01-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mctmsp01-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Assembly Guide",
+        "download": "/manuals/curved-treadmill-pro-assembly-guide.pdf",
+        "external": false
+      },
+      {
+        "label": "Exploded Drawing",
+        "download": "/manuals/mctmsp01-exploded-drawing.pdf",
+        "external": false
+      },
+      {
+        "label": "Part List",
+        "download": "/manuals/mctmsp01-part-list.pdf",
+        "external": false
+      },
+      {
+        "label": "Maintenance",
+        "download": "/manuals/mctmsp01-maintenance.pdf",
+        "external": false
+      },
+      {
+        "label": "Greasing the Magnet Axle",
+        "download": "/manuals/mctmsp01-greasing-the-magnet-axle.pdf",
+        "external": false
+      },
+      {
+        "label": "Replacing the Spring",
+        "download": "/manuals/mctmsp01-replacing-the-spring.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Digital Interval Timer",
+    "sub": "MMGFACC01",
+    "thumb": "/resources/mmgfacc01.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/mmgfacc01-digital-interval-timer.pdf",
         "external": false
       }
     ]
@@ -24,13 +296,141 @@
     ]
   },
   {
-    "name": "Curved Treadmill Pro",
-    "sub": "MCTMSP01",
-    "thumb": "/resources/curved-treadmill-pro.jpg",
+    "name": "LED Installation Guide",
+    "sub": "Installation Guide",
+    "thumb": "/category/flooring.jpg",
     "manuals": [
       {
-        "label": "Assembly Guide",
-        "download": "/manuals/curved-treadmill-pro-assembly-guide.pdf",
+        "label": "LED Installation Guide",
+        "download": "/manuals/led-installation-guide.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Medicine Ball Rack - 10 Ball (Double Sided)",
+    "sub": "MEFRBL01",
+    "thumb": "/resources/mefrbl01.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/mefrbl01-exercise-ball-stand-double-sided.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Modular Storage Rack - Complete (2/Dual Pipe, 2/Flat Shelf)",
+    "sub": "MEFRACC06",
+    "thumb": "/resources/mefracc06.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/mefracc06-modular-storage-rack.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Olympic Weight Plate Tree (8 Storage Pins)",
+    "sub": "MEFROP03",
+    "thumb": "/resources/mefrop03.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/mefrop03-olympic-weight-plate-tree.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Retail Rack",
+    "sub": "MERK153001",
+    "thumb": "/category/equipment-storage.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/merk153001-retail-rack.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Rigs",
+    "sub": "MRSPATT0X",
+    "thumb": "/category/rigs-racks.jpg",
+    "manuals": [
+      {
+        "label": "Product Guide",
+        "download": "/manuals/mrspatt0x-rigs.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Rubber Tile Installation Guide",
+    "sub": "Flooring Guide",
+    "thumb": "/resources/rubber-tile-installation-guide.jpg",
+    "manuals": [
+      {
+        "label": "Rubber Tile Installation Guide",
+        "download": "/manuals/rubber-tile-installation-guide.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Ski Trainer Elite",
+    "sub": "MCSTAR02",
+    "thumb": "/resources/mcstar02.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcstar02-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcstar02-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Troubleshooting",
+        "download": "/manuals/mcstar02-troubleshooting.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Ski Trainer Pro",
+    "sub": "MCSTAR01",
+    "thumb": "/resources/mcstar01.jpg",
+    "manuals": [
+      {
+        "label": "Console Manual",
+        "download": "/manuals/mcstar01-console-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Owners Manual",
+        "download": "/manuals/mcstar01-owners-manual.pdf",
+        "external": false
+      },
+      {
+        "label": "Troubleshooting",
+        "download": "/manuals/mcstar01-troubleshooting.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
+    "name": "Weightlifting Chalk Box",
+    "sub": "MWWLCH01",
+    "thumb": "/resources/mwwlch01.jpg",
+    "manuals": [
+      {
+        "label": "Exploded Drawing",
+        "download": "/manuals/mwwlch01-chalk-bowl.jpg",
         "external": false
       }
     ]

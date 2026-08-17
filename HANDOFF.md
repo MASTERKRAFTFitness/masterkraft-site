@@ -122,11 +122,28 @@ Committed locally; run `npx vercel --prod` to put these on staging.
 
 **Resources (`/resources`)**
 - Replicated the old site: product-photo thumbnails + a **per-product popup**
-  (`ResourcesList.tsx`) listing each manual. **BUT** 24 of the old site's 27 manual
-  PDFs are 404 (files gone from WordPress — confirmed in a browser). Page currently
-  shows only the **3 that resolve** (both flooring guides + Curved Treadmill Pro
-  assembly), hosted locally. `src/lib/resource-docs.json` drives it. **Re-add
-  products when the real PDFs are supplied** (structure is ready).
+  (`ResourcesList.tsx`) listing each manual. `src/lib/resource-docs.json` drives it.
+- **RESOLVED 2026-08-17 — now 23 products / 55 documents, all hosted locally.**
+  The old site's 24 manuals were 404 because the PDFs had been **deleted** from
+  `wp-content/uploads/2021/03/` (proven: an image in that same folder still serves
+  200, and a PDF in `2024/02` serves 200, so it was neither a folder purge nor a
+  plugin rule). No Wayback snapshots existed. Michael supplied the originals from
+  Dropbox, which turned out to hold far more than the missing 24 — maintenance
+  guides, noise troubleshooting, treadmill how-tos, and assembly guides for 8
+  products that never had any online.
+- **`scripts/import-manuals.mjs` rebuilds the whole page** from the Dropbox folder:
+  copies each doc to `public/manuals/<sku>-<label>.pdf`, pulls the product's real
+  name + photo from WooCommerce (so folder names like "CHALK BOWL" become
+  "Weightlifting Chalk Box"), and regenerates `resource-docs.json`. Idempotent —
+  **re-run it whenever the Dropbox folder gains documents**, then delete any
+  orphaned files in `public/manuals/` that the JSON no longer references.
+- **Everything is served from `/public`, never hot-linked from WordPress**, so this
+  cannot break again the way it did. ~80MB of PDFs now live in the repo. Two entries
+  have no catalogue product behind them and use category images: `MERK153001`
+  (Retail Rack) and `MRSPATT0X` (Rigs — looks like a family code, not a real SKU;
+  confirm the correct name with Steve). The 8 single-document guides are labelled
+  "Product Guide" because the PDFs could not be opened to classify them; that label
+  is not user-visible (single-doc rows link straight to the file).
 
 ## Product images — where they come from (+ the cutover risk)
 - The site is **already headless WooCommerce**: it reads catalogue/price/stock via
@@ -148,8 +165,7 @@ Committed locally; run `npx vercel --prod` to put these on staging.
   Michael's steer: keep WooCommerce running; don't migrate off it.
 
 ## Open / blocked (needs Michael/Steve or assets)
-- **Missing manual PDFs** — 22 equipment manuals need re-uploading (or send to
-  Claude to host locally). Then re-populate `resource-docs.json`.
+- ~~Missing manual PDFs~~ — **DONE 2026-08-17**, see the Resources section above.
 - **Home gym photos** — Michael is sending these through (2026-08-17).
 - **REVL studio assets** — Michael is contacting each club directly. Per club we need:
   6-10 landscape photos of the fitted-out floor at full resolution (originals, not
