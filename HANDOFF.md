@@ -311,6 +311,62 @@ showed). If the ergs really are held in stock, the fix is in Unleashed.
 product at all**, so the Bike Erg is missing from the site and cannot be mapped.
 Add the product in WooCommerce first, then map it in `manualAliases`.
 
+## Pre-launch test pass — run 2026-08-20 against staging
+
+`LAUNCH.md` §3, run for the first time. **Passed on everything except four
+items, listed below.**
+
+**Passed:** catalogue pagination, sort (price asc/desc verified genuinely
+ordered, name sorts), price filter, sub-category filter; Clearance crossed-out
+RRP (19 markdowns, RRP/reduced pairs correct); variable "From" pricing
+(`MWBBFUR` shows "From $90.00"); product gallery; **add to cart** (adds the
+correct ERP price and the local mirrored image, header badge updates); cart page
+line item, quantity, subtotal and the correct "confirmed on quote" freight copy;
+`Product` + `BreadcrumbList` JSON-LD (385.00 AUD, InStock, parses clean); real
+404 on an unknown route; favicon, `icon.svg`, OG image (49 KB PNG); `robots.txt`
+correctly `Disallow: /`; all 12 marketing pages 200; all 4 legacy redirects 308
+to the right place. **No console errors.** 18 requests, 248 KB, TTFB 20 ms,
+DOMContentLoaded 639 ms.
+
+### Found: 20 of 23 bundle products have NO PRICE
+
+The `-GROUP` products are WooCommerce **bundles** (`type: "bundle"`), and 20 of
+the 23 served have `regular_price: 0`, so they render **"Contact for pricing"**.
+These are the primary listings for whole ranges: Rubber Hex Dumbbells, Coloured
+Bumper Plates, Wall Ball, Dead Balls, Power Bag, Change Plates, Competition
+Kettlebells and so on. `enrichCard` only special-cases `variable`, so a bundle
+falls through to the WooCommerce parent price, which is zero. Either the bundles
+need a price in WooCommerce, or the site needs to price a bundle from its
+components. **Needs a decision.**
+
+### Found: the same product listed twice, once priced and once not
+
+`/equipment/weightlifting?sub=barbells` shows **"Urethane Fixed Barbells" twice**:
+`MWBBFUR` (variable, "From $90.00") and `MWBBFUR-GROUP` (bundle, "Contact for
+pricing"). Both are `visible` in WordPress, so the obsolete rule does not catch
+them. 5 bundles have a priced twin: `MWBBFUR-GROUP`, `MMDBRH-GROUP`,
+`MWWPCNB-GROUP`, `MMDEHG-GROUP`, `MWWPOU-GROUP`. The other four twins are
+A-prefixed and sit in Clearance, so they only collide where categories overlap.
+
+### Found: /cart and /checkout use the homepage title
+
+Both render `MASTERKRAFT | Shop Home Gym & Commercial Fitness Equipment` instead
+of "Cart" / "Checkout". They are client components with no metadata export, so
+the fix is a small server wrapper or a segment layout. Cosmetic, but it is what
+browser tabs, bookmarks and GA page reports will show.
+
+### Confirmed live (both already known, both awaiting a decision)
+- **Checkout still says "Shipping: Free"** while the cart says freight is quoted.
+- **A Stripe card form is live on the `pk_test` key** - `CONTINUE TO PAYMENT`
+  renders a Stripe iframe, so this is not quote-only as `LAUNCH.md` claimed.
+
+### Not covered
+**No visual mobile pass.** The browser pane dropped to a 0x0 viewport partway
+through and would not render, so mobile was verified only structurally (viewport
+meta correct, mobile menu button present in the DOM). A human should eyeball the
+nav drawer, hero and product grid on a phone before launch, and Lighthouse has
+still not been run.
+
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
 - **Accent = the brochure coral red** `#ef5350`, with `-600 #c73e37` and `-300 #f88a82`
