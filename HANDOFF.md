@@ -591,6 +591,62 @@ manuals are the remaining bulk and the honest options are dropping scan DPI
   photos on masterkraft.com, and their current Instagram handle. Nice to have: floor
   area in sqm and any before/after shots. Drop photos into `/public/revl/ig/<slug>/`
   and wire via `IG_PHOTOS` in `revl.ts`.
+### Interparcel (freight provider) — assessed 2026-08-20
+
+Steve has an Interparcel account (`steve@masterkraft.com`). **It can work with this
+site, but NOT the way their onboarding email describes.**
+
+**DO NOT install the WooCommerce plugin expecting it to price our checkout.**
+Their "live shipping rates" plugin registers a shipping method inside a
+WooCommerce *shipping zone* and renders rates on the **WooCommerce storefront
+checkout** - the storefront this site replaced. Our checkout is our own Next.js
+page. Their plugin would price a checkout nobody uses.
+
+**The route that works is their direct REST API**, which is separate from the
+plugin and barely mentioned in the email:
+
+```
+POST https://api.interparcel.com/quote
+X-Interparcel-Auth: <api key>      X-Interparcel-API-Version: 3
+{ "collection": {city, state, postcode, country},
+  "delivery":   {city, state, postcode, country},
+  "parcels": [ { "weight": kg, "length": cm, "width": cm, "height": cm } ],
+  "filter": { "serviceLevel": ["standard","express","pallet"], ... } }
+```
+Server-side from a route handler, keyed off the cart and the delivery postcode
+the customer already types at checkout. The key stays on the server. Service
+levels include **`pallet`**, which matters - a rig is not a parcel.
+
+**OUR FREIGHT DATA IS BETTER THAN EXPECTED. 188 of 221 products (85%) are
+quotable today**: 94% carry a weight, 85% carry full L/W/H.
+
+**Critically, the WooCommerce dimensions are SHIPPING CARTONS, not assembled
+size** - checked, and they differ exactly as they should:
+
+| product | WC dimensions (cm) | assembled (mm) |
+|---|---|---|
+| Functional Trainer Pro | 241.5 × 122.5 × **30.5** | 2,070 × 1,220 × **2,300** |
+| Olympic Power Rack 1.0 | 230 × 52 × **19** | 1,652 × 1,311 × **2,125** |
+| Olympic Barbell 20kg | 224 × 8 × 8 | 2,200 × 50 × 50 |
+
+Flat-packed cartons, in **cm**, which is exactly the unit Interparcel wants.
+Weights read as gross (barbell 21kg for a 20kg bar).
+
+**Gaps before it could go live:**
+- **33 products have no usable dimensions**, including all 3 Concept2 ergs
+  (weight but no L/W/H) and 14 with neither. They need carton measurements.
+- **Bundles carry no weight or dimensions at all**, so a `-GROUP` product cannot
+  be quoted without summing its components.
+- **Cart → parcels is a design decision.** One line item is not one parcel: 10
+  dumbbells is 10 cartons, and a rack may be a pallet. Interparcel's "Smart
+  Boxing" solves this on the plugin path; on the API path we decide it.
+- **No API key yet, so none of this is tested against the live endpoint.**
+- Their commercial prerequisite: **10-20 example shipments** before they will
+  quote rates, on a form attached to their email (not seen).
+
+**This is the missing piece for the freight contradiction below.** It makes
+option 2 (actually calculate freight) real rather than theoretical.
+
 - **FREIGHT CONTRADICTION (undecided, raised 2026-08-17).** The Stripe checkout
   summary hardcodes **"Shipping: Free"** (`StripeCheckout.tsx`, the Shipping row),
   but every other surface says freight is quoted: the cart says "Freight and lead
