@@ -25,8 +25,27 @@ needs a decision, a credential, or content. **Launch gates and env vars live in
 **A git push does NOT deploy.** Deploys are the Vercel CLI, from the project dir:
 
 ```bash
-cd ~/Desktop/masterkraft-site && npx vercel --prod
+cd ~/Desktop/masterkraft-site && npm run deploy
 ```
+
+That runs the **deploy gate** (`predeploy`) and then `vercel --prod`. The gate is
+~60s and any step failing stops the deploy:
+
+| step | catches |
+|---|---|
+| `check:snapshot` | src/data missing, truncated, or variations half-written (offline) |
+| `test` | the 69 unit tests |
+| `check:obsolete` | the committed ERP retirement list drifting from Unleashed |
+| `check:catalogue` | the catalogue snapshot drifting from WooCommerce |
+
+**`lint` is deliberately NOT in the gate.** The repo carries 21 pre-existing eslint
+errors, so gating on it would block every deploy. Run it and compare against `HEAD`.
+
+`check:snapshot` also runs as `prebuild`, so it fires on Vercel's build too. It is
+offline on purpose: the point of the snapshot is that rendering does not depend on
+WooCommerce being up, and a networked pre-build check would hand that back.
+
+To deploy without the gate (it is a safety net, not a law): `npx vercel --prod`.
 
 If it says **"Not authorized"**, run `npx vercel login` first (Michael's account).
 `NEXT_PUBLIC_*` vars are build-time inlined, so changing one in Vercel does nothing
@@ -70,7 +89,12 @@ Each of these was hit for real. They look like bugs in our code and are not.
 Four rules, all applied at one chokepoint in `src/lib/woocommerce.ts`. **If a
 category shows 0 products, suspect these first.**
 
-512 published products → **184 shown** (plus 37 Clearance).
+512 published products → **184 shown** (plus 36 Clearance; this was recorded as 37
+on 2026-08-20, and three of the 39 raw Clearance products are ERP-retired).
+
+The rules run against the **committed snapshot** in `src/data/`, not a live call
+(§4). The snapshot is a faithful mirror of what the store published and holds NO
+visibility rules, so these four are still the only thing deciding what appears.
 
 1. **Brand SKU filter** (`BRAND_SKU_RE = /^(?:[MN]|SC)/i`). Only MasterKraft's own
    M/N products, plus the Concept2 range on `SC` SKUs. **Clearance opts out** via
@@ -120,14 +144,22 @@ an order for an already-bought item must not fail because marketing hid it.
 
 | when | run |
 |---|---|
+| **product content changes in WordPress** | **`npm run build:catalogue`, then commit `src/data/`** |
+| checking whether the catalogue has drifted | `npm run check:catalogue` (exits 1 on drift, in the deploy gate) |
+| proving the snapshot still answers like the store | `npm run verify:catalogue` (hits the network) |
 | the ERP retires a product | `npm run build:obsolete`, then commit the JSON |
-| checking whether it has drifted | `npm run check:obsolete` (exits 1 on drift, gates a deploy) |
+| checking whether it has drifted | `npm run check:obsolete` (exits 1 on drift, in the deploy gate) |
 | the catalogue gains products | `npm run mirror:images`, then `npm run compress:assets` |
 | the Dropbox manuals folder gains files | `node scripts/import-manuals.mjs` |
 | product photos change | `python3 scripts/normalize-product-bg.py` |
 
 `build:obsolete` refuses to write if fewer than 1,500 products come back, since a
-short read would silently un-retire everything.
+short read would silently un-retire everything. `build:catalogue` refuses below
+400 published products for the same reason: a short read would empty the shop.
+
+**`build:catalogue` is now the most important of these.** The site serves product
+data from `src/data/`, so a content edit in WordPress is invisible until the
+snapshot is rebuilt and committed. Nothing rebuilds it automatically.
 
 ---
 
@@ -326,6 +358,19 @@ subdomain to `remotePatterns` in `next.config.ts`.
 from `/public`, so nothing on the WordPress side can break them. The same is true of
 the manuals, after the originals were lost from `wp-content/uploads/2021/03/` and
 had to be rebuilt from Michael's Dropbox.
+
+**So is the catalogue exposure.** Product data is now a committed snapshot (§4), so
+no page a visitor loads calls WooCommerce. Verified by pointing `WC_STORE_URL` at a
+dead host and serving a production build: every listing, search, product page and
+the sitemap still rendered, with the same counts. What this buys at the cutover is
+that a WordPress move can no longer take the shop down, and `WC_STORE_URL` only has
+to be correct before the next `build:catalogue` or a checkout.
+
+**Still true:** WordPress remains the place product content is edited, and the
+checkout path (freight quote, order creation) reads and writes it live. Keep it
+running. Dropping it altogether is a separate piece of work: it means finding a new
+home for the editorial layer AND a new order book, because the WooCommerce order is
+what syncs to Unleashed and what Interparcel's Shipping Manager fetches (§6).
 
 ---
 
