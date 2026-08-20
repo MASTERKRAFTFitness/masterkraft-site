@@ -252,6 +252,54 @@ pagination is correct (rack: 24 + 24 + 15 = 63). **The typeahead passes
 takes one request (~1.7-2.0s uncached, instant after) rather than paying for
 pages it will never display. It was returning nothing for "dumbbell" too.
 
+## Shipped 2026-08-20 — no Snap or Fernwood products, by construction
+
+Michael: "no S or F products on the website". Checked before changing anything:
+**no F product was served at all, and the only S-prefixed ones were the 3
+Concept2 ergs** (`SCRWAR04`, `SCSTAR03`, `SCSTACC04`), added on request in
+feedback round 3. **Confirmed 2026-08-20 that the Concept2 range STAYS** - it is
+a range MasterKraft distributes, S-looking only by SKU prefix.
+
+But "not listed" was not the same as "not on the website". Two routes bypassed
+the M/N brand filter:
+
+1. **Clearance runs with `brandFilter: false`** to show A-prefixed ex-display
+   stock, so a Snap or Fernwood item filed there would have been listed. None is
+   today (Clearance is 39 A-prefixed), but nothing stopped it.
+2. **`getProductBySlug` applied no brand filter at all**, so **all 149 Snap and
+   Fernwood product pages answered 200 on a direct URL** and sat in the sitemap.
+   Trucker Hat, LED Dimmers, Snap dumbbell racks and so on.
+
+`isForeignBrandSku` (`/^(?:S(?!C)|F)/i`) now excludes them at the same chokepoint
+as the obsolete rule, so listings, search, the sitemap and the product route all
+inherit it. **SC is exempt by the negative lookahead**, which is what keeps the
+Concept2 range.
+
+Verified: those pages 404, the 3 C2 pages still 200, catalogue unchanged at 184,
+Cardio 16, Strength 17. **Sitemap 429 → 283**, the drop being Snap/Fernwood URLs
+no longer advertised.
+
+### Watch out: THREE different codes for the same Concept2 products
+- **Product name:** "C2 Rower Model D PM5 Black"
+- **WooCommerce SKU:** `SCRWAR04` (no WooCommerce SKU starts with "C2")
+- **Unleashed code:** `C2ROWERG` (Unleashed has 4: `C2BIKEERG`, `C2ROWERG`,
+  `C2SKIERG`, `C2SKIERGFS`)
+
+**Consequence, NOT yet fixed: those three have no `unleashed-aliases` entry, so
+they fall back to the WooCommerce RRP and are UNDERPRICED against the ERP:**
+
+| product | site | Unleashed | gap |
+|---|---|---|---|
+| C2 Rower Model D PM5 Black | $1,375.00 | $1,705.00 | **-$330** |
+| C2 Ski Erg PM5 | $1,320.00 | $1,650.00 | **-$330** |
+| C2 Ski Erg Floor Stand | $352.00 | $440.00 | **-$88** |
+
+The mapping looks obvious (`SCRWAR04`→`C2ROWERG`, `SCSTAR03`→`C2SKIERG`,
+`SCSTACC04`→`C2SKIERGFS`) but names differ ("Model D" vs "Row Erg with Standard
+Legs"), so it needs Michael or Steve to confirm rather than be inferred - a wrong
+price is worse than a fallback. Also **`C2BIKEERG` ($2,145 inc-GST) exists in the
+ERP with no WooCommerce product at all**, so the Bike Erg is missing from the site.
+
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
 - **Accent = the brochure coral red** `#ef5350`, with `-600 #c73e37` and `-300 #f88a82`

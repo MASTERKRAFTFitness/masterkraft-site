@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { filterListable, filterSearchable, isObsolete } from "@/lib/woocommerce";
+import {
+  filterListable,
+  filterSearchable,
+  isForeignBrandSku,
+  isObsolete,
+} from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
 import { skuAliases } from "@/lib/unleashed-aliases";
 
@@ -64,5 +69,35 @@ describe("obsolete products (the ERP half)", () => {
   it("drops retired products from listings", () => {
     const items = [{ sku: "MSLBB01" }, { sku: "MMDBRH-GROUP" }];
     expect(filterListable(items).map((i) => i.sku)).toEqual(["MMDBRH-GROUP"]);
+  });
+});
+
+describe("other companies' branded ranges", () => {
+  it("excludes Snap (S) and Fernwood (F)", () => {
+    expect(isForeignBrandSku("SEFRDB13")).toBe(true); // Snap dumbbell rack
+    expect(isForeignBrandSku("FAAAU01")).toBe(true);
+  });
+
+  // Named "C2", SKU'd "SC", coded "C2*" in Unleashed. A range MasterKraft
+  // distributes, kept on the site by decision 2026-08-20.
+  it("keeps the Concept2 range, whose SKUs start SC", () => {
+    expect(isForeignBrandSku("SCRWAR04")).toBe(false);
+    expect(isForeignBrandSku("SCSTAR03")).toBe(false);
+    expect(isForeignBrandSku("SCSTACC04")).toBe(false);
+  });
+
+  it("leaves MasterKraft, unbranded and clearance stock alone", () => {
+    expect(isForeignBrandSku("MMDBRH-GROUP")).toBe(false);
+    expect(isForeignBrandSku("NBWBFW01")).toBe(false);
+    expect(isForeignBrandSku("AWWPCP01")).toBe(false); // A = third-party clearance
+    expect(isForeignBrandSku(undefined)).toBe(false);
+  });
+
+  // Clearance runs with brandFilter: false, so this is the only thing stopping a
+  // Snap or Fernwood item listed there from being served.
+  it("drops them even where the brand filter is off", () => {
+    // AWWPCP01 is real, currently-served clearance stock: A-prefixed, not retired.
+    const items = [{ sku: "SEFRDB13" }, { sku: "AWWPCP01" }, { sku: "SCRWAR04" }];
+    expect(filterListable(items).map((i) => i.sku)).toEqual(["AWWPCP01", "SCRWAR04"]);
   });
 });

@@ -73,6 +73,25 @@ export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
   return items.filter((i) => isBrandSku(i.sku));
 }
 
+// OTHER COMPANIES' BRANDED RANGES must never appear on masterkraft.com:
+// S = Snap, F = Fernwood. The M/N brand filter already keeps them out of the
+// listings, but two routes bypassed it:
+//   1. Clearance runs with `brandFilter: false` to show A-prefixed ex-display
+//      stock, so a Snap or Fernwood item filed there would have been listed.
+//   2. `getProductBySlug` applied no brand filter at all, so all 149 of their
+//      product pages answered 200 on a direct URL even though nothing linked to
+//      them. Unlisted is not the same as not on the website.
+// Excluded explicitly so the rule holds however a product is categorised.
+//
+// SC IS DELIBERATELY EXEMPT: those are the Concept2 ergs (C2 Rower, C2 Ski Erg,
+// C2 Ski Erg Floor Stand), a range MasterKraft distributes. They are named "C2"
+// but carry SC SKUs, and they stay on the site (confirmed 2026-08-20). Note
+// UNLEASHED codes that same range C2*, which is a different scheme again.
+const FOREIGN_BRAND_SKU_RE = /^(?:S(?!C)|F)/i;
+export function isForeignBrandSku(sku?: string): boolean {
+  return !!sku && FOREIGN_BRAND_SKU_RE.test(sku.trim());
+}
+
 // OBSOLETE PRODUCTS. Two systems retire products independently and the site
 // honours both, here, so no listing surface can miss one:
 //
@@ -95,15 +114,20 @@ export function isObsolete(p: Retirable): boolean {
   return p.catalog_visibility === "hidden" || isRetiredSku(p.sku);
 }
 
+// Never served, for any reason: retired, hidden, or another company's brand.
+function isUnservable(p: Retirable): boolean {
+  return isObsolete(p) || isForeignBrandSku(p.sku);
+}
+
 // "search" means search-only (excluded from catalogue listings); "catalog"
 // means catalogue-only (excluded from search). Nothing in the store uses either
 // today, but honouring them keeps us faithful to WooCommerce's own semantics.
 export function filterListable<T extends Retirable>(items: T[]): T[] {
-  return items.filter((i) => !isObsolete(i) && i.catalog_visibility !== "search");
+  return items.filter((i) => !isUnservable(i) && i.catalog_visibility !== "search");
 }
 
 export function filterSearchable<T extends Retirable>(items: T[]): T[] {
-  return items.filter((i) => !isObsolete(i) && i.catalog_visibility !== "catalog");
+  return items.filter((i) => !isUnservable(i) && i.catalog_visibility !== "catalog");
 }
 
 const metaStr = (meta: WcMeta[] | undefined, key: string): string => {
@@ -471,7 +495,7 @@ export async function getProductBySlug(slug: string): Promise<WcProduct | null> 
   // getProductById is deliberately NOT filtered - it backs order creation, and
   // an order for an already-bought item must not fail because marketing hid it.
   const p = data[0];
-  return p && !isObsolete(p) ? normalizeProduct(p) : null;
+  return p && !isUnservable(p) ? normalizeProduct(p) : null;
 }
 
 export async function getProductById(id: number): Promise<WcProduct | null> {
@@ -523,7 +547,7 @@ export async function getAllProductSlugs(): Promise<
     // Obsolete products 404, so keep them out of the sitemap.
     out.push(
       ...data
-        .filter((p) => !isObsolete(p))
+        .filter((p) => !isUnservable(p))
         .map((p) => ({ slug: p.slug, sku: p.sku, modified: p.date_modified_gmt }))
     );
     if (data.length < 100) break;
