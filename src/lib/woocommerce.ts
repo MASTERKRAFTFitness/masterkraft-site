@@ -1,7 +1,25 @@
-// Headless WooCommerce client - reads the existing masterkraft.com store via the
-// WC REST API (read-only key). Cart/checkout use the public Store API (task 6).
+// The catalogue read layer.
+//
+// Product data comes from the COMMITTED SNAPSHOT in src/data (see lib/catalogue.ts),
+// not from a request-time call to WooCommerce. Only the checkout path -
+// getProductById and getVariation - still talks to the live store; everything a
+// visitor browses is served from the repo. Re-run `npm run build:catalogue`
+// after a content edit in WordPress.
+//
+// This file owns the four visibility rules (brand SKU, foreign brand,
+// WordPress-hidden, ERP-retired) and applies them at one chokepoint, so the
+// snapshot stays a faithful mirror and cannot drift from what we serve.
 
 import imageOverrides from "./product-image-overrides.json";
+import {
+  allProducts,
+  categoryById,
+  categoryChildren,
+  productBySlug,
+  productsInCategory,
+  searchCatalogue,
+  variationsFor,
+} from "@/lib/catalogue";
 import { isRetiredSku } from "./obsolete";
 
 const BASE = `${process.env.WC_STORE_URL}/wp-json/wc/v3`;
@@ -51,6 +69,11 @@ export type WcProduct = {
   images: WcImage[];
   categories: WcTerm[];
   meta_data?: WcMeta[];
+  // Snapshot-only fields (see lib/catalogue.ts). The live checkout-path fetches
+  // don't request them, so both are optional.
+  date_modified_gmt?: string; // sitemap lastmod
+  featured?: boolean; // the store's own "featured" flag
+  menu_order?: number; // the store's listing order
 };
 
 export type WcMeta = { key: string; value: unknown };
@@ -142,155 +165,9 @@ export function filterSearchable<T extends Retirable>(items: T[]): T[] {
   return items.filter((i) => !isUnservable(i) && i.catalog_visibility !== "catalog");
 }
 
-const metaStr = (meta: WcMeta[] | undefined, key: string): string => {
-  const v = meta?.find((m) => m.key === key)?.value;
-  return typeof v === "string" ? v.trim() : v != null ? String(v) : "";
-};
-
-// Older products keep their whole spec table in one ACF HTML blob
-// (`specification_text`) rather than the discrete `assembled_size_*` / `colour`
-// / … fields. 78 of the 224 listed products have ONLY the blob, so without this
-// their spec table renders empty. The markup is uniform across the catalogue: a
-// single "Assembled Size" <strong> heading, then <li> items of "Label: value".
-// "34kg" -> "34 kg", "12months" -> "12 months".
-//
-// The blob template appends "months" to the warranty value whether or not the
-// value is written in months, so anything phrased differently comes back with a
-// stray unit glued to its last WORD: "2 Years Non-Wearable Partsmonths" (the two
-// C2 ergs, Air Rower Pro, Air Cycle Elite), and a value already ending in months
-// doubles up: "3 monthsmonths" (the 34kg plyo box, Functional Trainer Pro).
-// Only stripped at the END and only after a letter, so a real "3 months" (space
-// and digit before it) is never touched.
-// Exported for the tests. Fixing the source data in WordPress is still the right
-// call; this stops a bad value there reaching customers.
-export function normalizeSpecUnits(value: string): string {
-  return value
-    .replace(/([a-z])months\s*$/i, "$1")
-    .replace(/(\d)\s*(kg|months?|years?|weeks?|days?)\b/gi, "$1 $2");
-}
-
-const SPEC_BLOB_LABELS: Record<string, string> = {
-  colour: "Colour",
-  color: "Colour",
-  material: "Material",
-  warranty: "Warranty",
-  "net weight": "Net weight",
-  "gross weight": "Gross weight",
-};
-
-export function parseSpecBlob(html: string): {
-  dims: { l: string; w: string; h: string; d: string };
-  rows: { label: string; value: string }[];
-} {
-  const dims = { l: "", w: "", h: "", d: "" };
-  const rows: { label: string; value: string }[] = [];
-  if (!html) return { dims, rows };
-
-  for (const li of html.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
-    const text = li[1]
-      .replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .trim();
-    const parts = text.match(/^([^:]{1,40}):\s*([\s\S]+)$/);
-    if (!parts) continue;
-    const key = parts[1].trim().toLowerCase();
-    const value = parts[2].replace(/\s+/g, " ").trim();
-    if (!value) continue;
-
-    // Dimensions carry their own "mm"; strip it so they format like the
-    // discrete fields do (dims() re-adds a single trailing unit).
-    const bare = value.replace(/\s*mm\s*$/i, "");
-    if (key === "width") dims.w = bare;
-    else if (key === "height") dims.h = bare;
-    else if (key === "length") dims.l = bare;
-    else if (key === "depth") dims.d = bare;
-    else {
-      const label = SPEC_BLOB_LABELS[key];
-      if (label) {
-        // Weights are stored as "34kg"; warranties as "12months". Insert the
-        // missing space so they read consistently with the discrete fields, and
-        // collapse a doubled unit: several warranties were hand-typed as
-        // "3 monthsmonths" in WordPress (the 34kg plyo box and the Functional
-        // Trainer show it to customers; 3 more carry it behind a correct
-        // discrete field). Fixing the source data is still the right call, this
-        // just stops a typo there rendering on the site.
-        rows.push({ label, value: normalizeSpecUnits(value) });
-      }
-    }
-  }
-  return { dims, rows };
-}
-
-// Parse the ACF meta bag into the overview / features / specs the product page
-// renders. Missing fields simply drop out (unknown is never shown as blank/0).
-export function parseProductDetail(p: WcProduct): ProductDetail {
-  const m = p.meta_data;
-  const features: string[] = [];
-  const count = parseInt(metaStr(m, "features"), 10);
-  const max = Number.isFinite(count) && count > 0 ? count : 6;
-  for (let i = 0; i < max; i++) {
-    const t = metaStr(m, `features_${i}_text`);
-    if (t) features.push(t);
-  }
-
-  const specs: { label: string; value: string }[] = [];
-  const push = (label: string, value: string, unit = "") => {
-    const v = value.trim();
-    if (v) specs.push({ label, value: unit ? `${v}${unit}` : v });
-  };
-  const dims = (l: string, w: string, h: string, d: string) => {
-    const parts = [
-      l && `L ${l}`,
-      w && `W ${w}`,
-      h && `H ${h}`,
-      d && `D ${d}`,
-    ].filter(Boolean);
-    return parts.length ? `${parts.join(" × ")} mm` : "";
-  };
-  // Discrete ACF fields win; the legacy HTML blob fills whatever they leave empty.
-  const blob = parseSpecBlob(metaStr(m, "specification_text"));
-  const blobRow = (label: string) => blob.rows.find((r) => r.label === label)?.value ?? "";
-  const pushMerged = (label: string, discrete: string, unit = "") => {
-    if (discrete.trim()) push(label, discrete, unit);
-    else push(label, blobRow(label));
-  };
-
-  push(
-    "Assembled size",
-    dims(
-      metaStr(m, "assembled_size_length"),
-      metaStr(m, "assembled_size_width"),
-      metaStr(m, "assembled_size_height"),
-      metaStr(m, "assembled_size_depth"),
-    ) || dims(blob.dims.l, blob.dims.w, blob.dims.h, blob.dims.d),
-  );
-  pushMerged("Colour", metaStr(m, "colour"));
-  pushMerged("Material", metaStr(m, "material"));
-  pushMerged("Net weight", metaStr(m, "net_weight"), "kg");
-  pushMerged("Gross weight", metaStr(m, "gross_weight"), "kg");
-  push(
-    "Packing size",
-    dims(
-      metaStr(m, "packing_size_length"),
-      metaStr(m, "packing_size_width"),
-      metaStr(m, "packing_size_height"),
-      "",
-    ),
-  );
-  pushMerged("Warranty", metaStr(m, "warranty"));
-
-  const showPkg = metaStr(m, "show_package_inclusions");
-  const pkgText = metaStr(m, "package_inclusion_text");
-
-  return {
-    overviewShort: metaStr(m, "product_overview_short") || undefined,
-    overviewDescription: metaStr(m, "product_overview_description") || undefined,
-    features,
-    specs,
-    packageInclusions: showPkg === "1" && pkgText ? pkgText : undefined,
-  };
-}
+// Spec/detail parsing lives in lib/spec.ts (pure, no data imports) so the
+// reporting scripts can use the same parser the product page does.
+export { normalizeSpecUnits, parseSpecBlob, parseProductDetail } from "@/lib/spec";
 
 export type WcVariation = {
   id: number;
@@ -341,76 +218,39 @@ const PRODUCT_FIELDS =
 
 export async function getProductsByCategory(
   categoryId: number,
-  {
-    page = 1,
-    perPage = 24,
-    orderby = "menu_order",
-    order = "asc",
-  }: { page?: number; perPage?: number; orderby?: string; order?: "asc" | "desc" } = {}
+  { page = 1, perPage = 24 }: { page?: number; perPage?: number } = {}
 ): Promise<FetchResult<WcProduct[]>> {
-  const res = await wcGet<WcProduct[]>("/products", {
-    category: categoryId,
-    per_page: perPage,
-    page,
-    status: "publish",
-    orderby,
-    order,
-    _fields: PRODUCT_FIELDS,
-  });
-  return { ...res, data: filterListable(res.data).map(applyImageOverride) };
+  // Filter first, then paginate. The old version asked WooCommerce for one page
+  // and filtered afterwards, so a page could come back mostly empty while its
+  // `total` still reported the unfiltered count - the same fault that made site
+  // search return nothing. Off the snapshot there is no reason to page at all.
+  const all = filterListable(productsInCategory(categoryId)).map(applyImageOverride);
+  const start = (page - 1) * perPage;
+  return {
+    data: all.slice(start, start + perPage),
+    total: all.length,
+    totalPages: Math.max(1, Math.ceil(all.length / perPage)),
+  };
 }
 
-// Full category fetch (all pages), ordered by menu_order (the store's "featured"
-// order). By default filtered to MasterKraft's own M/N SKUs, but Clearance is
-// ex-display / end-of-line stock (A-prefixed SKUs), so it passes brandFilter:
-// false to show that stock rather than being emptied by the M/N filter.
-// WooCommerce answers in 1.5-2.5s per request, so paging through it one `await`
-// at a time is what makes a listing feel slow. Page 1 reports the page count in
-// x-wp-totalpages, so every remaining page can be fetched at once: wall clock
-// becomes one request instead of the sum. maxPages is a runaway guard.
-async function fetchAllPages(
-  params: Record<string, string | number | undefined>,
-  maxPages = 6
-): Promise<WcProduct[]> {
-  const first = await wcGet<WcProduct[]>("/products", { ...params, per_page: 100, page: 1 });
-  const pages = Math.min(first.totalPages || 1, maxPages);
-  if (pages <= 1) return first.data;
-  const rest = await Promise.all(
-    Array.from({ length: pages - 1 }, (_, i) =>
-      wcGet<WcProduct[]>("/products", { ...params, per_page: 100, page: i + 2 })
-    )
-  );
-  // Concatenated in page order, so the store's menu_order survives.
-  return [...first.data, ...rest.flatMap((r) => r.data)];
-}
-
+// A category's products in the store's menu_order. By default filtered to
+// MasterKraft's own M/N SKUs, but Clearance is ex-display / end-of-line stock
+// (A-prefixed SKUs), so it passes brandFilter: false to show that stock rather
+// than being emptied by the M/N filter.
 export async function getAllProductsByCategory(
   categoryId: number,
   opts?: { brandFilter?: boolean }
 ): Promise<WcProduct[]> {
-  const out = await fetchAllPages({
-    category: categoryId,
-    status: "publish",
-    orderby: "menu_order",
-    order: "asc",
-    _fields: PRODUCT_FIELDS,
-  });
   // The obsolete filter is independent of brandFilter: Clearance opts out of the
   // M/N brand filter but must still respect the store's hidden flag.
-  const listable = filterListable(out);
+  const listable = filterListable(productsInCategory(categoryId));
   return ((opts?.brandFilter ?? true) ? filterBrandSku(listable) : listable).map(applyImageOverride);
 }
 
 // The full catalogue (all categories), ordered by menu_order and filtered to
 // MasterKraft's own M/N SKUs. Backs the "All Equipment" all-products landing.
 export async function getAllProducts(): Promise<WcProduct[]> {
-  const out = (
-    await fetchAllPages(
-      { status: "publish", orderby: "menu_order", order: "asc", _fields: PRODUCT_FIELDS },
-      8
-    )
-  ).map(normalizeProduct);
-  return filterBrandSku(filterListable(out));
+  return filterBrandSku(filterListable(allProducts().map(normalizeProduct)));
 }
 
 export type WcCategoryChild = { id: number; slug: string; name: string; count: number };
@@ -431,61 +271,18 @@ export function decodeEntities(s: string): string {
 }
 
 // The category's own description (rich HTML) from WooCommerce — the SEO copy the
-// old site showed on each category landing page. Empty string if none/failed.
+// old site showed on each category landing page. Empty string if none.
 export async function getCategoryDescription(id: number): Promise<string> {
-  try {
-    const { data } = await wcGet<{ description?: string }>(`/products/categories/${id}`, {
-      _fields: "description",
-    });
-    return data?.description ?? "";
-  } catch {
-    return "";
-  }
+  return categoryById(id)?.description ?? "";
 }
 
 export async function getCategoryChildren(parentId: number): Promise<WcCategoryChild[]> {
-  const { data } = await wcGet<WcCategoryChild[]>("/products/categories", {
-    parent: parentId,
-    per_page: 100,
-    hide_empty: "true",
-    orderby: "name",
-    order: "asc",
-    _fields: "id,slug,name,count",
-  });
-  return data.map((c) => ({ ...c, name: decodeEntities(c.name) }));
-}
-
-// Search fetches the WHOLE result set, then filters, then paginates in memory -
-// the same full-fetch approach the category pages use, and for the same reason.
-//
-// Asking WooCommerce for one 24-row page and filtering afterwards returned an
-// EMPTY PAGE for the most common terms in the catalogue. The store holds a
-// parallel S-prefixed range with identical product names (`SMDBRH` alongside
-// `MMDBRH`), WooCommerce ranks those first, so all 24 rows were filtered away
-// and the page reported "0 products found" while dozens matched further down.
-// "dumbbell" is 59 raw results of which 22 are ours; "barbell" 95 of which 38.
-// Broadest terms run to 2 pages of 100, so 3 is ample headroom.
-export async function searchProducts(
-  query: string,
-  {
-    page = 1,
-    perPage = 24,
-    // The typeahead only needs a handful of suggestions and fires per keystroke,
-    // so it caps this at 1: one request, still filtered, instead of paying for
-    // pages it will never show.
-    maxPages = 3,
-  }: { page?: number; perPage?: number; maxPages?: number } = {}
-): Promise<FetchResult<WcProduct[]>> {
-  const raw = await fetchAllPages(
-    { search: query, status: "publish", _fields: PRODUCT_FIELDS },
-    maxPages
-  );
-  const matched = filterBrandSku(filterSearchable(raw)).map(applyImageOverride);
-  return {
-    data: matched.slice((page - 1) * perPage, page * perPage),
-    total: matched.length,
-    totalPages: Math.max(1, Math.ceil(matched.length / perPage)),
-  };
+  // hide_empty on the live call dropped childless terms; `count` is the store's
+  // own product count, so the same rule applies here.
+  return categoryChildren(parentId)
+    .filter((c) => c.count > 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => ({ id: c.id, slug: c.slug, name: decodeEntities(c.name), count: c.count }));
 }
 
 // WooCommerce returns some text fields (notably category names) HTML-encoded.
@@ -498,19 +295,43 @@ function normalizeProduct(p: WcProduct): WcProduct {
   });
 }
 
+// Search runs over the whole snapshot, then filters, then paginates in memory.
+//
+// Asking WooCommerce for one 24-row page and filtering afterwards returned an
+// EMPTY PAGE for the most common terms in the catalogue. The store holds a
+// parallel S-prefixed range with identical product names (`SMDBRH` alongside
+// `MMDBRH`), WooCommerce ranks those first, so all 24 rows were filtered away
+// and the page reported "0 products found" while dozens matched further down.
+// searchCatalogue reproduces WordPress's matching rules against the snapshot.
+export async function searchProducts(
+  query: string,
+  { page = 1, perPage = 24 }: { page?: number; perPage?: number; maxPages?: number } = {}
+): Promise<FetchResult<WcProduct[]>> {
+  const matched = filterBrandSku(filterSearchable(searchCatalogue(query))).map(applyImageOverride);
+  return {
+    data: matched.slice((page - 1) * perPage, page * perPage),
+    total: matched.length,
+    totalPages: Math.max(1, Math.ceil(matched.length / perPage)),
+  };
+}
+
 export async function getProductBySlug(slug: string): Promise<WcProduct | null> {
-  const { data } = await wcGet<WcProduct[]>("/products", {
-    slug,
-    // meta_data carries the ACF overview/features/specs the product page renders.
-    _fields: `${PRODUCT_FIELDS},meta_data`,
-  });
   // Returning null for an obsolete product makes /product/<slug> 404 rather than
   // serve a page with a live add-to-cart button for something we don't sell.
-  // getProductById is deliberately NOT filtered - it backs order creation, and
-  // an order for an already-bought item must not fail because marketing hid it.
-  const p = data[0];
+  const p = productBySlug(slug);
   return p && !isUnservable(p) ? normalizeProduct(p) : null;
 }
+
+// ---------------------------------------------------------------------------
+// The checkout path still reads WooCommerce LIVE, on purpose.
+//
+// getProductById and getVariation back freight quoting and order creation. They
+// run once per checkout, so the 1.5-2.5s is affordable, and they must never be
+// answered from a snapshot that could be a content edit behind the store: an
+// order priced off stale data is a real loss, where a stale listing is cosmetic.
+// getProductById is also deliberately NOT filtered — an order for an
+// already-bought item must not fail because marketing hid it.
+// ---------------------------------------------------------------------------
 
 export async function getProductById(id: number): Promise<WcProduct | null> {
   try {
@@ -535,48 +356,25 @@ export async function getVariation(
   }
 }
 
+// Read path (the product page's variant selector and the "From" price on cards),
+// so this one comes off the snapshot.
 export async function getProductVariations(productId: number): Promise<WcVariation[]> {
-  const { data } = await wcGet<WcVariation[]>(`/products/${productId}/variations`, {
-    per_page: 100,
-    _fields: "id,sku,price,regular_price,sale_price,stock_status,attributes,image,weight,dimensions",
-  });
-  return data;
+  return variationsFor(productId);
 }
 
 export async function getAllProductSlugs(): Promise<
   { slug: string; sku?: string; modified?: string }[]
 > {
-  const out: { slug: string; sku?: string; modified?: string }[] = [];
-  for (let page = 1; page <= 6; page++) {
-    const { data } = await wcGet<
-      { slug: string; sku?: string; date_modified_gmt?: string; catalog_visibility?: string }[]
-    >("/products", {
-      per_page: 100,
-      page,
-      status: "publish",
-      // sku so the caller can check the product against Unleashed's obsolete flag.
-      _fields: "slug,sku,date_modified_gmt,catalog_visibility",
-    });
-    if (!data.length) break;
-    // Obsolete products 404, so keep them out of the sitemap.
-    out.push(
-      ...data
-        .filter((p) => !isUnservable(p))
-        .map((p) => ({ slug: p.slug, sku: p.sku, modified: p.date_modified_gmt }))
-    );
-    if (data.length < 100) break;
-  }
-  return out;
+  // Obsolete products 404, so keep them out of the sitemap.
+  return allProducts()
+    .filter((p) => !isUnservable(p))
+    .map((p) => ({ slug: p.slug, sku: p.sku, modified: p.date_modified_gmt }));
 }
 
 export async function getFeaturedProducts(perPage = 8): Promise<WcProduct[]> {
-  const { data } = await wcGet<WcProduct[]>("/products", {
-    featured: "true",
-    per_page: perPage,
-    status: "publish",
-    _fields: PRODUCT_FIELDS,
-  });
-  return filterListable(data).map(applyImageOverride);
+  return filterListable(allProducts().filter((p) => p.featured))
+    .slice(0, perPage)
+    .map(applyImageOverride);
 }
 
 const audFormatter = new Intl.NumberFormat("en-AU", {

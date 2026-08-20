@@ -25,8 +25,27 @@ needs a decision, a credential, or content. **Launch gates and env vars live in
 **A git push does NOT deploy.** Deploys are the Vercel CLI, from the project dir:
 
 ```bash
-cd ~/Desktop/masterkraft-site && npx vercel --prod
+cd ~/Desktop/masterkraft-site && npm run deploy
 ```
+
+That runs the **deploy gate** (`predeploy`) and then `vercel --prod`. The gate is
+~60s and any step failing stops the deploy:
+
+| step | catches |
+|---|---|
+| `check:snapshot` | src/data missing, truncated, or variations half-written (offline) |
+| `test` | the 69 unit tests |
+| `check:obsolete` | the committed ERP retirement list drifting from Unleashed |
+| `check:catalogue` | the catalogue snapshot drifting from WooCommerce |
+
+**`lint` is deliberately NOT in the gate.** The repo carries 21 pre-existing eslint
+errors, so gating on it would block every deploy. Run it and compare against `HEAD`.
+
+`check:snapshot` also runs as `prebuild`, so it fires on Vercel's build too. It is
+offline on purpose: the point of the snapshot is that rendering does not depend on
+WooCommerce being up, and a networked pre-build check would hand that back.
+
+To deploy without the gate (it is a safety net, not a law): `npx vercel --prod`.
 
 If it says **"Not authorized"**, run `npx vercel login` first (Michael's account).
 `NEXT_PUBLIC_*` vars are build-time inlined, so changing one in Vercel does nothing
@@ -70,7 +89,12 @@ Each of these was hit for real. They look like bugs in our code and are not.
 Four rules, all applied at one chokepoint in `src/lib/woocommerce.ts`. **If a
 category shows 0 products, suspect these first.**
 
-512 published products → **184 shown** (plus 37 Clearance).
+512 published products → **184 shown** (plus 36 Clearance; this was recorded as 37
+on 2026-08-20, and three of the 39 raw Clearance products are ERP-retired).
+
+The rules run against the **committed snapshot** in `src/data/`, not a live call
+(§4). The snapshot is a faithful mirror of what the store published and holds NO
+visibility rules, so these four are still the only thing deciding what appears.
 
 1. **Brand SKU filter** (`BRAND_SKU_RE = /^(?:[MN]|SC)/i`). Only MasterKraft's own
    M/N products, plus the Concept2 range on `SC` SKUs. **Clearance opts out** via
@@ -120,14 +144,23 @@ an order for an already-bought item must not fail because marketing hid it.
 
 | when | run |
 |---|---|
+| **product content changes in WordPress** | **`npm run build:catalogue`, then commit `src/data/`** |
+| checking whether the catalogue has drifted | `npm run check:catalogue` (exits 1 on drift, in the deploy gate) |
+| proving the snapshot still answers like the store | `npm run verify:catalogue` (hits the network) |
 | the ERP retires a product | `npm run build:obsolete`, then commit the JSON |
-| checking whether it has drifted | `npm run check:obsolete` (exits 1 on drift, gates a deploy) |
+| checking whether it has drifted | `npm run check:obsolete` (exits 1 on drift, in the deploy gate) |
 | the catalogue gains products | `npm run mirror:images`, then `npm run compress:assets` |
 | the Dropbox manuals folder gains files | `node scripts/import-manuals.mjs` |
 | product photos change | `python3 scripts/normalize-product-bg.py` |
+| auditing product spec content | `npm run report:specs` (writes `reports/wc-spec-gaps.*`) |
 
 `build:obsolete` refuses to write if fewer than 1,500 products come back, since a
-short read would silently un-retire everything.
+short read would silently un-retire everything. `build:catalogue` refuses below
+400 published products for the same reason: a short read would empty the shop.
+
+**`build:catalogue` is now the most important of these.** The site serves product
+data from `src/data/`, so a content edit in WordPress is invisible until the
+snapshot is rebuilt and committed. Nothing rebuilds it automatically.
 
 ---
 
@@ -285,10 +318,30 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
   `MMDBRH-GROUP`, `MWWPCNB-GROUP`, `MMDEHG-GROUP`, `MWWPOU-GROUP`). Each duplicates
   a variable product that is priced from Unleashed, so the same product appears
   twice at two different prices. Reconciling two price sources is the wrong fix.
-- **Two warranty fields** read "3 monthsmonths" (`MBPB3I101`, `MSCMDU01`). The typo
-  is in the legacy `specification_text` blob, **not** the Warranty field, so anyone
-  fixing it will look in the wrong place. The cheap fix is to type the correct
-  warranty into the discrete Warranty field, which overrides the blob.
+- **89 products show a warranty with no unit.** The product page renders
+  `Warranty: 12` where it should read `12 months`: the discrete Warranty field holds
+  a bare number, and unlike Net/Gross weight the renderer appends no unit to it. The
+  blob has the full value, but the discrete field wins. **Customers see this today.**
+  Found 2026-08-21 by `npm run report:specs`; every affected SKU is in the CSV with
+  the exact value to type.
+- **28 products have specs that genuinely disagree** between the discrete field and
+  the blob, and the page shows the discrete one. Several are order-of-magnitude
+  errors: `MCTMSP02` net weight 480 vs 180kg, `SCRWAR04` (C2 rower) assembled size
+  `24,400 x 6,100` against the blob's `2,440 x 610 x 1,150`. These are wrong on the
+  site right now.
+- **26 warranty values read "3 monthsmonths"** in the served set (including
+  `MBPB3I101` and `MSCMDU01`). The typo is in the legacy `specification_text` blob,
+  **not** the Warranty field, so anyone fixing it will look in the wrong place. The
+  cheap fix is to type the correct warranty into the discrete Warranty field, which
+  overrides the blob. The site already repairs this at render time, so it is a
+  source-data problem rather than a visible one.
+- **The full spec punch list is `reports/wc-spec-gaps.csv`** (872 items across 218 of
+  the 220 served products), with `reports/wc-spec-gaps-summary.md` for the counts.
+  Regenerate with `npm run report:specs`. Each row carries the field, both competing
+  values and the literal action to take. Only the 143 priority-1 items change what a
+  customer sees; the rest is cleanup needed before `specification_text` can be
+  retired. **Doing this work is worth it whether or not the content ever leaves
+  WordPress** - it is the expensive, destination-independent half of any migration.
 - **Create the C2 Bike Erg**, which exists in Unleashed as `C2BIKEERG` at $2,145
   inc-GST with no WooCommerce product. Then map it in `manualAliases`.
 - **33 products have no carton dimensions**, including all 3 Concept2 ergs, and
@@ -326,6 +379,19 @@ subdomain to `remotePatterns` in `next.config.ts`.
 from `/public`, so nothing on the WordPress side can break them. The same is true of
 the manuals, after the originals were lost from `wp-content/uploads/2021/03/` and
 had to be rebuilt from Michael's Dropbox.
+
+**So is the catalogue exposure.** Product data is now a committed snapshot (§4), so
+no page a visitor loads calls WooCommerce. Verified by pointing `WC_STORE_URL` at a
+dead host and serving a production build: every listing, search, product page and
+the sitemap still rendered, with the same counts. What this buys at the cutover is
+that a WordPress move can no longer take the shop down, and `WC_STORE_URL` only has
+to be correct before the next `build:catalogue` or a checkout.
+
+**Still true:** WordPress remains the place product content is edited, and the
+checkout path (freight quote, order creation) reads and writes it live. Keep it
+running. Dropping it altogether is a separate piece of work: it means finding a new
+home for the editorial layer AND a new order book, because the WooCommerce order is
+what syncs to Unleashed and what Interparcel's Shipping Manager fetches (§6).
 
 ---
 
