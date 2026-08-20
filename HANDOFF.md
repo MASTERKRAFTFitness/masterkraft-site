@@ -370,12 +370,17 @@ them. 5 bundles have a priced twin: `MWBBFUR-GROUP`, `MMDBRH-GROUP`,
 `MWWPCNB-GROUP`, `MMDEHG-GROUP`, `MWWPOU-GROUP`. The other four twins are
 A-prefixed and sit in Clearance, so they only collide where categories overlap.
 
-### Found: /cart and /checkout use the homepage title
+### Found and FIXED: /cart and /checkout used the homepage title
 
-Both render `MASTERKRAFT | Shop Home Gym & Commercial Fitness Equipment` instead
-of "Cart" / "Checkout". They are client components with no metadata export, so
-the fix is a small server wrapper or a segment layout. Cosmetic, but it is what
-browser tabs, bookmarks and GA page reports will show.
+Both rendered `MASTERKRAFT | Shop Home Gym & Commercial Fitness Equipment`. They
+are client components, which **cannot export `metadata`**, so each now has a
+one-line **segment layout** (`src/app/cart/layout.tsx`, `src/app/checkout/layout.tsx`)
+carrying the title. Now "Cart | MASTERKRAFT" and "Checkout | MASTERKRAFT".
+
+Both layouts also set **`robots: noindex`**, which is the right call for a
+per-visitor cart and a checkout and survives the launch flip: when
+`NEXT_PUBLIC_ALLOW_INDEX` turns the rest of the site indexable, the deeper
+segment metadata still wins for these two.
 
 ### Confirmed live (both already known, both awaiting a decision)
 - **Checkout still says "Shipping: Free"** while the cart says freight is quoted.
