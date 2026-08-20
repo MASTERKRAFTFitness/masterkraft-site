@@ -409,19 +409,37 @@ export async function getCategoryChildren(parentId: number): Promise<WcCategoryC
   return data.map((c) => ({ ...c, name: decodeEntities(c.name) }));
 }
 
+// Search fetches the WHOLE result set, then filters, then paginates in memory -
+// the same full-fetch approach the category pages use, and for the same reason.
+//
+// Asking WooCommerce for one 24-row page and filtering afterwards returned an
+// EMPTY PAGE for the most common terms in the catalogue. The store holds a
+// parallel S-prefixed range with identical product names (`SMDBRH` alongside
+// `MMDBRH`), WooCommerce ranks those first, so all 24 rows were filtered away
+// and the page reported "0 products found" while dozens matched further down.
+// "dumbbell" is 59 raw results of which 22 are ours; "barbell" 95 of which 38.
+// Broadest terms run to 2 pages of 100, so 3 is ample headroom.
 export async function searchProducts(
   query: string,
-  { page = 1, perPage = 24 }: { page?: number; perPage?: number } = {}
+  {
+    page = 1,
+    perPage = 24,
+    // The typeahead only needs a handful of suggestions and fires per keystroke,
+    // so it caps this at 1: one request, still filtered, instead of paying for
+    // pages it will never show.
+    maxPages = 3,
+  }: { page?: number; perPage?: number; maxPages?: number } = {}
 ): Promise<FetchResult<WcProduct[]>> {
-  const res = await wcGet<WcProduct[]>("/products", {
-    search: query,
-    per_page: perPage,
-    page,
-    status: "publish",
-    _fields: PRODUCT_FIELDS,
-  });
-  const data = filterBrandSku(filterSearchable(res.data)).map(applyImageOverride);
-  return { data, total: data.length, totalPages: res.totalPages };
+  const raw = await fetchAllPages(
+    { search: query, status: "publish", _fields: PRODUCT_FIELDS },
+    maxPages
+  );
+  const matched = filterBrandSku(filterSearchable(raw)).map(applyImageOverride);
+  return {
+    data: matched.slice((page - 1) * perPage, page * perPage),
+    total: matched.length,
+    totalPages: Math.max(1, Math.ceil(matched.length / perPage)),
+  };
 }
 
 // WooCommerce returns some text fields (notably category names) HTML-encoded.

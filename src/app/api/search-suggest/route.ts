@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const q = new URL(request.url).searchParams.get("q")?.trim();
   if (!q || q.length < 2) return NextResponse.json({ results: [] });
   try {
-    const { data } = await searchProducts(q, { perPage: 6 });
+    const { data } = await searchProducts(q, { perPage: 6, maxPages: 1 });
     const results = data.map((p) => ({
       slug: p.slug,
       name: p.name,

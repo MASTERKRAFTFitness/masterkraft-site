@@ -221,6 +221,37 @@ quarter as often. **The trade is that an ERP price or stock change can take up t
 an hour to appear.** Lower it if stock accuracy starts mattering more than the
 wait.
 
+## Shipped 2026-08-20 — site search returned nothing for the commonest terms
+
+`/search?q=dumbbell`, `?q=barbell`, `?q=mat` and `?q=rig` all reported **0
+products found**. Pre-existing, not related to the obsolete rule: staging showed
+the same before any of today's work.
+
+**Cause:** `searchProducts` asked WooCommerce for **one page of 24** and applied
+the brand-SKU filter **afterwards**. The store holds a parallel **S-prefixed
+range with identical product names** (`SMDBRH` alongside `MMDBRH`), WooCommerce
+ranks those first, so all 24 rows were filtered away and the page reported
+nothing while dozens of matches sat further down the result set.
+
+**Fix:** search now full-fetches, filters, then paginates in memory, the same
+approach the category pages already use and for the same reason. Cheap now that
+pagination runs in parallel.
+
+| term | before | after |
+|---|---|---|
+| dumbbell | 0 | 22 |
+| barbell | 0 | 38 |
+| mat | 0 | 46 |
+| rig | 0 | 15 |
+| rack | 0 | 63 |
+| kettlebell | 8 | 13 |
+
+Terms that already worked are unchanged (bench 7, bumper 11, treadmill 2), and
+pagination is correct (rack: 24 + 24 + 15 = 63). **The typeahead passes
+`maxPages: 1`** — it fires per keystroke and only shows 6 suggestions, so it
+takes one request (~1.7-2.0s uncached, instant after) rather than paying for
+pages it will never display. It was returning nothing for "dumbbell" too.
+
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
 - **Accent = the brochure coral red** `#ef5350`, with `-600 #c73e37` and `-300 #f88a82`
@@ -317,16 +348,7 @@ wait.
   Michael's steer: keep WooCommerce running; don't migrate off it.
 
 ## Open / blocked (needs Michael/Steve or assets)
-- **SITE SEARCH IS BROKEN for common terms (found 2026-08-20, NOT yet fixed).**
-  `/search?q=dumbbell` and `?q=barbell`, `?q=mat`, `?q=rig` all return **0
-  products**, on staging today as well as locally, so this predates the obsolete
-  rule. Cause: `searchProducts` asks WooCommerce for **one page of 24** results
-  and applies the brand-SKU filter **afterwards**. The store holds a parallel
-  S-prefixed range with identical names (`SMDBRH` alongside `MMDBRH`), WooCommerce
-  ranks those first, so all 24 raw hits are filtered away and the page reports
-  nothing. Terms that do return are also under-counting (kettlebell 8, bench 8).
-  Fix options: fetch several pages before filtering, or push the brand filter into
-  the WooCommerce query. Needs a decision, then a small change.
+- ~~Site search broken for common terms~~ — **FIXED 2026-08-20**, see below.
 - ~~Missing manual PDFs~~ — **DONE 2026-08-17**, see the Resources section above.
 - **Home gym photos** — Michael is sending these through (2026-08-17).
 - **REVL studio assets** — Michael is contacting each club directly. Per club we need:
