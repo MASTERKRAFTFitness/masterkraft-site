@@ -152,6 +152,7 @@ an order for an already-bought item must not fail because marketing hid it.
 | the catalogue gains products | `npm run mirror:images`, then `npm run compress:assets` |
 | the Dropbox manuals folder gains files | `node scripts/import-manuals.mjs` |
 | product photos change | `python3 scripts/normalize-product-bg.py` |
+| auditing product spec content | `npm run report:specs` (writes `reports/wc-spec-gaps.*`) |
 
 `build:obsolete` refuses to write if fewer than 1,500 products come back, since a
 short read would silently un-retire everything. `build:catalogue` refuses below
@@ -317,10 +318,30 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
   `MMDBRH-GROUP`, `MWWPCNB-GROUP`, `MMDEHG-GROUP`, `MWWPOU-GROUP`). Each duplicates
   a variable product that is priced from Unleashed, so the same product appears
   twice at two different prices. Reconciling two price sources is the wrong fix.
-- **Two warranty fields** read "3 monthsmonths" (`MBPB3I101`, `MSCMDU01`). The typo
-  is in the legacy `specification_text` blob, **not** the Warranty field, so anyone
-  fixing it will look in the wrong place. The cheap fix is to type the correct
-  warranty into the discrete Warranty field, which overrides the blob.
+- **89 products show a warranty with no unit.** The product page renders
+  `Warranty: 12` where it should read `12 months`: the discrete Warranty field holds
+  a bare number, and unlike Net/Gross weight the renderer appends no unit to it. The
+  blob has the full value, but the discrete field wins. **Customers see this today.**
+  Found 2026-08-21 by `npm run report:specs`; every affected SKU is in the CSV with
+  the exact value to type.
+- **28 products have specs that genuinely disagree** between the discrete field and
+  the blob, and the page shows the discrete one. Several are order-of-magnitude
+  errors: `MCTMSP02` net weight 480 vs 180kg, `SCRWAR04` (C2 rower) assembled size
+  `24,400 x 6,100` against the blob's `2,440 x 610 x 1,150`. These are wrong on the
+  site right now.
+- **26 warranty values read "3 monthsmonths"** in the served set (including
+  `MBPB3I101` and `MSCMDU01`). The typo is in the legacy `specification_text` blob,
+  **not** the Warranty field, so anyone fixing it will look in the wrong place. The
+  cheap fix is to type the correct warranty into the discrete Warranty field, which
+  overrides the blob. The site already repairs this at render time, so it is a
+  source-data problem rather than a visible one.
+- **The full spec punch list is `reports/wc-spec-gaps.csv`** (872 items across 218 of
+  the 220 served products), with `reports/wc-spec-gaps-summary.md` for the counts.
+  Regenerate with `npm run report:specs`. Each row carries the field, both competing
+  values and the literal action to take. Only the 143 priority-1 items change what a
+  customer sees; the rest is cleanup needed before `specification_text` can be
+  retired. **Doing this work is worth it whether or not the content ever leaves
+  WordPress** - it is the expensive, destination-independent half of any migration.
 - **Create the C2 Bike Erg**, which exists in Unleashed as `C2BIKEERG` at $2,145
   inc-GST with no WooCommerce product. Then map it in `manualAliases`.
 - **33 products have no carton dimensions**, including all 3 Concept2 ergs, and

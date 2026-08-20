@@ -18,7 +18,8 @@
     "build:obsolete": "node scripts/build-obsolete-skus.mjs",
     "check:obsolete": "node scripts/check-obsolete.mjs",
     "mirror:images": "node scripts/mirror-product-images.mjs",
-    "compress:assets": "python3 scripts/compress-assets.py"
+    "compress:assets": "python3 scripts/compress-assets.py",
+    "report:specs": "vitest run --config vitest.reports.config.mts"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.8.0",
