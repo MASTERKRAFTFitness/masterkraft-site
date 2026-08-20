@@ -116,12 +116,20 @@ const metaStr = (meta: WcMeta[] | undefined, key: string): string => {
 // / … fields. 78 of the 224 listed products have ONLY the blob, so without this
 // their spec table renders empty. The markup is uniform across the catalogue: a
 // single "Assembled Size" <strong> heading, then <li> items of "Label: value".
-// "34kg" -> "34 kg", "12months" -> "12 months", "3 monthsmonths" -> "3 months".
-// Exported for the tests; the doubled unit is a data-entry mistake in WordPress,
-// not something the blob format does.
+// "34kg" -> "34 kg", "12months" -> "12 months".
+//
+// The blob template appends "months" to the warranty value whether or not the
+// value is written in months, so anything phrased differently comes back with a
+// stray unit glued to its last WORD: "2 Years Non-Wearable Partsmonths" (the two
+// C2 ergs, Air Rower Pro, Air Cycle Elite), and a value already ending in months
+// doubles up: "3 monthsmonths" (the 34kg plyo box, Functional Trainer Pro).
+// Only stripped at the END and only after a letter, so a real "3 months" (space
+// and digit before it) is never touched.
+// Exported for the tests. Fixing the source data in WordPress is still the right
+// call; this stops a bad value there reaching customers.
 export function normalizeSpecUnits(value: string): string {
   return value
-    .replace(/\b(kgs?|months?|years?|weeks?|days?)\1+\b/gi, "$1")
+    .replace(/([a-z])months\s*$/i, "$1")
     .replace(/(\d)\s*(kg|months?|years?|weeks?|days?)\b/gi, "$1 $2");
 }
 

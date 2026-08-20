@@ -109,6 +109,20 @@ describe("normalizeSpecUnits", () => {
     expect(normalizeSpecUnits("12months")).toBe("12 months");
   });
 
+  // The blob template appends "months" whether or not the value is in months, so
+  // a warranty phrased differently gets one glued to its last word.
+  it("strips a unit glued to a word", () => {
+    expect(normalizeSpecUnits("5 Years Frame, 2 Years Non-Wearable Partsmonths")).toBe(
+      "5 Years Frame, 2 Years Non-Wearable Parts"
+    );
+  });
+
+  it("never touches a correctly written value", () => {
+    expect(normalizeSpecUnits("(4) Cables- 6 months")).toBe("(4) Cables- 6 months");
+    expect(normalizeSpecUnits("3 months")).toBe("3 months");
+    expect(normalizeSpecUnits("2 Years Non-Wearable Parts")).toBe("2 Years Non-Wearable Parts");
+  });
+
   // Hand-typed in WordPress. Visible on the 34kg plyo box and the Functional
   // Trainer; three more carry it behind a correct discrete warranty field.
   it("collapses a doubled unit", () => {

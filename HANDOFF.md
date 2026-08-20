@@ -400,9 +400,15 @@ pages it will never display. It was returning nothing for "dumbbell" too.
   discrete Warranty field is empty. So the cheap content fix is to **type the correct
   warranty into the discrete field**, which overrides the blob; no need to edit
   legacy HTML. Still worth doing: the source data is wrong.
-  `normalizeSpecUnits` in `woocommerce.ts` now collapses a doubled unit as well as
-  inserting the missing space in "12months", so a typo in the source no longer
-  renders. Verified on all three pages.
+  **A second, wider shape turned up on 2026-08-20 while checking a C2 page:** the
+  blob template appends "months" whether or not the value is written in months,
+  so a warranty phrased differently comes back with a unit glued to its last WORD.
+  "5 Years Frame, 2 Years Non-Wearable **Partsmonths**" was rendering on **4 more
+  served products**: both C2 ergs, Air Rower Pro and Air Cycle Elite.
+  `normalizeSpecUnits` in `woocommerce.ts` now strips a unit glued to a word and
+  collapses a doubled one, as well as inserting the missing space in "12months".
+  It only strips at the END and only after a letter, so a real "3 months" is never
+  touched. Verified on all 6 affected pages.
 - **Warranty typos in WooCommerce** — some warranty fields are malformed at source,
   e.g. the 34kg plyo box reads "Cover: 3 monthsmonths". Renders as entered; needs a
   pass over the warranty fields in WordPress.
