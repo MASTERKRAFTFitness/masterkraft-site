@@ -382,12 +382,44 @@ browser tabs, bookmarks and GA page reports will show.
 - **A Stripe card form is live on the `pk_test` key** - `CONTINUE TO PAYMENT`
   renders a Stripe iframe, so this is not quote-only as `LAUNCH.md` claimed.
 
-### Not covered
-**No visual mobile pass.** The browser pane dropped to a 0x0 viewport partway
-through and would not render, so mobile was verified only structurally (viewport
-meta correct, mobile menu button present in the DOM). A human should eyeball the
-nav drawer, hero and product grid on a phone before launch, and Lighthouse has
-still not been run.
+### Mobile pass and Lighthouse — DONE
+
+**Mobile (375x812):** hero, stacked category/sort selects, 2-up product grid with
+the mirrored images, nav drawer (Equipment/Fitouts expanders, Portal + Fit-Out
+Solution buttons) and the product page all render correctly.
+
+**HOW TO RUN LIGHTHOUSE HERE.** The PageSpeed Insights API returns **429 without
+an API key**, so run it locally against the Chrome that is already installed:
+
+```bash
+cd <scratch> && export CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+npx --yes lighthouse@12 "https://web.test.masterkraft.com/all-equipment" \
+  --quiet --chrome-flags="--headless=new --no-sandbox" \
+  --preset=desktop --output=json --output-path=./lh-desktop.json
+```
+Drop `--preset=desktop` for the mobile run.
+
+| | Perf | A11y | Best practices | SEO |
+|---|---|---|---|---|
+| desktop | **97** | 95 | 100 | 69 |
+| mobile | **96** | 91 | 100 | 69 |
+
+Desktop LCP 0.8s, CLS 0, TBT 0ms. Mobile LCP 2.6s, CLS 0, TBT 50ms.
+**SEO 69 is entirely "Page is blocked from indexing"** - correct for staging, and
+it lifts on its own when `NEXT_PUBLIC_ALLOW_INDEX` is set.
+
+**Three real accessibility findings, none fixed yet:**
+1. **Contrast 2.61:1** on the disabled pagination control
+   (`div.mt-14 > span.btn`, `#a0a0a1` on white at 9pt). WCAG exempts inactive
+   controls, so this is a judgement call, but it is genuinely hard to read.
+2. **`aria-hidden` element contains focusable descendants** (`aside.fixed`, the
+   closed cart drawer). Keyboard users can tab into an invisible drawer. This one
+   is a real bug rather than a lint nit.
+3. **Heading order skips a level** - product card titles are `h3` with no `h2`
+   above them in the grid section.
+
+Remaining perf notes are minor: legacy JS ~14 KiB (Next default), unused JS
+~25 KiB, images ~88 KiB over-sized on desktop, and back/forward cache blocked.
 
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
