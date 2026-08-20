@@ -489,8 +489,12 @@ manuals are the remaining bulk and the honest options are dropping scan DPI
 - **Domain / indexing cutover** (the big gate) — move the WordPress/WooCommerce
   backend to a subdomain, point the real domain at Vercel, then flip
   `NEXT_PUBLIC_ALLOW_INDEX=true` + set `NEXT_PUBLIC_SITE_URL`. Full steps in `LAUNCH.md`.
-- **Product FEATURES data gap** — **64 of 224** brand-filtered products (some of
-  which are now hidden as obsolete) have no `features_N_text`
+- **Product FEATURES data gap** — regenerated 2026-08-20 against what the site
+  actually serves (221 products): **64 in the main catalogue + 27 in Clearance =
+  91**. Concentrated in Equipment Storage 18, Body Weight 12, Packages 9,
+  Barbells 8 = 47 of the 64. **0 products are missing an image** (all mirrored
+  locally). Full list at `reports/wc-content-gaps.csv`, tagged `no_features` /
+  `no_features_clearance`, with a `/product/<slug>` link per row have no `features_N_text`
   values in WooCommerce at all, so the Features section stays hidden on those pages.
   Content-entry task, not a bug. (Specs are no longer part of this gap — see the
   spec-blob fallback above. 2 products have neither specs source.) Concentrated in

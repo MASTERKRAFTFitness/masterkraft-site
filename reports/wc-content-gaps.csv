@@ -1,69 +1,92 @@
-issue,sku,product,detail
-no_features,MBPB3I101,"3-In-1 Foam Plyometric Box - 34kg",
-no_features,MEFRBB05,"Barbell Storage Box (9 Bar Holder) - Versatile",
-no_features,MMPACE101,"Chrome 110 Dumbbells (1kg-10kg Pairs)",
-no_features,MWWLMA01,"Drop Pads (Pair)",
-no_features,MMGFPS02,"Group Fitness Barbell Set - 37.5kg",
-no_features,MMGFPS01,"Group Fitness Barbell Set - Collars (Pair)",
-no_features,MBASADJ01,"Group Fitness Step (Adjustable)",
-no_features,MBRPBA01,"Knitted Resistance Bands (Set of 3)",
-no_features,MBRPMI01,"Micro Bands (Pack of 4)",
-no_features,MBPBMS01,"Plyometric Box (Set of 4)",
-no_features,MBSARO01,"Speed Rope (Elite)",
-no_features,MBSUTR01,"Suspension Trainer",
-no_features,MEFRDB01,"Vertical Dumbbell Rack - 10 Pair (Single Sided) 1.0",
-no_features,MEFRDB06,"Vertical Dumbbell Rack - Portable (Four Sided)",
-no_features,MEWMOP01,"Vertical Bumper Plate Rack 3 Tier (Wall Mounted)",
-no_features,MBSADO02,"Station Markers (Set of 5)",
-no_features,MWPAFRU02,"Rubber Fixed Barbells (Set of 5 Bars) & Rack",
-no_features,MWPAFRU01,"Rubber Fixed Barbells (Set of 10 Bars) & Rack",
-no_features,MEWMACC01,"Rope &amp; Band Rack (Wall Mounted) (Small)",
-no_features,MEWMACC02,"Rope &amp; Band Rack (Wall Mounted)",
-no_features,MMSLSD01,"Push &amp; Pull Sled",
-no_features,MBRPPO02,"Power Bands (Pack of 8)",
-no_features,MWPA10003,"Olympic Premium Rubber Weight Plates (3 Grip) (Set of 8) - 100kg",
-no_features,MWPA15003,"Olympic Premium Rubber Weight Plates (3 Grip) (Set of 10) - 150kg",
-no_features,MRSPFW05,"Olympic Power Rack 4.0",
-no_features,MRSPFW04,"Olympic Power Rack 3.0",
-no_features,MRSPFW02,"Olympic Power Rack 2.0",
-no_features,MEFROP01,"Olympic Plate Toaster Rack Portable",
-no_features,MWBBOL06,"Olympic Hex Deadlift Barbell (400mm Loadable Sleeves)",
-no_features,MWBBOL05,"Olympic Hex Deadlift Barbell (350mm Loadable Sleeves)",
-no_features,MWBBOL01,"Olympic Ez Curl Bar",
-no_features,MWBBOL02,"Olympic Barbell - 7ft Chrome (1000Lb Capacity)",
-no_features,MWBBOL04,"Olympic Barbell - 20kg (2000Lb Capacity)",
-no_features,MWBBOL03,"Olympic Barbell - 15kg (1500Lb Capacity)",
-no_features,MWWLACC02,"Olympic Bar Easy Lock Collars (Pair)",
-no_features,MEFRACC01,"Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)",
-no_features,MEFRBL03,"Medicine Ball Rack - 5 Ball (Single Sided)",
-no_features,MEFRBL02,"Medicine Ball Rack - 10 Ball (Single Sided)",
-no_features,MEFRBL01,"Medicine Ball Rack - 10 Ball (Double Sided)",
-no_features,MBSAHD01,"Lateral Endurance Hurdles (Set of 4)",
-no_features,MEFRKB01,"Kettlebell Rack (2 Tier) 2.0",
-no_features,MEFRDB07,"Horizontal Dumbbell Rack - 2 Tier (5 Pair) 1.0",
-no_features,MEFRPS01,"Group Fitness Barbell Set Rack",
-no_features,MSCMDU01,"Functional Trainer Pro",
-no_features,MEFRBB01,"Fixed Barbell Rack (5 Bar)",
-no_features,MEWMBL01,"Fitness Ball Storage Rack (Wall Mounted)",
-no_features,MBBSTR01,"Fitness &amp; Balance Trainer",
-no_features,MEWMMA01,"Exercise Mat Hanging Rack (Wall Mounted)",
-no_features,MBEMMA01,"EVA Exercise Mat",
-no_features,MBCTDR01,"Drop In Core Trainer",
-no_features,MWPA14002,"Competition Bumper Plates (Set of 8) - 140kg",
-no_features,MWPA10002,"Competition Bumper Plates (Set of 8) - 100kg",
-no_features,MWPA15002,"Competition Bumper Plates (Set of 10) - 150kg",
-no_features,MWPA14001,"Coloured Bumper Plates (Set of 8) & 2.5kg Change Plates - 145kg",
-no_features,MWPA10001,"Coloured Bumper Plates (Set of 8) - 100kg",
-no_features,MWPA9001,"Coloured Bumper Plates (Set of 6) - 90kg",
-no_features,MWPA15001,"Coloured Bumper Plates (Set of 10) - 150kg",
-no_features,MEWMRO01,"Battle Rope Storage (Wall Mounted)",
-no_features,MMBRNC01,"Battle Rope - 12m",
-no_features,MBBSCU01,"Balance Cushion",
-no_features,MMPWPBG05,"Aqua Bag - 35kg",
-no_features,MCRWAR01,"Air Rower Pro",
-no_features,MCBIAR05,"Air Cycle Elite",
-no_features,MBCTWH01,"Abdominal Wheel",
-warranty_typo,MBPB3I101,"3-In-1 Foam Plyometric Box - 34kg","Internal Frame: 12 months, Cover: 3 monthsmonths"
-warranty_typo,MSCMDU01,"Functional Trainer Pro","(1) Frame- 5 years (2) Blocks, pulleys, plates, rods- 3 years (3) Bearings, coatings- 1 year (4) Cables- 6 months (5) Hardware, plastics- 3 monthsmonths"
-no_specs,MMPACE101,"Chrome 110 Dumbbells (1kg-10kg Pairs)",
-no_specs,MMDBRH-GROUP,"Rubber Hex Dumbbells",
+issue,sku,product,category,url
+no_features,MEFRBB05,"Barbell Storage Box (9 Bar Holder) - Versatile","Equipment Storage",/product/barbell-storage-box-9-bar-holder-versatile
+no_features,MEFRDB01,"Vertical Dumbbell Rack - 10 Pair (Single Sided) 1.0","Equipment Storage",/product/vertical-dumbbell-rack-10-pair-single-sided-1-0
+no_features,MEFRDB06,"Vertical Dumbbell Rack - Portable (Four Sided)","Equipment Storage",/product/vertical-dumbbell-rack-portable-four-sided-2
+no_features,MEWMOP01,"Vertical Bumper Plate Rack 3 Tier (Wall Mounted)","Equipment Storage",/product/vertical-bumper-plate-rack-3-tier-wall-mounted
+no_features,MEWMACC01,"Rope &amp; Band Rack (Wall Mounted) (Small)","Equipment Storage",/product/rope-band-rack-wall-mounted-small
+no_features,MEWMACC02,"Rope &amp; Band Rack (Wall Mounted)","Equipment Storage",/product/rope-band-rack-wall-mounted
+no_features,MEFROP01,"Olympic Plate Toaster Rack Portable","Equipment Storage",/product/olympic-plate-toaster-rack-portable
+no_features,MEFRACC01,"Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)","Equipment Storage",/product/modular-storage-rack-kettlebells-dumbbells-hd-2-tier-1-2m-2
+no_features,MEFRBL03,"Medicine Ball Rack - 5 Ball (Single Sided)","Equipment Storage",/product/medicine-ball-rack-5-ball-single-sided
+no_features,MEFRBL02,"Medicine Ball Rack - 10 Ball (Single Sided)","Equipment Storage",/product/medicine-ball-rack-10-ball-single-sided
+no_features,MEFRBL01,"Medicine Ball Rack - 10 Ball (Double Sided)","Equipment Storage",/product/medicine-ball-rack-10-ball-double-sided-2
+no_features,MEFRKB01,"Kettlebell Rack (2 Tier) 2.0","Equipment Storage",/product/kettlebell-rack-2-tier-2-0
+no_features,MEFRDB07,"Horizontal Dumbbell Rack - 2 Tier (5 Pair) 1.0","Equipment Storage",/product/horizontal-dumbbell-rack-2-tier-5-pair-1-0
+no_features,MEFRPS01,"Group Fitness Barbell Set Rack","Equipment Storage",/product/group-fitness-barbell-set-rack
+no_features,MEFRBB01,"Fixed Barbell Rack (5 Bar)","Equipment Storage",/product/fixed-barbell-rack-5-bar
+no_features,MEWMBL01,"Fitness Ball Storage Rack (Wall Mounted)","Equipment Storage",/product/fitness-ball-storage-rack-wall-mounted
+no_features,MEWMMA01,"Exercise Mat Hanging Rack (Wall Mounted)","Equipment Storage",/product/exercise-mat-hanging-rack-wall-mounted
+no_features,MEWMRO01,"Battle Rope Storage (Wall Mounted)","Equipment Storage",/product/battle-rope-storage-wall-mounted
+no_features,MBPB3I101,"3-In-1 Foam Plyometric Box - 34kg","Body Weight",/product/3-in-1-foam-plyometric-box-34kg
+no_features,MBRPBA01,"Knitted Resistance Bands (Set of 3)","Body Weight",/product/knitted-resistance-bands-set-of-3
+no_features,MBRPMI01,"Micro Bands (Pack of 4)","Body Weight",/product/micro-bands-pack-of-4
+no_features,MBPBMS01,"Plyometric Box (Set of 4)","Body Weight",/product/plyometric-box-set-of-4
+no_features,MBSARO01,"Speed Rope (Elite)","Body Weight",/product/speed-rope-elite
+no_features,MBSUTR01,"Suspension Trainer","Body Weight",/product/suspension-trainer-2
+no_features,MBSADO02,"Station Markers (Set of 5)","Body Weight",/product/station-markers-set-of-5
+no_features,MBRPPO02,"Power Bands (Pack of 8)","Body Weight",/product/power-bands-pack-of-8
+no_features,MBSAHD01,"Lateral Endurance Hurdles (Set of 4)","Body Weight",/product/lateral-endurance-hurdles-set-of-4
+no_features,MBEMMA01,"EVA Exercise Mat","Body Weight",/product/eva-exercise-mat-2
+no_features,MBCTDR01,"Drop In Core Trainer","Body Weight",/product/drop-in-core-trainer-2
+no_features,MBCTWH01,"Abdominal Wheel","Body Weight",/product/abdominal-wheel
+no_features,MWPA10003,"Olympic Premium Rubber Weight Plates (3 Grip) (Set of 8) - 100kg","Packages",/product/olympic-premium-rubber-weight-plates-3-grip-set-of-8-100kg
+no_features,MWPA15003,"Olympic Premium Rubber Weight Plates (3 Grip) (Set of 10) - 150kg","Packages",/product/olympic-premium-rubber-weight-plates-3-grip-set-of-10-150kg
+no_features,MWPA14002,"Competition Bumper Plates (Set of 8) - 140kg","Packages",/product/competition-bumper-plates-set-of-8-140kg
+no_features,MWPA10002,"Competition Bumper Plates (Set of 8) - 100kg","Packages",/product/competition-bumper-plates-set-of-8-100kg
+no_features,MWPA15002,"Competition Bumper Plates (Set of 10) - 150kg","Packages",/product/competition-bumper-plates-set-of-10-150kg
+no_features,MWPA14001,"Coloured Bumper Plates (Set of 8) & 2.5kg Change Plates - 145kg","Packages",/product/coloured-bumper-plates-set-of-8-2-5kg-change-plates-145kg
+no_features,MWPA10001,"Coloured Bumper Plates (Set of 8) - 100kg","Packages",/product/coloured-bumper-plates-set-of-8-100kg
+no_features,MWPA9001,"Coloured Bumper Plates (Set of 6) - 90kg","Packages",/product/coloured-bumper-plates-set-of-6-90kg
+no_features,MWPA15001,"Coloured Bumper Plates (Set of 10) - 150kg","Packages",/product/coloured-bumper-plates-set-of-10-150kg
+no_features,MWPAFRU02,"Rubber Fixed Barbells (Set of 5 Bars) & Rack","Barbells",/product/rubber-fixed-barbells-set-of-5-bars-rack
+no_features,MWPAFRU01,"Rubber Fixed Barbells (Set of 10 Bars) & Rack","Barbells",/product/rubber-fixed-barbells-set-of-10-bars-rack
+no_features,MWBBOL06,"Olympic Hex Deadlift Barbell (400mm Loadable Sleeves)","Barbells",/product/olympic-hex-deadlift-barbell-400mm-loadable-sleeves
+no_features,MWBBOL05,"Olympic Hex Deadlift Barbell (350mm Loadable Sleeves)","Barbells",/product/olympic-hex-deadlift-barbell-350mm-loadable-sleeves-2
+no_features,MWBBOL01,"Olympic Ez Curl Bar","Barbells",/product/olympic-ez-curl-bar
+no_features,MWBBOL02,"Olympic Barbell - 7ft Chrome (1000Lb Capacity)","Barbells",/product/olympic-barbell-7ft-chrome-1000lb-capacity
+no_features,MWBBOL04,"Olympic Barbell - 20kg (2000Lb Capacity)","Barbells",/product/olympic-barbell-20kg-2000lb-capacity-3
+no_features,MWBBOL03,"Olympic Barbell - 15kg (1500Lb Capacity)","Barbells",/product/olympic-barbell-15kg-1500lb-capacity-3
+no_features,MRSPFW05,"Olympic Power Rack 4.0","Rigs & Racks",/product/olympic-power-rack-4-0
+no_features,MRSPFW04,"Olympic Power Rack 3.0","Rigs & Racks",/product/olympic-power-rack-3-0
+no_features,MRSPFW02,"Olympic Power Rack 2.0","Rigs & Racks",/product/olympic-power-rack-2-0
+no_features,MWWLMA01,"Drop Pads (Pair)","Weightlifting",/product/drop-pads-pair
+no_features,MWWLACC02,"Olympic Bar Easy Lock Collars (Pair)","Weightlifting",/product/olympic-bar-easy-lock-collars-pair-3
+no_features,MMGFPS02,"Group Fitness Barbell Set - 37.5kg","Group Fitness",/product/group-fitness-barbell-set-37-5kg
+no_features,MMGFPS01,"Group Fitness Barbell Set - Collars (Pair)","Group Fitness",/product/group-fitness-barbell-set-collars-pair
+no_features,MMSLSD01,"Push &amp; Pull Sled","Mixed Implements",/product/push-pull-sled
+no_features,MMPWPBG05,"Aqua Bag - 35kg","Mixed Implements",/product/aqua-bag-35kg
+no_features,MBBSTR01,"Fitness &amp; Balance Trainer","Balance & Stability",/product/fitness-balance-trainer
+no_features,MBBSCU01,"Balance Cushion","Balance & Stability",/product/balance-cushion
+no_features,MMPACE101,"Chrome 110 Dumbbells (1kg-10kg Pairs)","Dumbbells",/product/chrome-110-dumbbells-1kg-10kg-pairs
+no_features,MBASADJ01,"Group Fitness Step (Adjustable)","Aerobic Steps",/product/group-fitness-step-adjustable
+no_features,MSCMDU01,"Functional Trainer Pro","Cable Machines",/product/functional-trainer-pro
+no_features,MMBRNC01,"Battle Rope - 12m","Battle Ropes",/product/battle-rope-12m
+no_features,MCRWAR01,"Air Rower Pro","Cardio",/product/air-rower-pro
+no_features,MCBIAR05,"Air Cycle Elite","Bikes",/product/air-cycle-elite
+no_features_clearance,ABPBMS-01-1,"Plyometric Box 45cm",Clearance,/product/plyometric-box-45cm
+no_features_clearance,ABPBMS-01,"Plyometric Box 30cm",Clearance,/product/plyometric-box-30cm
+no_features_clearance,ABRMRL03,"Foam Roller - 45cm (black)",Clearance,/product/foam-roller-45cm-black
+no_features_clearance,ABRPPO,"Power Bands",Clearance,/product/power-bands-alt-v
+no_features_clearance,ABCTFS02,"Core Trainer (Landmine) With T Bar Handle",Clearance,/product/core-trainer-landmine-with-t-bar-handle-2
+no_features_clearance,ABEMMA01,"EVA Exercise Mat",Clearance,/product/eva-exercise-mat
+no_features_clearance,ABRPBA01,"Knitted Resistance Bands (Set of 3)",Clearance,/product/knitted-resistance-bands-set-of-3-2
+no_features_clearance,ABSADI01,"Mini Disc Cones (Set of 50)",Clearance,/product/mini-disc-cones-set-of-50-2
+no_features_clearance,AWWLACC02,"Olympic Bar Easy Lock Collars (Pair)",Clearance,/product/olympic-bar-easy-lock-collars-pair
+no_features_clearance,AWBBOL03,"Olympic Barbell - 15kg (1500Lb Capacity)",Clearance,/product/olympic-barbell-15kg-1500lb-capacity
+no_features_clearance,ABSADO01,"Station Markers (Set of 96) - Numbers",Clearance,/product/station-markers-set-of-96-numbers
+no_features_clearance,ABSADO06,"Station Markers (Set of 15) - Hero",Clearance,/product/station-markers-set-of-15-hero
+no_features_clearance,ABSADO07,"Station Markers (Set of 15) - Functional",Clearance,/product/station-markers-set-of-15-functional
+no_features_clearance,ABSADO08,"Station Markers (Set of 15) - Sherpa",Clearance,/product/station-markers-set-of-15-sherpa
+no_features_clearance,AEFRDB06,"Vertical Dumbbell Rack - Portable (Four Sided)",Clearance,/product/vertical-dumbbell-rack-portable-four-sided
+no_features_clearance,ABSUTR01,"Suspension Trainer",Clearance,/product/suspension-trainer
+no_features_clearance,AEWMACC02,"Rope &amp; Band Rack (Wall Mounted)",Clearance,/product/rope-band-rack-wall-mounted-2
+no_features_clearance,AEFRACC02,"Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)",Clearance,/product/modular-storage-rack-kettlebells-dumbbells-hd-2-tier-1-2m
+no_features_clearance,AEFRBL01,"Medicine Ball Rack - 10 Ball (Double Sided)",Clearance,/product/medicine-ball-rack-10-ball-double-sided
+no_features_clearance,AMBXSY01,"Focus Pads",Clearance,/product/focus-pads
+no_features_clearance,AMBXG01,"Cotton Inners (Fingerless, 100 Pair)",Clearance,/product/cotton-inners-fingerless
+no_features_clearance,AEFRBB01,"Barbell Storage Box (9 Bar Holder) - Versatile",Clearance,/product/barbell-storage-box-9-bar-holder-versatile-2
+no_features_clearance,AMBXPBG03,"Aqua Punching Bag (Black)- 86kg",Clearance,/product/aqua-punching-bag-86kg-53cm-d
+no_features_clearance,ABSADO03,"Station Markers (Set of 15) - Rep",Clearance,/product/station-markers-set-of-15-rep
+no_features_clearance,ABSADO04,"Station Markers (Set of 15) - Neural",Clearance,/product/station-markers-set-of-15-neural
+no_features_clearance,ABSADO05,"Station Markers (Set of 15) - Form",Clearance,/product/station-markers-set-of-15-form
+no_features_clearance,ABSADO02,"Station Markers (Set of 15) - Boost",Clearance,/product/station-markers-set-of-15-boost
