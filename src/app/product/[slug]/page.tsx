@@ -3,14 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/shop/ProductGallery";
 import { getProductBySlug, getProductVariations, getProductsByCategory, parseProductDetail, filterBrandSku } from "@/lib/woocommerce";
-import {
-  getUnleashedMap,
-  enrich,
-  enrichCard,
-  lookupBySku,
-  isObsoleteInUnleashed,
-  filterUnleashedObsolete,
-} from "@/lib/unleashed";
+import { getUnleashedMap, enrich, enrichCard, lookupBySku } from "@/lib/unleashed";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import ViewItemTracker from "@/components/shop/ViewItemTracker";
@@ -58,9 +51,6 @@ export default async function ProductPage({
   const cat = product.categories?.[0];
   const detail = parseProductDetail(product);
   const unleashed = await getUnleashedMap().catch(() => ({}));
-  // The other half of the obsolete rule: retired in the ERP, still visible in
-  // WordPress. Same outcome, a 404 rather than a live add-to-cart button.
-  if (isObsoleteInUnleashed(unleashed, product.sku)) notFound();
   const enriched = enrich(product, unleashed);
   const inStock = enriched.inStock;
   const stockQty = lookupBySku(unleashed, product.sku)?.stock;
@@ -131,9 +121,7 @@ export default async function ProductPage({
   let related: { product: typeof product; enriched: Awaited<ReturnType<typeof enrichCard>> }[] = [];
   if (cat) {
     const rel = await getProductsByCategory(cat.id, { perPage: 24 }).catch(() => null);
-    const others = filterUnleashedObsolete(filterBrandSku(rel?.data ?? []), unleashed)
-      .filter((p) => p.id !== product.id)
-      .slice(0, 4);
+    const others = filterBrandSku(rel?.data ?? []).filter((p) => p.id !== product.id).slice(0, 4);
     related = await Promise.all(
       others.map(async (p) => ({ product: p, enriched: await enrichCard(p, unleashed) }))
     );

@@ -3,7 +3,7 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import ProductCard from "@/components/shop/ProductCard";
 import { searchProducts, type WcProduct } from "@/lib/woocommerce";
-import { getUnleashedMap, enrichCard, filterUnleashedObsolete } from "@/lib/unleashed";
+import { getUnleashedMap, enrichCard } from "@/lib/unleashed";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -26,8 +26,8 @@ export default async function SearchPage({
     const unleashed = await getUnleashedMap().catch(() => ({}));
     try {
       const res = await searchProducts(q, { page, perPage: 24 });
-      products = filterUnleashedObsolete(res.data, unleashed);
-      total = products.length;
+      products = res.data;
+      total = res.total;
       totalPages = res.totalPages;
       const cards = await Promise.all(
         products.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))

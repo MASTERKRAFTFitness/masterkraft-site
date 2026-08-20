@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { filterListable, filterSearchable, isObsolete } from "@/lib/woocommerce";
-import { filterUnleashedObsolete, isObsoleteInUnleashed } from "@/lib/unleashed";
+import { isRetiredSku } from "@/lib/obsolete";
+import { skuAliases } from "@/lib/unleashed-aliases";
 
 const p = (sku: string, catalog_visibility?: string) => ({ sku, catalog_visibility });
 
@@ -30,38 +31,38 @@ describe("obsolete products", () => {
   });
 });
 
-describe("obsolete products (Unleashed half)", () => {
-  const map = {
-    MSLBB01: { price: 100, stock: 0, obsolete: true }, // retired in the ERP
-    MMDBRH: { price: 50, stock: 4, obsolete: false },
-    MFATSY01: { price: 80, stock: 2 }, // no flag recorded
-  };
-
-  it("retires a product Unleashed marks obsolete", () => {
-    expect(isObsoleteInUnleashed(map, "MSLBB01")).toBe(true);
-    expect(isObsoleteInUnleashed(map, "MMDBRH")).toBe(false);
+describe("obsolete products (the ERP half)", () => {
+  // Real codes from the committed list: the discontinued Selectorize range.
+  it("retires a product Unleashed has marked obsolete", () => {
+    expect(isRetiredSku("MSLBB01")).toBe(true); // Glute Ham Bench Pro
+    expect(isRetiredSku("MSBMSE01")).toBe(true); // Lat Pulldown Machine Elite
   });
 
-  it("only an explicit true retires a product", () => {
-    expect(isObsoleteInUnleashed(map, "MFATSY01")).toBe(false);
+  it("keeps a product that is still sold", () => {
+    expect(isRetiredSku("MMDBRH-GROUP")).toBe(false);
   });
 
-  // Plenty of catalogue products have no Unleashed match at all and must keep
-  // selling, so an unknown SKU is never treated as obsolete.
-  it("keeps products with no Unleashed match", () => {
-    expect(isObsoleteInUnleashed(map, "MNOTINERP")).toBe(false);
-    expect(isObsoleteInUnleashed(map, undefined)).toBe(false);
+  // Many catalogue products have no ERP match at all and must keep selling.
+  it("does not retire an unknown or missing SKU", () => {
+    expect(isRetiredSku("NOT-A-REAL-SKU")).toBe(false);
+    expect(isRetiredSku(undefined)).toBe(false);
+    expect(isRetiredSku("")).toBe(false);
   });
 
-  it("is case-insensitive on the SKU", () => {
-    expect(isObsoleteInUnleashed(map, "mslbb01")).toBe(true);
+  it("is case and whitespace insensitive", () => {
+    expect(isRetiredSku("  mslbb01 ")).toBe(true);
   });
 
-  it("filters a product list", () => {
-    const items = [{ sku: "MSLBB01" }, { sku: "MMDBRH" }, { sku: "MNOTINERP" }];
-    expect(filterUnleashedObsolete(items, map).map((i) => i.sku)).toEqual([
-      "MMDBRH",
-      "MNOTINERP",
-    ]);
+  // The catalogue and the ERP use different code schemes for the same product,
+  // so a retired product must not slip through under its web SKU.
+  it("resolves web SKUs through the alias map", () => {
+    const aliased = Object.entries(skuAliases).find(([, code]) => isRetiredSku(code));
+    if (!aliased) return; // no retired product currently has an alias
+    expect(isRetiredSku(aliased[0])).toBe(true);
+  });
+
+  it("drops retired products from listings", () => {
+    const items = [{ sku: "MSLBB01" }, { sku: "MMDBRH-GROUP" }];
+    expect(filterListable(items).map((i) => i.sku)).toEqual(["MMDBRH-GROUP"]);
   });
 });

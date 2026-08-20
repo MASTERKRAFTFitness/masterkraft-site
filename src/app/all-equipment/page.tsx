@@ -5,12 +5,7 @@ import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
 import CategoryJumpNav from "@/components/shop/CategoryJumpNav";
 import { getAllProducts, getCategoryChildren, type WcProduct } from "@/lib/woocommerce";
-import {
-  getUnleashedMap,
-  enrichCard,
-  filterUnleashedObsolete,
-  type EnrichedProduct,
-} from "@/lib/unleashed";
+import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
 import { categories } from "@/lib/categories";
 
 export const metadata: Metadata = {
@@ -48,7 +43,7 @@ export default async function AllEquipmentPage({
     getAllProducts().catch(() => null),
   ]);
   const failed = products === null;
-  const all: WcProduct[] = products ? filterUnleashedObsolete(products, unleashed) : [];
+  const all: WcProduct[] = products ?? [];
 
   // Name sorts need no pricing; featured = the store's menu_order (as fetched).
   if (sort === "name-asc") all.sort((a, b) => a.name.localeCompare(b.name));

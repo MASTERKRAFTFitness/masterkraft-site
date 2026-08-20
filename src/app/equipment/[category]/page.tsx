@@ -13,12 +13,7 @@ import {
   type WcProduct,
   type WcCategoryChild,
 } from "@/lib/woocommerce";
-import {
-  getUnleashedMap,
-  enrichCard,
-  filterUnleashedObsolete,
-  type EnrichedProduct,
-} from "@/lib/unleashed";
+import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
 
 export function generateStaticParams() {
   return categories.map((c) => ({ category: c.slug }));
@@ -84,14 +79,11 @@ export default async function CategoryPage({
       // Full-fetch keeps product counts correct after the brand-SKU filter.
       // Clearance is ex-display / end-of-line stock with A-prefixed SKUs, so it
       // opts out of the M/N brand-SKU filter that the branded categories use.
-      // Obsolete products are dropped twice over: WooCommerce's hidden flag
-      // inside getAllProductsByCategory, and Unleashed's Obsolete/IsSellable
-      // here, which catches lines the ERP retired while WordPress still shows
-      // them (the discontinued Selectorize range).
-      const all = filterUnleashedObsolete(
-        await getAllProductsByCategory(targetId, { brandFilter: c.slug !== "clearance" }),
-        unleashed
-      );
+      // Obsolete products are already gone: getAllProductsByCategory applies
+      // both halves of the rule (see isObsolete in woocommerce.ts).
+      const all = await getAllProductsByCategory(targetId, {
+        brandFilter: c.slug !== "clearance",
+      });
       let enrichedAll = await Promise.all(
         all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
       );

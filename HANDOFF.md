@@ -191,13 +191,35 @@ request against a genuinely empty cache pays this (right after a deploy, or a
 cold serverless region). Verified counts are unchanged after the refactor,
 including Equipment Storage, which spans 2 WooCommerce pages: 44 both ways.
 
-**Still slow and NOT fixed: the cold ERP map is ~16s of that remaining time**,
-and `includeObsolete=true` made it worse by taking Products from 6 pages to 10.
-That is the price of the obsolete rule as built. The durable fix is to stop
-fetching obsolescence at runtime and precompute the obsolete SKU list at build
-time, exactly as `snap-portal-franchisee` does with its committed catalogue JSON
-plus `npm run check:obsolete`. Cheaper stopgap: raise the 15-min ERP cache TTL,
-which trades stock-display freshness for fewer cold builds. Needs a decision.
+### Follow-up, same day: obsolescence moved out of the request path
+
+**The obsolete list is now generated and committed, not fetched at runtime.**
+`npm run build:obsolete` writes `src/lib/obsolete-skus.json` (804 codes) and
+`npm run check:obsolete` reports drift without writing, exiting 1 so it can gate
+a deploy. **RE-RUN `build:obsolete` WHEN THE ERP RETIRES A PRODUCT** or the site
+keeps selling it. The generator refuses to write if fewer than 1,500 products
+come back, since a short read would silently un-retire everything.
+
+`src/lib/obsolete.ts` resolves a WooCommerce SKU against that list, through the
+`unleashed-aliases` map so a retired product cannot slip through under its web
+SKU. `woocommerce.ts` now applies **both halves of the rule in `isObsolete`**, so
+every listing surface, the sitemap and `getProductBySlug` inherit it from one
+place. The per-page filtering added earlier is gone, and `/api/search-suggest`
+and the sitemap no longer block on the ERP map at all.
+
+**Honest note on what this did and did not buy.** It did NOT measurably speed up
+the cold map build. Dropping `includeObsolete` takes Products from 10 pages to 6,
+but repeated timings ran 8.4s/10.9s/9.5s for ten pages against 9.4s/15.8s/24.2s
+for six: **Unleashed throttles by request rate, so page count is not the lever**,
+and the numbers get worse the more you probe it. What it does buy is that the
+rule is deterministic, survives Unleashed being slow or down, and no longer runs
+on two surfaces that never needed it.
+
+**The ERP cache TTL is raised 15 min → 60 min** (`unstable_cache` in
+`unleashed.ts`). That is the actual latency win: the ~10-20s cold build happens a
+quarter as often. **The trade is that an ERP price or stock change can take up to
+an hour to appear.** Lower it if stock accuracy starts mattering more than the
+wait.
 
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**

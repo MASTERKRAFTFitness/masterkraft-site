@@ -5,7 +5,6 @@ import { fitouts } from "@/lib/fitouts";
 import { revlSites } from "@/lib/revl";
 import { locations } from "@/lib/locations";
 import { getAllProductSlugs } from "@/lib/woocommerce";
-import { getUnleashedMap, filterUnleashedObsolete } from "@/lib/unleashed";
 
 export const revalidate = 86400; // rebuild sitemap daily
 
@@ -46,11 +45,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const r of revlSites) entries.push({ url: `${SITE_URL}/revl-fitouts/${r.slug}`, changeFrequency: "monthly", priority: 0.5 });
 
   try {
-    // Obsolete product URLs 404, so they must not be advertised here. Both
-    // halves of the rule apply: WooCommerce-hidden (inside getAllProductSlugs)
-    // and Unleashed-retired (here).
-    const unleashed = await getUnleashedMap().catch(() => ({}));
-    const products = filterUnleashedObsolete(await getAllProductSlugs(), unleashed);
+    // Obsolete product URLs 404, so they are not advertised here either:
+    // getAllProductSlugs applies both halves of the rule.
+    const products = await getAllProductSlugs();
     for (const p of products) {
       entries.push({
         url: `${SITE_URL}/product/${p.slug}`,

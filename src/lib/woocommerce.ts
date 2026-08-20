@@ -2,6 +2,7 @@
 // WC REST API (read-only key). Cart/checkout use the public Store API (task 6).
 
 import imageOverrides from "./product-image-overrides.json";
+import { isRetiredSku } from "./obsolete";
 
 const BASE = `${process.env.WC_STORE_URL}/wp-json/wc/v3`;
 
@@ -72,30 +73,36 @@ export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
   return items.filter((i) => isBrandSku(i.sku));
 }
 
-// OBSOLETE PRODUCTS: WooCommerce's `catalog_visibility` is the store's own
-// "do not list this" switch, and the site must honour it. The store retires a
-// product two ways, and both come through as "hidden":
-//   1. the line is withdrawn (Wall Balls, Acoustic Underlay), and
-//   2. an old single listing is superseded by its `-GROUP` variable product
-//      (e.g. MMDBRH "Rubber Hex Dumbbells" -> the visible MMDBRH-GROUP).
-// To a shopper both mean the same thing, so a hidden product is never listed,
-// never searchable, absent from the sitemap and 404s on its own URL.
-// A MISSING value counts as visible: `catalog_visibility` has to be asked for
-// in `_fields`, so a caller that forgets it must not silently empty the page.
-type Visibility = { catalog_visibility?: string };
+// OBSOLETE PRODUCTS. Two systems retire products independently and the site
+// honours both, here, so no listing surface can miss one:
+//
+//  1. WORDPRESS hides it. `catalog_visibility: "hidden"` is the store's own "do
+//     not list this" switch, used both for withdrawn lines (Wall Balls, Acoustic
+//     Underlay) and for an old single listing superseded by its `-GROUP`
+//     variable product (MMDBRH -> the visible MMDBRH-GROUP). To a shopper both
+//     mean the same thing.
+//  2. UNLEASHED retires it. See `obsolete.ts` - a committed list, because
+//     reading it live cost ~6s on every cold listing render.
+//
+// Either way the product is never listed, never searchable, absent from the
+// sitemap, and 404s on its own URL.
+//
+// A MISSING `catalog_visibility` counts as visible: it has to be asked for in
+// `_fields`, so a caller that forgets it must not silently empty the page.
+type Retirable = { catalog_visibility?: string; sku?: string };
 
-export function isObsolete(p: Visibility): boolean {
-  return p.catalog_visibility === "hidden";
+export function isObsolete(p: Retirable): boolean {
+  return p.catalog_visibility === "hidden" || isRetiredSku(p.sku);
 }
 
 // "search" means search-only (excluded from catalogue listings); "catalog"
 // means catalogue-only (excluded from search). Nothing in the store uses either
 // today, but honouring them keeps us faithful to WooCommerce's own semantics.
-export function filterListable<T extends Visibility>(items: T[]): T[] {
+export function filterListable<T extends Retirable>(items: T[]): T[] {
   return items.filter((i) => !isObsolete(i) && i.catalog_visibility !== "search");
 }
 
-export function filterSearchable<T extends Visibility>(items: T[]): T[] {
+export function filterSearchable<T extends Retirable>(items: T[]): T[] {
   return items.filter((i) => !isObsolete(i) && i.catalog_visibility !== "catalog");
 }
 
@@ -419,7 +426,7 @@ export async function getProductBySlug(slug: string): Promise<WcProduct | null> 
     // meta_data carries the ACF overview/features/specs the product page renders.
     _fields: `${PRODUCT_FIELDS},meta_data`,
   });
-  // Returning null for a hidden product makes /product/<slug> 404 rather than
+  // Returning null for an obsolete product makes /product/<slug> 404 rather than
   // serve a page with a live add-to-cart button for something we don't sell.
   // getProductById is deliberately NOT filtered - it backs order creation, and
   // an order for an already-bought item must not fail because marketing hid it.

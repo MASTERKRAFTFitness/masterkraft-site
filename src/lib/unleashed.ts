@@ -16,9 +16,7 @@ import { skuAliases } from "@/lib/unleashed-aliases";
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
 
-// `obsolete` is optional so a partially-built entry (or a test fixture) is still
-// a valid entry; only an explicit `true` retires a product.
-export type UnleashedEntry = { price: number; stock: number; obsolete?: boolean };
+export type UnleashedEntry = { price: number; stock: number };
 type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
 function sign(query: string): string {
@@ -72,20 +70,11 @@ async function buildMap(): Promise<UnleashedMap> {
   // land first and be overwritten by the Products pass. Merged below instead.
   const stock: Record<string, number> = {};
 
-  // Prices + the obsolescence flags.
-  //
-  // THE TRAP: GET /Products HIDES OBSOLETE PRODUCTS BY DEFAULT. Without
-  // includeObsolete=true it returns 1,092 items every one of which reports
-  // Obsolete:false, which reads as "this company doesn't use the flag". With it,
-  // 1,892 items of which 800 are obsolete. Any check written without the
-  // parameter passes vacuously. The field is `Obsolete`, not `IsObsolete`.
+  // Prices. Deliberately WITHOUT includeObsolete=true: obsolescence is resolved
+  // from the committed list in `obsolete.ts`, so this fetch stays at 6 pages
+  // rather than 10. See that file for why.
   await Promise.all([
-    fetchAllPages<{
-    ProductCode?: string;
-    DefaultSellPrice?: number | string;
-    Obsolete?: boolean;
-    IsSellable?: boolean;
-  }>(
+    fetchAllPages<{ ProductCode?: string; DefaultSellPrice?: number | string }>(
     "Products",
     (p) => {
       if (!p.ProductCode) return;
@@ -93,10 +82,8 @@ async function buildMap(): Promise<UnleashedMap> {
       map[p.ProductCode.toUpperCase()] = {
         price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
         stock: 0,
-        obsolete: p.Obsolete === true || p.IsSellable === false,
       };
-    },
-      { extraQuery: "&includeObsolete=true" }
+    }
     ),
 
     // Stock on hand. Independent of the price/obsolete pass, so both run at once:
@@ -114,7 +101,7 @@ async function buildMap(): Promise<UnleashedMap> {
 
   for (const [code, qty] of Object.entries(stock)) {
     if (map[code]) map[code].stock = qty;
-    else map[code] = { price: 0, stock: qty, obsolete: false };
+    else map[code] = { price: 0, stock: qty };
   }
 
   return map;
@@ -122,8 +109,13 @@ async function buildMap(): Promise<UnleashedMap> {
 
 // Cache the whole built map in Next's shared Data Cache (persists across
 // serverless instances), so cold instances don't rebuild the full catalogue.
+// 60 min, raised from 15 (2026-08-20). Rebuilding this map costs ~16s because
+// Unleashed answers slowly and throttles concurrency, and every listing page
+// waits on it, so a shorter window just means more visitors paying that. The
+// trade is that a price or stock change in the ERP can take up to an hour to
+// show. Lower it again if stock accuracy starts mattering more than the wait.
 const cachedBuildMap = unstable_cache(buildMap, ["unleashed-price-stock-map"], {
-  revalidate: 900,
+  revalidate: 3600,
   tags: ["unleashed"],
 });
 
@@ -154,23 +146,6 @@ export async function enrichCard(product: WcProduct, map: UnleashedMap): Promise
     }
   }
   return enrich(product, map);
-}
-
-// OBSOLETE PRODUCTS, the ERP half of the rule. WooCommerce's catalog_visibility
-// (see `isObsolete` in woocommerce.ts) catches what WordPress hides; this catches
-// what Unleashed has retired while WordPress still shows it, which was 15
-// products including the whole discontinued Selectorize strength range.
-// Unknown SKUs are NOT obsolete: plenty of catalogue products have no Unleashed
-// match at all, and they must keep selling.
-export function isObsoleteInUnleashed(map: UnleashedMap, sku?: string): boolean {
-  return lookupBySku(map, sku)?.obsolete === true;
-}
-
-export function filterUnleashedObsolete<T extends { sku?: string }>(
-  items: T[],
-  map: UnleashedMap
-): T[] {
-  return items.filter((i) => !isObsoleteInUnleashed(map, i.sku));
 }
 
 export function lookupBySku(map: UnleashedMap, sku?: string): UnleashedEntry | null {
