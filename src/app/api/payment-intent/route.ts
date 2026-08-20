@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { resolveOrderLines, type CartRef } from "@/lib/woo-orders";
+import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
@@ -10,8 +11,10 @@ export async function POST(request: Request) {
   }
 
   let items: CartRef[];
+  let delivery: DeliveryInput | undefined;
+  let freightServiceId: string | undefined;
   try {
-    ({ items } = await request.json());
+    ({ items, delivery, freightServiceId } = await request.json());
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
@@ -36,15 +39,43 @@ export async function POST(request: Request) {
     );
   }
 
+  // FREIGHT IS PRICED HERE, ON THE SERVER, and re-quoted from scratch: the
+  // client sends only WHICH service was chosen, never what it costs. A freight
+  // price posted by the browser would be a way to buy delivery for a dollar.
+  //
+  // When freight cannot be quoted - no API key yet, a product with no carton
+  // dimensions, no compliant service - the order is NOT charged with an unknown
+  // freight cost. It is pushed to the quote flow, the same way an item priced on
+  // application already is. The one thing that must never happen is charging a
+  // card while the summary says freight is free.
+  const freight = await quoteFreightForRefs(items, delivery, freightServiceId);
+  if (freight.required && !freight.selected) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "We couldn't calculate freight for this delivery address. Please request a quote and our team will confirm it.",
+        reason: freight.reason,
+      },
+      { status: 422 }
+    );
+  }
+  const freightCost = freight.selected?.price ?? 0;
+  const chargeTotal = Math.round((total + freightCost) * 100) / 100;
+
   // A misconfigured/rejected Stripe key throws here. Catch it so the client gets
   // a legible error instead of a bare 500 (which is what masked a bad key earlier).
   let intent;
   try {
     intent = await stripe.paymentIntents.create({
-      amount: Math.round(total * 100), // cents
+      amount: Math.round(chargeTotal * 100), // cents
       currency: "aud",
       automatic_payment_methods: { enabled: true },
-      metadata: { source: "masterkraft-site", line_count: String(lines.length) },
+      metadata: {
+        source: "masterkraft-site",
+        line_count: String(lines.length),
+        freight: freight.selected ? `${freight.selected.service} ${freightCost}` : "quoted separately",
+      },
     });
   } catch (e) {
     console.error("[payment-intent] Stripe create failed", e);
@@ -54,5 +85,14 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, clientSecret: intent.client_secret, amount: total });
+  return NextResponse.json({
+    ok: true,
+    clientSecret: intent.client_secret,
+    amount: chargeTotal,
+    goodsTotal: total,
+    freight: freight.selected
+      ? { service: freight.selected.service, carrier: freight.selected.carrier, price: freightCost }
+      : null,
+    freightReason: freight.selected ? null : freight.reason,
+  });
 }

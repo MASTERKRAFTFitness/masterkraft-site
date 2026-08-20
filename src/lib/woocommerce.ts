@@ -42,6 +42,10 @@ export type WcProduct = {
   stock_status: string;
   catalog_visibility?: string; // "visible" | "catalog" | "search" | "hidden"
   bundle_price?: WcBundlePrice; // present on type: "bundle" only
+  // Shipping carton, NOT assembled size - verified against the spec blob. In cm
+  // and kg, which is what the freight API wants. See lib/freight.ts.
+  weight?: string;
+  dimensions?: { length?: string; width?: string; height?: string };
   short_description: string;
   description: string;
   images: WcImage[];
@@ -291,6 +295,8 @@ export function parseProductDetail(p: WcProduct): ProductDetail {
 export type WcVariation = {
   id: number;
   sku: string;
+  weight?: string;
+  dimensions?: { length?: string; width?: string; height?: string };
   price: string;
   regular_price: string;
   sale_price: string;
@@ -331,7 +337,7 @@ async function wcGet<T>(
 }
 
 const PRODUCT_FIELDS =
-  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,catalog_visibility,bundle_price,short_description,description,images,categories";
+  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,catalog_visibility,bundle_price,weight,dimensions,short_description,description,images,categories";
 
 export async function getProductsByCategory(
   categoryId: number,
@@ -521,7 +527,7 @@ export async function getVariation(
 ): Promise<WcVariation | null> {
   try {
     const { data } = await wcGet<WcVariation>(`/products/${productId}/variations/${variationId}`, {
-      _fields: "id,sku,price,regular_price,sale_price,stock_status,attributes,image",
+      _fields: "id,sku,price,regular_price,sale_price,stock_status,attributes,image,weight,dimensions",
     });
     return data;
   } catch {
@@ -532,7 +538,7 @@ export async function getVariation(
 export async function getProductVariations(productId: number): Promise<WcVariation[]> {
   const { data } = await wcGet<WcVariation[]>(`/products/${productId}/variations`, {
     per_page: 100,
-    _fields: "id,sku,price,regular_price,sale_price,stock_status,attributes,image",
+    _fields: "id,sku,price,regular_price,sale_price,stock_status,attributes,image,weight,dimensions",
   });
   return data;
 }

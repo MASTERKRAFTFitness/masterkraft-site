@@ -65,6 +65,34 @@ card payment you need all of:
 
 ---
 
+## 1b. Freight (Interparcel) ⚙️🔎🧠
+
+Live freight quoting is BUILT but not switched on. It turns on when these are set:
+
+- ⚙️ `INTERPARCEL_API_KEY` — from Steve's Interparcel account.
+- ⚙️ `FREIGHT_COLLECTION_CITY`, `FREIGHT_COLLECTION_POSTCODE`,
+  `FREIGHT_COLLECTION_STATE` — the despatch warehouse. **Still unknown.** Without
+  it no quote can be requested.
+- ⚙️ `FREIGHT_MARGIN_PERCENT` — handling margin. **Defaults to 15** (Michael,
+  2026-08-20); set it only to change that.
+
+**Until they are set the checkout says "Calculated on quote" and charges goods
+only. It never says "Free".** Once set, freight is quoted server-side, added to
+the Stripe charge, and a cart that cannot be quoted is pushed to the quote flow
+rather than charged with an unknown delivery cost.
+
+- 🔎 **VERIFY GST HANDLING ON THE FIRST REAL QUOTE.** `taxable: true` in their
+  response is read as "GST is NOT included", so GST is added for display. That
+  matches every other price on the site being GST-inclusive. **If it is actually
+  the other way round we undercharge freight by 10%.** Untestable without a key.
+- 🔎 **33 products have no carton dimensions**, including all 3 Concept2 ergs,
+  and **bundles have none at all**. Any cart containing one cannot be quoted and
+  goes to the quote flow. Fixing the source data widens coverage from 85%.
+- 🧠 **Service choice is not built.** The server picks the cheapest and also
+  returns the fastest, but letting the customer switch needs an
+  address → options → payment step. Decide once real rates exist.
+- 🧠 Interparcel want **10-20 example shipments** before quoting rates.
+
 ## 2. Domain / DNS cutover 🌐🧠 (needs Steve — the biggest item)
 
 The new site currently **reads the catalogue from `masterkraft.com`'s

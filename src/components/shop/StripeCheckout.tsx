@@ -48,6 +48,13 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
   // This is what Stripe actually charges — always display THIS, never the cart
   // subtotal, which can be stale relative to live Unleashed pricing.
   const [serverTotal, setServerTotal] = useState<number | null>(null);
+  // Freight, as priced by the SERVER. `freight` is what will be charged;
+  // `freightOptions` is what the customer may choose between. A null `freight`
+  // with `freightRequired` false means Interparcel is not configured yet, so
+  // freight is confirmed on quote - it is never, ever "free".
+  const [freight, setFreight] = useState<{ service: string; carrier: string; price: number } | null>(null);
+  const [freightServiceId, setFreightServiceId] = useState<string | undefined>(undefined);
+  const [freightRequired, setFreightRequired] = useState(false);
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,11 +81,31 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
       country: "AU",
     };
     const refs = refsFrom(items);
+    const delivery = { city: b.city, state: b.state, postcode: b.postcode, country: "Australia" };
     try {
+      // Ask for the delivery options first so the summary can show them, then
+      // create the intent for the chosen one. The server re-quotes either way;
+      // the id below is a choice, not a price.
+      const fq = await fetch("/api/freight/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: refs, delivery, serviceId: freightServiceId }),
+      })
+        .then((r) => r.json())
+        .catch(() => null);
+      if (fq) {
+        setFreightRequired(Boolean(fq.required));
+        // The server returns the cheapest plus, where one exists, a faster
+        // service. Letting the customer switch between them needs an
+        // address -> options -> payment step that does not exist yet, so for now
+        // the cheapest is taken. See LAUNCH.md.
+        if (fq.selected?.id) setFreightServiceId(fq.selected.id);
+      }
+
       const res = await fetch("/api/payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: refs }),
+        body: JSON.stringify({ items: refs, delivery, freightServiceId: fq?.selected?.id ?? freightServiceId }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
@@ -86,6 +113,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
       setOrderRefs(refs);
       setClientSecret(data.clientSecret);
       setServerTotal(typeof data.amount === "number" ? data.amount : null);
+      setFreight(data.freight ?? null);
       setPhase("payment");
       lock(); // freeze the cart while this payment is in flight
     } catch (err) {
@@ -169,8 +197,23 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
           <span>{aud.format(subtotal)}</span>
         </div>
         <div className="flex justify-between font-mono text-sm">
-          <span className="text-ash">Shipping</span>
-          <span>Free</span>
+          <span className="text-ash">Freight</span>
+          {freight ? (
+            <span className="text-right">
+              {aud.format(freight.price)}
+              {freight.service && (
+                <span className="block text-[11px] text-ash font-sans">
+                  {[freight.carrier, freight.service].filter(Boolean).join(" ")}
+                </span>
+              )}
+            </span>
+          ) : (
+            <span className="text-right text-xs text-ash max-w-[60%]">
+              {freightRequired
+                ? "Confirmed on quote"
+                : "Calculated on quote"}
+            </span>
+          )}
         </div>
         <div className="flex justify-between font-mono text-base py-3 mt-2 border-t border-line font-semibold">
           <span>Total</span>
