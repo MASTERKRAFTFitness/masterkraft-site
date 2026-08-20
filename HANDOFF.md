@@ -408,15 +408,23 @@ Desktop LCP 0.8s, CLS 0, TBT 0ms. Mobile LCP 2.6s, CLS 0, TBT 50ms.
 **SEO 69 is entirely "Page is blocked from indexing"** - correct for staging, and
 it lifts on its own when `NEXT_PUBLIC_ALLOW_INDEX` is set.
 
-**Three real accessibility findings, none fixed yet:**
-1. **Contrast 2.61:1** on the disabled pagination control
-   (`div.mt-14 > span.btn`, `#a0a0a1` on white at 9pt). WCAG exempts inactive
-   controls, so this is a judgement call, but it is genuinely hard to read.
-2. **`aria-hidden` element contains focusable descendants** (`aside.fixed`, the
-   closed cart drawer). Keyboard users can tab into an invisible drawer. This one
-   is a real bug rather than a lint nit.
-3. **Heading order skips a level** - product card titles are `h3` with no `h2`
-   above them in the grid section.
+**Three accessibility findings, ALL FIXED 2026-08-20. Accessibility is now 100
+on both desktop and mobile** (was 95 / 91), with `color-contrast`, `heading-order`
+and `aria-hidden-focus` all passing:
+1. **The closed cart drawer was keyboard-reachable.** `aria-hidden` hides an
+   element from the accessibility tree but does NOT remove its children from the
+   tab order, so all 7 controls in the closed drawer could still be tabbed into.
+   `CartDrawer` now also sets **`inert`** (React 19 supports it directly), which
+   is the attribute that actually removes them. Verified: closed, focusing a
+   drawer button does nothing; open, focus works normally.
+2. **Contrast 2.61:1** on the disabled pagination controls. They were `ink` at
+   `opacity-40`, which computes to `#a0a0a1` on white. Now `opacity-60`
+   (about `#707071`, ~5.2:1). Six controls across all-equipment, category and
+   search. WCAG exempts inactive controls, so this was a judgement call, but it
+   was genuinely hard to read.
+3. **Heading order skipped a level.** Product cards are `h3` and nothing above
+   them was an `h2`, so every listing jumped `h1` → `h3`. `ProductListing` now
+   carries an `sr-only` `h2`, which changes nothing visually.
 
 Remaining perf notes are minor: legacy JS ~14 KiB (Next default), unused JS
 ~25 KiB, images ~88 KiB over-sized on desktop, and back/forward cache blocked.

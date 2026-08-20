@@ -57,6 +57,10 @@ export default function ProductListing({ items, total }: { items: Item[]; total:
         </div>
       </div>
 
+      {/* The cards are h3, so without this the page jumps h1 -> h3. Not shown:
+          the listing already has a visible heading above it on every page. */}
+      <h2 className="sr-only">Products</h2>
+
       {view === "grid" ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
           {items.map(({ product, enriched }) => (

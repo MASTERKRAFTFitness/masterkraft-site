@@ -196,7 +196,7 @@ export default async function CategoryPage({
                         ← Prev
                       </Link>
                     ) : (
-                      <span className="btn btn-out opacity-40 !text-ink pointer-events-none">← Prev</span>
+                      <span className="btn btn-out opacity-60 !text-ink pointer-events-none">← Prev</span>
                     )}
                     <span className="text-ash">Page {page} of {totalPages}</span>
                     {page < totalPages ? (
@@ -204,7 +204,7 @@ export default async function CategoryPage({
                         Next →
                       </Link>
                     ) : (
-                      <span className="btn btn-out opacity-40 !text-ink pointer-events-none">Next →</span>
+                      <span className="btn btn-out opacity-60 !text-ink pointer-events-none">Next →</span>
                     )}
                   </div>
                 )}

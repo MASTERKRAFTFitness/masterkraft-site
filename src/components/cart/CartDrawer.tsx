@@ -32,10 +32,14 @@ export default function CartDrawer() {
         onClick={closeDrawer}
         aria-hidden
       />
+      {/* aria-hidden alone left the drawer's buttons and links in the tab order,
+          so a keyboard user could tab into a drawer they cannot see. `inert` is
+          what actually removes them (React 19 supports it directly). */}
       <aside
         role="dialog"
         aria-label="Shopping cart"
         aria-hidden={!drawerOpen}
+        inert={!drawerOpen}
         className={`fixed top-0 right-0 z-[80] h-full w-full max-w-md bg-white text-ink flex flex-col shadow-2xl transition-transform duration-300 ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
