@@ -1,4 +1,4 @@
-# MasterKraft website — handover (2026-08-17)
+# MasterKraft website — handover (2026-08-20)
 
 New Next.js e-commerce site for masterkraft.com (headless WooCommerce + Unleashed).
 This handoff reflects the state after a third feedback round. **Launch
@@ -42,7 +42,8 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   `SCSTACC04` — `SC` is used by nothing else). No SKU in the store actually starts
   with the characters "C2". **Clearance opts out** (A-prefixed SKUs) via
   `getAllProductsByCategory(id, { brandFilter: false })`. **If a category shows 0
-  products, suspect this filter first.** Catalogue is 512 products → **224 shown**.
+  products, suspect this filter first.** Catalogue is 512 published products →
+  **199 shown** (224 pass the brand filter, then 25 are dropped as obsolete, below).
 
 ## Shipped 2026-08-17 (feedback round 3) — committed, pushed AND deployed
 
@@ -74,6 +75,52 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 - **Buttons refilled with the exact brochure coral** (label switched to ink to keep AA).
 - Added `reports/wc-content-gaps.csv` - the WooCommerce content punch list.
 - Fixed "Request **a** Adelaide fit-out" (vowel cities).
+
+## Shipped 2026-08-20 — obsolete products are no longer served
+
+**The rule: WooCommerce's `catalog_visibility` is the store's own "do not list
+this" switch, and the site now honours it everywhere.** It did not before: the
+site filtered on `status: publish` only, so 25 products the WordPress storefront
+deliberately hides were being listed on the new site.
+
+The store retires a product two ways and both arrive as `hidden`:
+1. **the line is withdrawn** (Wall Balls, Acoustic Underlay, Aerobic Weighted Bars), and
+2. **an old single listing is superseded by its `-GROUP` variable product** (16 of
+   the 25, e.g. `MMDBRH` "Rubber Hex Dumbbells" → the visible `MMDBRH-GROUP`), so
+   the site was showing the same product twice.
+
+Implemented in `src/lib/woocommerce.ts` as `isObsolete` / `filterListable` /
+`filterSearchable`, applied at every fetch chokepoint (category, all-products,
+search, featured, related, sitemap) and in `getProductBySlug`. Tests in
+`src/lib/obsolete.test.ts`.
+
+- **Catalogue 224 → 199. Sitemap 512 → 450 product URLs. Clearance unaffected (39).**
+  No category is emptied. Biggest movers: Mixed Implements 37 → 22, Weightlifting
+  34 → 28, Dumbbells 11 → 7.
+- **A missing `catalog_visibility` counts as visible.** The field has to be asked
+  for in `_fields`, so a caller that forgets it shows too much rather than
+  silently emptying every listing. It is in `PRODUCT_FIELDS`.
+- **`getProductById` is deliberately NOT filtered.** It backs order creation
+  (`woo-orders.ts`); an order for an already-bought item must not fail because
+  marketing hid the listing.
+- **Obsolete product URLs now 404** instead of serving a page with a live
+  add-to-cart button.
+
+**Also fixed: a pre-existing SOFT 404 on `/product/[slug]`.** The segment had a
+`loading.tsx`, which wraps it in Suspense and flushes the shell (and a `200`)
+before `notFound()` runs. Every unknown OR obsolete product URL returned the 404
+body under a **200 status**, which Google indexes as a real page. The skeleton
+file is removed and the reason is commented in `page.tsx`. **Re-adding a
+`loading.tsx` to that segment brings the soft 404 back.** Verified against a
+production build: hidden and unknown slugs 404, valid products 200.
+
+**Unleashed is NOT the obsolescence source.** Its `Obsolete` flag exists on every
+product but is **unused: 0 of 1092 records set it**, and `IsSellable=false` covers
+only 4 non-products (an LCL handling fee, 3 REVL freight allowances), none of
+which reach the site. If the ERP ever starts maintaining `Obsolete`, wiring it in
+is a small change to `buildMap` in `unleashed.ts` plus one filter, and it would
+give Steve a single lever in Unleashed instead of WordPress. Not built, because
+dead code that filters nothing is worse than none.
 
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
@@ -171,6 +218,16 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   Michael's steer: keep WooCommerce running; don't migrate off it.
 
 ## Open / blocked (needs Michael/Steve or assets)
+- **SITE SEARCH IS BROKEN for common terms (found 2026-08-20, NOT yet fixed).**
+  `/search?q=dumbbell` and `?q=barbell`, `?q=mat`, `?q=rig` all return **0
+  products**, on staging today as well as locally, so this predates the obsolete
+  rule. Cause: `searchProducts` asks WooCommerce for **one page of 24** results
+  and applies the brand-SKU filter **afterwards**. The store holds a parallel
+  S-prefixed range with identical names (`SMDBRH` alongside `MMDBRH`), WooCommerce
+  ranks those first, so all 24 raw hits are filtered away and the page reports
+  nothing. Terms that do return are also under-counting (kettlebell 8, bench 8).
+  Fix options: fetch several pages before filtering, or push the brand filter into
+  the WooCommerce query. Needs a decision, then a small change.
 - ~~Missing manual PDFs~~ — **DONE 2026-08-17**, see the Resources section above.
 - **Home gym photos** — Michael is sending these through (2026-08-17).
 - **REVL studio assets** — Michael is contacting each club directly. Per club we need:
@@ -201,7 +258,8 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 - **Domain / indexing cutover** (the big gate) — move the WordPress/WooCommerce
   backend to a subdomain, point the real domain at Vercel, then flip
   `NEXT_PUBLIC_ALLOW_INDEX=true` + set `NEXT_PUBLIC_SITE_URL`. Full steps in `LAUNCH.md`.
-- **Product FEATURES data gap** — **64 of 224** products have no `features_N_text`
+- **Product FEATURES data gap** — **64 of 224** brand-filtered products (some of
+  which are now hidden as obsolete) have no `features_N_text`
   values in WooCommerce at all, so the Features section stays hidden on those pages.
   Content-entry task, not a bug. (Specs are no longer part of this gap — see the
   spec-blob fallback above. 2 products have neither specs source.) Concentrated in

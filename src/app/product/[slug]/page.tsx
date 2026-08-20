@@ -40,6 +40,12 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug).catch(() => null);
+  // Obsolete (WooCommerce-hidden) products come back null here, so they 404
+  // rather than serve a page with a live add-to-cart button.
+  // NOTE: this segment deliberately has NO loading.tsx. A loading file wraps the
+  // segment in Suspense, which flushes the shell - and a 200 - before this line
+  // runs, turning every 404 into a SOFT 404 (404 body, 200 status) that Google
+  // would happily index. Re-adding a skeleton here brings that back.
   if (!product) notFound();
 
   const cat = product.categories?.[0];

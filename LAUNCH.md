@@ -29,8 +29,9 @@ missing var fails **silently** — that's why each must be checked deliberately.
 - ⚙️ `NEXT_PUBLIC_SITE_URL=https://<real-domain>` — canonical URLs, sitemap, OG tags
   currently default to the staging URL (`src/lib/site.ts`). Point it at the launch
   domain or every canonical/share link is wrong.
-- ⚙️ `NEXT_PUBLIC_GA_ID=G-XXXXXXXX` — GA4 is wired (loads after cookie consent) but
-  **no analytics fire** until this is set. Grab the Measurement ID from GA4 admin.
+- ⚙️ `NEXT_PUBLIC_GA_ID` — **already set (G-86MEH5QL99) and working on staging.**
+  GA4 loads after cookie consent. Re-check it is present on the production domain
+  after the cutover, since a redeploy is what bakes it in.
 
 ### Forms — verify these are set (enquiries are the point of the site) 🔎
 The enquiry/quote/newsletter forms post to HubSpot (server-side) and email via
@@ -48,8 +49,11 @@ confirm (a) the email lands and (b) a HubSpot contact/submission appears. (This
 creates a real contact + email, so do it deliberately as the final check.)
 
 ### Card checkout — only if launching with payments 🧠
-Checkout is **quote-only** today (fine to launch that way). To enable live card
-payment you need all of:
+**Correction (2026-08-20): checkout is NOT quote-only as configured.**
+`paymentsConfigured` in `src/lib/stripe-client.ts` is simply "a publishable key is
+present", and staging has a **`pk_test`** key set, so the card form shows and would
+reject real cards. To launch quote-only, **remove the Stripe keys**. To enable live
+card payment you need all of:
 - 🧠 decision to go live with payments now vs. later.
 - ⚙️ `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` — from the store's
   Stripe account.

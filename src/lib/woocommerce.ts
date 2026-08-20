@@ -39,6 +39,7 @@ export type WcProduct = {
   sale_price: string;
   on_sale: boolean;
   stock_status: string;
+  catalog_visibility?: string; // "visible" | "catalog" | "search" | "hidden"
   short_description: string;
   description: string;
   images: WcImage[];
@@ -69,6 +70,33 @@ export function isBrandSku(sku?: string): boolean {
 }
 export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
   return items.filter((i) => isBrandSku(i.sku));
+}
+
+// OBSOLETE PRODUCTS: WooCommerce's `catalog_visibility` is the store's own
+// "do not list this" switch, and the site must honour it. The store retires a
+// product two ways, and both come through as "hidden":
+//   1. the line is withdrawn (Wall Balls, Acoustic Underlay), and
+//   2. an old single listing is superseded by its `-GROUP` variable product
+//      (e.g. MMDBRH "Rubber Hex Dumbbells" -> the visible MMDBRH-GROUP).
+// To a shopper both mean the same thing, so a hidden product is never listed,
+// never searchable, absent from the sitemap and 404s on its own URL.
+// A MISSING value counts as visible: `catalog_visibility` has to be asked for
+// in `_fields`, so a caller that forgets it must not silently empty the page.
+type Visibility = { catalog_visibility?: string };
+
+export function isObsolete(p: Visibility): boolean {
+  return p.catalog_visibility === "hidden";
+}
+
+// "search" means search-only (excluded from catalogue listings); "catalog"
+// means catalogue-only (excluded from search). Nothing in the store uses either
+// today, but honouring them keeps us faithful to WooCommerce's own semantics.
+export function filterListable<T extends Visibility>(items: T[]): T[] {
+  return items.filter((i) => !isObsolete(i) && i.catalog_visibility !== "search");
+}
+
+export function filterSearchable<T extends Visibility>(items: T[]): T[] {
+  return items.filter((i) => !isObsolete(i) && i.catalog_visibility !== "catalog");
 }
 
 const metaStr = (meta: WcMeta[] | undefined, key: string): string => {
@@ -242,7 +270,7 @@ async function wcGet<T>(
 }
 
 const PRODUCT_FIELDS =
-  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,short_description,description,images,categories";
+  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,catalog_visibility,short_description,description,images,categories";
 
 export async function getProductsByCategory(
   categoryId: number,
@@ -262,7 +290,7 @@ export async function getProductsByCategory(
     order,
     _fields: PRODUCT_FIELDS,
   });
-  return { ...res, data: res.data.map(applyImageOverride) };
+  return { ...res, data: filterListable(res.data).map(applyImageOverride) };
 }
 
 // Full category fetch (all pages), ordered by menu_order (the store's "featured"
@@ -288,7 +316,10 @@ export async function getAllProductsByCategory(
     out.push(...data);
     if (data.length < 100) break;
   }
-  return ((opts?.brandFilter ?? true) ? filterBrandSku(out) : out).map(applyImageOverride);
+  // The obsolete filter is independent of brandFilter: Clearance opts out of the
+  // M/N brand filter but must still respect the store's hidden flag.
+  const listable = filterListable(out);
+  return ((opts?.brandFilter ?? true) ? filterBrandSku(listable) : listable).map(applyImageOverride);
 }
 
 // The full catalogue (all categories), ordered by menu_order and filtered to
@@ -308,7 +339,7 @@ export async function getAllProducts(): Promise<WcProduct[]> {
     out.push(...data.map(normalizeProduct));
     if (data.length < 100) break;
   }
-  return filterBrandSku(out);
+  return filterBrandSku(filterListable(out));
 }
 
 export type WcCategoryChild = { id: number; slug: string; name: string; count: number };
@@ -364,7 +395,7 @@ export async function searchProducts(
     status: "publish",
     _fields: PRODUCT_FIELDS,
   });
-  const data = filterBrandSku(res.data).map(applyImageOverride);
+  const data = filterBrandSku(filterSearchable(res.data)).map(applyImageOverride);
   return { data, total: data.length, totalPages: res.totalPages };
 }
 
@@ -384,7 +415,12 @@ export async function getProductBySlug(slug: string): Promise<WcProduct | null> 
     // meta_data carries the ACF overview/features/specs the product page renders.
     _fields: `${PRODUCT_FIELDS},meta_data`,
   });
-  return data[0] ? normalizeProduct(data[0]) : null;
+  // Returning null for a hidden product makes /product/<slug> 404 rather than
+  // serve a page with a live add-to-cart button for something we don't sell.
+  // getProductById is deliberately NOT filtered - it backs order creation, and
+  // an order for an already-bought item must not fail because marketing hid it.
+  const p = data[0];
+  return p && !isObsolete(p) ? normalizeProduct(p) : null;
 }
 
 export async function getProductById(id: number): Promise<WcProduct | null> {
@@ -421,14 +457,19 @@ export async function getProductVariations(productId: number): Promise<WcVariati
 export async function getAllProductSlugs(): Promise<{ slug: string; modified?: string }[]> {
   const out: { slug: string; modified?: string }[] = [];
   for (let page = 1; page <= 6; page++) {
-    const { data } = await wcGet<{ slug: string; date_modified_gmt?: string }[]>("/products", {
+    const { data } = await wcGet<
+      { slug: string; date_modified_gmt?: string; catalog_visibility?: string }[]
+    >("/products", {
       per_page: 100,
       page,
       status: "publish",
-      _fields: "slug,date_modified_gmt",
+      _fields: "slug,date_modified_gmt,catalog_visibility",
     });
     if (!data.length) break;
-    out.push(...data.map((p) => ({ slug: p.slug, modified: p.date_modified_gmt })));
+    // Obsolete products 404, so keep them out of the sitemap.
+    out.push(
+      ...data.filter((p) => !isObsolete(p)).map((p) => ({ slug: p.slug, modified: p.date_modified_gmt }))
+    );
     if (data.length < 100) break;
   }
   return out;
@@ -441,7 +482,7 @@ export async function getFeaturedProducts(perPage = 8): Promise<WcProduct[]> {
     status: "publish",
     _fields: PRODUCT_FIELDS,
   });
-  return data.map(applyImageOverride);
+  return filterListable(data).map(applyImageOverride);
 }
 
 const audFormatter = new Intl.NumberFormat("en-AU", {
