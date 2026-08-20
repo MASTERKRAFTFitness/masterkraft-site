@@ -591,6 +591,41 @@ manuals are the remaining bulk and the honest options are dropping scan DPI
   photos on masterkraft.com, and their current Instagram handle. Nice to have: floor
   area in sqm and any before/after shots. Drop photos into `/public/revl/ig/<slug>/`
   and wire via `IG_PHOTOS` in `revl.ts`.
+### THE ORDER PIPELINE ALREADY REACHES UNLEASHED (verified 2026-08-20)
+
+Asked whether an order can flow end to end and up into Unleashed **before**
+Interparcel supply freight costings. **It can, and four of the five links already
+exist.** Freight pricing is the LAST link, not a prerequisite.
+
+| step | state |
+|---|---|
+| cart + checkout on this site | **built** |
+| freight quote | **the only missing piece** (Interparcel Quote API) |
+| payment (Stripe) | **built**, test keys |
+| order written into WooCommerce | **built** - `woo-orders.ts`, gated by `WC_WRITE_ENABLED` |
+| **WooCommerce → Unleashed** | **ALREADY WORKING** |
+| fulfilment / labels | Interparcel Shipping Manager "Fetch Orders" pulls WC orders, no code |
+
+**The Unleashed sync is proven, not assumed.** WooCommerce orders `490098`,
+`490100` and `490102` appear in Unleashed as sales orders under the *same
+numbers* (Unleashed's own orders use `SO-000008xx`). So anything that lands in
+WooCommerce is already flowing up into the ERP. `LAUNCH.md` lists this as
+"verify the sync still fires" - it does.
+
+**TWO TEST ORDERS ARE LIVE IN THE ERP.** `490100` ($856.90) and `490102`
+($779.00), "Test Buyer", 2026-08-10, paid via Stripe, `processing` in WooCommerce
+and **`Placed` in Unleashed**. They will read as real demand and may hold stock.
+**Void or delete them before launch.**
+
+**`woo-orders.ts` hardcodes "Free shipping" into every order it creates**
+(`method_id: "free_shipping"`, `$0.00`), so the checkout contradiction is being
+written into the order record and then into Unleashed. Meanwhile a real customer
+order (`490098`, Belinda Sunner) used a WooCommerce shipping method literally
+named **"Shipping calculated after order"**. The store already has the right
+method; our headless order code simply is not using it. **Switching that one line
+is very likely the interim freight answer** - it makes the order record match
+what every other surface says.
+
 ### Interparcel (freight provider) — assessed 2026-08-20
 
 Steve has an Interparcel account (`steve@masterkraft.com`). **It can work with this
