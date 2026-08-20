@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseSpecBlob, isBrandSku, parseProductDetail, type WcProduct } from "@/lib/woocommerce";
+import { parseSpecBlob, isBrandSku, parseProductDetail, type WcProduct, normalizeSpecUnits } from "@/lib/woocommerce";
 
 // The real markup shape used across the catalogue (78 products carry only this
 // blob, so a regression here empties their whole spec table).
@@ -100,5 +100,28 @@ describe("isBrandSku", () => {
     expect(isBrandSku("AB1234")).toBe(false); // clearance
     expect(isBrandSku("")).toBe(false);
     expect(isBrandSku(undefined)).toBe(false);
+  });
+});
+
+describe("normalizeSpecUnits", () => {
+  it("inserts the missing space the blob omits", () => {
+    expect(normalizeSpecUnits("34kg")).toBe("34 kg");
+    expect(normalizeSpecUnits("12months")).toBe("12 months");
+  });
+
+  // Hand-typed in WordPress. Visible on the 34kg plyo box and the Functional
+  // Trainer; three more carry it behind a correct discrete warranty field.
+  it("collapses a doubled unit", () => {
+    expect(normalizeSpecUnits("Internal Frame: 12 months, Cover: 3 monthsmonths")).toBe(
+      "Internal Frame: 12 months, Cover: 3 months"
+    );
+    expect(normalizeSpecUnits("Hardware, plastics- 3 monthsmonths")).toBe(
+      "Hardware, plastics- 3 months"
+    );
+  });
+
+  it("leaves correct values alone", () => {
+    expect(normalizeSpecUnits("5 years")).toBe("5 years");
+    expect(normalizeSpecUnits("(4) Cables- 6 months")).toBe("(4) Cables- 6 months");
   });
 });

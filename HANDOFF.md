@@ -366,9 +366,21 @@ wait.
   the 64. **Full punch list committed at `reports/wc-content-gaps.csv`** (tagged
   `no_features` / `warranty_typo` / `no_specs`), regenerate anytime with the probe
   approach in that file's columns.
-- **Warranty typos: exactly 2** (`MBPB3I101`, `MSCMDU01`) both reading "3 monthsmonths".
-  The other 73 warranties written as "12months" need NO action - the spec parser adds
-  the space automatically.
+- **Warranty typos: rescanned 2026-08-20, the "exactly 2" was undercounted.**
+  The doubled unit ("3 monthsmonths") appears on **12 published products, 5 of them
+  served, 2 of them visible to customers**: `MBPB3I101` (3-In-1 Foam Plyometric Box
+  34kg) and `MSCMDU01` (Functional Trainer Pro). Three more (`MSBMPL01`, `MSWBFW01`,
+  `MSWBFW02`) carry it in the blob but render clean, because their **discrete
+  Warranty field is correct and wins**. The rest sit on unserved S/R twins and the
+  now-retired Glute Ham Bench.
+  **The typo is NOT in the Warranty field** - for the two visible ones it lives in
+  the legacy `specification_text` blob, which the site falls back to because their
+  discrete Warranty field is empty. So the cheap content fix is to **type the correct
+  warranty into the discrete field**, which overrides the blob; no need to edit
+  legacy HTML. Still worth doing: the source data is wrong.
+  `normalizeSpecUnits` in `woocommerce.ts` now collapses a doubled unit as well as
+  inserting the missing space in "12months", so a typo in the source no longer
+  renders. Verified on all three pages.
 - **Warranty typos in WooCommerce** — some warranty fields are malformed at source,
   e.g. the 34kg plyo box reads "Cover: 3 monthsmonths". Renders as entered; needs a
   pass over the warranty fields in WordPress.

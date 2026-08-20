@@ -116,6 +116,15 @@ const metaStr = (meta: WcMeta[] | undefined, key: string): string => {
 // / … fields. 78 of the 224 listed products have ONLY the blob, so without this
 // their spec table renders empty. The markup is uniform across the catalogue: a
 // single "Assembled Size" <strong> heading, then <li> items of "Label: value".
+// "34kg" -> "34 kg", "12months" -> "12 months", "3 monthsmonths" -> "3 months".
+// Exported for the tests; the doubled unit is a data-entry mistake in WordPress,
+// not something the blob format does.
+export function normalizeSpecUnits(value: string): string {
+  return value
+    .replace(/\b(kgs?|months?|years?|weeks?|days?)\1+\b/gi, "$1")
+    .replace(/(\d)\s*(kg|months?|years?|weeks?|days?)\b/gi, "$1 $2");
+}
+
 const SPEC_BLOB_LABELS: Record<string, string> = {
   colour: "Colour",
   color: "Colour",
@@ -156,8 +165,13 @@ export function parseSpecBlob(html: string): {
       const label = SPEC_BLOB_LABELS[key];
       if (label) {
         // Weights are stored as "34kg"; warranties as "12months". Insert the
-        // missing space so they read consistently with the discrete fields.
-        rows.push({ label, value: value.replace(/(\d)\s*(kg|months?)\b/gi, "$1 $2") });
+        // missing space so they read consistently with the discrete fields, and
+        // collapse a doubled unit: several warranties were hand-typed as
+        // "3 monthsmonths" in WordPress (the 34kg plyo box and the Functional
+        // Trainer show it to customers; 3 more carry it behind a correct
+        // discrete field). Fixing the source data is still the right call, this
+        // just stops a typo there rendering on the site.
+        rows.push({ label, value: normalizeSpecUnits(value) });
       }
     }
   }
