@@ -1,7 +1,7 @@
 // Auto-generated WC SKU -> Unleashed ProductCode map.
 // Includes code-transform matches (name-validated >=0.80) and full-name matches
 // (>=0.90 similarity AND identical size/weight numbers, non-variable products).
-export const skuAliases: Record<string, string> = {
+const generatedAliases: Record<string, string> = {
   "ABPBMS-01": "ABPBMS01",
   "ABPBSB-06": "ABPBSB06",
   "MBCTFS02": "ABCTFS02",
@@ -126,3 +126,27 @@ export const skuAliases: Record<string, string> = {
   "SWWLCH02": "MWWLCH02",
   "SWWLMA01": "MWWLMA01",
 };
+
+// MANUAL entries, kept in their own object so regenerating the block above
+// cannot silently drop them.
+//
+// THE CONCEPT2 RANGE IS CODED THREE DIFFERENT WAYS and the matcher could never
+// have found it: the product is NAMED "C2 Rower Model D PM5 Black", carries the
+// WooCommerce SKU `SCRWAR04`, and lives in Unleashed as `C2ROWERG`. No shared
+// prefix, and the names differ too much for the >=0.80 similarity gate
+// ("Model D" vs "Row Erg with Standard Legs" are the same machine).
+//
+// Without these the three ergs fell back to the WooCommerce RRP and were
+// UNDERPRICED: rower $1,375 against the ERP's $1,705, ski erg $1,320 against
+// $1,650, floor stand $352 against $440. Mapping confirmed by Michael 2026-08-20.
+//
+// Unleashed also carries C2BIKEERG (Bike Erg, $2,145 inc-GST) which has NO
+// WooCommerce product, so it cannot be mapped: the Bike Erg is missing from the
+// site entirely. Add the product in WooCommerce first, then map it here.
+const manualAliases: Record<string, string> = {
+  SCRWAR04: "C2ROWERG", // C2 Rower Model D PM5 Black
+  SCSTAR03: "C2SKIERG", // C2 Ski Erg PM5
+  SCSTACC04: "C2SKIERGFS", // C2 Ski Erg Floor Stand
+};
+
+export const skuAliases: Record<string, string> = { ...generatedAliases, ...manualAliases };

@@ -87,3 +87,21 @@ describe("enrich", () => {
     expect(e.priceLabel).toBe("Contact for pricing");
   });
 });
+
+describe("Concept2 aliases", () => {
+  // The range is coded three ways: named "C2 …", SKU'd SC…, and C2… in the ERP.
+  // Without these the three ergs fall back to the WooCommerce RRP and undersell
+  // by $330 / $330 / $88.
+  it("maps the WooCommerce SC SKUs to the Unleashed C2 codes", () => {
+    expect(skuAliases["SCRWAR04"]).toBe("C2ROWERG");
+    expect(skuAliases["SCSTAR03"]).toBe("C2SKIERG");
+    expect(skuAliases["SCSTACC04"]).toBe("C2SKIERGFS");
+  });
+
+  it("prices a C2 erg from the ERP, not the web RRP", () => {
+    const map = { C2ROWERG: { price: 1705, stock: 0 } };
+    const e = enrich({ sku: "SCRWAR04", regular_price: "1250", stock_status: "instock" }, map);
+    expect(e.priceValue).toBe(1705);
+    expect(e.source).toBe("unleashed");
+  });
+});

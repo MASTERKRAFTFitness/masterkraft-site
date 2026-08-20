@@ -285,20 +285,31 @@ no longer advertised.
 - **Unleashed code:** `C2ROWERG` (Unleashed has 4: `C2BIKEERG`, `C2ROWERG`,
   `C2SKIERG`, `C2SKIERGFS`)
 
-**Consequence, NOT yet fixed: those three have no `unleashed-aliases` entry, so
-they fall back to the WooCommerce RRP and are UNDERPRICED against the ERP:**
+**FIXED 2026-08-20 (mapping confirmed by Michael).** The three had no
+`unleashed-aliases` entry - the matcher could never have found them, since there
+is no shared prefix and "Model D" vs "Row Erg with Standard Legs" is well under
+the 0.80 name-similarity gate - so they fell back to the WooCommerce RRP and were
+**underpriced**:
 
-| product | site | Unleashed | gap |
+| product | was | now (ERP) | recovered |
 |---|---|---|---|
-| C2 Rower Model D PM5 Black | $1,375.00 | $1,705.00 | **-$330** |
-| C2 Ski Erg PM5 | $1,320.00 | $1,650.00 | **-$330** |
-| C2 Ski Erg Floor Stand | $352.00 | $440.00 | **-$88** |
+| C2 Rower Model D PM5 Black | $1,375.00 | **$1,705.00** | +$330 |
+| C2 Ski Erg PM5 | $1,320.00 | **$1,650.00** | +$330 |
+| C2 Ski Erg Floor Stand | $352.00 | **$440.00** | +$88 |
 
-The mapping looks obvious (`SCRWAR04`→`C2ROWERG`, `SCSTAR03`→`C2SKIERG`,
-`SCSTACC04`→`C2SKIERGFS`) but names differ ("Model D" vs "Row Erg with Standard
-Legs"), so it needs Michael or Steve to confirm rather than be inferred - a wrong
-price is worse than a fallback. Also **`C2BIKEERG` ($2,145 inc-GST) exists in the
-ERP with no WooCommerce product at all**, so the Bike Erg is missing from the site.
+Added as `manualAliases` in `unleashed-aliases.ts`, a **separate object merged
+into `skuAliases`**, so regenerating the auto-generated block cannot silently
+drop them. Verified on the product pages and the Cardio listing.
+
+**Side effect worth knowing: all three flipped from "In stock" to "Made to
+order."** Unleashed is the source of truth for stock once a SKU matches, and it
+reports 0 available on the rower and -1 on both ski-erg lines. The old "In stock"
+came from WooCommerce's own flag, which is stale (the same staleness the turf
+showed). If the ergs really are held in stock, the fix is in Unleashed.
+
+**`C2BIKEERG` (Bike Erg, $2,145 inc-GST) exists in the ERP with NO WooCommerce
+product at all**, so the Bike Erg is missing from the site and cannot be mapped.
+Add the product in WooCommerce first, then map it in `manualAliases`.
 
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
