@@ -45,7 +45,9 @@ errors, so gating on it would block every deploy. Run it and compare against `HE
 offline on purpose: the point of the snapshot is that rendering does not depend on
 WooCommerce being up, and a networked pre-build check would hand that back.
 
-To deploy without the gate (it is a safety net, not a law): `npx vercel --prod`.
+To deploy without the gate (it is a safety net, not a law):
+`npx --yes vercel@latest deploy --prod --yes`. There is no local or global `vercel`
+binary on this machine, so a bare `vercel --prod` fails with command-not-found.
 
 If it says **"Not authorized"**, run `npx vercel login` first (Michael's account).
 `NEXT_PUBLIC_*` vars are build-time inlined, so changing one in Vercel does nothing
