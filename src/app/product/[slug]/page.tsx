@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/shop/ProductGallery";
-import { getProductBySlug, getProductVariations, getProductsByCategory, parseProductDetail, filterBrandSku } from "@/lib/woocommerce";
+import {
+  getProductBySlug,
+  getProductVariations,
+  getProductsByCategory,
+  parseProductDetail,
+  filterBrandSku,
+  getBundleFromPrice,
+  formatPrice,
+} from "@/lib/woocommerce";
 import { getUnleashedMap, enrich, enrichCard, lookupBySku } from "@/lib/unleashed";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
@@ -51,7 +59,13 @@ export default async function ProductPage({
   const cat = product.categories?.[0];
   const detail = parseProductDetail(product);
   const unleashed = await getUnleashedMap().catch(() => ({}));
-  const enriched = enrich(product, unleashed);
+  // A bundle has no price of its own, so label it the same way its card is
+  // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
+  // than becoming card-payable at the cost of its cheapest item - see enrichCard.
+  const bundleFrom = getBundleFromPrice(product);
+  const enriched = bundleFrom !== null
+    ? { ...enrich(product, unleashed), priceLabel: `From ${formatPrice(bundleFrom)}`, priceValue: 0 }
+    : enrich(product, unleashed);
   const inStock = enriched.inStock;
   const stockQty = lookupBySku(unleashed, product.sku)?.stock;
 

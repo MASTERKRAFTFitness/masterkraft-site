@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatPrice, getPricing, getPriceValue } from "@/lib/woocommerce";
+import { formatPrice, getBundleFromPrice, getPricing, getPriceValue } from "@/lib/woocommerce";
 import { lookupBySku, enrich, type UnleashedEntry } from "@/lib/unleashed";
 import { skuAliases } from "@/lib/unleashed-aliases";
 
@@ -103,5 +103,58 @@ describe("Concept2 aliases", () => {
     const e = enrich({ sku: "SCRWAR04", regular_price: "1250", stock_status: "instock" }, map);
     expect(e.priceValue).toBe(1705);
     expect(e.source).toBe("unleashed");
+  });
+});
+
+describe("bundle pricing", () => {
+  const bundle = (min?: string, priceMin?: string) => ({
+    type: "bundle",
+    bundle_price: {
+      price: { min: { incl_tax: priceMin ?? "78.38" } },
+      regular_price: min === undefined ? undefined : { min: { incl_tax: min } },
+    },
+  });
+
+  // regular_price, not price: `price` is the field the wholesale plugin distorts.
+  it("takes the minimum from regular_price, not price", () => {
+    expect(getBundleFromPrice(bundle("110"))).toBe(110);
+  });
+
+  it("is already GST-inclusive, so it is not multiplied again", () => {
+    expect(getBundleFromPrice(bundle("249"))).toBe(249);
+  });
+
+  it("ignores non-bundles", () => {
+    expect(getBundleFromPrice({ type: "simple", bundle_price: { regular_price: { min: { incl_tax: "99" } } } })).toBeNull();
+    expect(getBundleFromPrice({ type: "variable" })).toBeNull();
+  });
+
+  // A bundle with no usable figure must fall through to the old behaviour
+  // ("Contact for pricing") rather than render "From $0.00".
+  it("returns null when there is no usable minimum", () => {
+    expect(getBundleFromPrice(bundle(undefined))).toBeNull();
+    expect(getBundleFromPrice(bundle("0"))).toBeNull();
+    expect(getBundleFromPrice({ type: "bundle" })).toBeNull();
+  });
+});
+
+describe("a bundle is priced for display, not for sale", () => {
+  // A bundle is a configurable range and the site has no configurator, so the
+  // minimum is a guide price. canPay requires every cart item to be above zero,
+  // so a real priceValue here would make a whole range card-payable at the cost
+  // of its cheapest item.
+  it("keeps priceValue at 0 so bundles stay on the quote flow", async () => {
+    const { enrichCard } = await import("@/lib/unleashed");
+    const card = await enrichCard(
+      {
+        type: "bundle",
+        sku: "MWBBFUR-GROUP",
+        stock_status: "onbackorder",
+        bundle_price: { regular_price: { min: { incl_tax: "110" } } },
+      } as never,
+      {}
+    );
+    expect(card.priceLabel).toBe("From $110.00");
+    expect(card.priceValue).toBe(0);
   });
 });

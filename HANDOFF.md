@@ -328,16 +328,38 @@ correctly `Disallow: /`; all 12 marketing pages 200; all 4 legacy redirects 308
 to the right place. **No console errors.** 18 requests, 248 KB, TTFB 20 ms,
 DOMContentLoaded 639 ms.
 
-### Found: 20 of 23 bundle products have NO PRICE
+### Found and FIXED: 20 of 23 bundle products had NO PRICE
 
-The `-GROUP` products are WooCommerce **bundles** (`type: "bundle"`), and 20 of
-the 23 served have `regular_price: 0`, so they render **"Contact for pricing"**.
-These are the primary listings for whole ranges: Rubber Hex Dumbbells, Coloured
-Bumper Plates, Wall Ball, Dead Balls, Power Bag, Change Plates, Competition
-Kettlebells and so on. `enrichCard` only special-cases `variable`, so a bundle
-falls through to the WooCommerce parent price, which is zero. Either the bundles
-need a price in WooCommerce, or the site needs to price a bundle from its
-components. **Needs a decision.**
+The `-GROUP` products are WooCommerce **bundles**, and 20 of the 23 served had
+`regular_price: 0`, so they rendered **"Contact for pricing"** on the primary
+listing for whole ranges: Rubber Hex Dumbbells, Coloured Bumper Plates, Wall
+Ball, Dead Balls, Power Bag, Competition Kettlebells and so on.
+
+**Pricing them from their components does NOT work** - checked every component of
+all 23, and 22 of 23 have no usable price in Unleashed OR WooCommerce, because
+the components are the hidden single-product listings.
+
+**What works:** the bundle plugin publishes a computed range in `bundle_price`,
+populated for all 23, and **it comes through the LIST endpoint via `_fields`**,
+so no extra request per product. `getBundleFromPrice` takes the minimum as a
+"From $X". Listings verified: Weightlifting 14 "Contact for pricing" → 0,
+Mixed Implements 18 → 0.
+
+- **Uses `regular_price.min`, NOT `price.min`.** `price` is the field the
+  wholesale plugin distorts and reads lower ($78.38 against $110 on the Urethane
+  Fixed Barbells). Both are already GST-inclusive, so no ×1.1.
+- **The max is ignored and unusable**: the plugin multiplies out a per-component
+  quantity cap of 100, giving figures like $585,003. Only "From" is honest.
+- **`priceValue` STAYS 0 on purpose.** A bundle is a configurable range and the
+  site has no configurator, so the minimum is a guide price, not a line price.
+  `canPay` in the checkout requires every item above zero, so a real value would
+  have let someone **card-checkout a whole range at the cost of its cheapest
+  item**. Zero keeps bundles on the quote flow, where they already were. Verified
+  a cart holding a bundle still renders "Request a Quote".
+- It is WooCommerce-derived, so where a bundle duplicates a variable product the
+  two disagree (From $110 against the twin's Unleashed From $90). **The fix for
+  those five is to hide one of each pair in WordPress**, not to reconcile two
+  sources. Still outstanding, see the duplicate finding below.
 
 ### Found: the same product listed twice, once priced and once not
 

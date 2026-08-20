@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { unstable_cache } from "next/cache";
 import {
   formatPrice,
+  getBundleFromPrice,
   getPricing,
   getPriceValue,
   getProductVariations,
@@ -131,6 +132,24 @@ export async function getUnleashedMap(): Promise<UnleashedMap> {
 // Card-level enrichment: for variable products, fetch variations and show the
 // lowest variant price as "From $X" instead of the empty parent price.
 export async function enrichCard(product: WcProduct, map: UnleashedMap): Promise<EnrichedProduct> {
+  // Bundles carry no price of their own; the plugin's computed minimum becomes a
+  // "From $X" label rather than "Contact for pricing". See getBundleFromPrice.
+  //
+  // priceValue STAYS 0 ON PURPOSE. A bundle is a configurable range, and the
+  // site has no bundle configurator, so the minimum is a guide price and not a
+  // line price. `canPay` in the checkout requires every item to have a price
+  // above zero, so a real value here would let someone card-checkout a whole
+  // range at the cost of its cheapest item. Zero keeps bundles on the quote
+  // flow, which is where they were before this label existed.
+  const bundleFrom = getBundleFromPrice(product);
+  if (bundleFrom !== null) {
+    return {
+      priceLabel: `From ${formatPrice(bundleFrom)}`,
+      priceValue: 0,
+      inStock: product.stock_status === "instock",
+      source: "website",
+    };
+  }
   if (product.type === "variable") {
     const variations = await getProductVariations(product.id).catch(() => []);
     const enriched = variations.map((v) => enrich(v, map));

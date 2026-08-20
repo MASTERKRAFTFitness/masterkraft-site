@@ -41,6 +41,7 @@ export type WcProduct = {
   on_sale: boolean;
   stock_status: string;
   catalog_visibility?: string; // "visible" | "catalog" | "search" | "hidden"
+  bundle_price?: WcBundlePrice; // present on type: "bundle" only
   short_description: string;
   description: string;
   images: WcImage[];
@@ -49,6 +50,13 @@ export type WcProduct = {
 };
 
 export type WcMeta = { key: string; value: unknown };
+
+// WooCommerce Product Bundles publishes a computed range on each bundle. Both
+// figures are already GST-inclusive.
+export type WcBundlePrice = {
+  price?: { min?: { incl_tax?: string }; max?: { incl_tax?: string } };
+  regular_price?: { min?: { incl_tax?: string }; max?: { incl_tax?: string } };
+};
 
 // Structured product detail pulled from the store's ACF meta fields (the same
 // data the old site rendered: full overview, features, and a real spec table).
@@ -323,7 +331,7 @@ async function wcGet<T>(
 }
 
 const PRODUCT_FIELDS =
-  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,catalog_visibility,short_description,description,images,categories";
+  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,catalog_visibility,bundle_price,short_description,description,images,categories";
 
 export async function getProductsByCategory(
   categoryId: number,
@@ -591,6 +599,33 @@ export function getPricing(p: Priceable): { price: string; compareAt?: string } 
 }
 
 // Numeric GST-inclusive unit price used by the cart (0 = price on application).
+// BUNDLES ("-GROUP" products). They carry no price of their own - 20 of the 23
+// the site serves have `regular_price: 0` - so they rendered "Contact for
+// pricing" on every listing. The bundle plugin publishes a computed range in
+// `bundle_price`; the MINIMUM becomes a "From $X", the same shape variable
+// products already use.
+//
+// USE regular_price, NOT price. `price` is the field the wholesale plugin
+// distorts (see getPricing above) and reads lower: $78.38 against $110 on the
+// Urethane Fixed Barbells. Both are already GST-inclusive, so NO x1.1 here.
+//
+// The MAX is unusable and deliberately ignored: the plugin multiplies out a
+// per-component quantity cap of 100, returning figures like $585,003. Only a
+// "From" price is honest.
+//
+// NOTE this is WooCommerce-derived, so where a bundle duplicates a variable
+// product it will disagree with the Unleashed price shown on the twin (From $110
+// vs From $90). The fix for those five is to hide one of each pair in WordPress,
+// not to reconcile two different sources.
+export function getBundleFromPrice(p: {
+  type?: string;
+  bundle_price?: WcBundlePrice;
+}): number | null {
+  if (p.type !== "bundle") return null;
+  const v = parseFloat(p.bundle_price?.regular_price?.min?.incl_tax ?? "");
+  return Number.isFinite(v) && v > 0 ? v : null;
+}
+
 export function getPriceValue(p: Priceable): number {
   const regular = parseFloat(p.regular_price || p.price || "0");
   const sale = parseFloat(p.sale_price || "0");
