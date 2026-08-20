@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchProducts } from "@/lib/woocommerce";
+import { getUnleashedMap, filterUnleashedObsolete } from "@/lib/unleashed";
 
 // Lightweight typeahead: product name/slug/image only (no pricing, for speed).
 export async function GET(request: Request) {
@@ -7,7 +8,8 @@ export async function GET(request: Request) {
   if (!q || q.length < 2) return NextResponse.json({ results: [] });
   try {
     const { data } = await searchProducts(q, { perPage: 6 });
-    const results = data.map((p) => ({
+    const unleashed = await getUnleashedMap().catch(() => ({}));
+    const results = filterUnleashedObsolete(data, unleashed).map((p) => ({
       slug: p.slug,
       name: p.name,
       image: p.images?.[0]?.src ?? null,

@@ -454,21 +454,26 @@ export async function getProductVariations(productId: number): Promise<WcVariati
   return data;
 }
 
-export async function getAllProductSlugs(): Promise<{ slug: string; modified?: string }[]> {
-  const out: { slug: string; modified?: string }[] = [];
+export async function getAllProductSlugs(): Promise<
+  { slug: string; sku?: string; modified?: string }[]
+> {
+  const out: { slug: string; sku?: string; modified?: string }[] = [];
   for (let page = 1; page <= 6; page++) {
     const { data } = await wcGet<
-      { slug: string; date_modified_gmt?: string; catalog_visibility?: string }[]
+      { slug: string; sku?: string; date_modified_gmt?: string; catalog_visibility?: string }[]
     >("/products", {
       per_page: 100,
       page,
       status: "publish",
-      _fields: "slug,date_modified_gmt,catalog_visibility",
+      // sku so the caller can check the product against Unleashed's obsolete flag.
+      _fields: "slug,sku,date_modified_gmt,catalog_visibility",
     });
     if (!data.length) break;
     // Obsolete products 404, so keep them out of the sitemap.
     out.push(
-      ...data.filter((p) => !isObsolete(p)).map((p) => ({ slug: p.slug, modified: p.date_modified_gmt }))
+      ...data
+        .filter((p) => !isObsolete(p))
+        .map((p) => ({ slug: p.slug, sku: p.sku, modified: p.date_modified_gmt }))
     );
     if (data.length < 100) break;
   }

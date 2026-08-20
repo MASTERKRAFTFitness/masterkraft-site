@@ -43,7 +43,8 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
   with the characters "C2". **Clearance opts out** (A-prefixed SKUs) via
   `getAllProductsByCategory(id, { brandFilter: false })`. **If a category shows 0
   products, suspect this filter first.** Catalogue is 512 published products →
-  **199 shown** (224 pass the brand filter, then 25 are dropped as obsolete, below).
+  **184 shown**: 224 pass the brand filter, then 25 are dropped as WooCommerce-hidden
+  and 15 more as Unleashed-obsolete (see the obsolete-products section below).
 
 ## Shipped 2026-08-17 (feedback round 3) — committed, pushed AND deployed
 
@@ -78,8 +79,14 @@ gates + env vars live in `LAUNCH.md` — read that before any go-live work.**
 
 ## Shipped 2026-08-20 — obsolete products are no longer served
 
-**The rule: WooCommerce's `catalog_visibility` is the store's own "do not list
-this" switch, and the site now honours it everywhere.** It did not before: the
+**The rule has two halves, because two systems retire products independently:
+WooCommerce hides them and Unleashed marks them obsolete. Both are now honoured
+everywhere. Catalogue 224 → 184.**
+
+### The WordPress half: `catalog_visibility`
+
+**WooCommerce's `catalog_visibility` is the store's own "do not list this"
+switch, and the site now honours it everywhere.** It did not before: the
 site filtered on `status: publish` only, so 25 products the WordPress storefront
 deliberately hides were being listed on the new site.
 
@@ -114,13 +121,38 @@ file is removed and the reason is commented in `page.tsx`. **Re-adding a
 `loading.tsx` to that segment brings the soft 404 back.** Verified against a
 production build: hidden and unknown slugs 404, valid products 200.
 
-**Unleashed is NOT the obsolescence source.** Its `Obsolete` flag exists on every
-product but is **unused: 0 of 1092 records set it**, and `IsSellable=false` covers
-only 4 non-products (an LCL handling fee, 3 REVL freight allowances), none of
-which reach the site. If the ERP ever starts maintaining `Obsolete`, wiring it in
-is a small change to `buildMap` in `unleashed.ts` plus one filter, and it would
-give Steve a single lever in Unleashed instead of WordPress. Not built, because
-dead code that filters nothing is worse than none.
+### The ERP half: Unleashed also retires products
+
+**READ THIS BEFORE TOUCHING THE UNLEASHED CLIENT. `GET /Products` HIDES OBSOLETE
+PRODUCTS BY DEFAULT.** The plain endpoint returns 1,092 items, every one of which
+reports `Obsolete:false`, which reads exactly like "this company never uses the
+flag". With **`includeObsolete=true`** it returns **1,892, of which 800 are
+obsolete**. Any check written without the parameter passes vacuously - this
+session made that mistake and shipped the wrong conclusion in `b13c890` before
+catching it. The field is `Obsolete`, not `IsObsolete`. Same trap is documented
+in `snap-portal-franchisee/scripts/check-obsolete.mjs`, which is what caught it.
+
+**15 products the site was still serving are obsolete AND `IsSellable:false` in
+Unleashed**, with WordPress still showing them: the entire discontinued
+**Selectorize strength range** (11 machines: Lat Pulldown, Chest Press, Pec Deck,
+Leg Curl, Arm Curl, Assisted Chin/Dip, Ab/Back Extension and so on), plus Glute
+Ham Bench Pro, 2 artificial turf rolls and the custom-branding Impact-Lock tiles.
+
+- `isObsoleteInUnleashed` / `filterUnleashedObsolete` in `unleashed.ts`, applied
+  at the category, all-equipment, search, typeahead, related-rail and sitemap
+  surfaces, plus a `notFound()` on the product page.
+- **Catalogue 199 → 184. Sitemap 450 → 429.** Strength 28 → 17, Flooring 4 → 1,
+  Clearance 39 → 36 (2 dead items, both zero stock).
+- **Nothing sellable is hidden: zero obsolete products hold any Unleashed stock.**
+  Checked explicitly, because Clearance exists to sell end-of-line stock and
+  would be the wrong thing to filter. MFATSY01 turf reads `instock` in
+  WooCommerce but has 0 in Unleashed, which is the source of truth for stock.
+  If that ever stops being true, Clearance is the category to carve out first.
+- **An unknown SKU is never obsolete.** Many catalogue products have no Unleashed
+  match at all and must keep selling, so only an explicit flag retires anything.
+- `fetchAllPages`' page guard was raised to 16: Products is **10 pages** with
+  obsolete records included, against a previous cap of 8, so prices would have
+  silently vanished.
 
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**

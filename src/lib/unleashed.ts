@@ -16,7 +16,9 @@ import { skuAliases } from "@/lib/unleashed-aliases";
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
 
-export type UnleashedEntry = { price: number; stock: number };
+// `obsolete` is optional so a partially-built entry (or a test fixture) is still
+// a valid entry; only an explicit `true` retires a product.
+export type UnleashedEntry = { price: number; stock: number; obsolete?: boolean };
 type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
 function sign(query: string): string {
@@ -26,8 +28,9 @@ function sign(query: string): string {
     .digest("base64");
 }
 
-async function unleashedGet<T>(path: string, page: number): Promise<T> {
-  const query = "pageSize=200";
+async function unleashedGet<T>(path: string, page: number, extraQuery = ""): Promise<T> {
+  // NOTE: the query string is what gets HMAC-signed, so it must match the URL exactly.
+  const query = `pageSize=200${extraQuery}`;
   const res = await fetch(`${BASE}/${path}/${page}?${query}`, {
     headers: {
       "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
@@ -43,13 +46,21 @@ async function unleashedGet<T>(path: string, page: number): Promise<T> {
 
 type Paged<T> = { Items: T[]; Pagination?: { NumberOfPages?: number } };
 
-async function fetchAllPages<T>(path: string, onItem: (item: T) => void, maxPages = 8) {
-  const first = await unleashedGet<Paged<T>>(path, 1);
+// maxPages is a runaway guard, not a limit: Products is 10 pages with obsolete
+// records included (6 without), so keep clear headroom or prices silently vanish.
+async function fetchAllPages<T>(
+  path: string,
+  onItem: (item: T) => void,
+  { maxPages = 16, extraQuery = "" }: { maxPages?: number; extraQuery?: string } = {}
+) {
+  const first = await unleashedGet<Paged<T>>(path, 1, extraQuery);
   first.Items.forEach(onItem);
   const pages = Math.min(first.Pagination?.NumberOfPages ?? 1, maxPages);
   // Fetch the remaining pages in parallel rather than one-at-a-time.
   const rest = await Promise.all(
-    Array.from({ length: Math.max(0, pages - 1) }, (_, i) => unleashedGet<Paged<T>>(path, i + 2))
+    Array.from({ length: Math.max(0, pages - 1) }, (_, i) =>
+      unleashedGet<Paged<T>>(path, i + 2, extraQuery)
+    )
   );
   rest.forEach((d) => d.Items.forEach(onItem));
 }
@@ -57,8 +68,19 @@ async function fetchAllPages<T>(path: string, onItem: (item: T) => void, maxPage
 async function buildMap(): Promise<UnleashedMap> {
   const map: UnleashedMap = {};
 
-  // Prices
-  await fetchAllPages<{ ProductCode?: string; DefaultSellPrice?: number | string }>(
+  // Prices + the obsolescence flags.
+  //
+  // THE TRAP: GET /Products HIDES OBSOLETE PRODUCTS BY DEFAULT. Without
+  // includeObsolete=true it returns 1,092 items every one of which reports
+  // Obsolete:false, which reads as "this company doesn't use the flag". With it,
+  // 1,892 items of which 800 are obsolete. Any check written without the
+  // parameter passes vacuously. The field is `Obsolete`, not `IsObsolete`.
+  await fetchAllPages<{
+    ProductCode?: string;
+    DefaultSellPrice?: number | string;
+    Obsolete?: boolean;
+    IsSellable?: boolean;
+  }>(
     "Products",
     (p) => {
       if (!p.ProductCode) return;
@@ -66,8 +88,10 @@ async function buildMap(): Promise<UnleashedMap> {
       map[p.ProductCode.toUpperCase()] = {
         price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
         stock: 0,
+        obsolete: p.Obsolete === true || p.IsSellable === false,
       };
-    }
+    },
+    { extraQuery: "&includeObsolete=true" }
   );
 
   // Stock on hand
@@ -78,7 +102,7 @@ async function buildMap(): Promise<UnleashedMap> {
       const code = s.ProductCode.toUpperCase();
       const qty = Number(s.AvailableQty ?? s.QtyOnHand ?? 0);
       if (map[code]) map[code].stock = qty;
-      else map[code] = { price: 0, stock: qty };
+      else map[code] = { price: 0, stock: qty, obsolete: false };
     }
   ).catch(() => {
     /* stock optional — prices still work if this fails */
@@ -121,6 +145,23 @@ export async function enrichCard(product: WcProduct, map: UnleashedMap): Promise
     }
   }
   return enrich(product, map);
+}
+
+// OBSOLETE PRODUCTS, the ERP half of the rule. WooCommerce's catalog_visibility
+// (see `isObsolete` in woocommerce.ts) catches what WordPress hides; this catches
+// what Unleashed has retired while WordPress still shows it, which was 15
+// products including the whole discontinued Selectorize strength range.
+// Unknown SKUs are NOT obsolete: plenty of catalogue products have no Unleashed
+// match at all, and they must keep selling.
+export function isObsoleteInUnleashed(map: UnleashedMap, sku?: string): boolean {
+  return lookupBySku(map, sku)?.obsolete === true;
+}
+
+export function filterUnleashedObsolete<T extends { sku?: string }>(
+  items: T[],
+  map: UnleashedMap
+): T[] {
+  return items.filter((i) => !isObsoleteInUnleashed(map, i.sku));
 }
 
 export function lookupBySku(map: UnleashedMap, sku?: string): UnleashedEntry | null {

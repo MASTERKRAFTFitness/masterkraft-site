@@ -5,7 +5,12 @@ import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
 import CategoryJumpNav from "@/components/shop/CategoryJumpNav";
 import { getAllProducts, getCategoryChildren, type WcProduct } from "@/lib/woocommerce";
-import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
+import {
+  getUnleashedMap,
+  enrichCard,
+  filterUnleashedObsolete,
+  type EnrichedProduct,
+} from "@/lib/unleashed";
 import { categories } from "@/lib/categories";
 
 export const metadata: Metadata = {
@@ -39,7 +44,7 @@ export default async function AllEquipmentPage({
   let all: WcProduct[] = [];
   let failed = false;
   try {
-    all = await getAllProducts();
+    all = filterUnleashedObsolete(await getAllProducts(), unleashed);
   } catch {
     failed = true;
   }
