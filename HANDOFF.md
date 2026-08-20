@@ -154,6 +154,51 @@ Ham Bench Pro, 2 artificial turf rolls and the custom-branding Impact-Lock tiles
   obsolete records included, against a previous cap of 8, so prices would have
   silently vanished.
 
+## Shipped 2026-08-20 — listing pages were slow because fetches ran in series
+
+Reported as "clicking on equipment takes a long time to load". Measured, not
+guessed, and it predates the obsolete rule (staging showed the same).
+
+**The cause is that both upstream APIs are slow, and we queued up requests
+against them.** WooCommerce answers in **1.5 to 2.5s per request**; Unleashed
+takes **~2.5s per page and throttles concurrency** (9 pages take 15.6s in
+parallel, 37s in series). Against that, three things ran one `await` at a time:
+
+- `/equipment/[category]` awaited the ERP map, then the sub-categories, then the
+  category description, then the products. Four round trips in series.
+- `/all-equipment` awaited the ERP map, then the dropdown groups, then the
+  catalogue.
+- `getAllProducts` / `getAllProductsByCategory` paged through WooCommerce **one
+  page at a time** in a `for` loop, so the 512-product catalogue cost 6 serial
+  requests. They now read `x-wp-totalpages` off page 1 and fetch the rest at once
+  (`fetchAllPages` in `woocommerce.ts`), concatenated in page order so
+  `menu_order` survives.
+- `buildMap` in `unleashed.ts` fetched Products, then StockOnHand. Now
+  concurrent; stock is collected into its own record and merged after, because
+  otherwise StockOnHand could land first and be overwritten by the Products pass.
+
+**Measured cold (empty cache), same machine, back to back:**
+
+| Route | Before | After |
+|---|---|---|
+| `/equipment/strength` | 60.1s | 19.2s |
+| `/all-equipment` | 18.4s | 7.3s |
+| `/equipment/body-weight` | 6.7s | 5.0s |
+
+**Warm, which is what almost every visitor gets: 0.01 to 0.03s.** `wcGet` caches
+fetches for 10 min and the ERP map is `unstable_cache`d for 15, so only the first
+request against a genuinely empty cache pays this (right after a deploy, or a
+cold serverless region). Verified counts are unchanged after the refactor,
+including Equipment Storage, which spans 2 WooCommerce pages: 44 both ways.
+
+**Still slow and NOT fixed: the cold ERP map is ~16s of that remaining time**,
+and `includeObsolete=true` made it worse by taking Products from 6 pages to 10.
+That is the price of the obsolete rule as built. The durable fix is to stop
+fetching obsolescence at runtime and precompute the obsolete SKU list at build
+time, exactly as `snap-portal-franchisee` does with its committed catalogue JSON
+plus `npm run check:obsolete`. Cheaper stopgap: raise the 15-min ERP cache TTL,
+which trades stock-display freshness for fewer cold builds. Needs a decision.
+
 ## What the earlier sessions shipped (all live on staging)
 **Brand / design**
 - **Accent = the brochure coral red** `#ef5350`, with `-600 #c73e37` and `-300 #f88a82`

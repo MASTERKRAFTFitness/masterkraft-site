@@ -59,9 +59,14 @@ export default async function CategoryPage({
   const priceMin = sp.min && !isNaN(parseFloat(sp.min)) ? parseFloat(sp.min) : undefined;
   const priceMax = sp.max && !isNaN(parseFloat(sp.max)) ? parseFloat(sp.max) : undefined;
 
-  const unleashed = await getUnleashedMap().catch(() => ({}));
-  const children = await getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]);
-  const categoryDescription = await getCategoryDescription(c.wcId).catch(() => "");
+  // These three are independent, and WooCommerce answers in 1.5-2.5s per request,
+  // so awaiting them in turn cost the sum of all three before a product was even
+  // requested. In parallel it costs the slowest one.
+  const [unleashed, children, categoryDescription] = await Promise.all([
+    getUnleashedMap().catch(() => ({})),
+    getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]),
+    getCategoryDescription(c.wcId).catch(() => ""),
+  ]);
   const activeSub = subSlug ? children.find((s) => s.slug === subSlug) : undefined;
   const targetId = activeSub?.id ?? c.wcId;
 

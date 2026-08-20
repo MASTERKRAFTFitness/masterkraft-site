@@ -67,6 +67,10 @@ async function fetchAllPages<T>(
 
 async function buildMap(): Promise<UnleashedMap> {
   const map: UnleashedMap = {};
+  // Stock is collected separately rather than written straight into `map`,
+  // because the two fetches now run concurrently and StockOnHand could otherwise
+  // land first and be overwritten by the Products pass. Merged below instead.
+  const stock: Record<string, number> = {};
 
   // Prices + the obsolescence flags.
   //
@@ -75,7 +79,8 @@ async function buildMap(): Promise<UnleashedMap> {
   // Obsolete:false, which reads as "this company doesn't use the flag". With it,
   // 1,892 items of which 800 are obsolete. Any check written without the
   // parameter passes vacuously. The field is `Obsolete`, not `IsObsolete`.
-  await fetchAllPages<{
+  await Promise.all([
+    fetchAllPages<{
     ProductCode?: string;
     DefaultSellPrice?: number | string;
     Obsolete?: boolean;
@@ -91,22 +96,26 @@ async function buildMap(): Promise<UnleashedMap> {
         obsolete: p.Obsolete === true || p.IsSellable === false,
       };
     },
-    { extraQuery: "&includeObsolete=true" }
-  );
+      { extraQuery: "&includeObsolete=true" }
+    ),
 
-  // Stock on hand
-  await fetchAllPages<{ ProductCode?: string; AvailableQty?: number; QtyOnHand?: number }>(
-    "StockOnHand",
-    (s) => {
-      if (!s.ProductCode) return;
-      const code = s.ProductCode.toUpperCase();
-      const qty = Number(s.AvailableQty ?? s.QtyOnHand ?? 0);
-      if (map[code]) map[code].stock = qty;
-      else map[code] = { price: 0, stock: qty, obsolete: false };
-    }
-  ).catch(() => {
-    /* stock optional — prices still work if this fails */
-  });
+    // Stock on hand. Independent of the price/obsolete pass, so both run at once:
+    // this map is what every listing waits on, and Unleashed answers slowly.
+    fetchAllPages<{ ProductCode?: string; AvailableQty?: number; QtyOnHand?: number }>(
+      "StockOnHand",
+      (s) => {
+        if (!s.ProductCode) return;
+        stock[s.ProductCode.toUpperCase()] = Number(s.AvailableQty ?? s.QtyOnHand ?? 0);
+      }
+    ).catch(() => {
+      /* stock optional - prices still work if this fails */
+    }),
+  ]);
+
+  for (const [code, qty] of Object.entries(stock)) {
+    if (map[code]) map[code].stock = qty;
+    else map[code] = { price: 0, stock: qty, obsolete: false };
+  }
 
   return map;
 }

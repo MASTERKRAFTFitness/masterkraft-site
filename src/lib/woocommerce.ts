@@ -297,25 +297,37 @@ export async function getProductsByCategory(
 // order). By default filtered to MasterKraft's own M/N SKUs, but Clearance is
 // ex-display / end-of-line stock (A-prefixed SKUs), so it passes brandFilter:
 // false to show that stock rather than being emptied by the M/N filter.
+// WooCommerce answers in 1.5-2.5s per request, so paging through it one `await`
+// at a time is what makes a listing feel slow. Page 1 reports the page count in
+// x-wp-totalpages, so every remaining page can be fetched at once: wall clock
+// becomes one request instead of the sum. maxPages is a runaway guard.
+async function fetchAllPages(
+  params: Record<string, string | number | undefined>,
+  maxPages = 6
+): Promise<WcProduct[]> {
+  const first = await wcGet<WcProduct[]>("/products", { ...params, per_page: 100, page: 1 });
+  const pages = Math.min(first.totalPages || 1, maxPages);
+  if (pages <= 1) return first.data;
+  const rest = await Promise.all(
+    Array.from({ length: pages - 1 }, (_, i) =>
+      wcGet<WcProduct[]>("/products", { ...params, per_page: 100, page: i + 2 })
+    )
+  );
+  // Concatenated in page order, so the store's menu_order survives.
+  return [...first.data, ...rest.flatMap((r) => r.data)];
+}
+
 export async function getAllProductsByCategory(
   categoryId: number,
   opts?: { brandFilter?: boolean }
 ): Promise<WcProduct[]> {
-  const out: WcProduct[] = [];
-  for (let page = 1; page <= 6; page++) {
-    const { data } = await wcGet<WcProduct[]>("/products", {
-      category: categoryId,
-      per_page: 100,
-      page,
-      status: "publish",
-      orderby: "menu_order",
-      order: "asc",
-      _fields: PRODUCT_FIELDS,
-    });
-    if (!data.length) break;
-    out.push(...data);
-    if (data.length < 100) break;
-  }
+  const out = await fetchAllPages({
+    category: categoryId,
+    status: "publish",
+    orderby: "menu_order",
+    order: "asc",
+    _fields: PRODUCT_FIELDS,
+  });
   // The obsolete filter is independent of brandFilter: Clearance opts out of the
   // M/N brand filter but must still respect the store's hidden flag.
   const listable = filterListable(out);
@@ -325,20 +337,12 @@ export async function getAllProductsByCategory(
 // The full catalogue (all categories), ordered by menu_order and filtered to
 // MasterKraft's own M/N SKUs. Backs the "All Equipment" all-products landing.
 export async function getAllProducts(): Promise<WcProduct[]> {
-  const out: WcProduct[] = [];
-  for (let page = 1; page <= 8; page++) {
-    const { data } = await wcGet<WcProduct[]>("/products", {
-      per_page: 100,
-      page,
-      status: "publish",
-      orderby: "menu_order",
-      order: "asc",
-      _fields: PRODUCT_FIELDS,
-    });
-    if (!data.length) break;
-    out.push(...data.map(normalizeProduct));
-    if (data.length < 100) break;
-  }
+  const out = (
+    await fetchAllPages(
+      { status: "publish", orderby: "menu_order", order: "asc", _fields: PRODUCT_FIELDS },
+      8
+    )
+  ).map(normalizeProduct);
   return filterBrandSku(filterListable(out));
 }
 

@@ -32,22 +32,23 @@ export default async function AllEquipmentPage({
   const sort = sp.sort ?? "featured";
   const priceSort = sort === "price-asc" || sort === "price-desc";
 
-  const unleashed = await getUnleashedMap().catch(() => ({}));
-  // Category dropdown groups (each category + its sub-categories from WooCommerce).
-  const jumpGroups = await Promise.all(
-    categories.map(async (c) => ({
-      label: c.label,
-      slug: c.slug,
-      children: await getCategoryChildren(c.wcId).catch(() => []),
-    }))
-  );
-  let all: WcProduct[] = [];
-  let failed = false;
-  try {
-    all = filterUnleashedObsolete(await getAllProducts(), unleashed);
-  } catch {
-    failed = true;
-  }
+  // The ERP map, the dropdown's sub-categories and the catalogue itself are
+  // independent, and WooCommerce answers in 1.5-2.5s per request, so these ran
+  // as three serial stages. In parallel the page costs the slowest one.
+  const [unleashed, jumpGroups, products] = await Promise.all([
+    getUnleashedMap().catch(() => ({})),
+    // Category dropdown groups (each category + its sub-categories from WooCommerce).
+    Promise.all(
+      categories.map(async (c) => ({
+        label: c.label,
+        slug: c.slug,
+        children: await getCategoryChildren(c.wcId).catch(() => []),
+      }))
+    ),
+    getAllProducts().catch(() => null),
+  ]);
+  const failed = products === null;
+  const all: WcProduct[] = products ? filterUnleashedObsolete(products, unleashed) : [];
 
   // Name sorts need no pricing; featured = the store's menu_order (as fetched).
   if (sort === "name-asc") all.sort((a, b) => a.name.localeCompare(b.name));
