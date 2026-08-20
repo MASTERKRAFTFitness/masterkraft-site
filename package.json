@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "build:obsolete": "node scripts/build-obsolete-skus.mjs",
-    "check:obsolete": "node scripts/check-obsolete.mjs"
+    "check:obsolete": "node scripts/check-obsolete.mjs",
+    "mirror:images": "node scripts/mirror-product-images.mjs",
+    "compress:assets": "python3 scripts/compress-assets.py"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.8.0",

@@ -387,7 +387,58 @@ Add the product in WooCommerce first, then map it in `manualAliases`.
   "Product Guide" because the PDFs could not be opened to classify them; that label
   is not user-visible (single-doc rows link straight to the file).
 
-## Product images — where they come from (+ the cutover risk)
+## Shipped 2026-08-20 — product images mirrored locally, and the repo slimmed
+
+**The cutover risk is closed. Nothing on the site loads an image from WordPress
+any more**, verified: a category page went from 264 `wp-content` URLs to **zero**.
+
+- `npm run mirror:images` (`scripts/mirror-product-images.mjs`) downloads every
+  served product's images into `/public/product-images` and extends
+  `product-image-overrides.json`, the mechanism the site already used for the 30
+  colour-normalised `/product-bg` files. **374 files, 0 failures.** Idempotent;
+  re-run when the catalogue gains products.
+- **It fetches ONE AT A TIME on purpose.** The host refuses bursts: 20 parallel
+  HEADs got 40 of 62 rejected, serial GETs return 206 in ~20ms. Do not turn that
+  loop into a `Promise.all`.
+- It never touches a SKU that already has an override, so the colour-normalised
+  `/product-bg` images survive.
+- A product is only claimed once ALL its images come down; a partial set is left
+  remote rather than silently dropping gallery images.
+- Overrides now cover **233 products / 419 files**, checked: 0 missing on disk,
+  0 orphans.
+
+**`npm run compress:assets` (`scripts/compress-assets.py`) then cut the weight:**
+
+| | before | after | |
+|---|---|---|---|
+| product images | 86.9 MB | **24 MB** | 72% |
+| manuals | 73.7 MB | **67.8 MB** | 8% |
+
+The mirrored originals were near-lossless: one 1500x1030 photo was **4.33 MB**,
+and re-encodes to ~90 KB at q88 with no visible difference (checked side by side
+at 100% on fine white lettering, where JPEG artefacts show first). Dimensions are
+kept, since Next's optimiser handles sizing.
+
+**TWO TRAPS, both hit and both now guarded in the script:**
+1. **NEVER use `doc.update_stream` to swap an image inside a PDF.** It replaces
+   the bytes but leaves `/Filter` and `/ColorSpace` describing the OLD encoding,
+   so a full-page image renders as a **BLACK PAGE**. That was written to disk
+   here and only caught by rendering the result. Use `page.replace_image`.
+2. **The first version was not idempotent** - a second run re-compressed the same
+   files again, losing quality each time. The image threshold is now 20%, not 5%,
+   so repeat runs converge. Verified: the second run changes nothing.
+
+The script now renders every rewritten PDF and compares page brightness against
+the original, discarding the rewrite if anything moved. All **54 manuals / 320
+pages** render clean. The manuals only give 8% because the big owner's manuals
+already store their images efficiently; the gain is concentrated in about 10
+files (the rubber-tile guide halved, 3.69 MB → 1.84 MB).
+
+`public/` is **112 MB** all up. If that ever needs to come down further, the
+manuals are the remaining bulk and the honest options are dropping scan DPI
+(quality cost) or hosting them outside the repo.
+
+## Product images — the original exposure (now closed, kept for context)
 - The site is **already headless WooCommerce**: it reads catalogue/price/stock via
   the WC REST API and does NOT use the old WordPress storefront. But **WooCommerce
   is a WordPress plugin** — product data + image files physically live in that one
