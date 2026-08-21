@@ -214,9 +214,29 @@ appear in Unleashed as sales orders **under the same numbers** (Unleashed's own 
 | cart + checkout | built |
 | freight quote | built, needs a key |
 | payment (Stripe) | built, **test keys** |
-| order into WooCommerce | built, `woo-orders.ts`, gated by `WC_WRITE_ENABLED` |
+| order into WooCommerce | built, `woo-orders.ts`, gated by `WC_WRITE_ENABLED` — **but see the key warning below** |
 | WooCommerce → Unleashed | **already working** |
 | fulfilment / labels | Interparcel Shipping Manager "Fetch Orders", no code |
+
+**THE WOOCOMMERCE KEY IN `.env.local` IS READ-ONLY.** Proven 2026-08-21 by a real
+`PUT /products/{id}`, which returned:
+
+```
+401 woocommerce_rest_authentication_error
+"The API key provided does not have write permissions."
+```
+
+This is a launch blocker hiding behind a feature flag. `WC_WRITE_ENABLED=false`
+today, so nothing tries to write and nothing fails. **The moment that flag is
+turned on for launch, every order creation will 401 the same way** — the order
+would be paid for via Stripe and then never reach WooCommerce, and so never reach
+Unleashed. The three verified test orders (§6) were created before this key was
+in place, so they do not prove the current credentials work.
+
+Fix: WP Admin → WooCommerce → Settings → Advanced → REST API → create a key with
+**Read/Write** permission, then set `WC_CONSUMER_KEY`/`WC_CONSUMER_SECRET` in both
+`.env.local` and Vercel. The Vercel key may already differ from the local one;
+that is unverified either way, so check it rather than assume.
 
 **TWO TEST ORDERS ARE LIVE IN THE ERP.** `490100` ($856.90) and `490102` ($779.00),
 "Test Buyer", 2026-08-10, `Placed` in Unleashed. They read as real demand and may
