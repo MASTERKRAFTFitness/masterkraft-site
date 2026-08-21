@@ -150,7 +150,17 @@ if (APPLY) {
     rmSync(ROLLBACK, { force: true });
     console.log("Nothing landed, so no rollback file was kept.");
   }
-  console.log("Re-run `npm run build:catalogue` to pull the changes into the snapshot, then redeploy.");
+  if (landed.length) {
+    console.log("Re-run `npm run build:catalogue` to pull the changes into the snapshot, then redeploy.");
+  }
+  if (failed) {
+    console.log(
+      `\n${failed} write(s) failed. A 401 "does not have write permissions" means the\n` +
+        "WooCommerce key is read-only: create one with Read/Write under WP Admin ->\n" +
+        "WooCommerce -> Settings -> Advanced -> REST API, then update WC_CONSUMER_KEY\n" +
+        "and WC_CONSUMER_SECRET. Nothing was changed in the store."
+    );
+  }
 } else {
   console.log("Nothing was written. Re-run with --apply to write to the live store.");
 }
