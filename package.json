@@ -19,8 +19,9 @@
     "check:obsolete": "node scripts/check-obsolete.mjs",
     "mirror:images": "node scripts/mirror-product-images.mjs",
     "compress:assets": "python3 scripts/compress-assets.py",
-    "report:specs": "vitest run --config vitest.reports.config.mts",
-    "report:freight": "vitest run --config vitest.reports.config.mts scripts/interparcel-samples.report.ts"
+    "report:specs": "vitest run --config vitest.reports.config.mts scripts/spec-gaps.report.ts",
+    "report:freight": "vitest run --config vitest.reports.config.mts scripts/interparcel-samples.report.ts",
+    "report:all": "vitest run --config vitest.reports.config.mts"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.8.0",

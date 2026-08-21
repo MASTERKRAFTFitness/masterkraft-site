@@ -1,0 +1,717 @@
+{
+  "generated": "fix-warranty-units",
+  "entries": [
+    {
+      "id": 404004,
+      "sku": "ABCTDR01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404729,
+      "sku": "MBCTACC01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404017,
+      "sku": "MBCTDI01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403956,
+      "sku": "MBCTFS02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403725,
+      "sku": "MBCTMA01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404108,
+      "sku": "MBGYRI01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404356,
+      "sku": "MBGYSL01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403721,
+      "sku": "MBPB3I102",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403665,
+      "sku": "MBRMRL",
+      "key": "warranty",
+      "previous": "3",
+      "applied": "3 months",
+      "status": "applied"
+    },
+    {
+      "id": 404058,
+      "sku": "MBRMRL03",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404386,
+      "sku": "MBRPPO01",
+      "key": "warranty",
+      "previous": "3",
+      "applied": "3 months",
+      "status": "applied"
+    },
+    {
+      "id": 404229,
+      "sku": "MBSADI01",
+      "key": "warranty",
+      "previous": "3",
+      "applied": "3 months",
+      "status": "applied"
+    },
+    {
+      "id": 404589,
+      "sku": "MBSALD01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404612,
+      "sku": "MCSTACC01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404628,
+      "sku": "MCSTACC02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404238,
+      "sku": "MEFRACC02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404240,
+      "sku": "MEFRACC03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404242,
+      "sku": "MEFRACC04",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404243,
+      "sku": "MEFRACC05",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404232,
+      "sku": "MEFRACC06",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404033,
+      "sku": "MEFRBB02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404035,
+      "sku": "MEFRBB03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403838,
+      "sku": "MEFRBB04",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404750,
+      "sku": "MEFRDB02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404754,
+      "sku": "MEFRDB03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404752,
+      "sku": "MEFRDB04",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404739,
+      "sku": "MEFRDB05",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404152,
+      "sku": "MEFRDB08",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404160,
+      "sku": "MEFRDB09",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404158,
+      "sku": "MEFRDB10",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404154,
+      "sku": "MEFRDB11",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404180,
+      "sku": "MEFRKB02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404182,
+      "sku": "MEFRKB03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404352,
+      "sku": "MEFROP02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404350,
+      "sku": "MEFROP03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404354,
+      "sku": "MEFROP04",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404002,
+      "sku": "MEWMACC03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404150,
+      "sku": "MEWMBB01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404730,
+      "sku": "MEWMBB02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403853,
+      "sku": "MEWMBER01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404065,
+      "sku": "MEWMRL01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403703,
+      "sku": "AMDBRH",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403675,
+      "sku": "AMDEHG",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403818,
+      "sku": "MMBXPBG05",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404023,
+      "sku": "MMFWTL01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403998,
+      "sku": "MMGFACC01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404073,
+      "sku": "MMGFPS03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403951,
+      "sku": "MMPA25001",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404376,
+      "sku": "MMPA4BG01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403997,
+      "sku": "MMPA5BL01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404223,
+      "sku": "MMPA5BL02",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403870,
+      "sku": "MMPACE102",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404088,
+      "sku": "MMPAPS01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404093,
+      "sku": "MMPAPS02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403889,
+      "sku": "MWPA10001",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403905,
+      "sku": "MWPA10002",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404321,
+      "sku": "MWPA10003",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403890,
+      "sku": "MWPA14001",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403906,
+      "sku": "MWPA14002",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403887,
+      "sku": "MWPA15001",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403904,
+      "sku": "MWPA15002",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404320,
+      "sku": "MWPA15003",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403888,
+      "sku": "MWPA9001",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404540,
+      "sku": "MWPAFRU01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404541,
+      "sku": "MWPAFRU02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404491,
+      "sku": "MRCTATT01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 403697,
+      "sku": "MRSPATT01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 407868,
+      "sku": "MRSPATT02",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404501,
+      "sku": "MRSPATT03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404496,
+      "sku": "MRSPATT04",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404498,
+      "sku": "MRSPATT05",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404503,
+      "sku": "MRSPATT06",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404295,
+      "sku": "MRSPFW01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404299,
+      "sku": "MRSPFW03",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404500,
+      "sku": "MRWAATT01",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 488799,
+      "sku": "AWWPCP01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403643,
+      "sku": "AWWPCP02",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403685,
+      "sku": "AWWPOU",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404630,
+      "sku": "MMLBACC01",
+      "key": "warranty",
+      "previous": "3",
+      "applied": "3 months",
+      "status": "applied"
+    },
+    {
+      "id": 403708,
+      "sku": "MWBBFUR",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404328,
+      "sku": "MWBBOL07",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404322,
+      "sku": "MWBBOL08",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404330,
+      "sku": "MWBBOL09",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    },
+    {
+      "id": 404804,
+      "sku": "MWWAACC01",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 404001,
+      "sku": "MWWAACC02",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403835,
+      "sku": "MWWLACC01",
+      "key": "warranty",
+      "previous": "3",
+      "applied": "3 months",
+      "status": "applied"
+    },
+    {
+      "id": 403814,
+      "sku": "MWWLATT01",
+      "key": "warranty",
+      "previous": "3",
+      "applied": "3 months",
+      "status": "applied"
+    },
+    {
+      "id": 403860,
+      "sku": "MWWLCH02",
+      "key": "warranty",
+      "previous": "6",
+      "applied": "6 months",
+      "status": "applied"
+    },
+    {
+      "id": 403684,
+      "sku": "MWWPOU",
+      "key": "warranty",
+      "previous": "12",
+      "applied": "12 months",
+      "status": "applied"
+    }
+  ]
+}
