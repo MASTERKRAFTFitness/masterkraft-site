@@ -19,8 +19,31 @@ const before = readFileSync(OUT, "utf8");
 execFileSync("node", [join(ROOT, "scripts/build-obsolete-skus.mjs")], { stdio: "inherit" });
 const after = readFileSync(OUT, "utf8");
 
-if (before === after) {
+// Compare the CODES, not the whole file. The file also carries a `generatedFrom`
+// counter of how many products Unleashed held at the time, and that moves
+// whenever the ERP gains or loses any product at all -- which is not drift in
+// anything the site enforces. Diffing the raw text failed a deploy because the
+// catalogue grew from 1,892 to 1,942 products while all 804 retired codes were
+// identical. The retirement list is the thing that decides what we serve.
+const codesOf = (text) => {
+  try {
+    return JSON.stringify((JSON.parse(text).codes ?? []).slice().sort());
+  } catch {
+    return null;
+  }
+};
+const wasCodes = codesOf(before);
+const nowCodes = codesOf(after);
+
+if (wasCodes !== null && wasCodes === nowCodes) {
+  execFileSync("git", ["checkout", "--", OUT], { cwd: ROOT });
   console.log("\nClean: the committed obsolete list matches Unleashed.");
+  if (before !== after) {
+    console.log(
+      "(The ERP's total product count has moved since this list was generated.\n" +
+        " Harmless -- no retirement changed. `npm run build:obsolete` refreshes the note.)"
+    );
+  }
   process.exit(0);
 }
 
