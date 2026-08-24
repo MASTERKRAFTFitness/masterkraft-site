@@ -85,7 +85,7 @@ export default function CheckoutPage() {
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
             <p className="font-display uppercase tracking-wide text-2xl">Order confirmed</p>
             <p className="mt-3 text-ash">
-              Thanks, your order <strong>#{paidOrder}</strong> is in. You&apos;ll get a
+              Thanks, your order <strong>#{paidOrder}</strong>{" "}is in. You&apos;ll get a
               confirmation email shortly.
             </p>
             <Link href="/all-equipment" className="btn btn-accent mt-8">

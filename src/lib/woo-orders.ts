@@ -139,7 +139,11 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
             method_id: "flat_rate",
             method_title:
               [input.freight.carrier, input.freight.service].filter(Boolean).join(" ") || "Freight",
-            total: input.freight.amount.toFixed(2),
+            // EX-GST, for exactly the reason the line items are: the store adds
+            // 10% back. Order 490118 was recorded at $90.48 against a card charge
+            // of $86.80 because this sent the GST-inclusive $36.80 and WooCommerce
+            // dutifully added another $3.68 on top.
+            total: (input.freight.amount / GST).toFixed(2),
           }
         : { method_id: "flat_rate", method_title: "Freight quoted separately", total: "0.00" },
     ],

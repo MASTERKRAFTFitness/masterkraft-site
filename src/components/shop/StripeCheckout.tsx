@@ -334,7 +334,7 @@ function PayForm({
       <div className="border border-accent bg-accent/5 p-10 text-center">
         <p className="font-display uppercase tracking-wide text-2xl">Order confirmed</p>
         <p className="mt-3 text-ash">
-          Thanks, your order <strong>#{done.number}</strong> is in. You&apos;ll get a confirmation email shortly.
+          Thanks, your order <strong>#{done.number}</strong>{" "}is in. You&apos;ll get a confirmation email shortly.
         </p>
         <Link href="/all-equipment" className="btn btn-accent mt-8">
           Keep Shopping
