@@ -177,6 +177,91 @@ export function lookupBySku(map: UnleashedMap, sku?: string): UnleashedEntry | n
   return alias ? map[alias] ?? null : null;
 }
 
+// ---------------------------------------------------------------- live reads
+//
+// getUnleashedMap above is a 60-minute snapshot of the WHOLE catalogue, and that
+// is the right trade for listing pages: rebuilding it costs ~16s, every listing
+// waits on it, and stale-but-consistent is exactly what a visitor sees anyway.
+//
+// The support desk carries a different risk. A staff member repeats these
+// figures to a customer, so an hour-old "one in stock" is a promise rather than
+// a display, and the last unit may already be gone. Unleashed filters
+// server-side on productCode and answers a single SKU in 150-600ms, so the admin
+// path reads live instead of waiting on, or trusting, the shared snapshot.
+//
+// Verified 2026-08-25 against MBCTMA01 and MCTMSP02: identical figures to the
+// cached map, and fast enough that there is no reason to cache them here.
+
+/** Live reads are per-SKU, so a large list would mean a burst of requests. */
+const LIVE_SKU_LIMIT = 10;
+
+async function unleashedLive<T>(path: string, code: string): Promise<T[]> {
+  // The signature covers the query string exactly, so the same string must be
+  // both signed and sent. Do not rebuild it between the two.
+  const query = `pageSize=200&productCode=${encodeURIComponent(code)}`;
+  const res = await fetch(`${BASE}/${path}/1?${query}`, {
+    headers: {
+      "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
+      "api-auth-signature": sign(query),
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0",
+    },
+    cache: "no-store", // the entire point of this path
+  });
+  if (!res.ok) throw new Error(`Unleashed ${res.status} on live ${path}/${code}`);
+  const data = (await res.json()) as { Items?: T[] };
+  return data.Items ?? [];
+}
+
+export type LiveEntry = UnleashedEntry & { live: boolean };
+
+/**
+ * Price and stock read live for a handful of SKUs. Falls back to the cached map
+ * per SKU rather than as a whole, so one slow or missing product cannot turn an
+ * otherwise live answer into a stale one silently: check `live` on each entry.
+ */
+export async function getLiveEntries(skus: string[]): Promise<Record<string, LiveEntry>> {
+  const codes = [...new Set(skus.map((s) => s.trim().toUpperCase()).filter(Boolean))].slice(
+    0,
+    LIVE_SKU_LIMIT
+  );
+  if (!codes.length) return {};
+
+  // Only built if something actually falls back, so the happy path stays fast.
+  let fallback: UnleashedMap | null = null;
+
+  const results = await Promise.all(
+    codes.map(async (code): Promise<[string, LiveEntry]> => {
+      const target = skuAliases[code] ?? code;
+      try {
+        const [products, stock] = await Promise.all([
+          unleashedLive<{ DefaultSellPrice?: number | string }>("Products", target),
+          unleashedLive<{ AvailableQty?: number; QtyOnHand?: number }>("StockOnHand", target).catch(
+            () => []
+          ),
+        ]);
+        const raw = parseFloat(String(products[0]?.DefaultSellPrice ?? "0"));
+        if (!products.length) throw new Error("not in Unleashed");
+        return [
+          code,
+          {
+            price: raw > 0 ? Math.round(raw * GST * 100) / 100 : 0,
+            stock: Number(stock[0]?.AvailableQty ?? stock[0]?.QtyOnHand ?? 0),
+            live: true,
+          },
+        ];
+      } catch (e) {
+        console.error(`[unleashed] live read failed for ${code}, falling back`, e);
+        fallback ??= await getUnleashedMap();
+        const cached = lookupBySku(fallback, code);
+        return [code, { price: cached?.price ?? 0, stock: cached?.stock ?? 0, live: false }];
+      }
+    })
+  );
+
+  return Object.fromEntries(results);
+}
+
 export type EnrichedProduct = {
   priceLabel: string;
   priceValue: number; // numeric inc-GST unit price for the cart

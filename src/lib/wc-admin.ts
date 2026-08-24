@@ -27,6 +27,9 @@ export type WcOrder = {
   id: number;
   number: string;
   status: string;
+  /** The Stripe PaymentIntent id on card orders. Verified on 490118. */
+  transaction_id?: string;
+  payment_method?: string;
   currency: string;
   total: string;
   shipping_total?: string;
@@ -84,6 +87,7 @@ export function summariseOrder(o: WcOrder) {
     total: `${o.currency ?? "AUD"} ${o.total}`,
     freight: o.shipping_total ?? null,
     payment: o.payment_method_title ?? null,
+    payment_ref: o.transaction_id || null,
     customer: [o.billing?.first_name, o.billing?.last_name].filter(Boolean).join(" ") || null,
     email: o.billing?.email ?? null,
     phone: o.billing?.phone ?? null,

@@ -711,10 +711,42 @@ cookie itself rather than trusting it.
 | tool | source | notes |
 |---|---|---|
 | `search_catalogue`, `get_product` | committed snapshot + Unleashed | matches what a visitor sees |
-| `check_stock` | Unleashed | ERP is the source of truth, inc-GST |
+| `check_stock` | Unleashed, **live** | ERP is the source of truth, inc-GST |
 | `lookup_order`, `list_recent_orders` | WooCommerce, live, **read only** | `lib/wc-admin.ts` |
+| `check_payment` | Stripe, via the order's `transaction_id` | refunds and disputes included |
 | `quote_freight` | Australia Post | same numbers the checkout charges |
 | `send_reply`, `log_enquiry` | Resend, HubSpot | **write - approval required** |
+
+### Two freshness tiers, on purpose
+
+`getUnleashedMap()` is a 60-minute snapshot of the whole catalogue and stays that
+way: rebuilding it costs ~16s and every listing page waits on it. That is right
+for the shop, where stale-but-consistent is exactly what the visitor sees.
+
+**The support desk reads live instead**, through `getLiveEntries()` in
+`lib/unleashed.ts`. A staff member repeats these figures to a customer, so an
+hour-old "one in stock" is a promise rather than a display, and `MCTMSP02` has
+exactly 1. Unleashed filters server-side on `productCode` and answers in
+150-600ms, verified 2026-08-25, so live costs almost nothing here.
+
+`search_catalogue` still uses the cached map, because a search can span the
+catalogue. Every tool result carries its own basis, and the system prompt forbids
+quoting a price or stock figure from a search without confirming it first.
+
+### Sizes are three different things
+
+`assembled_size` (ACF meta, **millimetres**) is the built machine. `packing_size`
+(ACF meta, **millimetres**) is the carton. `freight_carton`
+(`WcProduct.dimensions`, **centimetres**) is the same carton, and exists only to
+price delivery. Weight splits the same way: net is the machine, gross is machine
+plus carton, and freight quotes on gross.
+
+`get_product` returns all of them separately and never merges them, plus a
+plausibility check that flags unit errors instead of letting the agent read them
+out. `SCRWAR04` records its assembled length as 24,400mm, ten times the truth,
+**and its freight carton inherited it as 2440cm**. That now fires three
+`data_warnings`. `MCTMSP02` (net 480kg, gross 601kg) produces none, so the check
+is not just noise.
 
 Reads go through the same modules the public site uses, so the agent cannot quote
 a price the shop does not show.
@@ -802,7 +834,26 @@ Hosting the loop elsewhere means either reimplementing all of that or exposing
 MasterKraft's ERP and order data over a public API for a sandbox to call. The loop
 belongs next to the data it reads.
 
+### Open: identity and audit
+
+**Decided 2026-08-25 that this grows to a small sales team, so this now matters.**
+Today it is one shared password and no persistence of any kind, because this repo
+has no database dependency at all. Consequences: "who approved sending that quote"
+has no answer, a refresh destroys the conversation, and nothing records what staff
+actually ask. `send_reply` now BCCs `QUOTE_TO_EMAIL` so at least every sent message
+lands in an inbox somebody reads, but that is a stopgap, not an audit trail.
+
+Doing it properly means adding persistence to an app that has none, plus per-user
+identity. Not built. See the architecture note in the session that added this.
+
 ### Not verified
+
+**`check_payment` end to end.** `STRIPE_SECRET_KEY` is empty in `.env.local`, so
+the tool was only exercised down to its "not configured" branch. It does correctly
+pull the PaymentIntent ref (`pi_3U7tPf...`) off order `490118`. **Note the trap:
+per section 10 the deployed site runs test Stripe keys, and a test key cannot see
+a live customer payment.** The tool reports which mode answered and says explicitly
+not to tell a customer they have not paid on the strength of a miss.
 
 **The model calls themselves.** `ANTHROPIC_API_KEY` was not available in the
 session that built this, so the tool executors, the auth, the streaming route and

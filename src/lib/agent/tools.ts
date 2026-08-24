@@ -7,13 +7,14 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import { allProducts, productBySlug, searchCatalogue } from "@/lib/catalogue";
-import { isForeignBrandSku, type WcProduct } from "@/lib/woocommerce";
+import { formatPrice, isForeignBrandSku, type WcProduct } from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
 import { parseProductDetail } from "@/lib/spec";
-import { enrich, getUnleashedMap } from "@/lib/unleashed";
+import { enrich, getLiveEntries, getUnleashedMap } from "@/lib/unleashed";
 import { collectionAddress, quoteFreight, type FreightItem } from "@/lib/freight";
 import { getOrder, listRecentOrders, ordersConfigured, summariseOrder } from "@/lib/wc-admin";
 import { submitHubspotForm } from "@/lib/hubspot";
+import { stripe, stripeEnabled } from "@/lib/stripe";
 
 export type ToolInput = Record<string, unknown>;
 
@@ -44,6 +45,84 @@ function findProduct(reference: string): WcProduct | undefined {
   const bySku = allProducts().find((p) => (p.sku ?? "").toUpperCase() === upper);
   if (bySku) return bySku;
   return searchCatalogue(ref)[0];
+}
+
+// Sizes come from three different places that are easy to confuse, so they are
+// returned separately and never merged:
+//   assembled  - ACF meta, millimetres. What the machine measures once built.
+//   packing    - ACF meta, millimetres. The carton as the supplier states it.
+//   freight    - WcProduct.dimensions, CENTIMETRES. What AusPost is quoted from.
+// Weight splits the same way: net is the machine, gross is machine plus carton,
+// and freight quotes on gross.
+//
+// A plausibility check runs over the result because the catalogue is known to
+// carry unit errors: SCRWAR04 records its assembled length as 24,400mm, which is
+// 24 metres and ten times the real figure, and the freight carton inherited it.
+// Flagging that is the difference between a staff member catching it and reading
+// it out to a customer.
+const MAX_PLAUSIBLE_MM = 4000;
+const MAX_PLAUSIBLE_KG = 1000;
+
+function metaNumber(product: WcProduct, key: string): number | null {
+  const raw = product.meta_data?.find((m) => m.key === key)?.value;
+  if (raw === undefined || raw === null || raw === "") return null;
+  const n = parseFloat(String(raw).replace(/,/g, "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function sizeFacts(product: WcProduct) {
+  const mm = (k: string) => metaNumber(product, k);
+  const assembled = {
+    length_mm: mm("assembled_size_length"),
+    width_mm: mm("assembled_size_width"),
+    depth_mm: mm("assembled_size_depth"),
+    height_mm: mm("assembled_size_height"),
+  };
+  const packing = {
+    length_mm: mm("packing_size_length"),
+    width_mm: mm("packing_size_width"),
+    height_mm: mm("packing_size_height"),
+  };
+  const netKg = mm("net_weight");
+  const grossKg = mm("gross_weight");
+  const freight = {
+    length_cm: dim(product.dimensions?.length),
+    width_cm: dim(product.dimensions?.width),
+    height_cm: dim(product.dimensions?.height),
+    weight_kg: dim(product.weight),
+  };
+
+  const warnings: string[] = [];
+  for (const [k, v] of Object.entries(assembled)) {
+    if (v && v > MAX_PLAUSIBLE_MM) {
+      warnings.push(
+        `Assembled ${k.replace("_mm", "")} reads ${v}mm (${(v / 1000).toFixed(1)}m), which is implausible for gym equipment. Likely a unit error in the product record. Confirm before quoting.`
+      );
+    }
+  }
+  if (freight.length_cm > MAX_PLAUSIBLE_MM / 10 || freight.width_cm > MAX_PLAUSIBLE_MM / 10) {
+    warnings.push(
+      "Freight carton dimensions look implausibly large, so any delivery price quoted from them will be wrong. Confirm before quoting."
+    );
+  }
+  if (netKg && grossKg && netKg > MAX_PLAUSIBLE_KG) {
+    warnings.push(`Net weight reads ${netKg}kg, which is implausible. Confirm before quoting.`);
+  }
+
+  return {
+    assembled_size: Object.values(assembled).some(Boolean) ? assembled : null,
+    packing_size: Object.values(packing).some(Boolean) ? packing : null,
+    net_weight_kg: netKg,
+    gross_weight_kg: grossKg,
+    freight_carton: freight.weight_kg && freight.length_cm ? freight : null,
+    weight_note:
+      netKg && grossKg && netKg !== grossKg
+        ? `Net ${netKg}kg is the machine, gross ${grossKg}kg includes the carton. Delivery is priced on gross.`
+        : null,
+    size_note:
+      "assembled_size and packing_size are in MILLIMETRES; freight_carton is in CENTIMETRES. Never quote the carton as the machine's footprint.",
+    data_warnings: warnings.length ? warnings : null,
+  };
 }
 
 // ---------------------------------------------------------------- read tools
@@ -81,6 +160,8 @@ const searchCatalogueTool: AgentTool = {
           retired: isRetiredSku(p.sku),
         };
       }),
+      basis:
+        "Prices and stock here come from the shared 60-minute catalogue cache, because a search can span many products. Call check_stock or get_product before quoting either to a customer.",
     };
   },
 };
@@ -102,22 +183,26 @@ const getProductTool: AgentTool = {
   run: async (input) => {
     const product = findProduct(str(input.reference));
     if (!product) return { error: "No product found for that reference." };
-    const map = await getUnleashedMap();
-    const e = enrich(product, map);
+    // Live, not the 60-minute map: a staff member repeats this to a customer.
+    const live = product.sku ? (await getLiveEntries([product.sku]))[product.sku.toUpperCase()] : null;
+    const map = live ? null : await getUnleashedMap();
+    const e = map ? enrich(product, map) : null;
     const detail = parseProductDetail(product);
     const weight = dim(product.weight);
     const length = dim(product.dimensions?.length);
     const width = dim(product.dimensions?.width);
     const height = dim(product.dimensions?.height);
     return {
+      ...sizeFacts(product),
       name: product.name,
       sku: product.sku || null,
       slug: product.slug,
       url: `/product/${product.slug}`,
-      price: e.priceLabel,
-      price_source: e.source,
-      in_stock: e.inStock,
-      stock_qty: e.stockQty ?? null,
+      price: live && live.price > 0 ? formatPrice(live.price) : e?.priceLabel ?? "Contact for pricing",
+      price_source: live?.live ? "unleashed (live)" : live ? "unleashed (cached fallback)" : e?.source ?? "website",
+      in_stock: live ? live.stock > 0 : e?.inStock ?? false,
+      stock_qty: live ? live.stock : e?.stockQty ?? null,
+      stock_basis: live?.live ? "read live from the ERP just now" : "up to 60 minutes old, the live read failed",
       retired: isRetiredSku(product.sku),
       foreign_brand: isForeignBrandSku(product.sku),
       categories: product.categories?.map((c) => c.name) ?? [],
@@ -152,26 +237,30 @@ const checkStockTool: AgentTool = {
     },
   },
   run: async (input) => {
-    const skus = Array.isArray(input.skus) ? input.skus.map((s) => str(s)).filter(Boolean).slice(0, 20) : [];
+    const skus = Array.isArray(input.skus) ? input.skus.map((s) => str(s)).filter(Boolean).slice(0, 10) : [];
     if (!skus.length) return { error: "Provide at least one SKU." };
-    const map = await getUnleashedMap();
+    // Read live rather than from the shared 60-minute map. This is the number a
+    // staff member turns into a promise on the phone, so an hour of drift is the
+    // difference between holding the last unit and overselling it.
+    const entries = await getLiveEntries(skus);
     const products = allProducts();
     return {
       results: skus.map((sku) => {
         const product = products.find((p) => (p.sku ?? "").toUpperCase() === sku.toUpperCase());
         if (!product) return { sku, found: false, note: "Not in the catalogue snapshot." };
-        const e = enrich(product, map);
+        const entry = entries[sku.toUpperCase()];
         return {
           sku,
           found: true,
           name: product.name,
-          price: e.priceLabel,
-          price_source: e.source,
-          in_stock: e.inStock,
-          stock_qty: e.stockQty ?? null,
+          price: entry && entry.price > 0 ? formatPrice(entry.price) : "Contact for pricing",
+          price_source: entry?.live ? "unleashed (live)" : "unleashed (cached fallback, up to 60 min old)",
+          in_stock: (entry?.stock ?? 0) > 0,
+          stock_qty: entry?.stock ?? null,
           retired: isRetiredSku(sku),
         };
       }),
+      basis: "Read live from Unleashed at the time of this call unless a row says otherwise.",
     };
   },
 };
@@ -288,6 +377,69 @@ const freightTool: AgentTool = {
   },
 };
 
+const checkPaymentTool: AgentTool = {
+  definition: {
+    name: "check_payment",
+    description:
+      "Whether an order was actually paid, and what happened to that payment: card type and last four digits, refunds, and disputes. Reads Stripe directly rather than trusting the order status. Use when a customer asks whether their payment went through, or about a refund.",
+    input_schema: {
+      type: "object",
+      properties: {
+        order_number: { type: "string", description: "The order number, e.g. 490118." },
+      },
+      required: ["order_number"],
+      additionalProperties: false,
+    },
+  },
+  run: async (input) => {
+    if (!ordersConfigured()) return { error: "WooCommerce credentials are not configured." };
+    const order = await getOrder(str(input.order_number)).catch(() => null);
+    if (!order) return { error: "No order found with that number." };
+
+    const base = {
+      order: order.number,
+      order_status: order.status,
+      order_total: `${order.currency ?? "AUD"} ${order.total}`,
+      marked_paid_at: order.date_paid ?? null,
+      method: order.payment_method_title ?? null,
+    };
+
+    if (!order.transaction_id) {
+      return { ...base, stripe: null, note: "No Stripe reference on this order, so it was not a card payment through the site." };
+    }
+    if (!stripeEnabled() || !stripe) {
+      return { ...base, stripe_ref: order.transaction_id, error: "STRIPE_SECRET_KEY is not set, so the payment itself cannot be checked." };
+    }
+
+    try {
+      const pi = await stripe.paymentIntents.retrieve(order.transaction_id, { expand: ["latest_charge"] });
+      const charge = pi.latest_charge && typeof pi.latest_charge !== "string" ? pi.latest_charge : null;
+      const card = charge?.payment_method_details?.card;
+      return {
+        ...base,
+        stripe_ref: pi.id,
+        payment_status: pi.status,
+        amount: `${(pi.amount / 100).toFixed(2)} ${pi.currency.toUpperCase()}`,
+        card: card ? `${card.brand} ending ${card.last4}` : null,
+        refunded: charge?.refunded ?? false,
+        amount_refunded: charge ? `${(charge.amount_refunded / 100).toFixed(2)} ${pi.currency.toUpperCase()}` : null,
+        disputed: charge?.disputed ?? false,
+        // A test-mode key cannot see a live payment and vice versa. Saying which
+        // mode answered stops "not found" being read as "never paid".
+        stripe_mode: pi.livemode ? "live" : "test",
+      };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return {
+        ...base,
+        stripe_ref: order.transaction_id,
+        error: `Stripe could not find that payment: ${message}`,
+        note: "If the site is running test Stripe keys, a real customer payment is invisible to them. That is a key mismatch, not a missing payment. Do not tell a customer they have not paid on the strength of this.",
+      };
+    }
+  },
+};
+
 // --------------------------------------------------------------- write tools
 // Neither of these runs until the operator approves it in the console.
 
@@ -320,6 +472,10 @@ const sendReplyTool: AgentTool = {
       body: JSON.stringify({
         from,
         to: [str(input.to)],
+        // Every sent reply lands in the inbox the team already reads. Without
+        // this the only copy lives in Resend's dashboard, which nobody opens,
+        // so "as per your email" would be unanswerable.
+        bcc: process.env.QUOTE_TO_EMAIL ? [process.env.QUOTE_TO_EMAIL] : undefined,
         reply_to: process.env.QUOTE_TO_EMAIL || undefined,
         subject: str(input.subject),
         text: body,
@@ -382,6 +538,7 @@ export const AGENT_TOOLS: AgentTool[] = [
   checkStockTool,
   lookupOrderTool,
   recentOrdersTool,
+  checkPaymentTool,
   freightTool,
   sendReplyTool,
   logEnquiryTool,
