@@ -51,12 +51,7 @@ export async function POST(request: Request) {
   const freight = await quoteFreightForRefs(items, delivery, freightServiceId);
   if (freight.required && !freight.selected) {
     return NextResponse.json(
-      {
-        ok: false,
-        error:
-          "We couldn't calculate freight for this delivery address. Please request a quote and our team will confirm it.",
-        reason: freight.reason,
-      },
+      { ok: false, error: freightMessage(freight.reason), reason: freight.reason },
       { status: 422 }
     );
   }
@@ -101,4 +96,23 @@ export async function POST(request: Request) {
       : null,
     freightReason: freight.selected ? null : freight.reason,
   });
+}
+
+// Say WHY the order needs a quote. Most rejections here are not the customer's
+// address failing - they are a rack or a machine, which ships as freight rather
+// than parcel post and always did. Telling a Sydney customer we could not price
+// "this delivery address" for a 250kg machine sends them off to re-check a
+// postcode that was never the problem.
+function freightMessage(reason?: string): string {
+  switch (reason) {
+    case "oversize":
+    case "too_many_parcels":
+      return "This order ships as freight rather than parcel post, so we price delivery per order. Request a quote and our team will confirm the cost with you.";
+    case "incomplete_dimensions":
+      return "We don't have shipping dimensions on file for one or more items in this order. Request a quote and our team will confirm delivery with you.";
+    case "no_delivery_address":
+      return "Please enter your delivery suburb and postcode so we can calculate freight.";
+    default:
+      return "We couldn't calculate freight for this order right now. Please request a quote and our team will confirm it.";
+  }
 }
