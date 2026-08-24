@@ -352,10 +352,27 @@ states.
   itemised directly above the warning.
 - The order confirmation read "#490118is in." JSX trimmed the space; the source
   looked right and the bundle did not. Now explicit.
-- **Business address moved** to 8/337-339 Settlement Rd, Thomastown VIC 3074,
-  updated on `/privacy-policy` and `/returns`. Still needs doing in WooCommerce →
-  Settings → General, and the email footer under Settings → Emails still says
-  © 2021. The phone number `03 9972 5918` has NOT been confirmed against the move.
+- **Business address moved** to 8/337-339 Settlement Rd, Thomastown VIC 3074.
+  Updated on `/privacy-policy` and `/returns`, along with the stale phone number
+  there (now `(03) 9044 9575`, which every other surface already used).
+
+  **⚠️ BLOCKED, NOT DONE: the WordPress side.** Michael could not get into
+  wp-admin on 2026-08-24. Whoever has access needs to change three things, and
+  the first affects tax and invoices, not just wording:
+  1. **WooCommerce → Settings → General**, Store Address. WooCommerce calculates
+     tax from this and prints it on invoices and packing slips. Clear the
+     "Factory 2" line.
+  2. **WooCommerce → Settings → Emails**, "Footer text" under Email template.
+     Still reads `© 2021 — MASTERKRAFT / Factory 2, 73 Dohertys Road, Laverton
+     North, VIC 3026`. Fix the year while there. Check "From" name and address
+     on the same screen.
+  3. **A PDF invoice plugin, if one is installed** (commonly WooCommerce PDF
+     Invoices & Packing Slips), keeps its OWN shop address. If invoices are PDFs
+     rather than plain emails, this is the one customers actually see.
+
+  Then search wp-admin for `Dohertys` and `Laverton`: the address tends to also
+  sit in a theme option or an old page. Most are invisible now the front end is
+  headless, but anything feeding emails or PDFs still reaches customers.
 - **The Woo → Unleashed sync is confirmed working with the new `flat_rate` shipping
   line.** Order 490118 reached Unleashed under the same number. §6 had only ever
   proven it with the old `free_shipping` line.
