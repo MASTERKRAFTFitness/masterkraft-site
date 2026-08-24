@@ -48,6 +48,9 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
   // This is what Stripe actually charges — always display THIS, never the cart
   // subtotal, which can be stale relative to live Unleashed pricing.
   const [serverTotal, setServerTotal] = useState<number | null>(null);
+  // Goods only, as repriced by the server. Kept apart from `serverTotal` (which
+  // includes freight) so "your cart price changed" can mean only that.
+  const [serverGoods, setServerGoods] = useState<number | null>(null);
   // Freight, as priced by the SERVER. `freight` is what will be charged;
   // `freightOptions` is what the customer may choose between. A null `freight`
   // with `freightRequired` false means Australia Post is not configured yet, so
@@ -113,6 +116,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
       setOrderRefs(refs);
       setClientSecret(data.clientSecret);
       setServerTotal(typeof data.amount === "number" ? data.amount : null);
+      setServerGoods(typeof data.goodsTotal === "number" ? data.goodsTotal : null);
       setFreight(data.freight ?? null);
       setPhase("payment");
       lock(); // freeze the cart while this payment is in flight
@@ -168,6 +172,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
               orderRefs={orderRefs}
               subtotal={subtotal}
               serverTotal={serverTotal}
+              serverGoods={serverGoods}
               onPaid={onPaid}
               onBack={() => {
                 unlock();
@@ -229,6 +234,7 @@ function PayForm({
   orderRefs,
   subtotal,
   serverTotal,
+  serverGoods,
   onPaid,
   onBack,
 }: {
@@ -236,6 +242,7 @@ function PayForm({
   orderRefs: OrderRef[];
   subtotal: number;
   serverTotal: number | null;
+  serverGoods: number | null;
   onPaid?: (orderNumber: string) => void;
   onBack: () => void;
 }) {
@@ -249,8 +256,14 @@ function PayForm({
   // What Stripe will actually charge (server-repriced). Falls back to the cart
   // subtotal only if the server didn't return an amount.
   const charge = serverTotal ?? subtotal;
-  // Cart price drifted from live pricing — tell the customer before they pay.
-  const priceChanged = serverTotal !== null && Math.abs(serverTotal - subtotal) >= 0.01;
+  // Cart price drifted from live pricing - tell the customer before they pay.
+  //
+  // Compare GOODS against GOODS. `serverTotal` includes freight, so measuring it
+  // against the cart subtotal made every freight-bearing order announce
+  // "pricing updated since you added to cart" when nothing had repriced: the
+  // difference was the delivery charge, itemised directly above. Alarming, and
+  // it would have trained customers to distrust a message that matters.
+  const priceChanged = serverGoods !== null && Math.abs(serverGoods - subtotal) >= 0.01;
 
   async function pay(e: React.FormEvent) {
     e.preventDefault();
