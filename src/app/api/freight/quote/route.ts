@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 
-// Freight options for the checkout summary. The Interparcel key stays on the
+// Freight options for the checkout summary. The Australia Post key stays on the
 // server, and the weights and dimensions are resolved from WooCommerce rather
 // than trusted from the browser, so nobody can post a 1kg parcel for a 130kg
 // rack and buy cheap freight.

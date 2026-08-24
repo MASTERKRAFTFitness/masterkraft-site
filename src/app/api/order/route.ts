@@ -77,13 +77,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid cart" }, { status: 422 });
   }
 
-  if (intent.amount_received !== Math.round(total * 100) || intent.currency !== "aud") {
+  // The charge is goods PLUS freight. Comparing it against the goods total alone
+  // would reject every freight-bearing order AFTER the card was captured, which
+  // is how a paid customer ends up with no order. The freight figure comes from
+  // the PaymentIntent metadata, written by our own server when the intent was
+  // created, so it records what was charged without re-quoting the carrier here
+  // (a rate that moved, or a carrier having a bad minute, must not lose an order
+  // that has already been paid for).
+  const freightCharged = Number(intent.metadata?.freight_amount ?? 0);
+  const freightAmount = Number.isFinite(freightCharged) && freightCharged > 0 ? freightCharged : 0;
+  const chargedTotal = Math.round((total + freightAmount) * 100) / 100;
+
+  if (intent.amount_received !== Math.round(chargedTotal * 100) || intent.currency !== "aud") {
     return NextResponse.json({ ok: false, error: "Payment amount mismatch" }, { status: 409 });
   }
 
   let order;
   try {
-    order = await createWooOrder({ billing, shipping, lines, paymentIntentId, customerNote, chargedTotal: total });
+    order = await createWooOrder({
+      billing,
+      shipping,
+      lines,
+      paymentIntentId,
+      customerNote,
+      chargedTotal,
+      freight: {
+        amount: freightAmount,
+        service: intent.metadata?.freight_service || "",
+        carrier: intent.metadata?.freight_carrier || "",
+      },
+    });
   } catch (e) {
     console.error("[order] create failed", e);
     // Payment succeeded but order failed — surface clearly so it can be reconciled.

@@ -1,15 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   collectionAddress,
+  isOversize,
   itemsToParcels,
   marginPercent,
+  oversizeSkus,
+  pricesIncludeGst,
   quoteFreight,
   selectOptions,
   type FreightItem,
   type FreightOption,
 } from "@/lib/freight";
 
+// A carton Australia Post will actually carry: under 22kg, under 105cm, under
+// 0.25 cubic metres.
 const item = (over: Partial<FreightItem> = {}): FreightItem => ({
+  sku: "MBASADJ",
+  name: "Group Fitness Step",
+  quantity: 1,
+  weightKg: 18,
+  lengthCm: 45,
+  widthCm: 45,
+  heightCm: 37,
+  ...over,
+});
+
+// A real product that is pallet freight, not a parcel: 224cm long.
+const barbell = (over: Partial<FreightItem> = {}): FreightItem => ({
   sku: "MWBBOL04",
   name: "Olympic Barbell 20kg",
   quantity: 1,
@@ -22,27 +39,27 @@ const item = (over: Partial<FreightItem> = {}): FreightItem => ({
 
 const opt = (over: Partial<FreightOption> = {}): FreightOption => ({
   id: "A",
-  carrier: "Carrier",
-  service: "Standard",
+  carrier: "Australia Post",
+  service: "Parcel Post",
   serviceLevel: "standard",
   price: 100,
   ...over,
 });
 
 describe("cart to parcels", () => {
-  // Each product carries its OWN carton, so 3 barbells are 3 cartons rather than
-  // one impossible 63kg box.
+  // Each product carries its OWN carton, so 3 steps are 3 cartons rather than
+  // one impossible box.
   it("emits one parcel per unit", () => {
     const { parcels, missing } = itemsToParcels([item({ quantity: 3 })]);
     expect(parcels).toHaveLength(3);
     expect(missing).toEqual([]);
-    expect(parcels[0]).toEqual({ weight: 21, length: 224, width: 8, height: 8 });
+    expect(parcels[0]).toEqual({ weight: 18, length: 45, width: 45, height: 37 });
   });
 
   // Never under-declare a carton: the API takes integer cm.
   it("rounds dimensions up", () => {
-    const { parcels } = itemsToParcels([item({ lengthCm: 241.5, widthCm: 122.5, heightCm: 30.5 })]);
-    expect(parcels[0]).toMatchObject({ length: 242, width: 123, height: 31 });
+    const { parcels } = itemsToParcels([item({ lengthCm: 44.5, widthCm: 44.5, heightCm: 36.5 })]);
+    expect(parcels[0]).toMatchObject({ length: 45, width: 45, height: 37 });
   });
 
   it("reports items with no usable carton data instead of guessing", () => {
@@ -53,6 +70,32 @@ describe("cart to parcels", () => {
     ]);
     expect(parcels).toHaveLength(1);
     expect(missing).toEqual(["SCRWAR04", "MMDBRH-GROUP"]);
+  });
+});
+
+// Two thirds of this catalogue is pallet freight. Recognising that BEFORE
+// calling the API is the difference between an honest "calculated on quote" and
+// a rejected request the customer sees as an error.
+describe("what Australia Post will not carry", () => {
+  it("rejects a carton over 22kg", () => {
+    expect(isOversize({ weight: 35, length: 40, width: 40, height: 40 })).toBe(true);
+  });
+
+  it("rejects a carton longer than 105cm", () => {
+    expect(isOversize({ weight: 21, length: 224, width: 8, height: 8 })).toBe(true);
+  });
+
+  it("rejects a carton over 0.25 cubic metres", () => {
+    // 100 x 60 x 60 = 0.36 m3, inside every other limit.
+    expect(isOversize({ weight: 10, length: 100, width: 60, height: 60 })).toBe(true);
+  });
+
+  it("accepts a carton inside all three limits", () => {
+    expect(isOversize({ weight: 18, length: 45, width: 45, height: 37 })).toBe(false);
+  });
+
+  it("names the offending SKUs so the cart can explain itself", () => {
+    expect(oversizeSkus([item(), barbell()])).toEqual(["MWBBOL04"]);
   });
 });
 
@@ -107,12 +150,23 @@ describe("configuration", () => {
     expect(marginPercent()).toBe(15);
   });
 
+  // AusPost publish GST-inclusive retail prices, so the default must be "already
+  // included". The escape hatch exists in case this account's rates differ.
+  it("treats carrier prices as GST-inclusive unless told otherwise", () => {
+    delete process.env.AUSPOST_PRICES_INCLUDE_GST;
+    expect(pricesIncludeGst()).toBe(true);
+    process.env.AUSPOST_PRICES_INCLUDE_GST = "false";
+    expect(pricesIncludeGst()).toBe(false);
+  });
+
   it("has no collection address until one is configured", () => {
     delete process.env.FREIGHT_COLLECTION_POSTCODE;
     delete process.env.FREIGHT_COLLECTION_CITY;
     expect(collectionAddress()).toBeNull();
   });
 });
+
+const delivery = { city: "Geelong", state: "VIC", postcode: "3220", country: "Australia" };
 
 describe("failing soft", () => {
   const saved = { ...process.env };
@@ -123,97 +177,159 @@ describe("failing soft", () => {
     process.env = { ...saved };
   });
 
-  const delivery = { city: "Geelong", state: "VIC", postcode: "3220", country: "Australia" };
-
-  // The whole point: no key, missing cartons or a dead API must never produce
-  // "Free". Heavy goods, and free freight is a promise we cannot keep.
+  // The whole point: no key, missing cartons, pallet freight or a dead API must
+  // never produce "Free". Heavy goods, and free freight is a promise we cannot keep.
   it("reports not_configured when there is no API key", async () => {
-    delete process.env.INTERPARCEL_API_KEY;
+    delete process.env.AUSPOST_API_KEY;
     const q = await quoteFreight([item()], delivery);
     expect(q).toEqual({ ok: false, reason: "not_configured" });
   });
 
   it("fails the whole cart when any item lacks carton data", async () => {
-    process.env.INTERPARCEL_API_KEY = "test-key";
-    process.env.FREIGHT_COLLECTION_CITY = "Melbourne";
-    process.env.FREIGHT_COLLECTION_POSTCODE = "3000";
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     const q = await quoteFreight([item(), item({ sku: "SCRWAR04", lengthCm: 0 })], delivery);
     expect(q).toMatchObject({ ok: false, reason: "incomplete_dimensions", missing: ["SCRWAR04"] });
+  });
+
+  // Sent to the quote flow WITHOUT calling the API: PAC would only reject it.
+  it("sends pallet freight to the quote flow instead of to the API", async () => {
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    let called = false;
+    globalThis.fetch = (async () => {
+      called = true;
+      return new Response("{}");
+    }) as typeof fetch;
+    const q = await quoteFreight([item(), barbell()], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "oversize", oversize: ["MWBBOL04"] });
+    expect(called).toBe(false);
   });
 });
 
 describe("what the customer is actually charged", () => {
   const saved = { ...process.env };
   const realFetch = globalThis.fetch;
+  let calls: string[] = [];
+
   beforeEach(() => {
     process.env = { ...saved };
-    process.env.INTERPARCEL_API_KEY = "test-key";
-    process.env.FREIGHT_COLLECTION_CITY = "Melbourne";
-    process.env.FREIGHT_COLLECTION_POSTCODE = "3000";
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     process.env.FREIGHT_COLLECTION_STATE = "VIC";
+    calls = [];
   });
   afterEach(() => {
     process.env = { ...saved };
     globalThis.fetch = realFetch;
   });
 
-  const delivery = { city: "Geelong", state: "VIC", postcode: "3220", country: "Australia" };
-  const reply = (body: unknown) => {
-    globalThis.fetch = (async () =>
-      new Response(JSON.stringify(body), {
+  /** Reply with the PAC service-list shape, one body per call in order. */
+  const reply = (...bodies: unknown[]) => {
+    let i = 0;
+    globalThis.fetch = (async (url: string) => {
+      calls.push(String(url));
+      const body = bodies[Math.min(i++, bodies.length - 1)];
+      return new Response(JSON.stringify(body), {
         status: 200,
         headers: { "Content-Type": "application/json" },
-      })) as typeof fetch;
+      });
+    }) as unknown as typeof fetch;
   };
 
-  it("applies the 15% margin and adds GST on a taxable rate", async () => {
-    process.env.FREIGHT_MARGIN_PERCENT = "15";
-    reply({
-      status: 0,
-      services: [
-        { id: "STD", carrier: "Couriers", service: "Road", serviceLevel: "standard", price: 100, taxable: true, delivery: { daysFrom: 3, daysTo: 5 } },
-      ],
-    });
-    const q = await quoteFreight([item()], delivery);
-    // 100 + 15% = 115, + GST = 126.50
-    expect(q).toMatchObject({ ok: true });
-    if (q.ok) expect(q.options[0].price).toBe(126.5);
+  const pac = (services: { code: string; name: string; price: string }[]) => ({
+    services: { service: services },
   });
 
-  it("does not add GST when the rate already includes it", async () => {
-    process.env.FREIGHT_MARGIN_PERCENT = "0";
-    reply({
-      status: 0,
-      services: [{ id: "STD", price: 100, taxable: false, serviceLevel: "standard" }],
-    });
+  it("applies the handling margin and does not add GST to a retail rate", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "15";
+    reply(pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }]));
     const q = await quoteFreight([item()], delivery);
-    if (q.ok) expect(q.options[0].price).toBe(100);
+    expect(q).toMatchObject({ ok: true });
+    // 20.00 + 15% = 23.00, and GST is already in the carrier's figure.
+    if (q.ok) expect(q.options[0].price).toBe(23);
+  });
+
+  it("adds GST when the account is told rates exclude it", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    process.env.AUSPOST_PRICES_INCLUDE_GST = "false";
+    reply(pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }]));
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) expect(q.options[0].price).toBe(22);
+  });
+
+  it("sends the despatch postcode as the origin", async () => {
+    reply(pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }]));
+    await quoteFreight([item()], delivery);
+    expect(calls[0]).toContain("from_postcode=3074");
+    expect(calls[0]).toContain("to_postcode=3220");
+  });
+
+  // PAC prices one parcel per call, so identical cartons are priced once and
+  // multiplied rather than costing an API call each.
+  it("prices identical cartons once and multiplies", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    reply(pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }]));
+    const q = await quoteFreight([item({ quantity: 3 })], delivery);
+    expect(calls).toHaveLength(1);
+    if (q.ok) expect(q.options[0].price).toBe(60);
+  });
+
+  // The whole consignment has to travel somehow, so a service only one carton
+  // can use is not a service we can sell.
+  it("offers only services every carton can travel on", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    reply(
+      pac([
+        { code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" },
+        { code: "AUS_PARCEL_EXPRESS", name: "Express Post", price: "30.00" },
+      ]),
+      pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "25.00" }])
+    );
+    const q = await quoteFreight([item(), item({ sku: "OTHER", weightKg: 5 })], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) {
+      expect(q.options.map((o) => o.id)).toEqual(["AUS_PARCEL_REGULAR"]);
+      expect(q.options[0].price).toBe(45);
+    }
   });
 
   it("returns the cheapest and the fastest, priced", async () => {
     process.env.FREIGHT_MARGIN_PERCENT = "0";
-    reply({
-      status: 0,
-      services: [
-        { id: "STD", price: 50, taxable: false, serviceLevel: "standard", delivery: { daysTo: 5 } },
-        { id: "EXP", price: 90, taxable: false, serviceLevel: "express", delivery: { daysTo: 1 } },
-        { id: "MID", price: 70, taxable: false, serviceLevel: "standard", delivery: { daysTo: 4 } },
-      ],
-    });
+    reply(
+      pac([
+        { code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" },
+        { code: "AUS_PARCEL_EXPRESS", name: "Express Post", price: "30.00" },
+      ])
+    );
     const q = await quoteFreight([item()], delivery);
-    expect(q.ok).toBe(true);
-    if (q.ok) expect(q.options.map((o) => o.id)).toEqual(["STD", "EXP"]);
+    if (q.ok) expect(q.options.map((o) => o.id)).toEqual(["AUS_PARCEL_REGULAR", "AUS_PARCEL_EXPRESS"]);
   });
 
-  // status 1 is their error shape. It must not become a free delivery.
-  it("treats an API error as unquotable, not as free freight", async () => {
-    reply({ status: 1, errorMessage: "Invalid collection country", errorCode: "100001" });
+  // PAC collapses a single service to an object rather than a one-item array.
+  it("copes with a single service returned as an object", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    reply({ services: { service: { code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" } } });
     const q = await quoteFreight([item()], delivery);
-    expect(q).toMatchObject({ ok: false, reason: "error", detail: "Invalid collection country" });
+    expect(q.ok).toBe(true);
+    if (q.ok) expect(q.options[0].price).toBe(20);
+  });
+
+  it("treats an API error as unquotable, not as free freight", async () => {
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ error: { errorMessage: "Length exceeds maximum" } }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })) as typeof fetch;
+    const q = await quoteFreight([item()], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "error", detail: "Length exceeds maximum" });
   });
 
   it("treats an empty service list as unquotable", async () => {
-    reply({ status: 0, services: [] });
+    reply({ services: { service: [] } });
     const q = await quoteFreight([item()], delivery);
     expect(q).toMatchObject({ ok: false, reason: "no_services" });
   });
@@ -224,5 +340,13 @@ describe("what the customer is actually charged", () => {
     }) as typeof fetch;
     const q = await quoteFreight([item()], delivery);
     expect(q).toMatchObject({ ok: false, reason: "error" });
+  });
+
+  // A 40-carton order is a pallet job. Cap the fan-out rather than firing 40
+  // requests mid-checkout.
+  it("sends an unreasonable number of cartons to the quote flow", async () => {
+    reply(pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }]));
+    const q = await quoteFreight([item({ quantity: 40 })], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "too_many_parcels" });
   });
 });

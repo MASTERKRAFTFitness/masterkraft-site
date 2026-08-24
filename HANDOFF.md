@@ -167,40 +167,71 @@ snapshot is rebuilt and committed. Nothing rebuilds it automatically.
 
 ---
 
-## 5. Freight (Interparcel)
+## 5. Freight (Australia Post)
 
-**Built, not switched on.** Michael's call 2026-08-20: freight quoted at checkout,
+**Built, not switched on — waiting on the API key only.** Carrier switched from
+Interparcel to Australia Post (Michael, 2026-08-24). Freight is quoted at checkout,
 cheapest service plus one faster option, carrier rate plus a **15% handling margin**.
 
-**Do not install their WooCommerce plugin.** It registers a shipping method in a
-WooCommerce shipping zone and prices the **WooCommerce storefront checkout** - the
-storefront this site replaced. It would price a checkout nobody uses.
+**Despatch origin is 3074, Thomastown VIC** (Michael, 2026-08-24). That was the
+missing value that blocked every quote. It is in `.env.local`, which is gitignored,
+so it also needs setting in Vercel.
 
-We use their REST API instead: `POST https://api.interparcel.com/quote`, with
-`X-Interparcel-Auth` and `X-Interparcel-API-Version: 3`, sending collection and
-delivery addresses and a parcels array of weight (kg) and L/W/H (cm). Service
-levels include `pallet`, which matters because a rig is not a parcel.
+### Australia Post prices a third of the catalogue, and that is expected
 
-- `src/lib/freight.ts` is the domain logic, `src/lib/freight-server.ts` resolves a
-  cart against WooCommerce, and **both the quote route and the payment-intent route
-  go through it**, so the price shown and the price charged cannot disagree.
+PAC prices parcels: 22kg, 105cm longest side, 0.25m³. Of 338 listed products, 246
+carry usable carton data and **111 fit those limits**. 96 are over 22kg and 109 over
+105cm. Racks, rigs, machines and benches are pallet freight and always were.
+
+`quoteFreight` checks the limits **before** calling the API and returns `oversize`,
+which the checkout renders as "Calculated on quote". **The heavy two-thirds still
+need a second carrier** (Mainfreight / Freight Exchange, both already named on the
+Shipping page). That is a commercial decision, not outstanding code.
+
+**Correction to earlier versions of this doc:** the "85% quotable / 33 products
+missing dimensions" figure was measured over a narrower set than the shop serves.
+On the listed set it is **73% (246/338)**, with 92 products short: 55 have neither
+weight nor dimensions, 37 have a weight but no dimensions. Bundles are not "none at
+all" either; 27 of 47 carry dimensions, but those are `-GROUP` parents whose carton
+is one representative unit, and they are all $0 "Contact for pricing" so they never
+reach card checkout.
+
+### How it hangs together
+
+- `src/lib/freight.ts` is the domain logic and the AusPost transport,
+  `src/lib/freight-server.ts` resolves a cart against WooCommerce, and **both the
+  quote route and the payment-intent route go through it**, so the price shown and
+  the price charged cannot disagree.
 - Weights and cartons are read server-side. **The client sends only which service
   was chosen, never what it costs.**
-- **One parcel per unit**, using each product's own carton. Three barbells are three
-  cartons, not one impossible 63kg box. Dimensions round up.
-- **It fails soft in every direction and NEVER says "Free".** No key, a product with
-  no carton dimensions, no compliant service or a dead API all produce "Calculated
-  on quote" and charge goods only. Once freight IS configured, a cart that cannot be
-  quoted goes to the quote flow rather than being charged an unknown delivery cost.
+- **One parcel per unit**, using each product's own carton. Identical cartons are
+  priced once and multiplied, since PAC takes one parcel per call.
+- **It fails soft in every direction and NEVER says "Free".** No key, missing carton
+  data, an over-limit carton, no service common to every carton, or a dead API all
+  produce "Calculated on quote" and charge goods only.
+- `npm run check:auspost` smoke-tests the live key against five destinations.
 
-**Our data supports it: 85% of products are quotable** (94% carry a weight, 85% full
-dimensions), and the WooCommerce dimensions are **shipping cartons, not assembled
-size** - verified: the Functional Trainer is 30.5cm high flat-packed against 2,300mm
-assembled. Units are cm and kg, which is what the API wants.
+### Two bugs fixed 2026-08-24 that would have bitten the moment freight went live
 
-To switch on, see `LAUNCH.md` §1b. Needs `INTERPARCEL_API_KEY` and the despatch
-warehouse address. **The GST reading of their `taxable` flag must be checked against
-the first real quote** or freight undercharges by 10%.
+Both were harmless while freight was off, which is exactly why they survived:
+
+- `src/app/api/order/route.ts` compared the Stripe amount against a **goods-only**
+  total. A freight-bearing charge would have 409'd **after the card was captured**,
+  leaving a paid customer with no order. It now reads the freight figure from the
+  PaymentIntent metadata (written by our own server at intent creation) rather than
+  re-quoting the carrier after payment.
+- `src/lib/woo-orders.ts` hardcoded `free_shipping 0.00`, so Woo and Unleashed would
+  have recorded zero freight on a charge that included it. It now writes the real
+  figure, and when no freight was charged the line reads **"Freight quoted
+  separately"** rather than "Free shipping", so nobody picking the order reads $0 as
+  permission to ship for nothing.
+
+🔎 **The `flat_rate` shipping line is new and needs one test order** to confirm the
+WooCommerce → Unleashed sync still maps it (see §6, which verified the pipeline with
+the old `free_shipping` line).
+
+🔎 **Verify GST on the first real quote** or freight undercharges by 10%. See
+`LAUNCH.md` §1b.
 
 ---
 

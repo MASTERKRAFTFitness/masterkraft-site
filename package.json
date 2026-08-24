@@ -17,6 +17,7 @@
     "verify:catalogue": "PARITY=1 vitest run src/lib/catalogue-parity.test.ts",
     "build:obsolete": "node scripts/build-obsolete-skus.mjs",
     "check:obsolete": "node scripts/check-obsolete.mjs",
+    "check:auspost": "node scripts/auspost-check.mjs",
     "mirror:images": "node scripts/mirror-product-images.mjs",
     "compress:assets": "python3 scripts/compress-assets.py",
     "report:specs": "vitest run --config vitest.reports.config.mts scripts/spec-gaps.report.ts",

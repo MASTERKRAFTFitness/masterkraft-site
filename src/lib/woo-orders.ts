@@ -86,6 +86,8 @@ export type CreateOrderInput = {
   // The GST-inclusive amount the card was actually charged (the PaymentIntent
   // total). Used to sanity-check that WooCommerce computed the same order total.
   chargedTotal?: number;
+  /** What freight was charged, so the order records it instead of "free". */
+  freight?: { amount: number; service?: string; carrier?: string };
 };
 
 export type WooOrderResult = {
@@ -125,10 +127,21 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
     billing: input.billing,
     shipping: input.shipping ?? input.billing,
     line_items,
-    // Shipping is always free on card orders — send it explicitly so WooCommerce
-    // never computes and adds a shipping cost the customer wasn't charged for.
+    // Send the shipping line explicitly so WooCommerce never computes and adds a
+    // cost the customer wasn't charged for. When freight WAS charged this records
+    // the real figure, so the order, Stripe and Unleashed agree. When it wasn't,
+    // the line reads "quoted separately" rather than "Free shipping": these are
+    // heavy goods, freight is still owed, and whoever picks the order must not
+    // read a $0 line as permission to ship it for nothing.
     shipping_lines: [
-      { method_id: "free_shipping", method_title: "Free shipping", total: "0.00" },
+      input.freight && input.freight.amount > 0
+        ? {
+            method_id: "flat_rate",
+            method_title:
+              [input.freight.carrier, input.freight.service].filter(Boolean).join(" ") || "Freight",
+            total: input.freight.amount.toFixed(2),
+          }
+        : { method_id: "flat_rate", method_title: "Freight quoted separately", total: "0.00" },
     ],
     customer_note: input.customerNote,
     meta_data: [

@@ -69,7 +69,7 @@ export type FreightDecision = {
 /**
  * Price the delivery for a cart.
  *
- * `required` is false until Interparcel is configured. Until then the checkout
+ * `required` is false until Australia Post is configured. Until then the checkout
  * carries on as it does today, with freight confirmed on quote - it must still
  * never claim freight is free. Once a key and a collection address exist,
  * freight becomes part of the charge, and a cart that cannot be quoted goes to
@@ -83,7 +83,7 @@ export async function quoteFreightForRefs(
   delivery?: DeliveryInput,
   chosenServiceId?: string
 ): Promise<FreightDecision> {
-  const configured = Boolean(process.env.INTERPARCEL_API_KEY) && collectionAddress() !== null;
+  const configured = Boolean(process.env.AUSPOST_API_KEY) && collectionAddress() !== null;
   if (!configured) {
     return { required: false, selected: null, options: [], reason: "not_configured" };
   }

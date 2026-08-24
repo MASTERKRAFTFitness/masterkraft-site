@@ -50,7 +50,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
   const [serverTotal, setServerTotal] = useState<number | null>(null);
   // Freight, as priced by the SERVER. `freight` is what will be charged;
   // `freightOptions` is what the customer may choose between. A null `freight`
-  // with `freightRequired` false means Interparcel is not configured yet, so
+  // with `freightRequired` false means Australia Post is not configured yet, so
   // freight is confirmed on quote - it is never, ever "free".
   const [freight, setFreight] = useState<{ service: string; carrier: string; price: number } | null>(null);
   const [freightServiceId, setFreightServiceId] = useState<string | undefined>(undefined);

@@ -74,6 +74,12 @@ export async function POST(request: Request) {
       metadata: {
         source: "masterkraft-site",
         line_count: String(lines.length),
+        // Read back by /api/order to check the paid amount and to put a real
+        // shipping line on the WooCommerce order. Written here on the server, so
+        // it is a trustworthy record of what the card was charged for.
+        freight_amount: freightCost.toFixed(2),
+        freight_service: freight.selected?.service ?? "",
+        freight_carrier: freight.selected?.carrier ?? "",
         freight: freight.selected ? `${freight.selected.service} ${freightCost}` : "quoted separately",
       },
     });
