@@ -480,7 +480,7 @@ export const legalContent: Record<string, ContentSection[]> = {
     {
       "heading": "The Privacy Officer",
       "body": [
-        "MasterKraft Pty Ltd Address: 8/337-339 Settlement Rd, Thomastown, Vic. 3074 Telephone: 03 9972 5918 Email: admin@masterkraft.com",
+        "MasterKraft Pty Ltd Address: 8/337-339 Settlement Rd, Thomastown, Vic. 3074 Telephone: (03) 9044 9575 Email: admin@masterkraft.com",
         "With any request that is made we will need to authenticate your identity to ensure the correct person is requesting the information. We will not charge you for making the request, however, if reasonable we may charge you with the costs associated with your request. You will only be granted access to your personal information where we are permitted or required by law to grant access. We are unable to provide you with access that is unlawful. Further we are not required to, and will not, give access to personal information to the extent that:",
         "We reasonably believe that giving access would pose a serious threat to the life, health, or safety of any individual, or to public health or public safety; or",
         "Giving access would have an unreasonable impact on the privacy of other individuals; or",
