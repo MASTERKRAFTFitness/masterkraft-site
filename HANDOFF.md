@@ -381,9 +381,10 @@ states.
 
 ---
 
-## 8. Shipped 2026-08-21
+## 8. Shipped 2026-08-24 (earlier the same day)
 
-11 commits, `e41431a` through `bd4acc7`. All deployed and verified on
+12 commits, `e41431a` through `36e2ee0`. Dated 2026-08-21 in the original write-up;
+that was wrong, it is the morning of the same day as §7b. All deployed and verified on
 `web.test.masterkraft.com`.
 
 ### The site no longer reads WooCommerce to render anything
