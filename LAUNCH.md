@@ -14,8 +14,12 @@ The app reads everything from env vars and **degrades gracefully** when one is
 missing (forms still say "thanks", analytics simply don't load, etc.), so a
 missing var fails **silently** — that's why each must be checked deliberately.
 
-> After changing any `NEXT_PUBLIC_*` var you must **redeploy** (those are baked in
-> at build time). Server-only vars take effect on the next request.
+> **After changing ANY env var you must redeploy.** Vercel applies environment
+> variables to *new* deployments only, so neither `NEXT_PUBLIC_*` (baked in at build
+> time) nor server-only vars reach the running production build until you redeploy.
+> An earlier version of this doc said server-only vars took effect on the next
+> request. They do not, and believing that is a good way to conclude an integration
+> is broken when it simply has not been deployed yet.
 
 ### Already set (confirmed working on staging)
 - ✅ `WC_STORE_URL`, `WC_CONSUMER_KEY`, `WC_CONSUMER_SECRET` — reads the catalogue.
