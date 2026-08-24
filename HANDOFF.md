@@ -519,6 +519,12 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
   `490118` from the 2026-08-24 freight test (§7b).
 - **Form-delivery test** - needs a go-ahead, it emails the team and creates a real
   HubSpot contact.
+- **The admin support desk needs three env vars before it exists in production**
+  (§13b). `ANTHROPIC_API_KEY` from console.anthropic.com (billed per token,
+  separate from any Claude subscription), plus `ADMIN_PASSWORD` and a random
+  `ADMIN_SESSION_SECRET`. All three go in `.env.local` and Vercel Production.
+  Until then `/admin` returns 404 everywhere, which is the intended safe state.
+  No live model conversation has been run against it yet.
 - **Home gym photos.** Still outstanding. `home-gym-fitout` in `src/lib/fitouts.ts`
   points at `/category/body-weight.jpg`, a product-category shot standing in for a
   real fitout. Drop a file anywhere and it is a ten-minute job: crop to 2000x1333
@@ -654,6 +660,10 @@ WC write) remain unverifiable without a live test.
 
 `FREIGHT_MARGIN_PERCENT` defaults to 15 in code; set it only to change that.
 
+**Admin console (new, 2026-08-25):** `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`
+(32+ random hex), `ANTHROPIC_API_KEY`. All three are local-dev only right now and
+**none is set in Vercel**, so `/admin` 404s in production until they are. See §13b.
+
 ---
 
 ## 13. Conventions
@@ -667,6 +677,152 @@ WC write) remain unverifiable without a live test.
 - Relevant memories: `reference_masterkraft_woocommerce`, `reference_masterkraft_brand`,
   `reference_masterkraft_revl_galleries`, `reference_masterkraft_deploy`,
   `reference_masterkraft_unleashed`.
+
+---
+
+## 13b. The admin support desk (`/admin`), built 2026-08-25
+
+An internal console where a Claude agent answers product, stock, order and
+delivery questions against the real systems, and drafts customer replies. Built
+because the customer-facing admin work had no tooling at all: answering "is this
+in stock and what does delivery cost" meant opening Unleashed, WooCommerce and
+the AusPost calculator by hand.
+
+**It is not customer-facing.** Nothing it writes reaches a customer without a
+staff member approving it first.
+
+### Getting in
+
+`ADMIN_PASSWORD` + `ADMIN_SESSION_SECRET` are exchanged for a signed, 12-hour
+cookie. There are no user accounts.
+
+**It fails closed.** With either env var unset, `/admin` and `/admin/login` both
+return 404 rather than opening. Verified by unsetting the secret: 404, restored:
+307 to the login page. An unconfigured deploy therefore cannot leak order data or
+expose a send-email tool, which is why it is safe that Vercel has neither var yet.
+
+`src/proxy.ts` is the gate. Next 16 renamed Middleware to Proxy and the file must
+sit at `src/proxy.ts`; a `middleware.ts` there is silently ignored. The proxy is
+the optimistic check the Next docs describe, so `/api/admin/agent` re-verifies the
+cookie itself rather than trusting it.
+
+### What the agent can reach
+
+| tool | source | notes |
+|---|---|---|
+| `search_catalogue`, `get_product` | committed snapshot + Unleashed | matches what a visitor sees |
+| `check_stock` | Unleashed | ERP is the source of truth, inc-GST |
+| `lookup_order`, `list_recent_orders` | WooCommerce, live, **read only** | `lib/wc-admin.ts` |
+| `quote_freight` | Australia Post | same numbers the checkout charges |
+| `send_reply`, `log_enquiry` | Resend, HubSpot | **write - approval required** |
+
+Reads go through the same modules the public site uses, so the agent cannot quote
+a price the shop does not show.
+
+### The approval gate
+
+The two write tools never execute in the tool loop. When Claude calls one, the
+route emits an `approval` event instead and stops; the console renders the exact
+payload with Approve and Decline. The conversation is held in the browser, and
+the approved action is re-read from the `tool_use` block in that history, so
+there is no session store to keep.
+
+One consequence worth knowing: the Anthropic API needs every `tool_result` for an
+assistant turn in a single message, so a turn that mixes reads with a pending
+write re-runs its read tools when you approve. All read tools are idempotent, so
+this is safe, just not free.
+
+### Verified 2026-08-25 (not assumed)
+
+Against live systems, through the running app:
+
+- Unleashed: `MBCTMA01` $25.00 / 7 in stock, `MCTMSP02` $7,589.00 / 1,
+  `SCRWAR04` $1,705.00 / 0.
+- **`SCRWAR04` shows the Unleashed price is doing real work**: the WooCommerce
+  fallback for the same product is $1,375.00. A $330 gap.
+- AusPost: 2x `MBCTMA01` to Parramatta 2150 quoted $36.80 Parcel Post, which is
+  exactly the freight charged on real order `490118`.
+- WooCommerce orders: `490118`, `490117`, `490116` returned with contact,
+  address and lines.
+- Auth: unauthenticated `/admin` 307s to the login page, `/api/admin/agent`
+  answers 401 JSON (not an HTML login page, which would have rendered into the
+  chat), and the unconfigured case 404s.
+
+`npm run build` passes, `npx vitest run` is 86 passed / 32 skipped, and lint is
+unchanged at 21 errors + 2 warnings.
+
+### The Anthropic account
+
+**Create a MasterKraft organisation, on a MasterKraft email and card.** Not
+Michael's personal account: this is an operating cost that should arrive addressed
+to the business, and a support desk keyed to one person's card stops working the
+day that person steps back. Whoever's address creates the org owns it, so use
+`hello@masterkraft.com` or similar rather than a personal address.
+
+**You do not need a second login.** One Anthropic login can belong to several
+organisations and switch between them in the Console. So: create the MasterKraft
+org from a MasterKraft mailbox, then invite Michael's existing login into it as an
+admin. Ownership and recovery stay with the business, day-to-day management
+happens from the login he already uses. Billing, API keys and usage are all
+per-ORGANISATION, not per-login, which is the distinction that matters.
+
+**The trap: a key from the wrong org works perfectly.** The app reads
+`ANTHROPIC_API_KEY` and cannot tell which organisation issued it. Paste a personal
+key into MasterKraft's Vercel and everything runs, the usage just bills the wrong
+entity and there is no clean handover later. Nothing will warn you. Check the key
+was issued in the MasterKraft workspace, not merely that the console answers.
+
+**Issue the key inside a Workspace, and set a spend limit on it.** This is not
+bookkeeping neatness. An agent is a program that spends money in a loop.
+`MAX_TURNS` in the agent route caps one conversation at 12 model turns; nothing in
+the code caps the month, and a workspace spend limit is the only thing that does.
+
+**A leaked `ANTHROPIC_API_KEY` is a bill, not a breach.** It buys Claude tokens
+and nothing else. It does not reach Unleashed, WooCommerce, HubSpot or Resend,
+which hold their own credentials, and reaching the tools at all requires
+`ADMIN_PASSWORD` first. Worth knowing, because it sets how paranoid to be.
+
+Keep it Sensitive in Vercel, but **verify it the moment it is set**: load `/admin`
+and ask one question. See §7b for why that instruction is here, a Sensitive var
+holding the wrong value went unnoticed for weeks because nobody could read it back.
+
+Rough cost, estimated and not measured: **$0.10 to $0.30 a conversation**, so
+roughly **$60 to $180 a month** at twenty a day. The system prompt and tool
+definitions are cached, so the variable cost is mostly tool results;
+`list_recent_orders` is the expensive one at maybe 6k to 8k tokens of order JSON.
+The lever if that lands badly is the model (`MODEL` in the agent route): Sonnet 5
+is $3/$15 per MTok against Opus 5's $5/$25.
+
+### Why it is not a Managed Agent
+
+Anthropic can host the agent loop and a sandbox. That is the wrong shape here. The
+tools ARE the app: `getUnleashedMap()`, `quoteFreight()` and `getOrder()` are
+existing functions sharing the site's env vars and its `unstable_cache` layer.
+Hosting the loop elsewhere means either reimplementing all of that or exposing
+MasterKraft's ERP and order data over a public API for a sandbox to call. The loop
+belongs next to the data it reads.
+
+### Not verified
+
+**The model calls themselves.** `ANTHROPIC_API_KEY` was not available in the
+session that built this, so the tool executors, the auth, the streaming route and
+the UI are all proven, but no live conversation has run end to end. Expect to
+shake out prompt-level behaviour on the first real use.
+
+### Watch out
+
+- **§13's lint note is stale.** It says 2 pre-existing lint errors; there are 21
+  errors and 2 warnings, none in the admin code. Compare against `HEAD`, do not
+  expect 2.
+- Folders under `app/` starting with `_` are Next private folders and do not
+  route. Cost 10 minutes here.
+- The system prompt in `lib/agent/prompt.ts` sits behind a prompt-cache
+  breakpoint. Keep it a byte-stable constant; interpolating anything per-request
+  invalidates the cache on every call.
+- `TOOL_DEFINITIONS` order is part of that same cached prefix. Appending is fine,
+  reshuffling is not.
+- The spec conflicts in §10 now matter more, not less. The agent will read a
+  wrong weight out to a staff member and freight will price on it.
 
 ---
 
