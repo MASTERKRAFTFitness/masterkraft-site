@@ -267,8 +267,15 @@ in place, so they do not prove the current credentials work.
 
 Fix: WP Admin → WooCommerce → Settings → Advanced → REST API → create a key with
 **Read/Write** permission, then set `WC_CONSUMER_KEY`/`WC_CONSUMER_SECRET` in both
-`.env.local` and Vercel. The Vercel key may already differ from the local one;
-that is unverified either way, so check it rather than assume.
+`.env.local` and Vercel.
+
+**RESOLVED later the same day, and it was worse than suspected** — see §7b. The
+Vercel credentials were not merely read-only, they were dead: `getProductById`
+returned null for every product, so card checkout was broken on the deployed site
+and had been for some time. It hid because only the checkout path reads live
+WooCommerce; everything a visitor browses comes from the snapshot, so the site
+looked healthy. `WC_CONSUMER_SECRET` also held a `ck_` consumer key rather than a
+`cs_` secret — same length, and invisible while the var was marked Sensitive.
 
 **TWO TEST ORDERS ARE LIVE IN THE ERP.** `490100` ($856.90) and `490102` ($779.00),
 "Test Buyer", 2026-08-10, `Placed` in Unleashed. They read as real demand and may
@@ -318,7 +325,7 @@ items" and nothing could be bought. It had presumably been broken for some time.
 It was invisible because **product pages, categories and search all serve the
 committed snapshot in `src/data/`** and only the checkout path reads live
 WooCommerce. The site looked completely healthy. This is the "unverified Vercel
-key" from the 2026-08-21 handover, now proven rather than suspected.
+key" from §8 earlier the same day, now proven rather than suspected.
 
 **Lesson worth keeping: set Vercel vars NON-sensitive where you can.** Sensitive
 values cannot be read back, which is exactly why a dead key sat there unnoticed.
