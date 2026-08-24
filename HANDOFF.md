@@ -169,8 +169,14 @@ snapshot is rebuilt and committed. Nothing rebuilds it automatically.
 
 ## 5. Freight (Australia Post)
 
-**Built, not switched on — waiting on the API key only.** Carrier switched from
-Interparcel to Australia Post (Michael, 2026-08-24). Freight is quoted at checkout,
+**LIVE in production.** `AUSPOST_API_KEY` and all four `FREIGHT_COLLECTION_*` are
+set in Vercel Production, and the deployment serving the site is newer than they
+are, so they are in the running build. Verified 2026-08-25. Carrier switched from
+Interparcel to Australia Post (Michael, 2026-08-24).
+
+(This line previously read "Built, not switched on — waiting on the API key only",
+which was true when written and stale within hours. It caused a real
+mis-reading: §5 and §7b said opposite things about whether freight worked.) Freight is quoted at checkout,
 cheapest service plus one faster option, carrier rate plus a **15% handling margin**.
 
 **Despatch origin is 3074, Thomastown VIC** (Michael, 2026-08-24). That was the
@@ -503,10 +509,9 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 - **Card checkout: live or quote-only.** Staging shows a **card form on a `pk_test`
   key**, which would reject a real card. `LAUNCH.md` used to claim the checkout was
   quote-only; it is not. `paymentsConfigured` is simply "a publishable key exists".
-- **The Australia Post API key** is now the only thing stopping live freight
-  quoting; the despatch origin (3074 Thomastown) is settled. Server-side, so do
-  not prefix it `NEXT_PUBLIC_`, and it needs setting in Vercel as well as
-  `.env.local`. Carrier switched from Interparcel on 2026-08-24 — see §5.
+- ~~**The Australia Post API key.**~~ **Done** — set in Vercel Production, and the
+  live deployment is newer than it, so freight quoting is live. Verified
+  2026-08-25.
 - **A second carrier for the heavy two-thirds.** Australia Post prices 111 of 338
   listed products; racks, rigs, machines and benches are pallet freight. Commercial
   decision, not outstanding code.
