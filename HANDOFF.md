@@ -304,6 +304,66 @@ console errors.
 
 ---
 
+## 7b. Shipped 2026-08-24
+
+Freight went live, and finding out whether it worked turned up three bugs that had
+nothing to do with freight. Every one of them was invisible from the code alone.
+
+### Card checkout was broken on the deployed site
+
+**The WooCommerce credentials in Vercel were dead.** `getProductById` returned null
+for every product, so `payment-intent` answered "We couldn't price one or more
+items" and nothing could be bought. It had presumably been broken for some time.
+
+It was invisible because **product pages, categories and search all serve the
+committed snapshot in `src/data/`** and only the checkout path reads live
+WooCommerce. The site looked completely healthy. This is the "unverified Vercel
+key" from the 2026-08-21 handover, now proven rather than suspected.
+
+**Lesson worth keeping: set Vercel vars NON-sensitive where you can.** Sensitive
+values cannot be read back, which is exactly why a dead key sat there unnoticed.
+Reading them back immediately caught `WC_CONSUMER_SECRET` holding the consumer key
+(`ck_`) rather than the secret (`cs_`) - same length, invisible any other way.
+
+### WooCommerce was adding GST to a GST-inclusive freight charge
+
+Test order `490118` was charged **$86.80** and recorded as **$90.48**, in both
+WooCommerce and Unleashed. The shipping line sent the GST-inclusive $36.80 and the
+store added another $3.68.
+
+The line items three lines above already divide by GST and carry a comment saying
+why. The shipping line did not. **Only an order that actually carries freight shows
+this**, so nothing short of a real end-to-end test would have caught it.
+
+### Newsletter signups were being discarded
+
+`HUBSPOT_FORM_NEWSLETTER` has never existed. With no GUID `submitHubspotForm`
+returns "skipped", and the route still returned `ok: true`, so subscribers saw a
+thank-you and the address reached nothing but a log line. Unlike the contact and
+quote forms there was no email fallback. There is now, with tests for all four
+states.
+
+### Also
+
+- **Freight (Australia Post) is live and verified.** See §5.
+- The checkout announced "Pricing updated since you added to cart" on every
+  freight-bearing order, because it compared a freight-inclusive total against a
+  goods-only subtotal. Nothing had repriced; the difference was the freight,
+  itemised directly above the warning.
+- The order confirmation read "#490118is in." JSX trimmed the space; the source
+  looked right and the bundle did not. Now explicit.
+- **Business address moved** to 8/337-339 Settlement Rd, Thomastown VIC 3074,
+  updated on `/privacy-policy` and `/returns`. Still needs doing in WooCommerce →
+  Settings → General, and the email footer under Settings → Emails still says
+  © 2021. The phone number `03 9972 5918` has NOT been confirmed against the move.
+- **The Woo → Unleashed sync is confirmed working with the new `flat_rate` shipping
+  line.** Order 490118 reached Unleashed under the same number. §6 had only ever
+  proven it with the old `free_shipping` line.
+
+**Test order 490118 needs cancelling** in WooCommerce and Unleashed.
+
+---
+
 ## 8. Shipped 2026-08-21
 
 11 commits, `e41431a` through `bd4acc7`. All deployed and verified on
