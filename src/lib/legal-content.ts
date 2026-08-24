@@ -480,7 +480,7 @@ export const legalContent: Record<string, ContentSection[]> = {
     {
       "heading": "The Privacy Officer",
       "body": [
-        "MasterKraft Pty Ltd Address: F2, 73 Dohertys Rd, Laverton North, Vic. 3026 Telephone: 03 9972 5918 Email: admin@masterkraft.com",
+        "MasterKraft Pty Ltd Address: 8/337-339 Settlement Rd, Thomastown, Vic. 3074 Telephone: 03 9972 5918 Email: admin@masterkraft.com",
         "With any request that is made we will need to authenticate your identity to ensure the correct person is requesting the information. We will not charge you for making the request, however, if reasonable we may charge you with the costs associated with your request. You will only be granted access to your personal information where we are permitted or required by law to grant access. We are unable to provide you with access that is unlawful. Further we are not required to, and will not, give access to personal information to the extent that:",
         "We reasonably believe that giving access would pose a serious threat to the life, health, or safety of any individual, or to public health or public safety; or",
         "Giving access would have an unreasonable impact on the privacy of other individuals; or",
@@ -779,7 +779,7 @@ export const legalContent: Record<string, ContentSection[]> = {
         "To return or exchange an item at our warehouse please contact us to organise a suitable day and time. Please note that our staff must be notified beforehand to ensure stock availability and to avoid any disappointment. If the item is not in stock, a credit note will be issued.",
         "Phone: 03 9044 9575 Email: admin@masterkraft.com",
         "You may return the items to the address below:",
-        "MasterKraft Attn: Returns Department F2, 73 Dohertys Rd, Laverton North, Vic. 3026 AUSTRALIA",
+        "MasterKraft Attn: Returns Department 8/337-339 Settlement Rd, Thomastown, Vic. 3074 AUSTRALIA",
         "*Please note there are no returns or exchanges on sale items for change of mind purchases. All sales are final. **A 20% restocking fee applies for all change of mind returns."
       ]
     },
