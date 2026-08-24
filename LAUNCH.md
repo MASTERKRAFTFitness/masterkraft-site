@@ -8,6 +8,46 @@ Legend: ✅ done · ⚙️ set an env var in Vercel · 🌐 DNS/infra · 🧠 de
 
 ---
 
+## 0. State as of 2026-08-24
+
+Everything that could be finished without the domain switchover has been.
+
+**Working and verified on the deployed site:**
+- Australia Post freight, end to end. A 2-mat cart quotes goods $50 + freight
+  $36.80 = $86.80 and renders "Australia Post Parcel Post" in the checkout summary.
+  A 250kg machine correctly routes to the quote flow.
+- Card checkout repricing. **It was broken.** The WooCommerce credentials in Vercel
+  were dead, so `getProductById` returned null for every product and payment-intent
+  answered "We couldn't price one or more items". Product pages hid it completely,
+  because they serve the committed snapshot and only checkout reads live
+  WooCommerce. Credentials replaced 2026-08-24.
+- All 64 content pages and a 57-product sample return 200. Sitemap product count
+  (283) matches the servable set exactly. No console errors. Mobile pass clean.
+
+**Blockers, all waiting on the domain (§2):**
+1. ⚙️ **Stripe is in TEST mode.** `pk_test` is baked into the deployed bundle, so
+   the card form renders and every real card would be declined.
+2. ⚙️ `NEXT_PUBLIC_SITE_URL` is `https://web.test.masterkraft.com`, so every
+   canonical, sitemap entry and share link points at a test subdomain.
+3. ⚙️ `NEXT_PUBLIC_ALLOW_INDEX` is **not set at all**, so `robots.txt` is
+   `Disallow: /`.
+
+**Small, not blocked:**
+- ⚙️ `HUBSPOT_FORM_NEWSLETTER` has never existed. The form must be created in
+  HubSpot. Signups are no longer lost in the meantime: the route now emails them
+  through Resend when HubSpot cannot take them.
+- ⚙️ **Preview** still holds the dead WooCommerce credentials, all four 24 days old.
+- 🔎 **One real paid order** to confirm the new `flat_rate` shipping line still
+  syncs Woo → Unleashed. Doable today in Stripe test mode, and worth doing before
+  live keys go anywhere near it.
+- 🧠 **Klarna and Zip are enabled** on the Stripe account and appear at checkout
+  alongside Card. Deliberate or not, decide before launch: this catalogue runs to
+  $30k rigs.
+- ⚙️ Not yet deployed: the newsletter fallback and the checkout copy fix. Both are
+  committed and pushed but need `npx vercel --prod`.
+
+---
+
 ## 1. Environment variables (Vercel → Project → Settings → Environment Variables)
 
 The app reads everything from env vars and **degrades gracefully** when one is
@@ -233,14 +273,30 @@ and redeploy.
 
 ---
 
-## 3. Pre-launch test pass (on the real domain, indexing still off) 🔎
-- [ ] Catalogue: categories, search, filters, sort, pagination, a variable product's
-      "From" price, a clearance item's crossed-out price.
-- [ ] Product page: gallery/zoom, add-to-cart, cart drawer, mini-cart totals.
-- [ ] Checkout quote flow → email + HubSpot land (see §1 verification).
-- [ ] Contact + newsletter forms → land.
-- [ ] Mobile pass (nav drawer, hero, product grid, forms).
-- [ ] 404 / error pages, favicon, OG share preview (paste a URL into Slack/LinkedIn).
+## 3. Pre-launch test pass 🔎
+
+Run against staging 2026-08-24. Only the items that genuinely need the real domain
+are still open.
+
+- [x] Every route: 64 content pages + 57 sampled product pages all 200. 404 page
+      renders. Favicon and sitemap serve.
+- [x] Catalogue: category page, subcategory filters, price filter, sort, product
+      count, grid/list toggle.
+- [x] Product page → add to cart → cart drawer → mini-cart totals. 2 × $25 = $50.
+- [x] Checkout: address → freight quote → payment element. Charge matched the
+      server exactly ($86.80). **Found and fixed a bug here:** every freight-bearing
+      order announced "Pricing updated since you added to cart" because the warning
+      compared a freight-inclusive total against a goods-only subtotal.
+- [x] Mobile pass (375px): hero, nav, category grid, filters.
+- [x] No console errors.
+- [ ] **Card payment end to end** in Stripe test mode → WooCommerce order →
+      Unleashed sales order. The one remaining functional unknown.
+- [ ] Contact + newsletter + quote forms actually land (creates real HubSpot
+      contacts and emails, so do it deliberately).
+- [ ] OG share preview — needs the real domain, since the canonical is currently a
+      test subdomain.
+- [ ] `ALLOW_INDEX` on, `robots.txt` allows crawl, sitemap submitted — needs the
+      real domain.
 - [ ] Lighthouse quick check (perf/SEO/a11y).
 
 ## 4. Go-live sequence
