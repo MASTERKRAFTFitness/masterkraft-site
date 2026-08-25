@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CookieConsent from "@/components/layout/CookieConsent";
+import ChatWidget from "@/components/chat/ChatWidget";
 import NavProgress from "@/components/layout/NavProgress";
 import { SITE_URL, ALLOW_INDEX } from "@/lib/site";
 
@@ -73,6 +74,7 @@ export default function RootLayout({
           <Footer />
           <CartDrawer />
           <CookieConsent />
+          <ChatWidget />
         </CartProvider>
       </body>
     </html>

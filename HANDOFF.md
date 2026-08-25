@@ -966,6 +966,107 @@ shake out prompt-level behaviour on the first real use.
 
 ---
 
+## 13c. The public chat assistant (`/api/chat`), built 2026-08-26
+
+A customer-facing chat widget on every page of the website. Related to 13b but a
+**separate build**, and the separation is the whole point.
+
+**Off by default.** It renders nothing unless `NEXT_PUBLIC_CHAT_ENABLED=true`.
+The agent behind it has still never been checked against a live model (see 13b,
+"Not verified"), so absent is the right default for a page every customer sees.
+
+### Why it does not reuse the admin tool list
+
+The internal tools are correct for staff and dangerous in public:
+
+- `lookup_order` returns name, email, phone and delivery address keyed on an
+  order number alone, and order numbers are sequential (490118). Anyone who can
+  count could harvest the customer list.
+- `list_recent_orders` returns the last 25 orders with no customer scoping.
+- `check_payment` exposes payment state per order.
+
+So `src/lib/agent/public-tools.ts` is a **separate list**, not a filter over
+`AGENT_TOOLS`. The rule for adding to it: ask what a tool returns on its worst
+input, not its intended one. The read implementations ARE reused, so freight,
+stock and catalogue logic cannot drift between the two agents.
+
+| Public tool | Notes |
+|---|---|
+| `search_catalogue` | Reused unchanged |
+| `get_product` | Reused, `foreign_brand` and `retired` stripped |
+| `check_stock` | Reused unchanged |
+| `quote_freight` | Reused unchanged |
+| `check_order_status` | New. Order number **and** matching email, redacted output |
+| `log_enquiry` | New. Runs immediately, no approval, unlike the admin version |
+
+### check_order_status, and why it feels strict
+
+Requires the order number AND the email the order was placed with. Every failure
+returns **identical** wording whatever the cause, because distinguishing "no such
+order" from "wrong email" is an oracle confirming which numbers are real. Five
+failures blocks that visitor for the day. Output carries no contact details, no
+address and no name.
+
+It also refuses `getOrder`'s fuzzy fallback: that helper returns the first search
+hit when the direct lookup misses, which is useful for staff and would hand a
+stranger's order to a visitor. Public callers get exact number matches only.
+
+**There is no tracking number.** The WooCommerce order payload this store returns
+has no tracking field, so the tool says so rather than inventing one. If a
+tracking plugin is added later, that is where to wire it.
+
+### The browser is not trusted
+
+The endpoint is stateless, so the browser returns the transcript with every
+message. `src/lib/agent/history.ts` rebuilds it and keeps **plain text turns
+only**: a forged `tool_result` claiming a rower costs $40 would otherwise be
+repeated back by the model and screenshotted. Tool results are re-fetched inside
+the request instead, so nothing real is lost. Capped at 20 messages, 2000 chars
+each, 12000 total.
+
+### Cost and abuse
+
+- Model is **`claude-sonnet-5`**, not Opus. The desk runs Opus for a handful of
+  staff making decisions; this is open to the internet.
+- `max_tokens` 1500, `MAX_TURNS` 8, `maxDuration` 60 (honoured on every Vercel
+  plan, so it does not depend on the plan question still open in 13b).
+- `src/lib/agent/rate-limit.ts`: 6/min and 40/day per visitor, 2000/day global.
+- **The limiter is per-instance memory.** Vercel runs several lambdas, so a
+  determined attacker spread over cold starts gets more than those numbers
+  suggest. It is worth having on day one; the real fix is a shared store
+  (Upstash, or the Supabase project once 13b's migration is run). Do not read
+  the caps as a guarantee.
+
+### Verified 2026-08-26 (not assumed)
+
+- 21 tests in `src/lib/agent/*.test.ts`, all passing. They pin: the public list
+  never contains an internal tool, a match returns no PII, wrong-email and
+  no-such-order are byte-identical, the fuzzy fallback is refused, guessing is
+  blocked after five misses, and forged tool blocks are stripped from history.
+- Full suite 115 passed, typecheck clean, no new lint errors (the 21 pre-existing
+  ones are untouched).
+- Widget rendered and driven in the browser at 1280 and 375: opens, sends,
+  Enter-to-send works, error state shows the contact link, no layout overflow.
+- With no key the route logs and returns 503, and the visitor sees one neutral
+  message. Confirmed in the dev server log.
+
+### Not verified
+
+- **No live model conversation, same as 13b.** Every answer the agent would give
+  a customer is unproven. This is the reason for the flag.
+- `log_enquiry` has not been fired against HubSpot from this route.
+- The rate limiter is tested against a fake clock, not against real concurrent
+  traffic on Vercel.
+
+### Before turning it on
+
+1. Set `ANTHROPIC_API_KEY` (see 13b: MasterKraft org, own workspace, spend limit).
+2. Leave `NEXT_PUBLIC_CHAT_ENABLED` unset and exercise it locally first.
+3. Read a dozen real answers, especially a pallet-freight item and a wrong-email
+   order lookup.
+4. Only then set the flag in Vercel Production. It is a `NEXT_PUBLIC_` var, so it
+   needs a rebuild, not just a redeploy.
+
 ## 14. Reference: brand, navigation, shop, content, REVL, resources
 
 All live. Preserved from earlier sessions because the reasoning still binds.
