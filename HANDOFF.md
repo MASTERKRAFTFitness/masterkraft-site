@@ -564,10 +564,12 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
   `ADMIN_SESSION_SECRET`. All three go in `.env.local` and Vercel Production.
   Until then `/admin` returns 404 everywhere, which is the intended safe state.
   No live model conversation has been run against it yet.
-- **Home gym photos.** Still outstanding. `home-gym-fitout` in `src/lib/fitouts.ts`
-  points at `/category/body-weight.jpg`, a product-category shot standing in for a
-  real fitout. Drop a file anywhere and it is a ten-minute job: crop to 2000x1333
-  to match `public/fitout/school-gym.jpg`, repoint, `npm run compress:assets`.
+- ~~**Home gym photos.**~~ **Done 2026-08-25** - `/fitout/home-gym.jpg`, cropped from
+  Michael's own garage setup. Worth knowing it is tonally different from its five
+  siblings, which are professionally shot, dark and moody; this one is a bright,
+  flat phone photo. It is real MasterKraft equipment and it beats the
+  product-category placeholder it replaced, but if a styled home-gym shoot ever
+  happens, this is the first tile to swap.
 
 ### Steve
 - **Domain / DNS cutover, option A or B** (`LAUNCH.md` §2). The big gate:

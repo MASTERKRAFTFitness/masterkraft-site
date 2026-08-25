@@ -51,7 +51,7 @@ export const fitouts: Fitout[] = [
     slug: "home-gym-fitout",
     name: "Home Gym",
     blurb: "Premium home setups that bring commercial-grade quality into your own space.",
-    image: "/category/body-weight.jpg",
+    image: "/fitout/home-gym.jpg",
     intro:
       "Your home gym should be built to last. We help you make the most of the space you have with commercial-grade equipment scaled for the home.",
     points: [
