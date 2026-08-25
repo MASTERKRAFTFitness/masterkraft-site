@@ -123,6 +123,7 @@ cost nothing. If a bidder gets close, consider mentioning it before they find it
 
 - [ ] Re-run `npm run report:bulky` and check the numbers still match
 - [ ] Attach `reports/bulky-freight-profile.csv` for anyone pricing the full range
-- [ ] Decide whether to disclose the 33 unmeasured products (currently yes, in
-      the Data caveats section, because a carrier finds them during onboarding
-      anyway and it is better to say it first)
+- [ ] Check nothing from the "Deliberately NOT in the provider-facing brief"
+      table has crept back in
+- [ ] The 33 unmeasured products are currently NOT disclosed. If a bidder gets
+      close, decide whether to raise it before they find it
