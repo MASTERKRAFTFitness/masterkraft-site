@@ -16,6 +16,9 @@ That writes `reports/bulky-freight-profile.md` and `.csv` from the committed
 catalogue snapshot, using the same parcel thresholds the live checkout enforces
 (`lib/freight.ts`). The CSV is the "full 107 item list" the brief offers carriers.
 
+> Re-verified after the `fac4ca6` snapshot refresh on 2026-08-25: unchanged.
+> 107 bulky, 601kg / 268cm / 1.12m3. The provider spec and its PDF are still accurate.
+
 ## The numbers, as at 2026-08-25
 
 | | |
@@ -126,8 +129,9 @@ commercial lives in this file and goes to a provider some other way, if at all:
 consignment profile and weight bands, lanes, volumes, handling and tailgate
 pricing, the rate-card fallback, and the commercial response checklist.
 
-What stays is the four calls (rate, book, status, ERP write), the field contract,
-error and status code requirements, auth and sandbox, and the input limits.
+What stays is the five calls (rate, book, status webhook, consignment lookup,
+ERP write), the field contract, error and status code requirements, auth,
+sandbox, network access, and the input limits.
 
 The physical extremes survive, but reframed: 601kg, 268cm and 1.12m3 appear as
 **values the API must accept** rather than as a catalogue profile. A provider
@@ -145,7 +149,7 @@ export CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 npm run brief:pdf
 ```
 
-Writes `reports/MasterKraft-Freight-API.pdf`, 9 pages A4. The PDF is not
+Writes `reports/MasterKraft-Freight-API.pdf`, 8 pages A4. The PDF is not
 committed because it is regenerable and the HTML is the source of truth. Edit the
 HTML, never the PDF, or the web and paper versions drift.
 
