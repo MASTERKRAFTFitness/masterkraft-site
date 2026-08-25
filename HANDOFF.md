@@ -834,17 +834,65 @@ Hosting the loop elsewhere means either reimplementing all of that or exposing
 MasterKraft's ERP and order data over a public API for a sandbox to call. The loop
 belongs next to the data it reads.
 
-### Open: identity and audit
+### Identity and audit
 
-**Decided 2026-08-25 that this grows to a small sales team, so this now matters.**
-Today it is one shared password and no persistence of any kind, because this repo
-has no database dependency at all. Consequences: "who approved sending that quote"
-has no answer, a refresh destroys the conversation, and nothing records what staff
-actually ask. `send_reply` now BCCs `QUOTE_TO_EMAIL` so at least every sent message
-lands in an inbox somebody reads, but that is a stopgap, not an audit trail.
+**Two modes, and the console says which one it is in.**
 
-Doing it properly means adding persistence to an app that has none, plus per-user
-identity. Not built. See the architecture note in the session that added this.
+| | shared | supabase |
+|---|---|---|
+| trigger | `SUPABASE_*` unset | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set |
+| sign in | one shared `ADMIN_PASSWORD` | work email, six-digit code emailed via Resend |
+| "who approved this" | **no answer** | recorded against a person |
+
+Shared mode is kept deliberately, not as a leftover: it means a database outage
+cannot lock the team out of their own order lookups, and the console worked
+before the database existed. Both `/admin` and the login page state plainly when
+they are in it, because in shared mode nothing is attributable.
+
+**No passwords in identity mode.** Identity IS the work email, proven by a code.
+Nothing to rotate, and when someone leaves the business their mailbox goes and so
+does their access. Codes are six digits from the CSPRNG, hashed at rest, single
+use, ten minute expiry, and burnt after five wrong guesses. Requesting a code
+answers identically whether or not the address belongs to staff, so it cannot be
+used to enumerate who works here.
+
+**Bootstrap:** an empty `admin_users` table means nobody can sign in to create the
+first user. `ADMIN_BOOTSTRAP_EMAILS` (comma separated, in Vercel) lists addresses
+allowed to sign in before a row exists; the row is created on first successful
+code entry. Kept out of the repo on purpose.
+
+**What is recorded:** the conversation, every message, and one row per write the
+agent proposed. The proposal row is written BEFORE anyone decides, so a proposal
+nobody acted on still leaves a trace: `/admin/activity` shows those as **never
+decided**, in the accent colour, because "the agent wanted to email a customer and
+nobody said yes" is the case you most want to see.
+
+Audit writes are best effort and never raise. An audit outage must not stop
+someone looking up an order for a customer on the phone. The trade is explicit: a
+gap in the record beats a console that stops working.
+
+**Schema:** `supabase/migrations/20260825_admin_identity_and_audit.sql`. Plain
+Postgres apart from the RLS block, so it runs anywhere. Every table has RLS on
+with **no policies**, which denies anon and authenticated outright; only the
+service role key reaches them, and only from server code.
+
+> **NOT YET APPLIED.** The MasterKraft Supabase project (`pmydkwszkgjnolrcnenh`)
+> lives in its own org, which this session's Supabase connection could not reach.
+> Paste the migration into that project's SQL editor, then set `SUPABASE_URL`,
+> `SUPABASE_SERVICE_ROLE_KEY` and `ADMIN_BOOTSTRAP_EMAILS`.
+>
+> The SQL was validated against a real Postgres inside a transaction that was
+> rolled back: tables, foreign keys, the insert/approve flow and RLS all checked
+> out, and nothing persisted.
+
+### Still open
+
+- **Identity mode is unverified end to end**, because the database does not exist
+  yet. Shared mode was tested through the running app (wrong password 401, correct
+  200, activity page reports no audit trail). The email-code path is built and
+  typechecks, but no code has been sent or redeemed.
+- Conversations are recorded but not yet re-openable in the UI. `/admin/activity`
+  lists actions, not threads.
 
 ### Not verified
 

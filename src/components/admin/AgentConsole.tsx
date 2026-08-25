@@ -28,6 +28,9 @@ export default function AgentConsole() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  // Issued by the server on the first turn and echoed back after, so a whole
+  // thread lands under one audit record instead of fragmenting per message.
+  const conversationId = useRef<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +62,7 @@ export default function AgentConsole() {
       const res = await fetch("/api/admin/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, approvals: decisions }),
+        body: JSON.stringify({ messages: history, approvals: decisions, conversation_id: conversationId.current }),
       });
 
       if (!res.ok || !res.body) {
@@ -123,6 +126,7 @@ export default function AgentConsole() {
               break;
             case "messages":
               setMessages(event.messages as ApiMessage[]);
+              if (typeof event.conversation_id === "string") conversationId.current = event.conversation_id;
               break;
             case "error":
               setEntries((prev) => [...prev, { kind: "error", text: String(event.message ?? "Error") }]);

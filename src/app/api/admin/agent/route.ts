@@ -1,6 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE, adminSecret, verifySession } from "@/lib/admin-auth";
+import { adminCookieFrom, adminSecret, readSession } from "@/lib/admin-auth";
+import {
+  actorFrom,
+  recordDecision,
+  recordMessage,
+  recordProposal,
+  startConversation,
+} from "@/lib/agent/audit";
 import { SYSTEM_PROMPT } from "@/lib/agent/prompt";
 import { TOOL_DEFINITIONS, describeToolCall, toolByName, type ToolInput } from "@/lib/agent/tools";
 
@@ -18,6 +25,8 @@ type Approval = { tool_use_id: string; approved: boolean };
 type ClientBody = {
   messages?: Anthropic.MessageParam[];
   approvals?: Approval[];
+  /** Returned by a previous turn. Absent on the first message of a thread. */
+  conversation_id?: string | null;
 };
 
 function hasToolUse(message: Anthropic.MessageParam | undefined): boolean {
@@ -32,9 +41,12 @@ export async function POST(request: Request) {
   // The proxy already gated this, but a route that hands out order data and can
   // send email re-checks rather than trusting the layer in front of it.
   const secret = adminSecret();
-  if (!secret || !(await verifySession(cookieFrom(request), secret))) {
+  const session = secret ? await readSession(adminCookieFrom(request), secret) : null;
+  if (!session) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
+  // Null in shared-password mode, where there is no person to attribute to.
+  const actor = actorFrom(session);
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "ANTHROPIC_API_KEY is not set. Add it to .env.local and Vercel." },
@@ -58,6 +70,23 @@ export async function POST(request: Request) {
   const client = new Anthropic();
   const encoder = new TextEncoder();
 
+  // Opened on the first turn of a thread and carried by the client afterwards,
+  // so a whole conversation lands under one record rather than fragmenting.
+  let conversationId = typeof body.conversation_id === "string" ? body.conversation_id : null;
+  const lastUserText = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.role === "user" && typeof m.content === "string") return m.content;
+    }
+    return "";
+  })();
+  if (actor && !conversationId && lastUserText) {
+    conversationId = await startConversation(actor, lastUserText);
+  }
+  if (actor && lastUserText && approvals.length === 0) {
+    await recordMessage(conversationId, "user", lastUserText);
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       const emit = (event: Record<string, unknown>) => {
@@ -74,6 +103,7 @@ export async function POST(request: Request) {
           if (!hasToolUse(messages[messages.length - 1])) {
             const assistant = await runModelTurn(client, messages, emit);
             messages.push({ role: "assistant", content: assistant.content });
+            if (actor) await recordMessage(conversationId, "assistant", assistant.content);
             if (assistant.stop_reason !== "tool_use") break;
             continue;
           }
@@ -103,6 +133,7 @@ export async function POST(request: Request) {
               }
               if (!decision.approved) {
                 emit({ type: "tool", name: use.name, summary: describeToolCall(use.name, input), state: "declined" });
+                if (actor) await recordDecision(use.id, "declined", null);
                 results.push({
                   type: "tool_result",
                   tool_use_id: use.id,
@@ -117,10 +148,14 @@ export async function POST(request: Request) {
             try {
               const output = await tool.run(input);
               emit({ type: "tool", name: use.name, summary, state: "done" });
+              // Only writes are audited. Recording every catalogue search would
+              // bury the two rows that actually matter.
+              if (actor && tool.write) await recordDecision(use.id, "approved", output);
               results.push({ type: "tool_result", tool_use_id: use.id, content: JSON.stringify(output) });
             } catch (e) {
               const message = e instanceof Error ? e.message : String(e);
               emit({ type: "tool", name: use.name, summary, state: "error" });
+              if (actor && tool.write) await recordDecision(use.id, "approved", { error: message });
               results.push({ type: "tool_result", tool_use_id: use.id, is_error: true, content: message });
             }
           }
@@ -131,6 +166,11 @@ export async function POST(request: Request) {
           // read tools above run again on the way through.
           if (pending.length) {
             for (const use of pending) {
+              // Written BEFORE anyone decides, so a proposal nobody acted on
+              // still leaves a trace.
+              if (actor) {
+                await recordProposal(conversationId, actor, use.id, use.name, use.input);
+              }
               emit({
                 type: "approval",
                 tool_use_id: use.id,
@@ -146,7 +186,7 @@ export async function POST(request: Request) {
           messages.push({ role: "user", content: results });
         }
 
-        emit({ type: "messages", messages });
+        emit({ type: "messages", messages, conversation_id: conversationId });
         emit({ type: "done", awaiting_approval: awaitingApproval });
       } catch (e) {
         console.error("[admin-agent]", e);
@@ -187,16 +227,6 @@ async function runModelTurn(
   stream.on("text", (delta) => emit({ type: "text", delta }));
 
   return stream.finalMessage();
-}
-
-function cookieFrom(request: Request): string | undefined {
-  const header = request.headers.get("cookie");
-  if (!header) return undefined;
-  for (const part of header.split(";")) {
-    const [name, ...rest] = part.trim().split("=");
-    if (name === ADMIN_COOKIE) return rest.join("=");
-  }
-  return undefined;
 }
 
 function friendlyError(e: unknown): string {
