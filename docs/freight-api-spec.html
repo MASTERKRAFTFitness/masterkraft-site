@@ -1,0 +1,624 @@
+<title>MasterKraft Freight API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --paper:#eef1f2; --surface:#fbfcfc; --sunken:#e4e9ea; --ink:#15181b;
+    --muted:#5b656d; --faint:#8a949b; --rule:#d3dadd; --rule-firm:#b4bfc4;
+    --accent:#b93c26; --measure:70ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#101416; --surface:#181d20; --sunken:#0b0e10; --ink:#e7ecee;
+      --muted:#98a3aa; --faint:#6e7a81; --rule:#2a3235; --rule-firm:#3d484d;
+      --accent:#e2725a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#101416; --surface:#181d20; --sunken:#0b0e10; --ink:#e7ecee;
+    --muted:#98a3aa; --faint:#6e7a81; --rule:#2a3235; --rule-firm:#3d484d;
+    --accent:#e2725a;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size:1.06rem; line-height:1.62; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:78rem; margin:0 auto; padding:0 1.5rem 7rem; }
+
+  .mast { border-bottom:2px solid var(--ink); padding:4.5rem 0 1.5rem; margin-bottom:2rem; }
+  .mast__kicker {
+    font-family:"IBM Plex Mono", monospace; font-size:.7rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 1.1rem;
+  }
+  .mast__title {
+    font-family:Oswald,"Arial Narrow",sans-serif; font-weight:600;
+    font-size:clamp(2.5rem,7.5vw,3.1rem); line-height:.98; text-transform:uppercase;
+    text-wrap:balance; margin:0 0 1rem;
+  }
+  .mast__sub { max-width:var(--measure); color:var(--muted); margin:0; }
+
+  .shell { display:grid; grid-template-columns:minmax(0,1fr); gap:0; }
+  .rail { display:none; }
+  @media (min-width:62rem) {
+    .shell { grid-template-columns:12rem minmax(0,1fr); gap:4rem; align-items:start; }
+    .rail { display:block; position:sticky; top:2.5rem; }
+  }
+  .rail__head {
+    font-family:"IBM Plex Mono", monospace; font-size:.63rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); padding-bottom:.6rem;
+    border-bottom:1px solid var(--rule); margin-bottom:.85rem;
+  }
+  .rail a {
+    display:block; font-family:"IBM Plex Mono", monospace; font-size:.73rem;
+    color:var(--muted); text-decoration:none; padding:.3rem 0 .3rem .7rem;
+    margin-left:-.7rem; border-left:2px solid transparent; transition:color .14s, border-color .14s;
+  }
+  .rail a:hover, .rail a:focus-visible { color:var(--accent); border-left-color:var(--accent); }
+
+  section { padding-top:3.2rem; scroll-margin-top:1.5rem; }
+  section + section { border-top:1px solid var(--rule); }
+
+  .label {
+    font-family:"IBM Plex Mono", monospace; font-size:.67rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 .7rem;
+  }
+  h2 {
+    font-family:Oswald,"Arial Narrow",sans-serif; font-weight:500; font-size:2rem;
+    line-height:1.1; text-transform:uppercase; text-wrap:balance; margin:0 0 1.2rem;
+  }
+  h3 { font-weight:600; font-size:1.3rem; line-height:1.25; text-wrap:balance; margin:2rem 0 .75rem; }
+  p, li { max-width:var(--measure); }
+  p { margin:0 0 1.05rem; }
+  ul, ol { margin:0 0 1.05rem; padding-left:1.15rem; }
+  li { margin-bottom:.45rem; }
+  li::marker { color:var(--accent); }
+  .lede { font-size:1.35rem; line-height:1.45; }
+  code {
+    font-family:"IBM Plex Mono", monospace; font-size:.86em; background:var(--sunken);
+    border:1px solid var(--rule); padding:.06em .32em;
+  }
+  pre {
+    font-family:"IBM Plex Mono", monospace; font-size:.79rem; line-height:1.55;
+    background:var(--sunken); border:1px solid var(--rule); padding:1rem 1.1rem;
+    overflow-x:auto; margin:0 0 1.2rem; max-width:var(--measure);
+  }
+  pre code { background:none; border:0; padding:0; font-size:inherit; }
+  .caption { font-family:"IBM Plex Mono", monospace; font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin:0 0 .5rem; }
+
+  .scroller { overflow-x:auto; margin:0 0 1.3rem; border-bottom:1px solid var(--rule); }
+  table { border-collapse:collapse; width:100%; min-width:32rem; font-size:.92rem; }
+  th {
+    font-family:"IBM Plex Mono", monospace; font-size:.64rem; font-weight:500;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--faint); text-align:left;
+    padding:0 1.2rem .55rem 0; border-bottom:1px solid var(--rule-firm); white-space:nowrap;
+  }
+  td { padding:.55rem 1.2rem .55rem 0; border-bottom:1px solid var(--rule); vertical-align:top; font-variant-numeric:tabular-nums; }
+  tr:last-child td { border-bottom:none; }
+  td:last-child, th:last-child { padding-right:0; }
+  .mono { font-family:"IBM Plex Mono", monospace; font-size:.88em; white-space:nowrap; }
+  .em { color:var(--accent); font-weight:600; }
+  .req { font-family:"IBM Plex Mono", monospace; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  .opt { font-family:"IBM Plex Mono", monospace; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+
+  .note {
+    background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--accent);
+    padding:1.1rem 1.3rem; margin:0 0 1.3rem; max-width:var(--measure);
+  }
+  .note > :last-child { margin-bottom:0; }
+  .note__head {
+    font-family:"IBM Plex Mono", monospace; font-size:.66rem; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 .5rem;
+  }
+
+  footer {
+    margin-top:4rem; padding-top:1.4rem; border-top:2px solid var(--ink);
+    font-family:"IBM Plex Mono", monospace; font-size:.73rem; color:var(--faint);
+    display:flex; flex-wrap:wrap; gap:.4rem 1.6rem;
+  }
+  a { color:var(--accent); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+
+  /* ---------------------------------------------------------------- print
+     A PDF is always light, whatever the screen was set to. The token
+     overrides carry !important because the dark rule above is a more
+     specific selector than :root and would otherwise win. */
+  @media print {
+    :root {
+      --paper:#ffffff !important; --surface:#f7f9f9 !important; --sunken:#f0f3f4 !important;
+      --ink:#15181b !important; --muted:#454e55 !important; --faint:#6b757c !important;
+      --rule:#c9d1d4 !important; --rule-firm:#9aa6ac !important; --accent:#a8341f !important;
+    }
+    @page { size:A4; margin:15mm 14mm 16mm; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+    body { font-size:9.6pt; line-height:1.5; background:#fff; }
+    .wrap { max-width:none; padding:0; }
+    .rail { display:none !important; }
+    .shell { display:block !important; }
+    p, li, .note, pre { max-width:none; }
+
+    .mast { padding-top:0; margin-bottom:1rem; }
+    .mast__title { font-size:30pt; }
+    .lede { font-size:12pt; }
+    h2 { font-size:17pt; }
+    h3 { font-size:11.5pt; }
+
+    h2, h3, .label, .caption { break-after:avoid; page-break-after:avoid; }
+    tr, .note, pre { break-inside:avoid; page-break-inside:avoid; }
+    thead { display:table-header-group; }
+    section { break-inside:auto; padding-top:1.5rem; }
+    section + section { border-top:1px solid var(--rule); }
+
+    /* On screen these scroll sideways; on paper they must simply fit. */
+    .scroller { overflow:visible !important; }
+    table { min-width:0 !important; font-size:8.4pt; table-layout:auto; }
+    td, th { padding-right:.7rem; }
+    .mono { white-space:normal; }
+    pre { font-size:7.6pt; white-space:pre-wrap; }
+
+    a { color:inherit; text-decoration:none; }
+    footer { margin-top:2rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="mast__kicker">Integration specification &middot; v1 &middot; August 2026</p>
+    <h1 class="mast__title">MasterKraft<br>Freight API</h1>
+    <p class="mast__sub">
+      What we need from a freight provider's API to quote, book and track bulky consignments from
+      our website checkout, and to write the result back into Unleashed, our ERP. This document is
+      the technical scope only.
+    </p>
+  </header>
+
+  <div class="shell">
+    <nav class="rail" aria-label="Sections">
+      <p class="rail__head">Contents</p>
+      <a href="#scope">Scope</a>
+      <a href="#stability">Rate stability</a>
+      <a href="#rating">1. Rating</a>
+      <a href="#booking">2. Booking</a>
+      <a href="#status">3. Status</a>
+      <a href="#erp">4. Unleashed</a>
+      <a href="#auth">Auth</a>
+      <a href="#limits">Limits</a>
+      <a href="#need">What we need</a>
+    </nav>
+
+    <main>
+
+      <section id="scope">
+        <p class="label">Scope</p>
+        <h2>What we are integrating</h2>
+        <p class="lede">
+          Five calls. Quote at checkout, book on payment, receive status, look status up on demand,
+          and write the consignment number back to our ERP.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>#</th><th>Call</th><th>When</th><th>Direction</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td class="mono">rate</td><td>Customer reaches checkout</td><td>We call you, synchronously</td></tr>
+              <tr><td>2</td><td class="mono">book</td><td>Payment succeeds</td><td>We call you</td></tr>
+              <tr><td>3a</td><td class="mono">status webhook</td><td>Consignment moves</td><td>You call us</td></tr>
+              <tr><td>3b</td><td class="mono">consignment lookup</td><td>On demand</td><td>We call you</td></tr>
+              <tr><td>4</td><td class="mono">ERP write</td><td>After booking</td><td>Either side, see section 4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Everything is server to server. Our checkout prices delivery on the server and never
+          accepts a freight price from the browser.
+        </p>
+      </section>
+
+      <section id="stability">
+        <p class="label">Constraint &middot; read this first</p>
+        <h2>Rate stability</h2>
+        <div class="note">
+          <p class="note__head">We call rate twice for every order</p>
+          <p>
+            Once when the customer reaches checkout, to display options. Again on the server at the
+            moment we charge the card, to compute what to actually charge. Between those two calls
+            the browser holds only <code>service.id</code>, never a price.
+          </p>
+          <p>
+            <strong>The same inputs must therefore return the same price for at least 30 minutes,
+            and <code>service.id</code> must be stable across both calls.</strong> If your pricing is
+            not deterministic, return a quote token with a stated lifetime that we can redeem on the
+            second call instead.
+          </p>
+          <p>
+            When the second call disagrees with the first we fail the order rather than charge a
+            different number, so a drifting rate is a lost sale, not a rounding difference.
+          </p>
+        </div>
+      </section>
+
+      <section id="rating">
+        <p class="label">Call 1</p>
+        <h2>Rating</h2>
+        <p>Synchronous, on the checkout path, with a customer waiting.</p>
+
+        <p class="caption">Request</p>
+        <pre><code>POST /rate
+{
+  "collection": { "postcode": "3074", "suburb": "Thomastown",
+                  "state": "VIC", "country": "AU" },
+  "delivery":   { "postcode": "2150", "suburb": "Parramatta",
+                  "state": "NSW", "country": "AU",
+                  "residential": true },
+  "items": [
+    { "sku": "MCTMSP02", "quantity": 1, "weight_kg": 601,
+      "length_cm": 185, "width_cm": 91, "height_cm": 56 }
+  ]
+}</code></pre>
+
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">collection</td><td>object</td><td>Constant. Always Thomastown VIC 3074.</td></tr>
+              <tr><td class="mono">delivery.residential</td><td>boolean</td><td>Known at checkout. Drives tailgate and any residential surcharge.</td></tr>
+              <tr><td class="mono">items[].sku</td><td>string</td><td>Our product code, echoed for reconciliation against your invoice.</td></tr>
+              <tr><td class="mono">items[].quantity</td><td>integer</td><td>Each unit is a separate carton. We do not consolidate.</td></tr>
+              <tr><td class="mono">items[].weight_kg</td><td>number</td><td>Gross, carton included.</td></tr>
+              <tr><td class="mono">items[].length_cm</td><td>integer</td><td>Rounded up. Same for <code>width_cm</code> and <code>height_cm</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          That is the complete set of what we hold per line. We do <strong>not</strong> have pallet
+          counts, stackability or dangerous goods classification. If your API requires any of those,
+          tell us and we will discuss whether we can derive them.
+        </p>
+
+        <p class="caption">Response</p>
+        <pre><code>{
+  "quote_id": "q_01J8XZ...",          // optional, see Rate stability
+  "expires_at": "2026-08-25T04:30:00Z",
+  "services": [
+    {
+      "id": "road-standard",
+      "name": "Road Freight",
+      "service_level": "standard",
+      "price": 284.50,
+      "price_includes_gst": false,
+      "eta_days_min": 3,
+      "eta_days_max": 6,
+      "chargeable_weight_kg": 612,
+      "surcharges": [
+        { "code": "tailgate", "description": "Tailgate delivery", "price": 45.00 }
+      ]
+    }
+  ]
+}</code></pre>
+
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Field</th><th></th><th>How we use it</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">services[].id</td><td class="req">Required</td><td>Stored on the order, sent back at payment and at booking. Must be stable.</td></tr>
+              <tr><td class="mono">services[].name</td><td class="req">Required</td><td>Displayed to the customer verbatim.</td></tr>
+              <tr><td class="mono">service_level</td><td class="req">Required</td><td>One of <code>standard</code>, <code>express</code>, <code>courier</code>. We show the cheapest service plus the fastest that beats it, so we need a comparable level.</td></tr>
+              <tr><td class="mono">price</td><td class="req">Required</td><td>Numeric, AUD.</td></tr>
+              <tr><td class="mono">price_includes_gst</td><td class="req">Required</td><td>Explicit boolean rather than an assumption. Getting this backwards misprices every order by 10%.</td></tr>
+              <tr><td class="mono">surcharges[]</td><td class="req">Required</td><td>Coded and priced separately, not folded into <code>price</code>. We itemise delivery for the customer.</td></tr>
+              <tr><td class="mono">eta_days_min / max</td><td class="req">Required</td><td>Ranking and display. Without these we cannot identify the faster service.</td></tr>
+              <tr><td class="mono">chargeable_weight_kg</td><td class="opt">Optional</td><td>Tells us when a consignment cubes out rather than weighs out.</td></tr>
+              <tr><td class="mono">quote_id / expires_at</td><td class="opt">Conditional</td><td>Required only if pricing is not deterministic. See Rate stability.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>When you cannot quote</h3>
+        <p>
+          Return a coded reason, not an empty <code>services</code> array. We show the customer a
+          different message for each, and an empty list is indistinguishable from a fault.
+        </p>
+        <pre><code>{ "services": [],
+  "error": { "code": "outside_network",
+             "message": "No service to postcode 2150" } }</code></pre>
+        <p>
+          Please supply the full set of codes you can emit. At minimum we need to distinguish
+          <em>outside your network</em>, <em>item too large or heavy to carry</em>, and
+          <em>temporary failure, retry</em>.
+        </p>
+
+        <h3>Performance</h3>
+        <ul>
+          <li><strong>p95 under 2 seconds.</strong> A customer is waiting on this response.</li>
+          <li>All line items in <strong>one request</strong>. Per carton calls are workable but multiply the latency.</li>
+          <li>Tell us your rate limits. We call this once per checkout view.</li>
+        </ul>
+      </section>
+
+      <section id="booking">
+        <p class="label">Call 2</p>
+        <h2>Booking</h2>
+        <p>Called once payment succeeds. No human rekeying.</p>
+
+        <p class="caption">Request</p>
+        <pre><code>POST /book
+{
+  "service_id": "road-standard",
+  "quote_id": "q_01J8XZ...",          // if quotes are tokenised
+  "order_number": "490118",
+  "delivery": { "name": "...", "phone": "...", "email": "...",
+                "address_1": "...", "suburb": "...", "state": "...",
+                "postcode": "...", "residential": true,
+                "instructions": "..." },
+  "items": [ /* same shape as the rate call */ ]
+}</code></pre>
+
+        <p class="caption">Response</p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Field</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">consignment_number</td><td class="req">Required</td><td>Available <strong>in this response</strong>, not only in a portal or a confirmation email. Written to our ERP.</td></tr>
+              <tr><td class="mono">order_number</td><td class="req">Required</td><td>Echoed back. This is the key that ties your record to ours.</td></tr>
+              <tr><td class="mono">label_url</td><td class="req">Required</td><td>Or base64 PDF. Printed at despatch.</td></tr>
+              <tr><td class="mono">tracking_url</td><td class="req">Required</td><td>Shown to the customer and emailed.</td></tr>
+              <tr><td class="mono">number_of_packages</td><td class="req">Required</td><td>Piece count. Written to our ERP.</td></tr>
+              <tr><td class="mono">chargeable_weight_kg</td><td class="opt">Preferred</td><td>So our records match what you invoice.</td></tr>
+              <tr><td class="mono">pickup_date</td><td class="opt">Preferred</td><td>Expected collection.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <span class="opt">Preferred</span> &nbsp;An endpoint to cancel or amend a consignment
+          before pickup, since orders are occasionally changed after payment.
+        </p>
+      </section>
+
+      <section id="status">
+        <p class="label">Call 3</p>
+        <h2>Shipment status</h2>
+        <p class="lede">
+          We need both a push and a pull. They answer different questions and one does not
+          substitute for the other.
+        </p>
+
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Mechanism</th><th></th><th>Answers</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Webhook</strong>, you call us</td>
+                <td class="req">Required</td>
+                <td>"Something changed." Drives customer notifications and the ERP write, without us running a scheduler.</td>
+              </tr>
+              <tr>
+                <td><strong>Query endpoint</strong>, we call you</td>
+                <td class="req">Required</td>
+                <td>"Where is consignment X right now?" Asked by staff with a customer on the phone, and used to reconcile after any missed webhook.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <p class="note__head">Why push alone is not enough</p>
+          <p>
+            Our support desk answers delivery questions on demand. If the only status we hold is what
+            was pushed to us, then a single dropped webhook means we confidently tell a customer
+            something stale. A query endpoint is what makes the record self correcting.
+          </p>
+        </div>
+
+        <h3>Push: the event</h3>
+        <pre><code>POST &lt;our endpoint&gt;
+{
+  "event_id": "evt_01J8XZ...",
+  "consignment_number": "...",
+  "order_number": "490118",
+  "status": "in_transit",
+  "status_description": "Departed Melbourne depot",
+  "occurred_at": "2026-08-25T04:30:00Z",
+  "estimated_delivery": "2026-08-28",
+  "location": "Melbourne, VIC"
+}</code></pre>
+
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Field</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">event_id</td><td class="req">Required</td><td>Stable and unique. We deduplicate on it, so a retry is safe.</td></tr>
+              <tr><td class="mono">consignment_number</td><td class="req">Required</td><td>Ties the event to the booking.</td></tr>
+              <tr><td class="mono">order_number</td><td class="req">Required</td><td>Ties it to our order without a lookup.</td></tr>
+              <tr><td class="mono">status</td><td class="req">Required</td><td>A code from your fixed vocabulary, not free text.</td></tr>
+              <tr><td class="mono">status_description</td><td class="req">Required</td><td>Human readable. Shown to the customer.</td></tr>
+              <tr><td class="mono">occurred_at</td><td class="req">Required</td><td>When it happened, not when you sent it. Events can arrive out of order and we sort on this.</td></tr>
+              <tr><td class="mono">estimated_delivery</td><td class="req">Required</td><td><strong>Revised ETA, on every event.</strong> "It moved" without "and it now arrives Thursday" is not useful to a customer.</td></tr>
+              <tr><td class="mono">location</td><td class="opt">Preferred</td><td>Last scan point.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Pull: current state</h3>
+        <pre><code>GET /consignments/{consignment_number}
+
+{
+  "consignment_number": "...",
+  "order_number": "490118",
+  "status": "in_transit",
+  "estimated_delivery": "2026-08-28",
+  "events": [ /* full history, oldest first */ ],
+  "proof_of_delivery": null
+}</code></pre>
+        <p>
+          Current status, the revised ETA, and the <strong>full event history</strong>. The history
+          matters: it is how we detect and backfill anything a webhook failed to deliver.
+        </p>
+
+        <h3>Exceptions</h3>
+        <p>
+          Most of what we ship is bulky, and a meaningful share goes to residential addresses where
+          nobody is home and there is no dock. Exceptions are normal, not edge cases, so they need
+          more than a status code:
+        </p>
+        <ul>
+          <li><strong>A reason code</strong>, distinguishing at minimum: nobody home, access or vehicle restriction, refused, damaged, lost, held for payment or documentation.</li>
+          <li><strong>What happens next</strong>, and by when. Automatic redelivery, held at depot with a deadline, or awaiting instruction from us.</li>
+          <li><strong>Whether we need to act</strong>, as a boolean, so an exception that resolves itself does not raise the same alarm as one waiting on us.</li>
+        </ul>
+
+        <h3>Vocabulary and mechanics</h3>
+        <ul>
+          <li>
+            <strong>The complete list of status and exception codes you can emit</strong>, not a
+            sample. We map them onto a fixed field in our ERP, so an unmapped code arriving in
+            production is a defect we would rather design out now.
+          </li>
+          <li>Tell us if you add codes later. A new code should not be a silent change.</li>
+          <li>Signed callbacks, so we can verify they came from you. HMAC over the raw body is fine.</li>
+          <li>Retry on non 2xx with backoff, so a brief outage on our side does not lose an event.</li>
+          <li>Separate webhook URLs for sandbox and production, configurable by us without a support ticket.</li>
+          <li>Proof of delivery retrievable against the consignment number, if you capture it. Signature or photo. It settles disputes.</li>
+        </ul>
+      </section>
+
+      <section id="erp">
+        <p class="label">Call 4</p>
+        <h2>Writing back to Unleashed</h2>
+        <p>
+          Unleashed is our ERP and the system of record for dispatch. Every website order already
+          exists there as a sales order under the same <code>order_number</code> we send you.
+        </p>
+        <p>
+          Unleashed exposes a <code>SalesShipments</code> object. These are the fields that need to
+          be populated against that order number:
+        </p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Unleashed field</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">OrderNumber</td><td>Our order number, unchanged</td></tr>
+              <tr><td class="mono">ShippingCompany</td><td>Your company name</td></tr>
+              <tr><td class="mono">TrackingNumber</td><td><code>consignment_number</code> from the booking response</td></tr>
+              <tr><td class="mono">DispatchDate</td><td>From the despatch status event</td></tr>
+              <tr><td class="mono">NumberOfPackages</td><td><code>number_of_packages</code></td></tr>
+              <tr><td class="mono">ShipmentWeight</td><td><code>chargeable_weight_kg</code></td></tr>
+              <tr><td class="mono">ShipmentStatus</td><td>Mapped from your status codes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <strong>Either party can do this write.</strong> If you already integrate with Unleashed,
+          say so and we will use it. Otherwise the booking response and status webhook above give us
+          everything we need to write it ourselves, and we are happy to build that side.
+        </p>
+      </section>
+
+      <section id="auth">
+        <p class="label">Environments</p>
+        <h2>Authentication and sandbox</h2>
+        <ul>
+          <li>Server to server credentials: API key or OAuth client credentials. No browser calls, so no CORS requirement.</li>
+          <li>Separate <strong>sandbox and production</strong> credentials.</li>
+          <li>
+            <strong>The sandbox must be able to return failure cases</strong>, not only successes. We
+            build and test the "cannot quote" path deliberately, and we cannot do that against an
+            endpoint that always succeeds.
+          </li>
+          <li>Sandbox bookings must not create real consignments or generate charges.</li>
+          <li>A documented approach to versioning, so a change on your side does not break checkout without notice.</li>
+        </ul>
+
+        <h3>Network access</h3>
+        <div class="note">
+          <p class="note__head">Tell us early if you require IP allowlisting</p>
+          <p>
+            Our checkout runs on serverless infrastructure, so calls to you originate from a
+            <strong>shared pool of addresses that changes without notice</strong>. We cannot give you
+            a fixed egress IP on our current platform.
+          </p>
+          <p>
+            If your API is gated on an allowlist, say so in your response. It is not necessarily a
+            blocker, but it needs infrastructure work on our side and we would rather price that in
+            now than discover it midway through an integration.
+          </p>
+        </div>
+        <ul>
+          <li>
+            We authenticate to you with a key or OAuth credentials over TLS. That is the control we
+            expect to rely on, rather than network origin.
+          </li>
+          <li>
+            <strong>For your callbacks to us, we verify the signature, not the source address.</strong>
+            If you publish source IP ranges we will use them as an additional check, but we will not
+            depend on them, and we will not reject an otherwise valid signed callback for arriving
+            from an address outside a published range.
+          </li>
+          <li>
+            If you do publish ranges, tell us how changes are announced and with how much notice.
+          </li>
+        </ul>
+      </section>
+
+      <section id="limits">
+        <p class="label">Constraints</p>
+        <h2>Values your API must accept</h2>
+        <p>
+          These are the extremes in our catalogue. They are stated here as input validation limits,
+          not as typical consignments.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Input</th><th>Must accept up to</th></tr></thead>
+            <tbody>
+              <tr><td>Single line item weight</td><td>601 kg</td></tr>
+              <tr><td>Single carton longest side</td><td>268 cm</td></tr>
+              <tr><td>Single carton volume</td><td>1.12 m&sup3;</td></tr>
+              <tr><td>Distinct line items per request</td><td>8</td></tr>
+              <tr><td>Total cartons per consignment</td><td>30</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          An API that rejects a 601kg line item, or silently truncates a dimension, fails at
+          checkout rather than at integration time. Please confirm these are within range.
+        </p>
+      </section>
+
+      <section id="need">
+        <p class="label">Next step</p>
+        <h2>What we need from you</h2>
+        <ol>
+          <li>API documentation, and whether a sandbox is available today.</li>
+          <li>Whether rating is deterministic, or whether you issue quote tokens, and their lifetime.</li>
+          <li>The complete list of error codes from rating, and of status and exception codes from tracking.</li>
+          <li>Whether you expose a consignment lookup endpoint as well as webhooks.</li>
+          <li><strong>Whether your API requires IP allowlisting</strong>, and if so what you need from us.</li>
+          <li>Whether you already integrate with Unleashed.</li>
+          <li>Confirmation that the input limits above are within range.</li>
+          <li>Which of the fields marked Required you return today, and which would need development.</li>
+        </ol>
+
+        <div class="note">
+          <p class="note__head">Contact</p>
+          <p>
+            <strong>MasterKraft</strong><br>
+            Thomastown, Victoria 3074<br>
+            +61 3 9044 9575
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <span>MasterKraft</span>
+        <span>Freight API integration spec</span>
+        <span>v1, August 2026</span>
+      </footer>
+    </main>
+  </div>
+</div>

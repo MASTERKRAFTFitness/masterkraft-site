@@ -22,11 +22,15 @@
     "compress:assets": "python3 scripts/compress-assets.py",
     "report:specs": "vitest run --config vitest.reports.config.mts scripts/spec-gaps.report.ts",
     "report:freight": "vitest run --config vitest.reports.config.mts scripts/interparcel-samples.report.ts",
-    "report:all": "vitest run --config vitest.reports.config.mts"
+    "report:all": "vitest run --config vitest.reports.config.mts",
+    "report:bulky": "vitest run --config vitest.reports.config.mts scripts/bulky-freight-profile.report.ts",
+    "brief:pdf": "npx --yes serve -l 8899 docs >/dev/null 2>&1 & sleep 2; \"$CHROME_PATH\" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 --print-to-pdf=reports/MasterKraft-Freight-API.pdf http://localhost:8899/freight-api-spec.html; kill %1"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.12.1",
+    "@supabase/supabase-js": "^2.112.4",
     "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4",

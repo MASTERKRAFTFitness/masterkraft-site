@@ -183,7 +183,30 @@ cheapest service plus one faster option, carrier rate plus a **15% handling marg
 missing value that blocked every quote. It is in `.env.local`, which is gitignored,
 so it also needs setting in Vercel.
 
+### The bulky freight brief (2026-08-25)
+
+`docs/freight-brief-bulky.md` plus `npm run report:bulky`. The RFP sent to
+carriers for the half of the catalogue AusPost cannot carry. It documents the
+LIVE AusPost integration as the spec to repeat, rather than describing a wishlist,
+and carries a field-level data contract.
+
+The requirement most rate APIs miss, and the one to keep loudest: **we price
+freight twice**, once at checkout to display and again server-side in
+`payment-intent/route.ts` when we charge the card, because the browser sends only
+the service id and never the price. So a carrier's rate must reproduce for the
+same inputs, or supply a redeemable quote token. A rate that drifts between those
+two calls fails the order.
+
+Also found while writing it: **Unleashed holds 923 sales shipments and only 43
+carry a tracking number**; 886 have no `ShippingCompany`. Those fields exist and
+are essentially unused, so we have no dispatch visibility in our own ERP.
+
 ### Australia Post prices a third of the catalogue, and that is expected
+
+> **The "111 of 338" figure below is STALE.** Current, from `npm run report:bulky`:
+> 79 of 186 measured products are parcel-carriable (42%), 107 are bulky (58%), out
+> of 220 sellable. 33 carry no carton data at all. Trust the report, not the prose.
+
 
 PAC prices parcels: 22kg, 105cm longest side, 0.25m³. Of 338 listed products, 246
 carry usable carton data and **111 fit those limits**. 96 are over 22kg and 109 over
@@ -500,6 +523,22 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 ## 10. Open / blocked, by owner
 
 ### Michael
+- **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
+  promoted yet.** Three things gate it, and two are promises the page makes:
+  1. **`HUBSPOT_FORM_WAITLIST` does not exist.** Until it is created and set, every
+     registration falls back to email. That path is built and tested, so nothing
+     is lost, but the contact is not in HubSpot and the list cannot be pulled for
+     the November send. The custom properties the route sends also need creating:
+     `site_count`, `purchase_timeframe`, `opt_in_status`, `contact_source`,
+     `source_campaign`.
+  2. **Lead routing has no owner.** Build Kit doc 14 still routes enquiries to
+     Adam, who has left. Registrations currently email `QUOTE_TO_EMAIL`.
+  3. **Somebody has to actually send the spec sheet and pricing.** The page trades
+     an operator's details for them. The list will be small and high value, so
+     this is a personal send, not a campaign.
+- **Is the Recovery Roller render approved for public use?** It is the hero of
+  that page at a larger size than anywhere else, extracted from the design preview
+  to `public/recovery-roller/roller-render.png`.
 - ~~**THE LAUNCH BLOCKER: the WooCommerce key in Vercel.**~~ **RESOLVED 2026-08-24,
   see §7b.** It was worse than suspected: the Vercel credentials were dead rather
   than read-only, card checkout was broken on the deployed site, and
@@ -519,10 +558,18 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
   `490118` from the 2026-08-24 freight test (§7b).
 - **Form-delivery test** - needs a go-ahead, it emails the team and creates a real
   HubSpot contact.
-- **Home gym photos.** Still outstanding. `home-gym-fitout` in `src/lib/fitouts.ts`
-  points at `/category/body-weight.jpg`, a product-category shot standing in for a
-  real fitout. Drop a file anywhere and it is a ten-minute job: crop to 2000x1333
-  to match `public/fitout/school-gym.jpg`, repoint, `npm run compress:assets`.
+- **The admin support desk needs three env vars before it exists in production**
+  (§13b). `ANTHROPIC_API_KEY` from console.anthropic.com (billed per token,
+  separate from any Claude subscription), plus `ADMIN_PASSWORD` and a random
+  `ADMIN_SESSION_SECRET`. All three go in `.env.local` and Vercel Production.
+  Until then `/admin` returns 404 everywhere, which is the intended safe state.
+  No live model conversation has been run against it yet.
+- ~~**Home gym photos.**~~ **Done 2026-08-25** - `/fitout/home-gym.jpg`, cropped from
+  Michael's own garage setup. Worth knowing it is tonally different from its five
+  siblings, which are professionally shot, dark and moody; this one is a bright,
+  flat phone photo. It is real MasterKraft equipment and it beats the
+  product-category placeholder it replaced, but if a styled home-gym shoot ever
+  happens, this is the first tile to swap.
 
 ### Steve
 - **Domain / DNS cutover, option A or B** (`LAUNCH.md` §2). The big gate:
@@ -654,6 +701,10 @@ WC write) remain unverifiable without a live test.
 
 `FREIGHT_MARGIN_PERCENT` defaults to 15 in code; set it only to change that.
 
+**Admin console (new, 2026-08-25):** `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`
+(32+ random hex), `ANTHROPIC_API_KEY`. All three are local-dev only right now and
+**none is set in Vercel**, so `/admin` 404s in production until they are. See §13b.
+
 ---
 
 ## 13. Conventions
@@ -667,6 +718,251 @@ WC write) remain unverifiable without a live test.
 - Relevant memories: `reference_masterkraft_woocommerce`, `reference_masterkraft_brand`,
   `reference_masterkraft_revl_galleries`, `reference_masterkraft_deploy`,
   `reference_masterkraft_unleashed`.
+
+---
+
+## 13b. The admin support desk (`/admin`), built 2026-08-25
+
+An internal console where a Claude agent answers product, stock, order and
+delivery questions against the real systems, and drafts customer replies. Built
+because the customer-facing admin work had no tooling at all: answering "is this
+in stock and what does delivery cost" meant opening Unleashed, WooCommerce and
+the AusPost calculator by hand.
+
+**It is not customer-facing.** Nothing it writes reaches a customer without a
+staff member approving it first.
+
+### Getting in
+
+`ADMIN_PASSWORD` + `ADMIN_SESSION_SECRET` are exchanged for a signed, 12-hour
+cookie. There are no user accounts.
+
+**It fails closed.** With either env var unset, `/admin` and `/admin/login` both
+return 404 rather than opening. Verified by unsetting the secret: 404, restored:
+307 to the login page. An unconfigured deploy therefore cannot leak order data or
+expose a send-email tool, which is why it is safe that Vercel has neither var yet.
+
+`src/proxy.ts` is the gate. Next 16 renamed Middleware to Proxy and the file must
+sit at `src/proxy.ts`; a `middleware.ts` there is silently ignored. The proxy is
+the optimistic check the Next docs describe, so `/api/admin/agent` re-verifies the
+cookie itself rather than trusting it.
+
+### What the agent can reach
+
+| tool | source | notes |
+|---|---|---|
+| `search_catalogue`, `get_product` | committed snapshot + Unleashed | matches what a visitor sees |
+| `check_stock` | Unleashed, **live** | ERP is the source of truth, inc-GST |
+| `lookup_order`, `list_recent_orders` | WooCommerce, live, **read only** | `lib/wc-admin.ts` |
+| `check_payment` | Stripe, via the order's `transaction_id` | refunds and disputes included |
+| `quote_freight` | Australia Post | same numbers the checkout charges |
+| `send_reply`, `log_enquiry` | Resend, HubSpot | **write - approval required** |
+
+### Two freshness tiers, on purpose
+
+`getUnleashedMap()` is a 60-minute snapshot of the whole catalogue and stays that
+way: rebuilding it costs ~16s and every listing page waits on it. That is right
+for the shop, where stale-but-consistent is exactly what the visitor sees.
+
+**The support desk reads live instead**, through `getLiveEntries()` in
+`lib/unleashed.ts`. A staff member repeats these figures to a customer, so an
+hour-old "one in stock" is a promise rather than a display, and `MCTMSP02` has
+exactly 1. Unleashed filters server-side on `productCode` and answers in
+150-600ms, verified 2026-08-25, so live costs almost nothing here.
+
+`search_catalogue` still uses the cached map, because a search can span the
+catalogue. Every tool result carries its own basis, and the system prompt forbids
+quoting a price or stock figure from a search without confirming it first.
+
+### Sizes are three different things
+
+`assembled_size` (ACF meta, **millimetres**) is the built machine. `packing_size`
+(ACF meta, **millimetres**) is the carton. `freight_carton`
+(`WcProduct.dimensions`, **centimetres**) is the same carton, and exists only to
+price delivery. Weight splits the same way: net is the machine, gross is machine
+plus carton, and freight quotes on gross.
+
+`get_product` returns all of them separately and never merges them, plus a
+plausibility check that flags unit errors instead of letting the agent read them
+out. `SCRWAR04` records its assembled length as 24,400mm, ten times the truth,
+**and its freight carton inherited it as 2440cm**. That now fires three
+`data_warnings`. `MCTMSP02` (net 480kg, gross 601kg) produces none, so the check
+is not just noise.
+
+Reads go through the same modules the public site uses, so the agent cannot quote
+a price the shop does not show.
+
+### The approval gate
+
+The two write tools never execute in the tool loop. When Claude calls one, the
+route emits an `approval` event instead and stops; the console renders the exact
+payload with Approve and Decline. The conversation is held in the browser, and
+the approved action is re-read from the `tool_use` block in that history, so
+there is no session store to keep.
+
+One consequence worth knowing: the Anthropic API needs every `tool_result` for an
+assistant turn in a single message, so a turn that mixes reads with a pending
+write re-runs its read tools when you approve. All read tools are idempotent, so
+this is safe, just not free.
+
+### Verified 2026-08-25 (not assumed)
+
+Against live systems, through the running app:
+
+- Unleashed: `MBCTMA01` $25.00 / 7 in stock, `MCTMSP02` $7,589.00 / 1,
+  `SCRWAR04` $1,705.00 / 0.
+- **`SCRWAR04` shows the Unleashed price is doing real work**: the WooCommerce
+  fallback for the same product is $1,375.00. A $330 gap.
+- AusPost: 2x `MBCTMA01` to Parramatta 2150 quoted $36.80 Parcel Post, which is
+  exactly the freight charged on real order `490118`.
+- WooCommerce orders: `490118`, `490117`, `490116` returned with contact,
+  address and lines.
+- Auth: unauthenticated `/admin` 307s to the login page, `/api/admin/agent`
+  answers 401 JSON (not an HTML login page, which would have rendered into the
+  chat), and the unconfigured case 404s.
+
+`npm run build` passes, `npx vitest run` is 86 passed / 32 skipped, and lint is
+unchanged at 21 errors + 2 warnings.
+
+### The Anthropic account
+
+**Create a MasterKraft organisation, on a MasterKraft email and card.** Not
+Michael's personal account: this is an operating cost that should arrive addressed
+to the business, and a support desk keyed to one person's card stops working the
+day that person steps back. Whoever's address creates the org owns it, so use
+`hello@masterkraft.com` or similar rather than a personal address.
+
+**You do not need a second login.** One Anthropic login can belong to several
+organisations and switch between them in the Console. So: create the MasterKraft
+org from a MasterKraft mailbox, then invite Michael's existing login into it as an
+admin. Ownership and recovery stay with the business, day-to-day management
+happens from the login he already uses. Billing, API keys and usage are all
+per-ORGANISATION, not per-login, which is the distinction that matters.
+
+**The trap: a key from the wrong org works perfectly.** The app reads
+`ANTHROPIC_API_KEY` and cannot tell which organisation issued it. Paste a personal
+key into MasterKraft's Vercel and everything runs, the usage just bills the wrong
+entity and there is no clean handover later. Nothing will warn you. Check the key
+was issued in the MasterKraft workspace, not merely that the console answers.
+
+**Issue the key inside a Workspace, and set a spend limit on it.** This is not
+bookkeeping neatness. An agent is a program that spends money in a loop.
+`MAX_TURNS` in the agent route caps one conversation at 12 model turns; nothing in
+the code caps the month, and a workspace spend limit is the only thing that does.
+
+**A leaked `ANTHROPIC_API_KEY` is a bill, not a breach.** It buys Claude tokens
+and nothing else. It does not reach Unleashed, WooCommerce, HubSpot or Resend,
+which hold their own credentials, and reaching the tools at all requires
+`ADMIN_PASSWORD` first. Worth knowing, because it sets how paranoid to be.
+
+Keep it Sensitive in Vercel, but **verify it the moment it is set**: load `/admin`
+and ask one question. See §7b for why that instruction is here, a Sensitive var
+holding the wrong value went unnoticed for weeks because nobody could read it back.
+
+Rough cost, estimated and not measured: **$0.10 to $0.30 a conversation**, so
+roughly **$60 to $180 a month** at twenty a day. The system prompt and tool
+definitions are cached, so the variable cost is mostly tool results;
+`list_recent_orders` is the expensive one at maybe 6k to 8k tokens of order JSON.
+The lever if that lands badly is the model (`MODEL` in the agent route): Sonnet 5
+is $3/$15 per MTok against Opus 5's $5/$25.
+
+### Why it is not a Managed Agent
+
+Anthropic can host the agent loop and a sandbox. That is the wrong shape here. The
+tools ARE the app: `getUnleashedMap()`, `quoteFreight()` and `getOrder()` are
+existing functions sharing the site's env vars and its `unstable_cache` layer.
+Hosting the loop elsewhere means either reimplementing all of that or exposing
+MasterKraft's ERP and order data over a public API for a sandbox to call. The loop
+belongs next to the data it reads.
+
+### Identity and audit
+
+**Two modes, and the console says which one it is in.**
+
+| | shared | supabase |
+|---|---|---|
+| trigger | `SUPABASE_*` unset | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set |
+| sign in | one shared `ADMIN_PASSWORD` | work email, six-digit code emailed via Resend |
+| "who approved this" | **no answer** | recorded against a person |
+
+Shared mode is kept deliberately, not as a leftover: it means a database outage
+cannot lock the team out of their own order lookups, and the console worked
+before the database existed. Both `/admin` and the login page state plainly when
+they are in it, because in shared mode nothing is attributable.
+
+**No passwords in identity mode.** Identity IS the work email, proven by a code.
+Nothing to rotate, and when someone leaves the business their mailbox goes and so
+does their access. Codes are six digits from the CSPRNG, hashed at rest, single
+use, ten minute expiry, and burnt after five wrong guesses. Requesting a code
+answers identically whether or not the address belongs to staff, so it cannot be
+used to enumerate who works here.
+
+**Bootstrap:** an empty `admin_users` table means nobody can sign in to create the
+first user. `ADMIN_BOOTSTRAP_EMAILS` (comma separated, in Vercel) lists addresses
+allowed to sign in before a row exists; the row is created on first successful
+code entry. Kept out of the repo on purpose.
+
+**What is recorded:** the conversation, every message, and one row per write the
+agent proposed. The proposal row is written BEFORE anyone decides, so a proposal
+nobody acted on still leaves a trace: `/admin/activity` shows those as **never
+decided**, in the accent colour, because "the agent wanted to email a customer and
+nobody said yes" is the case you most want to see.
+
+Audit writes are best effort and never raise. An audit outage must not stop
+someone looking up an order for a customer on the phone. The trade is explicit: a
+gap in the record beats a console that stops working.
+
+**Schema:** `supabase/migrations/20260825_admin_identity_and_audit.sql`. Plain
+Postgres apart from the RLS block, so it runs anywhere. Every table has RLS on
+with **no policies**, which denies anon and authenticated outright; only the
+service role key reaches them, and only from server code.
+
+> **NOT YET APPLIED.** The MasterKraft Supabase project (`pmydkwszkgjnolrcnenh`)
+> lives in its own org, which this session's Supabase connection could not reach.
+> Paste the migration into that project's SQL editor, then set `SUPABASE_URL`,
+> `SUPABASE_SERVICE_ROLE_KEY` and `ADMIN_BOOTSTRAP_EMAILS`.
+>
+> The SQL was validated against a real Postgres inside a transaction that was
+> rolled back: tables, foreign keys, the insert/approve flow and RLS all checked
+> out, and nothing persisted.
+
+### Still open
+
+- **Identity mode is unverified end to end**, because the database does not exist
+  yet. Shared mode was tested through the running app (wrong password 401, correct
+  200, activity page reports no audit trail). The email-code path is built and
+  typechecks, but no code has been sent or redeemed.
+- Conversations are recorded but not yet re-openable in the UI. `/admin/activity`
+  lists actions, not threads.
+
+### Not verified
+
+**`check_payment` end to end.** `STRIPE_SECRET_KEY` is empty in `.env.local`, so
+the tool was only exercised down to its "not configured" branch. It does correctly
+pull the PaymentIntent ref (`pi_3U7tPf...`) off order `490118`. **Note the trap:
+per section 10 the deployed site runs test Stripe keys, and a test key cannot see
+a live customer payment.** The tool reports which mode answered and says explicitly
+not to tell a customer they have not paid on the strength of a miss.
+
+**The model calls themselves.** `ANTHROPIC_API_KEY` was not available in the
+session that built this, so the tool executors, the auth, the streaming route and
+the UI are all proven, but no live conversation has run end to end. Expect to
+shake out prompt-level behaviour on the first real use.
+
+### Watch out
+
+- **§13's lint note is stale.** It says 2 pre-existing lint errors; there are 21
+  errors and 2 warnings, none in the admin code. Compare against `HEAD`, do not
+  expect 2.
+- Folders under `app/` starting with `_` are Next private folders and do not
+  route. Cost 10 minutes here.
+- The system prompt in `lib/agent/prompt.ts` sits behind a prompt-cache
+  breakpoint. Keep it a byte-stable constant; interpolating anything per-request
+  invalidates the cache on every call.
+- `TOOL_DEFINITIONS` order is part of that same cached prefix. Appending is fine,
+  reshuffling is not.
+- The spec conflicts in §10 now matter more, not less. The agent will read a
+  wrong weight out to a staff member and freight will price on it.
 
 ---
 
