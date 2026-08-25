@@ -1981,7 +1981,7 @@
      "slug": "plyometric-boxes"
     }
    ],
-   "date_modified_gmt": "2026-07-28T02:31:36",
+   "date_modified_gmt": "2026-08-24T04:32:14",
    "menu_order": 0,
    "featured": false,
    "meta_data": [
@@ -2984,7 +2984,7 @@
      "slug": "core-training"
     }
    ],
-   "date_modified_gmt": "2026-08-21T04:36:28",
+   "date_modified_gmt": "2026-08-24T08:40:08",
    "menu_order": 0,
    "featured": false,
    "meta_data": [
@@ -5605,7 +5605,7 @@
      "slug": "weight-benches"
     }
    ],
-   "date_modified_gmt": "2026-06-21T23:31:31",
+   "date_modified_gmt": "2026-08-24T04:32:20",
    "menu_order": 0,
    "featured": false,
    "meta_data": [
@@ -9557,7 +9557,7 @@
      "slug": "power-bags"
     }
    ],
-   "date_modified_gmt": "2026-05-15T06:56:12",
+   "date_modified_gmt": "2026-08-21T05:47:15",
    "menu_order": 0,
    "featured": false,
    "meta_data": [
@@ -13482,7 +13482,7 @@
      "slug": "mixed-implements"
     }
    ],
-   "date_modified_gmt": "2026-07-22T06:31:43",
+   "date_modified_gmt": "2026-08-21T07:08:49",
    "menu_order": 0,
    "featured": false,
    "meta_data": [
@@ -59626,14 +59626,14 @@
      "slug": "rigs-racks"
     },
     {
-     "id": 232,
-     "name": "Squat &amp; Power Racks",
-     "slug": "squat-power-racks"
-    },
-    {
      "id": 108,
      "name": "Squat &amp; Power Racks",
      "slug": "squat-power-racks-strength"
+    },
+    {
+     "id": 232,
+     "name": "Squat &amp; Power Racks",
+     "slug": "squat-power-racks"
     },
     {
      "id": 52,
@@ -59794,14 +59794,14 @@
      "slug": "rigs-racks"
     },
     {
-     "id": 232,
-     "name": "Squat &amp; Power Racks",
-     "slug": "squat-power-racks"
-    },
-    {
      "id": 108,
      "name": "Squat &amp; Power Racks",
      "slug": "squat-power-racks-strength"
+    },
+    {
+     "id": 232,
+     "name": "Squat &amp; Power Racks",
+     "slug": "squat-power-racks"
     },
     {
      "id": 52,
@@ -60292,14 +60292,14 @@
      "slug": "rigs-racks"
     },
     {
-     "id": 232,
-     "name": "Squat &amp; Power Racks",
-     "slug": "squat-power-racks"
-    },
-    {
      "id": 108,
      "name": "Squat &amp; Power Racks",
      "slug": "squat-power-racks-strength"
+    },
+    {
+     "id": 232,
+     "name": "Squat &amp; Power Racks",
+     "slug": "squat-power-racks"
     },
     {
      "id": 52,
@@ -60447,14 +60447,14 @@
      "slug": "rigs-racks"
     },
     {
-     "id": 232,
-     "name": "Squat &amp; Power Racks",
-     "slug": "squat-power-racks"
-    },
-    {
      "id": 108,
      "name": "Squat &amp; Power Racks",
      "slug": "squat-power-racks-strength"
+    },
+    {
+     "id": 232,
+     "name": "Squat &amp; Power Racks",
+     "slug": "squat-power-racks"
     },
     {
      "id": 52,
@@ -78743,14 +78743,14 @@
    ],
    "categories": [
     {
-     "id": 276,
-     "name": "Dumbbells",
-     "slug": "dumbbells-packages-2"
-    },
-    {
      "id": 39,
      "name": "Dumbbells",
      "slug": "dumbbells"
+    },
+    {
+     "id": 276,
+     "name": "Dumbbells",
+     "slug": "dumbbells-packages-2"
     },
     {
      "id": 33,
