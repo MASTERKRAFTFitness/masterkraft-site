@@ -1,8 +1,10 @@
 # Bulky freight brief
 
-The RFP we send to freight companies for the 58% of the catalogue Australia Post
-cannot carry. Shareable version was published as an artifact; this is the source
-of truth for the numbers in it.
+The RFP we send to freight providers for the bulky half of the catalogue.
+
+**This file is INTERNAL. The provider-facing version is deliberately narrower.**
+Keep it that way: this doc holds the working numbers and our own weak spots, the
+published brief holds only what a provider needs to quote and build.
 
 **Regenerate the figures before sending it to anyone new:**
 
@@ -95,6 +97,27 @@ Where AusPost falls short and a bulky carrier must do better:
    and use them only to rank services, never to promise a date.
 3. No tailgate / residential / two-person concept, because parcels do not need one.
 4. Rating only. Nothing is booked through it, which is why the ERP is empty.
+
+## Deliberately NOT in the provider-facing brief
+
+Trimmed on Michael's call, 2026-08-25, on the principle that a provider gets what
+they need and nothing more. If a future edit reintroduces any of this, it is a
+regression, not an improvement:
+
+| Withheld | Why |
+|---|---|
+| **Any carrier name**, current or historical | We are tendering to these people. Naming incumbents tells a bidder who they are pricing against. |
+| **The handling margin** | Our markup is not a provider's business. |
+| **"Not a greenfield tender"** framing | Revealed our position for no gain. |
+| **The 923 shipments / 43 tracking numbers stat** | The ASK (populate these fields) is what a provider needs. How empty our ERP is today is not. |
+| **The 33 unmeasured products and the one bad record** | See the caveat below. |
+| Parcel-versus-bulky percentages | 107 products is the number they quote against. The split reveals more than it helps. |
+| Inconsistent `DeliveryRegion` data | Destination mix is given as percentages instead. |
+
+**One reservation, recorded rather than argued.** Dropping the data-gaps
+disclosure is a defensible commercial call, but a provider will hit the 33
+unmeasured products during onboarding, and hearing it from us first would have
+cost nothing. If a bidder gets close, consider mentioning it before they find it.
 
 ## Before sending
 
