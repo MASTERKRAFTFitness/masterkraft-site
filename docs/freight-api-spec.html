@@ -533,6 +533,36 @@
           <li>Sandbox bookings must not create real consignments or generate charges.</li>
           <li>A documented approach to versioning, so a change on your side does not break checkout without notice.</li>
         </ul>
+
+        <h3>Network access</h3>
+        <div class="note">
+          <p class="note__head">Tell us early if you require IP allowlisting</p>
+          <p>
+            Our checkout runs on serverless infrastructure, so calls to you originate from a
+            <strong>shared pool of addresses that changes without notice</strong>. We cannot give you
+            a fixed egress IP on our current platform.
+          </p>
+          <p>
+            If your API is gated on an allowlist, say so in your response. It is not necessarily a
+            blocker, but it needs infrastructure work on our side and we would rather price that in
+            now than discover it midway through an integration.
+          </p>
+        </div>
+        <ul>
+          <li>
+            We authenticate to you with a key or OAuth credentials over TLS. That is the control we
+            expect to rely on, rather than network origin.
+          </li>
+          <li>
+            <strong>For your callbacks to us, we verify the signature, not the source address.</strong>
+            If you publish source IP ranges we will use them as an additional check, but we will not
+            depend on them, and we will not reject an otherwise valid signed callback for arriving
+            from an address outside a published range.
+          </li>
+          <li>
+            If you do publish ranges, tell us how changes are announced and with how much notice.
+          </li>
+        </ul>
       </section>
 
       <section id="limits">
@@ -568,6 +598,7 @@
           <li>Whether rating is deterministic, or whether you issue quote tokens, and their lifetime.</li>
           <li>The complete list of error codes from rating, and of status and exception codes from tracking.</li>
           <li>Whether you expose a consignment lookup endpoint as well as webhooks.</li>
+          <li><strong>Whether your API requires IP allowlisting</strong>, and if so what you need from us.</li>
           <li>Whether you already integrate with Unleashed.</li>
           <li>Confirmation that the input limits above are within range.</li>
           <li>Which of the fields marked Required you return today, and which would need development.</li>
