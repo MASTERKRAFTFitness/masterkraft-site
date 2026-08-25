@@ -119,9 +119,24 @@ disclosure is a defensible commercial call, but a provider will hit the 33
 unmeasured products during onboarding, and hearing it from us first would have
 cost nothing. If a bidder gets close, consider mentioning it before they find it.
 
+## Scope: the provider document is API ONLY
+
+Narrowed 2026-08-25. It is a technical integration spec, not a tender. Everything
+commercial lives in this file and goes to a provider some other way, if at all:
+consignment profile and weight bands, lanes, volumes, handling and tailgate
+pricing, the rate-card fallback, and the commercial response checklist.
+
+What stays is the four calls (rate, book, status, ERP write), the field contract,
+error and status code requirements, auth and sandbox, and the input limits.
+
+The physical extremes survive, but reframed: 601kg, 268cm and 1.12m3 appear as
+**values the API must accept** rather than as a catalogue profile. A provider
+whose API rejects a 601kg line item needs to know that before integration, not
+after.
+
 ## The provider-facing document
 
-`docs/freight-brief.html` is the source. It is the same file published as the
+`docs/freight-api-spec.html` is the source. It is the same file published as the
 artifact, and it carries a `@media print` block so it renders to a clean A4 PDF
 without a second design.
 
@@ -130,7 +145,7 @@ export CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 npm run brief:pdf
 ```
 
-Writes `reports/MasterKraft-Freight-Brief.pdf`, 9 pages A4. The PDF is not
+Writes `reports/MasterKraft-Freight-API.pdf`, 9 pages A4. The PDF is not
 committed because it is regenerable and the HTML is the source of truth. Edit the
 HTML, never the PDF, or the web and paper versions drift.
 

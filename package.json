@@ -24,7 +24,7 @@
     "report:freight": "vitest run --config vitest.reports.config.mts scripts/interparcel-samples.report.ts",
     "report:all": "vitest run --config vitest.reports.config.mts",
     "report:bulky": "vitest run --config vitest.reports.config.mts scripts/bulky-freight-profile.report.ts",
-    "brief:pdf": "npx --yes serve -l 8899 docs >/dev/null 2>&1 & sleep 2; \"$CHROME_PATH\" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 --print-to-pdf=reports/MasterKraft-Freight-Brief.pdf http://localhost:8899/freight-brief.html; kill %1"
+    "brief:pdf": "npx --yes serve -l 8899 docs >/dev/null 2>&1 & sleep 2; \"$CHROME_PATH\" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 --print-to-pdf=reports/MasterKraft-Freight-API.pdf http://localhost:8899/freight-api-spec.html; kill %1"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
