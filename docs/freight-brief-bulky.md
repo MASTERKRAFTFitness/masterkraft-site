@@ -119,6 +119,30 @@ disclosure is a defensible commercial call, but a provider will hit the 33
 unmeasured products during onboarding, and hearing it from us first would have
 cost nothing. If a bidder gets close, consider mentioning it before they find it.
 
+## The provider-facing document
+
+`docs/freight-brief.html` is the source. It is the same file published as the
+artifact, and it carries a `@media print` block so it renders to a clean A4 PDF
+without a second design.
+
+```
+export CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+npm run brief:pdf
+```
+
+Writes `reports/MasterKraft-Freight-Brief.pdf`, 9 pages A4. The PDF is not
+committed because it is regenerable and the HTML is the source of truth. Edit the
+HTML, never the PDF, or the web and paper versions drift.
+
+The print block forces the light palette with `!important`, because the
+dark-scheme rule uses `:root:not([data-theme="light"])` and outranks a bare
+`:root`. It also unwraps the horizontally-scrolling table containers, which are
+right on screen and would clip on paper.
+
+**Contact details on the brief are the published switchboard number only.** The
+site has no public email address (see conventions), so there is no address on it.
+If a named contact should receive responses, add one before sending.
+
 ## Before sending
 
 - [ ] Re-run `npm run report:bulky` and check the numbers still match
