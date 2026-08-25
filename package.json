@@ -22,7 +22,8 @@
     "compress:assets": "python3 scripts/compress-assets.py",
     "report:specs": "vitest run --config vitest.reports.config.mts scripts/spec-gaps.report.ts",
     "report:freight": "vitest run --config vitest.reports.config.mts scripts/interparcel-samples.report.ts",
-    "report:all": "vitest run --config vitest.reports.config.mts"
+    "report:all": "vitest run --config vitest.reports.config.mts",
+    "report:bulky": "vitest run --config vitest.reports.config.mts scripts/bulky-freight-profile.report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

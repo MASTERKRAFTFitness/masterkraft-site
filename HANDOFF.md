@@ -183,7 +183,30 @@ cheapest service plus one faster option, carrier rate plus a **15% handling marg
 missing value that blocked every quote. It is in `.env.local`, which is gitignored,
 so it also needs setting in Vercel.
 
+### The bulky freight brief (2026-08-25)
+
+`docs/freight-brief-bulky.md` plus `npm run report:bulky`. The RFP sent to
+carriers for the half of the catalogue AusPost cannot carry. It documents the
+LIVE AusPost integration as the spec to repeat, rather than describing a wishlist,
+and carries a field-level data contract.
+
+The requirement most rate APIs miss, and the one to keep loudest: **we price
+freight twice**, once at checkout to display and again server-side in
+`payment-intent/route.ts` when we charge the card, because the browser sends only
+the service id and never the price. So a carrier's rate must reproduce for the
+same inputs, or supply a redeemable quote token. A rate that drifts between those
+two calls fails the order.
+
+Also found while writing it: **Unleashed holds 923 sales shipments and only 43
+carry a tracking number**; 886 have no `ShippingCompany`. Those fields exist and
+are essentially unused, so we have no dispatch visibility in our own ERP.
+
 ### Australia Post prices a third of the catalogue, and that is expected
+
+> **The "111 of 338" figure below is STALE.** Current, from `npm run report:bulky`:
+> 79 of 186 measured products are parcel-carriable (42%), 107 are bulky (58%), out
+> of 220 sellable. 33 carry no carton data at all. Trust the report, not the prose.
+
 
 PAC prices parcels: 22kg, 105cm longest side, 0.25m³. Of 338 listed products, 246
 carry usable carton data and **111 fit those limits**. 96 are over 22kg and 109 over
