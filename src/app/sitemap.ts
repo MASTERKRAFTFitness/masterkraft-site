@@ -30,6 +30,7 @@ const staticPaths = [
   "/terms-and-conditions",
   "/privacy-policy",
   "/wholesale-store",
+  "/recovery-roller",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -523,6 +523,22 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 ## 10. Open / blocked, by owner
 
 ### Michael
+- **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
+  promoted yet.** Three things gate it, and two are promises the page makes:
+  1. **`HUBSPOT_FORM_WAITLIST` does not exist.** Until it is created and set, every
+     registration falls back to email. That path is built and tested, so nothing
+     is lost, but the contact is not in HubSpot and the list cannot be pulled for
+     the November send. The custom properties the route sends also need creating:
+     `site_count`, `purchase_timeframe`, `opt_in_status`, `contact_source`,
+     `source_campaign`.
+  2. **Lead routing has no owner.** Build Kit doc 14 still routes enquiries to
+     Adam, who has left. Registrations currently email `QUOTE_TO_EMAIL`.
+  3. **Somebody has to actually send the spec sheet and pricing.** The page trades
+     an operator's details for them. The list will be small and high value, so
+     this is a personal send, not a campaign.
+- **Is the Recovery Roller render approved for public use?** It is the hero of
+  that page at a larger size than anywhere else, extracted from the design preview
+  to `public/recovery-roller/roller-render.png`.
 - ~~**THE LAUNCH BLOCKER: the WooCommerce key in Vercel.**~~ **RESOLVED 2026-08-24,
   see §7b.** It was worse than suspected: the Vercel credentials were dead rather
   than read-only, card checkout was broken on the deployed site, and
