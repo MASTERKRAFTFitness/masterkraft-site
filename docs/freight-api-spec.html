@@ -199,8 +199,8 @@
         <p class="label">Scope</p>
         <h2>What we are integrating</h2>
         <p class="lede">
-          Four calls. Quote at checkout, book on payment, receive status, and write the consignment
-          number back to our ERP.
+          Five calls. Quote at checkout, book on payment, receive status, look status up on demand,
+          and write the consignment number back to our ERP.
         </p>
         <div class="scroller">
           <table>
@@ -208,7 +208,8 @@
             <tbody>
               <tr><td>1</td><td class="mono">rate</td><td>Customer reaches checkout</td><td>We call you, synchronously</td></tr>
               <tr><td>2</td><td class="mono">book</td><td>Payment succeeds</td><td>We call you</td></tr>
-              <tr><td>3</td><td class="mono">status</td><td>Consignment moves</td><td>You call us, webhook</td></tr>
+              <tr><td>3a</td><td class="mono">status webhook</td><td>Consignment moves</td><td>You call us</td></tr>
+              <tr><td>3b</td><td class="mono">consignment lookup</td><td>On demand</td><td>We call you</td></tr>
               <tr><td>4</td><td class="mono">ERP write</td><td>After booking</td><td>Either side, see section 4</td></tr>
             </tbody>
           </table>
@@ -243,7 +244,7 @@
       </section>
 
       <section id="rating">
-        <p class="label">Call 1 of 4</p>
+        <p class="label">Call 1</p>
         <h2>Rating</h2>
         <p>Synchronous, on the checkout path, with a customer waiting.</p>
 
@@ -341,7 +342,7 @@
       </section>
 
       <section id="booking">
-        <p class="label">Call 2 of 4</p>
+        <p class="label">Call 2</p>
         <h2>Booking</h2>
         <p>Called once payment succeeds. No human rekeying.</p>
 
@@ -380,30 +381,114 @@
       </section>
 
       <section id="status">
-        <p class="label">Call 3 of 4</p>
-        <h2>Status callbacks</h2>
-        <p>
-          A webhook per status change. Polling is an acceptable fallback but we would rather not run
-          a scheduler for it.
+        <p class="label">Call 3</p>
+        <h2>Shipment status</h2>
+        <p class="lede">
+          We need both a push and a pull. They answer different questions and one does not
+          substitute for the other.
         </p>
+
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Mechanism</th><th></th><th>Answers</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Webhook</strong>, you call us</td>
+                <td class="req">Required</td>
+                <td>"Something changed." Drives customer notifications and the ERP write, without us running a scheduler.</td>
+              </tr>
+              <tr>
+                <td><strong>Query endpoint</strong>, we call you</td>
+                <td class="req">Required</td>
+                <td>"Where is consignment X right now?" Asked by staff with a customer on the phone, and used to reconcile after any missed webhook.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <p class="note__head">Why push alone is not enough</p>
+          <p>
+            Our support desk answers delivery questions on demand. If the only status we hold is what
+            was pushed to us, then a single dropped webhook means we confidently tell a customer
+            something stale. A query endpoint is what makes the record self correcting.
+          </p>
+        </div>
+
+        <h3>Push: the event</h3>
         <pre><code>POST &lt;our endpoint&gt;
 {
+  "event_id": "evt_01J8XZ...",
   "consignment_number": "...",
   "order_number": "490118",
   "status": "in_transit",
   "status_description": "Departed Melbourne depot",
-  "occurred_at": "2026-08-25T04:30:00Z"
+  "occurred_at": "2026-08-25T04:30:00Z",
+  "estimated_delivery": "2026-08-28",
+  "location": "Melbourne, VIC"
 }</code></pre>
+
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Field</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">event_id</td><td class="req">Required</td><td>Stable and unique. We deduplicate on it, so a retry is safe.</td></tr>
+              <tr><td class="mono">consignment_number</td><td class="req">Required</td><td>Ties the event to the booking.</td></tr>
+              <tr><td class="mono">order_number</td><td class="req">Required</td><td>Ties it to our order without a lookup.</td></tr>
+              <tr><td class="mono">status</td><td class="req">Required</td><td>A code from your fixed vocabulary, not free text.</td></tr>
+              <tr><td class="mono">status_description</td><td class="req">Required</td><td>Human readable. Shown to the customer.</td></tr>
+              <tr><td class="mono">occurred_at</td><td class="req">Required</td><td>When it happened, not when you sent it. Events can arrive out of order and we sort on this.</td></tr>
+              <tr><td class="mono">estimated_delivery</td><td class="req">Required</td><td><strong>Revised ETA, on every event.</strong> "It moved" without "and it now arrives Thursday" is not useful to a customer.</td></tr>
+              <tr><td class="mono">location</td><td class="opt">Preferred</td><td>Last scan point.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Pull: current state</h3>
+        <pre><code>GET /consignments/{consignment_number}
+
+{
+  "consignment_number": "...",
+  "order_number": "490118",
+  "status": "in_transit",
+  "estimated_delivery": "2026-08-28",
+  "events": [ /* full history, oldest first */ ],
+  "proof_of_delivery": null
+}</code></pre>
+        <p>
+          Current status, the revised ETA, and the <strong>full event history</strong>. The history
+          matters: it is how we detect and backfill anything a webhook failed to deliver.
+        </p>
+
+        <h3>Exceptions</h3>
+        <p>
+          Most of what we ship is bulky, and a meaningful share goes to residential addresses where
+          nobody is home and there is no dock. Exceptions are normal, not edge cases, so they need
+          more than a status code:
+        </p>
         <ul>
-          <li>Signed, so we can verify the callback came from you. HMAC over the body is fine.</li>
-          <li><strong>The full list of status codes you can emit</strong>, not a sample. We map them onto a fixed field in our ERP, so we need the complete set up front.</li>
-          <li>Proof of delivery retrievable against the consignment number, if you capture it.</li>
-          <li>Retry on non 2xx, so a brief outage on our side does not lose an event.</li>
+          <li><strong>A reason code</strong>, distinguishing at minimum: nobody home, access or vehicle restriction, refused, damaged, lost, held for payment or documentation.</li>
+          <li><strong>What happens next</strong>, and by when. Automatic redelivery, held at depot with a deadline, or awaiting instruction from us.</li>
+          <li><strong>Whether we need to act</strong>, as a boolean, so an exception that resolves itself does not raise the same alarm as one waiting on us.</li>
+        </ul>
+
+        <h3>Vocabulary and mechanics</h3>
+        <ul>
+          <li>
+            <strong>The complete list of status and exception codes you can emit</strong>, not a
+            sample. We map them onto a fixed field in our ERP, so an unmapped code arriving in
+            production is a defect we would rather design out now.
+          </li>
+          <li>Tell us if you add codes later. A new code should not be a silent change.</li>
+          <li>Signed callbacks, so we can verify they came from you. HMAC over the raw body is fine.</li>
+          <li>Retry on non 2xx with backoff, so a brief outage on our side does not lose an event.</li>
+          <li>Separate webhook URLs for sandbox and production, configurable by us without a support ticket.</li>
+          <li>Proof of delivery retrievable against the consignment number, if you capture it. Signature or photo. It settles disputes.</li>
         </ul>
       </section>
 
       <section id="erp">
-        <p class="label">Call 4 of 4</p>
+        <p class="label">Call 4</p>
         <h2>Writing back to Unleashed</h2>
         <p>
           Unleashed is our ERP and the system of record for dispatch. Every website order already
@@ -481,7 +566,8 @@
         <ol>
           <li>API documentation, and whether a sandbox is available today.</li>
           <li>Whether rating is deterministic, or whether you issue quote tokens, and their lifetime.</li>
-          <li>The complete list of error codes from rating and status codes from tracking.</li>
+          <li>The complete list of error codes from rating, and of status and exception codes from tracking.</li>
+          <li>Whether you expose a consignment lookup endpoint as well as webhooks.</li>
           <li>Whether you already integrate with Unleashed.</li>
           <li>Confirmation that the input limits above are within range.</li>
           <li>Which of the fields marked Required you return today, and which would need development.</li>
