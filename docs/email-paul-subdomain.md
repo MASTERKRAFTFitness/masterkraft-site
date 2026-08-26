@@ -67,7 +67,7 @@ this is a short list rather than a vague ask:
 record pointing at your WordPress server, untouched. We would value your help
 sequencing that on the day so we keep a fast rollback available.
 
-**What we need from you:**
+**Could you come back to us on three things:**
 
 - **Which subdomain you prefer** (`shop.` or `cms.`).
 - **A date you can do the vhost and certificate.** We are ready on our side and
@@ -78,7 +78,9 @@ sequencing that on the day so we keep a fast rollback available.
   requested and never created, so I would rather know the route than guess.
 
 Our side is quick once the store has moved: we change one setting, redeploy, and
-verify a product page still shows live prices before anything else happens. Call me if it is easier to talk it through.
+verify a product page still shows live prices before anything else happens.
+
+Call me if it is easier to talk it through.
 
 Thanks Paul, this is the last big piece.
 
