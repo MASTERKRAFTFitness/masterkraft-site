@@ -1,88 +1,78 @@
-# Draft email to Paul (eFront) — move the WooCommerce store to a subdomain
+# Draft email to Paul (eFront) — give WooCommerce its own hostname back
 
-Status: DRAFT for Michael to review and send. This is the single gate that
-unblocks go-live (see `launch-checklist.md` section 0 and `go-live-runbook.md`
-step 1). Nothing else in the cutover can finish until this lands.
+Status: DRAFT for Michael to review and send.
 
-Revised 2026-08-27: the original said "getting close" with no date. Michael now
-wants the cutover done, so this version asks for a specific commitment, points
-Paul at the finished site so the request is concrete, and asks the DNS question
-directly (see notes).
+**Rewritten 2026-08-27, after the cutover.** Every earlier version said "this is
+the last thing before we go live". That is now wrong: the site went live on
+`masterkraft.com` on 27 August without Paul, because only the buy path reads the
+live store and the site launched in quote-only mode.
+
+The ask has changed shape. WooCommerce is no longer competing for the hostname,
+it has **lost** it. WordPress is still running on its server, but
+`masterkraft.com/wp-admin` and `/wp-json` now answer from Vercel, so the store is
+only reachable by IP. That makes this more urgent than it was yesterday, not less.
 
 ---
 
-**Subject:** MasterKraft relaunch: the one hosting change we need from you to go live
+**Subject:** MasterKraft: WooCommerce needs its own hostname (we cut the site over yesterday)
 
 Hi Paul,
 
-The new MasterKraft website is finished and running. You can see it here:
+An update and a request.
 
-**https://web.test.masterkraft.com**
+**The new site is live.** `https://masterkraft.com` now serves the new MasterKraft
+website. We repointed the domain on 27 August. Email was deliberately left alone:
+we kept your nameservers and changed only the A and CNAME records, and we have
+confirmed mail is still flowing normally.
 
-That is the real site on its real hosting, reading live products, prices and
-stock from your WooCommerce store. The only thing standing between it and
-`masterkraft.com` is one change on your side, and I wanted to lay it out clearly
-so we can get it scheduled.
+**Your WordPress install has not been touched.** It is running exactly as it was,
+on the same server, with all its data. Nothing has been moved or deleted.
 
-**The situation.** The new site does not hold its own product catalogue. It reads
-products, prices and stock live from the existing WooCommerce store in real time.
-So WooCommerce has to stay running and reachable after we switch
-`masterkraft.com` over to the new site. Right now both want the same hostname,
-and they cannot both have it.
+**But it no longer has a hostname.** Because `masterkraft.com` now points at the
+new site, WooCommerce is only reachable by IP address. In practice:
 
-**The change we need.** Today the WooCommerce store is served from
-`masterkraft.com` itself. We need it moved to a stable subdomain, for example:
+- `masterkraft.com/wp-admin` no longer reaches WordPress.
+- `masterkraft.com/wp-json/...` no longer reaches the WooCommerce API.
+- Anything integrating with the store over that hostname will be failing,
+  **including the Unleashed sync**, which is the one we would most like you to
+  check.
 
-- `shop.masterkraft.com`, or
-- `cms.masterkraft.com`
+**So the request is the same one as before, now with some urgency:** please give
+the store its own subdomain, for example `shop.masterkraft.com` or
+`cms.masterkraft.com`.
 
-Once it is on a subdomain, the new site keeps reading live data from there, and
-we can repoint `masterkraft.com` at the new site without taking the store's data
-offline for a moment.
+**What we need specifically.** We tested what the server does today, so this is a
+short list rather than a vague ask:
 
-**What we need from you specifically.** We tested what the server does today, so
-this is a short list rather than a vague ask:
-
-1. **A vhost for the subdomain, pointing at the existing WordPress docroot.**
-   We checked: a request with `Host: shop.masterkraft.com` currently reaches the
-   server but `/wp-json/` returns 404, so WordPress is bound to the
-   `masterkraft.com` vhost only.
+1. **A vhost for the subdomain, pointing at the existing WordPress docroot.** A
+   request with `Host: shop.masterkraft.com` currently reaches the server but
+   `/wp-json/` returns 404, so WordPress is bound to the old vhost only.
 2. **An SSL certificate covering the subdomain**, so https works there.
-3. **Update any payment gateway or webhook callback URLs** registered against
-   the old hostname.
-4. **Confirm the Unleashed sync** still runs against the store at its new
-   address.
+3. **Update any payment gateway or webhook callback URLs** registered against the
+   old hostname.
+4. **Check the Unleashed sync** and repoint it at the new address.
 
 **Two things we can take off your plate:**
 
-- **The WordPress Address / Site URL change** in wp-admin. We have backend
-  access and can do that ourselves, once 1 and 2 are in place. It has to be
-  last: changed before the vhost exists, WordPress redirects every request to a
-  hostname that does not answer and the site goes dark.
-- **The DNS record**, if it is ours to make. Which brings us to the question
-  below.
+- **The WordPress Address / Site URL change** in wp-admin. We have backend access
+  and can do that ourselves once 1 and 2 are in place. It has to be last: changed
+  before the vhost exists, WordPress redirects everything to a hostname that does
+  not answer.
+- **The DNS record.** The domain is on Netregistry nameservers and we have access,
+  so unless you would rather do it, tell us the value you want and we will create
+  it.
 
-**At cutover (a separate, later step):** we point `masterkraft.com` and
-`www.masterkraft.com` at the new site's host, and leave the `shop`/`cms` DNS
-record pointing at your WordPress server, untouched. We would value your help
-sequencing that on the day so we keep a fast rollback available.
-
-**Could you come back to us on three things:**
+**Could you come back to us on:**
 
 - **Which subdomain you prefer** (`shop.` or `cms.`).
-- **A date you can do the vhost and certificate.** We are ready on our side and
-  would like to go live this week if that is at all workable.
-- **Who holds the DNS for masterkraft.com.** It is on Netregistry nameservers.
-  If that account is yours we will send you the records; if it is ours, tell us
-  and we will make them. We have hit this before: a record we needed was
-  requested and never created, so I would rather know the route than guess.
+- **When you can do the vhost and certificate.** Sooner is better: until it is
+  done, the store has no working hostname and its integrations are down.
+- **Whether anything else on your side pointed at `masterkraft.com`** that we
+  should expect to have broken.
 
-Our side is quick once the store has moved: we change one setting, redeploy, and
-verify a product page still shows live prices before anything else happens.
-
-Call me if it is easier to talk it through.
-
-Thanks Paul, this is the last big piece.
+Sorry to land this as a fait accompli. The cutover was brought forward, and the
+new site does not depend on WooCommerce to display anything, so it could go ahead
+without waiting. The store side is the part that now needs you.
 
 Best,
 Michael
@@ -91,29 +81,20 @@ Michael
 
 ## Notes for Michael (not part of the email)
 
-- **The DNS question is deliberate.** `staging.masterkraft.com` is configured as a
-  domain in Vercel but has never resolved (NXDOMAIN), which means somebody
-  requested a record and it was never created. If that is the normal failure mode
-  here, the cutover will stall on it too. Worth pinning down before the day.
-- The exact subdomain does not matter to us; `shop.` reads better to a customer
-  who might ever see it, `cms.` reads as clearly internal. Either works in the
-  code, it is a single env var: `WC_STORE_URL`.
-- **Do not mention `masterkraft.com.au`.** It is listed in our Vercel account but
-  its DNS points elsewhere and it currently serves a Brisbane kitchen and bathroom
-  company. Separate question, not Paul's.
-- After Paul confirms it is live, our side is: set
-  `WC_STORE_URL=https://shop.masterkraft.com` in Vercel, redeploy, verify a
-  product page still shows live prices, then continue the runbook.
-- Verification one-liner once he says it is up:
-  `curl -s -o /dev/null -w '%{http_code}\n' https://shop.masterkraft.com/wp-json/`
-  (expect 200).
-- **Still blocking independently of Paul:** Stripe is on test keys. Confirmed
-  2026-08-27 by finding `pk_test` in the deployed JavaScript bundle. Real cards
-  will be rejected until `sk_live_`/`pk_live_` are set in Vercel Production.
-- **Paul is no longer on the critical path for launching.** `NEXT_PUBLIC_CHECKOUT_MODE=quote`
-  turns the site into browse-and-quote, which has no WooCommerce dependency, so
-  the apex can be cut over before he has done anything. He is on the critical
-  path for card checkout returning, not for going live.
-- **Order of operations, if it goes wrong nothing else matters:** DNS record,
-  then vhost, then certificate, then siteurl. Changing siteurl early is the one
-  step that takes the store down and can lock you out of wp-admin.
+- **The honest framing matters here.** We cut the domain over knowing this would
+  happen. Better to say so than let Paul discover the store is unreachable and
+  work out why.
+- **Check the Unleashed sync today** rather than waiting on Paul. If it pushes to
+  WooCommerce over `masterkraft.com`, it has been failing since the cutover.
+  Orders taken before then are safe; the risk is anything that has tried since.
+- **You can still reach wp-admin by IP** (`http://103.26.237.235/wp-admin/`),
+  though the browser will warn about the certificate and WordPress may redirect
+  you back to `masterkraft.com`. If it does, that is siteurl doing its job, and is
+  another reason to get the subdomain in place.
+- `WC_STORE_URL` in Vercel still says `https://masterkraft.com`, which now
+  resolves to the new site. Harmless while `NEXT_PUBLIC_CHECKOUT_MODE=quote` is
+  set, because nothing reads it. It must change the moment the store moves.
+- **Still blocking card checkout independently of Paul:** Stripe is on test keys,
+  confirmed 2026-08-27 from the deployed bundle.
+- **Order of operations:** DNS record, then vhost, then certificate, then siteurl.
+  Changing siteurl early is the one step that can lock you out of wp-admin.

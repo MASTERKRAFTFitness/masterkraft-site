@@ -10,6 +10,33 @@ needs a decision, a credential, or content. **Launch gates and env vars live in
 
 ---
 
+## 0. THE SITE IS LIVE (2026-08-27)
+
+`https://masterkraft.com` serves this Next.js site. Cut over from WordPress on
+27 August. Verified over real DNS: valid certificate covering apex and www, www
+redirects to apex, `/admin` 404s, `robots.txt` indexable on the apex and still
+`Disallow: /` on `web.test`. **Email survived**: MX and SPF untouched, nameservers
+left on Netregistry deliberately, and a real message was received after the change.
+
+**It launched as browse-and-quote.** `NEXT_PUBLIC_CHECKOUT_MODE=quote` is set, so
+the card form is hidden and every cart goes to the quote flow. Two things have to
+happen before card checkout returns, in either order:
+
+1. **Stripe live keys** in Vercel Production. Still `pk_test` as at 27 August,
+   confirmed by reading the deployed bundle. Michael sets these.
+2. **Paul moves WooCommerce to a subdomain** (`docs/email-paul-subdomain.md`),
+   then `WC_STORE_URL` changes and `NEXT_PUBLIC_CHECKOUT_MODE` is removed.
+
+The buy path (payment-intent, order, freight quote) is the only thing that reads
+the live store. Everything a visitor browses comes from the committed snapshot,
+which is why the cutover could happen before Paul did anything.
+
+**DNS, for reference:** apex A records at Vercel (`216.198.79.1`, `64.29.17.1`),
+`www` CNAME to `cname.vercel-dns.com`, everything else untouched. Rollback is both
+A records back to `103.26.237.235`. See `docs/dns-cutover.md`.
+
+---
+
 ## 1. Start here
 
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.

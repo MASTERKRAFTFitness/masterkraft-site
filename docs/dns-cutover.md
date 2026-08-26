@@ -60,13 +60,28 @@ Read from Vercel on 2026-08-26 via `vercel domains verify masterkraft.com`, not
 from memory. **An earlier draft of this file said `76.76.21.21`, which is wrong
 for this project.** Re-run that command before the day if there is any delay.
 
-| Record | Type | Change to |
+| Host field | Type | Value |
 |---|---|---|
-| `@` (apex) | A | `216.198.79.1` |
-| `@` (apex) | A | `64.29.17.1` |
+| **leave blank** | A | `216.198.79.1` |
+| **leave blank** | A | `64.29.17.1` |
 | `www` | CNAME | `cname.vercel-dns.com` |
 
+**Netregistry does not accept `@` for the root.** Its Add Record dialog rejects it
+with "Name contains invalid characters"; the hint under the field reads
+"Leave blank for root". Leave the Host box empty. (`@` is the convention at most
+other registrars, which is why it was wrong here.)
+
+**REPLACE the existing records, do not add alongside them.** The root and `www`
+both currently have an A record pointing at `103.26.237.235`. If the new records
+are added without removing those, DNS hands out every address it holds and
+visitors are split at random between the new site and the old WordPress one. End
+state for the root is exactly two A records, both Vercel.
+
 Two A records on the apex, both of them. Vercel returns a pair for redundancy.
+
+**TTL:** whatever you set is roughly how long a rollback takes to take effect.
+Pick the shortest option available for the cutover, and raise it once the dust
+has settled.
 
 The `www` target is not a guess: `web.test.masterkraft.com` already points at
 `cname.vercel-dns.com` on this same domain and works today.

@@ -253,7 +253,16 @@ problem, since that is what they are built for.
 
 ---
 
-## 2. Domain / DNS cutover 🌐🧠 (needs Steve — the biggest item)
+## 2. Domain / DNS cutover ✅ DONE 2026-08-27
+
+**Option B was not needed and option A was not taken either.** The apex was
+pointed at Vercel while WordPress stayed exactly where it was, because only the
+buy path reads the live store. The site launched as browse-and-quote via
+`NEXT_PUBLIC_CHECKOUT_MODE=quote`. WooCommerce still needs to move for card
+checkout to return; it is no longer a launch blocker. See `docs/dns-cutover.md`
+and HANDOFF section 0.
+
+<details><summary>Original plan, kept for the reasoning</summary>
 
 The new site currently **reads the catalogue from `masterkraft.com`'s
 WooCommerce** while itself living on Vercel. The WordPress/WooCommerce backend and
@@ -270,6 +279,8 @@ the new Next.js front-end can't both own `masterkraft.com`. Options:
 Whichever: add the domain in Vercel, set the DNS records Vercel provides, confirm
 HTTPS, then flip `NEXT_PUBLIC_ALLOW_INDEX` + `NEXT_PUBLIC_SITE_URL` for that domain
 and redeploy.
+
+</details>
 
 ---
 
