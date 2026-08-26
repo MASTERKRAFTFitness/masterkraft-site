@@ -213,6 +213,96 @@ async function unleashedLive<T>(path: string, code: string): Promise<T[]> {
   return data.Items ?? [];
 }
 
+// ----------------------------------------------------------------- shipments
+//
+// Dispatch lives in Unleashed as SalesShipments, keyed on the SAME order number
+// the website uses (verified 2026-08-25 against 488906). Kept here rather than in
+// its own module so the HMAC-over-the-query-string rule stays in one place: the
+// signature covers the query exactly, and a second copy of that would drift.
+//
+// WHAT THIS DATA IS ACTUALLY LIKE, so callers do not over-promise:
+//   923 shipments exist, and only 43 carry a tracking number. 886 have no
+//   ShippingCompany at all, because dispatch happens in carrier portals and
+//   nothing writes back. "Dispatched with no tracking" is the NORMAL case, not
+//   an error, and must be reported as such rather than as "we do not know".
+//
+// Two shapes that bite: ShippingCompany is an OBJECT ({Guid, Name}), not a
+// string, and DispatchDate is Microsoft JSON date format.
+
+export type Shipment = {
+  shipmentNumber: string | null;
+  status: string | null;
+  dispatchedAt: string | null;
+  trackingNumber: string | null;
+  carrier: string | null;
+  packages: number | null;
+  weightKg: number | null;
+  deliverTo: string | null;
+  lineCount: number;
+};
+
+type RawShipment = {
+  ShipmentNumber?: string;
+  ShipmentStatus?: string;
+  DispatchDate?: string;
+  TrackingNumber?: string | null;
+  ShippingCompany?: { Name?: string } | null;
+  NumberOfPackages?: number | null;
+  ShipmentWeight?: number | null;
+  DeliverySuburb?: string;
+  DeliveryCity?: string;
+  DeliveryRegion?: string;
+  DeliveryPostCode?: string;
+  SalesShipmentLines?: unknown[];
+};
+
+/** Unleashed serialises dates as /Date(1770681600000)/. */
+function parseUnleashedDate(value?: string): string | null {
+  const m = /\/Date\((-?\d+)/.exec(String(value ?? ""));
+  return m ? new Date(Number(m[1])).toISOString() : null;
+}
+
+/**
+ * Every shipment recorded against one order number, newest first.
+ *
+ * An empty array means no dispatch record exists, which for a recent order
+ * usually means "not shipped yet" rather than "missing". The caller has to make
+ * that distinction, because only it knows whether the order itself is real.
+ */
+export async function getShipmentsForOrder(orderNumber: string): Promise<Shipment[]> {
+  const query = `pageSize=200&orderNumber=${encodeURIComponent(orderNumber.trim())}`;
+  const res = await fetch(`${BASE}/SalesShipments/1?${query}`, {
+    headers: {
+      "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
+      "api-auth-signature": sign(query),
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0",
+    },
+    cache: "no-store", // somebody is asking where their delivery is
+  });
+  if (!res.ok) throw new Error(`Unleashed ${res.status} on SalesShipments/${orderNumber}`);
+
+  const data = (await res.json()) as { Items?: RawShipment[] };
+  return (data.Items ?? [])
+    // Deleted shipments are cancelled paperwork, not dispatches. 12 of 923.
+    .filter((s) => s.ShipmentStatus !== "Deleted")
+    .map((s) => ({
+      shipmentNumber: s.ShipmentNumber ?? null,
+      status: s.ShipmentStatus ?? null,
+      dispatchedAt: parseUnleashedDate(s.DispatchDate),
+      trackingNumber: s.TrackingNumber || null,
+      carrier: s.ShippingCompany?.Name || null,
+      packages: s.NumberOfPackages ?? null,
+      weightKg: s.ShipmentWeight ?? null,
+      deliverTo:
+        [s.DeliverySuburb, s.DeliveryCity, s.DeliveryRegion, s.DeliveryPostCode]
+          .filter(Boolean)
+          .join(", ") || null,
+      lineCount: s.SalesShipmentLines?.length ?? 0,
+    }))
+    .sort((a, b) => (b.dispatchedAt ?? "").localeCompare(a.dispatchedAt ?? ""));
+}
+
 export type LiveEntry = UnleashedEntry & { live: boolean };
 
 /**

@@ -755,6 +755,7 @@ cookie itself rather than trusting it.
 | `check_stock` | Unleashed, **live** | ERP is the source of truth, inc-GST |
 | `lookup_order`, `list_recent_orders` | WooCommerce, live, **read only** | `lib/wc-admin.ts` |
 | `check_payment` | Stripe, via the order's `transaction_id` | refunds and disputes included |
+| `check_shipment` | Unleashed `SalesShipments` | see the dispatch note below |
 | `quote_freight` | Australia Post | same numbers the checkout charges |
 | `send_reply`, `log_enquiry` | Resend, HubSpot | **write - approval required** |
 
@@ -773,6 +774,24 @@ exactly 1. Unleashed filters server-side on `productCode` and answers in
 `search_catalogue` still uses the cached map, because a search can span the
 catalogue. Every tool result carries its own basis, and the system prompt forbids
 quoting a price or stock figure from a search without confirming it first.
+
+### Dispatch: "no tracking number" is the normal case
+
+`check_shipment` reads `SalesShipments`, keyed on the same order number the
+website uses (verified against 488906). Two field shapes bite: `ShippingCompany`
+is an OBJECT (`{Guid, Name}`) and not a string, and `DispatchDate` is Microsoft
+JSON date format.
+
+**923 shipments exist and only 43 carry a tracking number**; 886 have no carrier
+recorded, because dispatch paperwork is done in carrier portals and nothing
+writes back. So the usual answer is a dispatch date with nothing against it. The
+tool says so explicitly and the prompt forbids reading that as "lost" or "we do
+not know if it shipped". This is the same gap the freight API spec asks a
+provider to close.
+
+It also separates three cases that look alike: dispatched, order exists but has
+not shipped, and no such order. A typo must not read back to a customer as a
+delayed delivery.
 
 ### Sizes are three different things
 
