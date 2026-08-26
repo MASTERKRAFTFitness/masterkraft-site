@@ -56,27 +56,36 @@ Leave everything else exactly as it is:
 
 Two records, in Netregistry's DNS editor for `masterkraft.com`.
 
+Read from Vercel on 2026-08-26 via `vercel domains verify masterkraft.com`, not
+from memory. **An earlier draft of this file said `76.76.21.21`, which is wrong
+for this project.** Re-run that command before the day if there is any delay.
+
 | Record | Type | Change to |
 |---|---|---|
-| `@` (apex) | A | `76.76.21.21` |
+| `@` (apex) | A | `216.198.79.1` |
+| `@` (apex) | A | `64.29.17.1` |
 | `www` | CNAME | `cname.vercel-dns.com` |
 
-> **Confirm both values in the Vercel dashboard before typing them.** Add
-> `masterkraft.com` to the `masterkraft-site` project first; Vercel then shows the
-> exact records it wants for that domain. The apex A record above is Vercel's
-> standard value, but read it off their screen rather than trusting this file.
+Two A records on the apex, both of them. Vercel returns a pair for redundancy.
 
-Some registrars will not accept a CNAME on the apex. That is why the apex uses an
-A record and only `www` uses a CNAME.
+The `www` target is not a guess: `web.test.masterkraft.com` already points at
+`cname.vercel-dns.com` on this same domain and works today.
+
+Some registrars will not accept a CNAME on the apex. That is why the apex uses A
+records and only `www` uses a CNAME.
+
+### Already done, so you do not have to
+
+Both `masterkraft.com` and `www.masterkraft.com` are attached to the
+**masterkraft-site** project in Vercel as of 2026-08-26. This has no effect until
+DNS points at Vercel, and is undone with `vercel domains rm` if needed.
 
 ---
 
 ## Before you change anything
 
-- [ ] `masterkraft.com` and `www.masterkraft.com` added as domains on the
-      **masterkraft-site** project in Vercel (not just the account). Until this is
-      done, Vercel will not serve the domain and you will get a 404 after the DNS
-      propagates.
+- [x] `masterkraft.com` and `www.masterkraft.com` attached to the
+      **masterkraft-site** project in Vercel. Done 2026-08-26.
 - [ ] `NEXT_PUBLIC_SITE_URL=https://masterkraft.com` set in Vercel Production.
 - [ ] `NEXT_PUBLIC_ALLOW_INDEX=true` set in Vercel Production. Without it the new
       site goes live with `Disallow: /` and is invisible to Google.
