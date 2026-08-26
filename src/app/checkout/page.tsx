@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { track, trackBeginCheckout } from "@/lib/analytics";
-import { paymentsConfigured } from "@/lib/stripe-client";
+import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout from "@/components/shop/StripeCheckout";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -77,6 +77,16 @@ export default function CheckoutPage() {
         <div className="container-mk">
           <p className="font-mono text-xs tracking-widest text-accent uppercase mb-3">Checkout</p>
           <h1 className="text-4xl lg:text-5xl font-bold">{paidOrder || canPay ? "Checkout" : "Request a Quote"}</h1>
+          {/* Only when quote-only is DELIBERATE. A cart that simply contains a
+              POA item already lands on the quote flow by design and needs no
+              apology for it. */}
+          {checkoutMode === "quote" && !paidOrder && (
+            <p className="mt-3 max-w-xl text-sm text-white/70">
+              Card payment is briefly unavailable while we move our systems. Send your cart
+              through and we will confirm pricing, freight and lead times, normally within one
+              business day.
+            </p>
+          )}
         </div>
       </div>
 
