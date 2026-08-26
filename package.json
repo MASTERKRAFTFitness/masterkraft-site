@@ -25,7 +25,8 @@
     "report:all": "vitest run --config vitest.reports.config.mts",
     "report:bulky": "vitest run --config vitest.reports.config.mts scripts/bulky-freight-profile.report.ts",
     "brief:pdf": "npx --yes serve -l 8899 docs >/dev/null 2>&1 & sleep 2; \"$CHROME_PATH\" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 --print-to-pdf=reports/MasterKraft-Freight-API.pdf http://localhost:8899/freight-api-spec.html; kill %1",
-    "report:cartons": "vitest run --config vitest.reports.config.mts scripts/carton-gaps.report.ts"
+    "report:cartons": "vitest run --config vitest.reports.config.mts scripts/carton-gaps.report.ts",
+    "report:workbook": "npm run report:cartons && npm run report:bulky && python3 scripts/build-gaps-workbook.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
