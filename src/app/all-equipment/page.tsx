@@ -37,7 +37,7 @@ export default async function AllEquipmentPage({
       categories.map(async (c) => ({
         label: c.label,
         slug: c.slug,
-        children: await getCategoryChildren(c.wcId).catch(() => []),
+        children: c.wcId ? await getCategoryChildren(c.wcId).catch(() => []) : [],
       }))
     ),
     getAllProducts().catch(() => null),

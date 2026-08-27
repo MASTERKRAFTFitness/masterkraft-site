@@ -59,8 +59,8 @@ export default async function CategoryPage({
   // requested. In parallel it costs the slowest one.
   const [unleashed, children, categoryDescription] = await Promise.all([
     getUnleashedMap().catch(() => ({})),
-    getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]),
-    getCategoryDescription(c.wcId).catch(() => ""),
+    c.wcId ? getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]) : [],
+    c.wcId ? getCategoryDescription(c.wcId).catch(() => "") : "",
   ]);
   const activeSub = subSlug ? children.find((s) => s.slug === subSlug) : undefined;
   const targetId = activeSub?.id ?? c.wcId;
@@ -81,7 +81,7 @@ export default async function CategoryPage({
       // opts out of the M/N brand-SKU filter that the branded categories use.
       // Obsolete products are already gone: getAllProductsByCategory applies
       // both halves of the rule (see isObsolete in woocommerce.ts).
-      const all = await getAllProductsByCategory(targetId, {
+      const all = !targetId ? [] : await getAllProductsByCategory(targetId, {
         brandFilter: c.slug !== "clearance",
       });
       let enrichedAll = await Promise.all(

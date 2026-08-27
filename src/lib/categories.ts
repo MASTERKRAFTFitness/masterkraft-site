@@ -1,6 +1,12 @@
 // Equipment categories (mirrors masterkraft.com). `wcId` maps each to its
 // WooCommerce product-category term id in the live store.
-export type Category = { slug: string; label: string; image: string; blurb: string; wcId: number };
+//
+// `image` and `wcId` are optional for categories that are being stood up ahead
+// of their products. With no image PageHero falls back to the mk-glow treatment,
+// which is a designed state rather than a hole, and is honest in a way that
+// borrowing another category's photography would not be. With no wcId there is
+// nothing to query, so the page shows its "no products to show right now" state.
+export type Category = { slug: string; label: string; image?: string; blurb: string; wcId?: number };
 
 export const categories: Category[] = [
   { slug: "body-weight", label: "Body Weight", image: "/category/body-weight.jpg", blurb: "Functional and calisthenics gear for bodyweight training.", wcId: 48 },
@@ -13,6 +19,23 @@ export const categories: Category[] = [
   { slug: "weightlifting", label: "Weightlifting", image: "/category/weightlifting.jpg", blurb: "Barbells, bumper plates, benches and platforms.", wcId: 53 },
   { slug: "packages", label: "Packages", image: "/category/packages.jpg", blurb: "Curated equipment packages for a complete setup.", wcId: 275 },
   { slug: "clearance", label: "Clearance", image: "/category/clearance.jpg", blurb: "Ex-display and end-of-line equipment at reduced prices.", wcId: 356 },
+
+  // ADDED 2026-08-27, AND CURRENTLY EMPTY ON PURPOSE. Unleashed carries all
+  // three ranges under MasterKraft's own codes - 107 products in its Apparel
+  // group (MAAAU01 Trucker Hat, MAACU02 Oversized Hoodie and so on), NBLLE2501 /
+  // NBLLE2502 in Lighting, and MCRFAL01 / MCRFWO01 reformers filed under Cardio.
+  // None of them were ever created in WooCommerce, which only ever got the Snap
+  // and REVL versions (SAAAU01/SAAAU02, SLLE/RLLE), and those are excluded by
+  // isForeignBrandSku. The site lists from the WooCommerce snapshot, so these
+  // three render their empty state until the products exist there.
+  //
+  // Apparel and Lighting point at the real WooCommerce terms, so they populate
+  // by themselves the moment MasterKraft-coded products are filed under them.
+  // Reformers has NO WooCommerce category at all - that term needs creating in
+  // the store before this one can be wired to anything.
+  { slug: "apparel", label: "Apparel", blurb: "Training wear and accessories in MasterKraft colours.", wcId: 349 },
+  { slug: "lighting", label: "Lighting", blurb: "Linear LED systems and dimmers built for training floors.", wcId: 348 },
+  { slug: "reformers", label: "Reformers", blurb: "Studio and performance reformers for Pilates programming." },
 ];
 
 export function getCategory(slug: string) {
