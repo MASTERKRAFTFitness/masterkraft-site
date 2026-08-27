@@ -45,12 +45,18 @@ change has become the bottleneck. We would like to work out a sensible handover
 with you rather than anything abrupt, and we are happy to keep paying out any
 notice or commitment we have.
 
-**First though, the urgent thing:** please give the store its own subdomain, for
-example `shop.masterkraft.com` or `cms.masterkraft.com`. Right now WooCommerce has
-no working hostname at all, so this is the priority regardless of what we agree
-about the longer term.
+**What would help most, and it is small: a full cPanel backup of the account.**
+We have set up our own hosting and can restore it ourselves, which takes the store
+off your hands entirely and is probably five minutes of your time.
 
-**It is a ten minute job in cPanel.** We have established the server runs cPanel
+A full backup also carries what a plugin export cannot: the wp-config constants,
+server level cron jobs, .htaccess rules and the Unleashed sync credentials. Those
+are the parts we would otherwise have to rediscover, so it is the cleanest
+handover for both of us.
+
+**If a backup is awkward, the alternative is giving the store its own subdomain**,
+for example `shop.masterkraft.com`, so WooCommerce has a working hostname again
+while we sort the longer term. It is about ten minutes in cPanel. We have established the server runs cPanel
 and sits on CloudLoop infrastructure (`103.26.237.235`, reverse DNS
 `cloudloop.com.au`). The steps are:
 
@@ -70,16 +76,7 @@ We can handle the DNS record ourselves, and the WordPress Site URL change after.
 - **Send us the cPanel login** and we will do steps 1 and 2 today, or
 - **You do them**, whichever is quicker for you.
 
-**Or, simplest of all: send us a full cPanel backup.** We have now set up our own
-hosting, so if it is easier for you to generate a complete backup of the account
-and share the file, we can restore it on our side and take the store off your
-hands entirely. That is probably five minutes of your time and removes the need
-for anything else on this list.
-
-A full backup would bring across the things an export cannot: the wp-config
-constants, server level cron jobs, .htaccess rules and the Unleashed sync
-credentials. Those are the parts we would otherwise have to rediscover, so it is
-genuinely the cleanest handover for both of us.
+Either send us the cPanel login and we will do it, or do it yourself, whichever suits.
 
 If the hosting account is not yours directly, could you tell us who holds it? We
 can approach them, we just do not know who to ask.
