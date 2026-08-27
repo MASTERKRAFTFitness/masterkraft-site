@@ -257,7 +257,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "heading": "28 PRIVACY AND MARKETING",
       "body": [
         "By entering into these Terms and Conditions, you agree to:",
-        "(a) be bound by the terms of our Privacy Policy which can be found at www.gymequipmentdirect.com.au; and",
+        "(a) be bound by the terms of our Privacy Policy which can be found at masterkraft.com/privacy-policy; and",
         "(b) receive relevant information and materials regarding our product offerings (“the Information”). The Information will be sent to you via electronic message as defined pursuant to the Spam Act 2003 (Vic) from us or our permitted agents."
       ]
     },
