@@ -37,6 +37,95 @@ A records back to `103.26.237.235`. See `docs/dns-cutover.md`.
 
 ---
 
+## 0b. Shipped the evening of 27 August, after the cutover
+
+Four commits, all pushed and deployed to production, all verified live.
+
+### `3b91747` The cutover broke every product image, and this fixed it
+
+Product images were absolute URLs on `masterkraft.com/wp-content/uploads/`. The
+moment the apex became Vercel they all 404'd, and Next's image optimiser returned
+502. **279 of 512 products** were affected. The earlier mirror
+(`mirror-product-images.mjs`) had copied the product *data* but only the image
+*URLs*, and it drew a brand line (`/^(?:[MN]|SC)/`) that excluded REVL and the
+foreign ranges - sound while the domain still pointed at WordPress, a fault line
+once it did not.
+
+`scripts/mirror-remaining-images.mjs` picks up what it skipped. Two differences
+from the original, both forced:
+
+* it reads `src/data/catalogue.json`, not the WooCommerce API - that API is
+  unreachable post-cutover, so **the original script cannot run at all**;
+* it fetches over `node:http` against `103.26.237.235` with an explicit
+  `Host: masterkraft.com` header. That host serves uploads **only** to its exact
+  vhost name (a made-up subdomain and the bare IP both 404), and `fetch()` cannot
+  do this because undici drops a `host` header in favour of the URL's authority.
+
+`scripts/dedupe-product-images.mjs` then collapses byte-identical files by
+SHA-256. One photo shared by several SKUs was written once per SKU.
+
+    1494 files / 109.9 MB  ->  510 files / 36 MB
+
+**Snap (S) and Fernwood (F) are excluded and must stay excluded.** The first run
+pulled 174 of their products - another company's brand photography, headed into
+this repo, for pages that 404 by design under `isForeignBrandSku`. The filter now
+lives in the script with its reasoning.
+
+Every product the site serves resolves to a local image; none remain remote.
+
+### `c9d251f` Warranty claim form, REVL markets, scraped cart popup
+
+* **`/warranty#claim`** - the page said what was covered and gave nobody a way to
+  act. Follows the **waitlist** route's shape, not the contact route's: when
+  HubSpot does not confirm, the claim is emailed to a human, and when neither
+  lands the customer is told to email rather than shown a receipt we cannot
+  honour. `HUBSPOT_FORM_WARRANTY` does not exist yet, so today every submission
+  takes the email fallback to `QUOTE_TO_EMAIL`. **Nobody has yet submitted a real
+  claim end to end** - worth doing once.
+* **REVL** - Thailand (coming soon) and New Zealand added, Indonesia promoted to
+  operating. Neither new market has named studios, so both use the existing
+  "Studios operating" branch. A hardcoded "eight markets" in the intro had already
+  gone stale; it counts from the data now (`revlOperatingMarketCount`).
+* **"since 2022"** on both the homepage feature and the fit-outs page, confirmed
+  by Michael. The two previously disagreed (2022 vs 2023).
+* **Cart popup** - "You were not leaving your cart just like that, right?" was
+  scraped WordPress cart-abandonment copy at the foot of **five** legal pages, not
+  the three reported. All removed.
+
+### `2107df0` Apparel, Lighting and Reformers categories
+
+All three ranges exist in **Unleashed** under MasterKraft's own codes: 107 products
+in its Apparel group (`MAAAU01` Trucker Hat, `MAACU02` Oversized Hoodie …),
+`NBLLE2501`/`NBLLE2502` in Lighting, `MCRFAL01`/`MCRFWO01` reformers filed under
+Cardio. **None were ever created in WooCommerce**, which only received the Snap and
+REVL equivalents (`SAAAU01` against `MAAAU01`, `SLLE`/`RLLE` against `NBLLE`), and
+those are excluded by `isForeignBrandSku`.
+
+So all three render the empty state today. Apparel and Lighting point at the real
+WooCommerce terms (349, 348) and **populate with no code change** the day
+MasterKraft-coded products are filed under them. Reformers has no term in the store
+at all; one needs creating.
+
+`image` and `wcId` are now **optional** on `Category` - no image falls back to the
+`mk-glow` hero, no `wcId` means nothing to query. Four call sites guarded, and the
+parity test skips termless categories because it compares against the live store.
+
+**Deliberately not linked from the nav** while they have no stock. One line each in
+`nav.ts` when there is.
+
+### `b9784d2` The Terms pointed at a competitor's domain
+
+Clause 28(a) bound customers to "our Privacy Policy which can be found at
+`www.gymequipmentdirect.com.au`" - a domain MasterKraft does not own, scraped in
+with the rest of the legal content. Now `masterkraft.com/privacy-policy`.
+
+**Still there and NOT touched:** section 29 of the same page is the full terms of a
+competition that closed **29 April 2023** (Australian Fitness Expo Sydney, $1,795
+Air Rowing Machine), presented as current. Removing live legal copy is Michael's
+call, not a fix to make unasked.
+
+---
+
 ## 1. Start here
 
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.
@@ -72,11 +161,32 @@ errors, so gating on it would block every deploy. Run it and compare against `HE
 offline on purpose: the point of the snapshot is that rendering does not depend on
 WooCommerce being up, and a networked pre-build check would hand that back.
 
-To deploy without the gate (it is a safety net, not a law):
-`npx --yes vercel@latest deploy --prod --yes`. There is no local or global `vercel`
-binary on this machine, so a bare `vercel --prod` fails with command-not-found.
+**THE GATE NO LONGER PASSES (since 27 Aug).** `check:catalogue` queries
+`masterkraft.com/wp-json/wc/v3`, which is Vercel now, so it dies on
+`WooCommerce 403 after 4 tries` and the `&&` chain stops **before** `vercel` runs.
+Until the store has a working hostname again, deploy with the explicit command
+below. Skipping the gate is only safe when the commit does not touch `src/data/` -
+that snapshot is exactly what the check guards.
 
-If it says **"Not authorized"**, run `npx vercel login` first (Michael's account).
+**Watch for the silent version of this failure.** Piping `npm run deploy` through
+`tail` reports the *pipe's* exit code, so a failed gate looks like a clean exit 0
+and it appears to have deployed when nothing did. Confirm against production, not
+against the exit code.
+
+To deploy without the gate (it is a safety net, not a law):
+
+```bash
+npx --yes vercel@latest deploy --prod --yes --scope masterkraft
+```
+
+There is no local or global `vercel` binary on this machine, so a bare
+`vercel --prod` fails with command-not-found.
+
+**`--scope masterkraft` IS REQUIRED.** Without it the CLI returns a bare
+`{"status":"error","reason":"deploy_failed","message":"Not authorized"}` even
+though `vercel whoami` returns marketing-8481 and `vercel teams ls` shows
+MASTERKRAFT as the current team. The error never mentions scope, so it reads like
+a credentials problem and is not - **do not go re-authenticating.**
 `NEXT_PUBLIC_*` vars are build-time inlined, so changing one in Vercel does nothing
 until a redeploy. Claude cannot deploy or set Vercel env / DNS - surface those.
 
@@ -550,6 +660,34 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 ## 10. Open / blocked, by owner
 
 ### Michael
+
+**Added 27 August, in priority order. The first one gates most of the rest.**
+
+- **SEND THE EMAIL TO PAUL.** Drafted, sitting unsent in Outlook drafts, needs his
+  address. Text is `docs/email-paul-subdomain.md`; it leads with a request for a
+  full cPanel backup, with the subdomain as the fallback ask. **There is a deadline
+  that is not ours:** his server holds a Let's Encrypt certificate for
+  `masterkraft.com` expiring **27 September 2026**, renewed by HTTP validation
+  against a hostname that now resolves to Vercel, so the renewal will start
+  failing. The WooCommerce migration, the new categories filling with stock, and
+  card checkout mattering at all are all downstream of this conversation starting.
+- **107 apparel SKUs that the website has never been able to sell.** MasterKraft's
+  own apparel, lighting and reformers are all in Unleashed but were never created
+  in WooCommerce, which only ever got the Snap and REVL versions. Ask Steve or
+  Gaetana whether that was deliberate (wholesale-only) or an oversight. If it is an
+  oversight it is a product line the site has never listed. See §0b.
+- **Section 29 of the Terms is a competition that closed in April 2023.** Still
+  live, presented as current. Yes/no on removing it.
+- **Submit one real warranty claim** through `/warranty#claim` and confirm it
+  arrives. Only the rejection paths have been exercised; submitting for real sends
+  email, so it was left for a human. With no `HUBSPOT_FORM_WARRANTY` it takes the
+  email fallback to `QUOTE_TO_EMAIL`.
+- **Remove the `/etc/hosts` override.** `103.26.237.235 masterkraft.com` is still
+  in there from cutover testing, so the live site does not appear on this machine.
+- **Fix the deploy gate** (§1 DEPLOY). `check:catalogue` cannot pass while
+  WooCommerce is unreachable, so it blocks every deploy and is being stepped past.
+  It should degrade to a warning rather than fail hard.
+
 - **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
   promoted yet.** Three things gate it, and two are promises the page makes:
   1. **`HUBSPOT_FORM_WAITLIST` does not exist.** Until it is created and set, every
