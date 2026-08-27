@@ -263,8 +263,17 @@ export const revlNetwork: RevlMarket[] = [
   { country: "Malaysia", flag: "🇲🇾", studios: ["Kuala Lumpur (KLCC)"] },
   { country: "Vietnam", flag: "🇻🇳", studios: ["Ho Chi Minh City"] },
   { country: "Taiwan", flag: "🇹🇼", studios: ["Taipei"] },
+  // Indonesia moved from "coming soon" to operating, and New Zealand added, on
+  // Michael's 2026-08-27 list. Neither has named studios yet, so both render as
+  // "Studios operating" - fill in the names when REVL supplies them.
+  { country: "Indonesia", flag: "🇮🇩", studios: [] },
+  { country: "New Zealand", flag: "🇳🇿", studios: [] },
   { country: "South Korea", flag: "🇰🇷", studios: [], comingSoon: true },
+  { country: "Thailand", flag: "🇹🇭", studios: [], comingSoon: true },
   { country: "Canada", flag: "🇨🇦", studios: [], comingSoon: true },
-  { country: "Indonesia", flag: "🇮🇩", studios: [], comingSoon: true },
   { country: "United States", flag: "🇺🇸", studios: [], comingSoon: true },
 ];
+
+// The intro copy used to hardcode "eight markets", which silently went stale the
+// moment this list changed. Counted from the data instead.
+export const revlOperatingMarketCount = revlNetwork.filter((m) => !m.comingSoon).length;

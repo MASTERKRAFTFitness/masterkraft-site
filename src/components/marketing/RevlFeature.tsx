@@ -15,7 +15,7 @@ export default function RevlFeature() {
           </Eyebrow>
           <h2 className="font-display text-4xl lg:text-5xl uppercase leading-[0.95]">REVL Training</h2>
           <p className="mt-6 text-white/75 text-lg leading-relaxed max-w-xl">
-            MasterKraft has fitted out every REVL studio across Australia and Singapore, delivering each
+            MasterKraft has fitted out every REVL studio across the globe since 2022, delivering each
             complete floor (rigs, functional zones, conditioning gear, storage and branded flooring) in a
             single container, coordinated to REVL&apos;s identity and built for back-to-back group classes.
           </p>

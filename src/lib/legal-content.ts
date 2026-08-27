@@ -313,12 +313,6 @@ export const legalContent: Record<string, ContentSection[]> = {
       "body": [
         "These terms and conditions supersede and replace any arrangements, representations, understandings or agreements made or existing between the Customer and the Company and (except as otherwise may be agreed in writing) constitute the entire agreement relating to the supply of the Products."
       ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
-      ]
     }
   ],
   "privacy-policy": [
@@ -540,12 +534,6 @@ export const legalContent: Record<string, ContentSection[]> = {
       "body": [
         "We will update this Privacy Policy from time to time. We therefore recommend that you read it each time you visit our website. If you do not agree with the Privacy Policy at any time, please do not continue to use our website. If you do continue to use our website, you are deemed to have accepted the terms of the Privacy Policy as they appear at the time of use."
       ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
-      ]
     }
   ],
   "warranty": [
@@ -721,12 +709,6 @@ export const legalContent: Record<string, ContentSection[]> = {
         "(2) Warranty Period – 3 months.",
         "For more information or warranty information for additional products please email admin@masterkraft.com"
       ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
-      ]
     }
   ],
   "returns": [
@@ -781,12 +763,6 @@ export const legalContent: Record<string, ContentSection[]> = {
         "You may return the items to the address below:",
         "MasterKraft Attn: Returns Department 8/337-339 Settlement Rd, Thomastown, Vic. 3074 AUSTRALIA",
         "*Please note there are no returns or exchanges on sale items for change of mind purchases. All sales are final. **A 20% restocking fee applies for all change of mind returns."
-      ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
       ]
     }
   ],
@@ -864,12 +840,6 @@ export const legalContent: Record<string, ContentSection[]> = {
         "Can I add items to my order?",
         "If an order has been dispatched then we will not be able to add anything to your order sorry.",
         "If you have items on backorder, we may be able to add more products."
-      ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
       ]
     }
   ]
