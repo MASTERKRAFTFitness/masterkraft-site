@@ -26,6 +26,10 @@
 // RE-RUN THIS whenever product content changes in WordPress.
 // `npm run check:catalogue` reports drift without writing anything.
 
+// Must come before any fetch: it steers the store hostname while the store has
+// no working DNS name. Inert unless WC_STORE_PIN is set. See the file for why.
+import "./lib/store-dns-pin.mjs";
+
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -228,9 +232,34 @@ const prevBySlug = new Map((prevProducts?.products ?? []).map((p) => [p.slug, p]
 const nowBySlug = new Map(products.map((p) => [p.slug, p]));
 const added = products.filter((p) => !prevBySlug.has(p.slug));
 const removed = (prevProducts?.products ?? []).filter((p) => !nowBySlug.has(p.slug));
+// WooCommerce does not promise a stable order for a product's `categories`, and
+// it demonstrably reshuffles it for products nobody has edited: on 28 August six
+// rigs came back with the same four terms in a different order, which a
+// whole-object JSON compare reported as drift. That is the gate crying wolf, and
+// a gate that cries wolf gets skipped.
+//
+// The site depends on exactly one thing about that order: product/[slug] takes
+// `categories[0]` as the breadcrumb. So compare position 0 exactly and the rest
+// as a set. Sorting the whole array instead would hide a changed breadcrumb;
+// comparing the whole array in order fails the build over a reshuffle that
+// changes nothing on any page.
+//
+// Only the comparison normalises. What gets written stays in the store's own
+// order, because that is what `categories[0]` reads.
+function comparable(product) {
+  const [primary, ...rest] = product.categories ?? [];
+  return JSON.stringify({
+    ...product,
+    categories: [
+      primary ?? null,
+      ...rest.map((c) => JSON.stringify(c)).sort(),
+    ],
+  });
+}
+
 const changed = products.filter((p) => {
   const was = prevBySlug.get(p.slug);
-  return was && JSON.stringify(was) !== JSON.stringify(p);
+  return was && comparable(was) !== comparable(p);
 });
 
 const elapsed = ((Date.now() - started) / 1000).toFixed(1);

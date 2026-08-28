@@ -10,7 +10,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "predeploy": "npm run check:snapshot && npm test && npm run check:obsolete && npm run check:catalogue",
-    "deploy": "npx --yes vercel@latest deploy --prod --yes",
+    "deploy": "npx --yes vercel@latest deploy --prod --yes --scope masterkraft",
     "build:catalogue": "node scripts/build-catalogue.mjs",
     "check:catalogue": "node scripts/build-catalogue.mjs --check",
     "check:snapshot": "node scripts/check-snapshot.mjs",

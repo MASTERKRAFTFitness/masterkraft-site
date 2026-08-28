@@ -161,12 +161,41 @@ errors, so gating on it would block every deploy. Run it and compare against `HE
 offline on purpose: the point of the snapshot is that rendering does not depend on
 WooCommerce being up, and a networked pre-build check would hand that back.
 
-**THE GATE NO LONGER PASSES (since 27 Aug).** `check:catalogue` queries
-`masterkraft.com/wp-json/wc/v3`, which is Vercel now, so it dies on
-`WooCommerce 403 after 4 tries` and the `&&` chain stops **before** `vercel` runs.
-Until the store has a working hostname again, deploy with the explicit command
-below. Skipping the gate is only safe when the commit does not touch `src/data/` -
-that snapshot is exactly what the check guards.
+**THE GATE PASSES AGAIN (28 Aug).** It was broken from the cutover until then:
+`check:catalogue` queries `masterkraft.com/wp-json/wc/v3`, which is Vercel now, so
+it died on `WooCommerce 403 after 4 tries` and the `&&` chain stopped **before**
+`vercel` ran. Two things fixed it, and both are worth knowing about.
+
+**1. The store never went away, it only lost its name.** WordPress is still
+serving on the old box, our consumer key still works, and its certificate covers
+both `masterkraft.com` and `www.masterkraft.com`, so it validates fully if you
+resolve the name yourself. `scripts/lib/store-dns-pin.mjs` does exactly that,
+driven by `WC_STORE_PIN=masterkraft.com=103.26.237.235` in `.env.local`. Read the
+header of that file before touching it. It is a splint: it is inert unless the
+variable is set, it announces itself on stderr every run, and it goes stale by
+itself the moment `WC_STORE_URL` moves to a subdomain. **Delete `WC_STORE_PIN`
+the day Paul gives the store a hostname.**
+
+Do not reach for `http://103.26.237.235` instead. That host serves by vhost name
+so the bare IP 404s, and it would put the consumer key on the wire in clear text.
+
+**2. The check was also crying wolf.** It compared whole products with
+`JSON.stringify`, and WooCommerce does not promise a stable order for a product's
+`categories`. Six rigs came back with the same four terms reshuffled, which the
+gate called drift. It now compares `categories[0]` exactly - that is the one thing
+the site reads from that order, for the breadcrumb on `product/[slug]` - and the
+rest as a set. The snapshot is still **written** in the store's own order, because
+that is what `categories[0]` reads. No snapshot data changed; the gate simply
+stopped failing over a reshuffle that changes nothing on any page.
+
+Full gate verified green end to end on 28 Aug: 512 products, 80 categories, 98
+tests, obsolete list clean, no drift.
+
+`npm run deploy` was also missing `--scope masterkraft`, so it would have failed
+at the `vercel` step even once the gate passed. Fixed in `package.json`.
+
+If you ever do need to skip the gate, that is only safe when the commit does not
+touch `src/data/` - that snapshot is exactly what the check guards.
 
 **Watch for the silent version of this failure.** Piping `npm run deploy` through
 `tail` reports the *pipe's* exit code, so a failed gate looks like a clean exit 0
