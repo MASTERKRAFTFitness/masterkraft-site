@@ -33,9 +33,9 @@ new site, WooCommerce is only reachable by IP address. In practice:
 
 - `masterkraft.com/wp-admin` no longer reaches WordPress.
 - `masterkraft.com/wp-json/...` no longer reaches the WooCommerce API.
-- Anything integrating with the store over that hostname will be failing,
-  **including the Unleashed sync**, which is the one we would most like you to
-  check.
+- Anything integrating with the store over that hostname will be failing. That
+  includes any stock or pricing sync, and the payment gateway callbacks
+  (Stripe, Afterpay and Zip are all configured against it).
 
 **The bigger picture, so the next bit is not a surprise.** Now that the website
 runs on our own infrastructure, we would like to bring the hosting side in-house
@@ -56,8 +56,8 @@ handover for both of us.
 
 **If a backup is awkward, the alternative is giving the store its own subdomain**,
 for example `shop.masterkraft.com`, so WooCommerce has a working hostname again
-while we sort the longer term. It is about ten minutes in cPanel. We have established the server runs cPanel
-and sits on CloudLoop infrastructure (`103.26.237.235`, reverse DNS
+while we sort the longer term. It is about ten minutes in cPanel. We have established the server runs
+cPanel and sits on CloudLoop infrastructure (`103.26.237.235`, reverse DNS
 `cloudloop.com.au`). The steps are:
 
 1. **Domains → Create A Domain**, `shop.masterkraft.com`, with **"Share document
@@ -75,8 +75,6 @@ We can handle the DNS record ourselves, and the WordPress Site URL change after.
 
 - **Send us the cPanel login** and we will do steps 1 and 2 today, or
 - **You do them**, whichever is quicker for you.
-
-Either send us the cPanel login and we will do it, or do it yourself, whichever suits.
 
 If the hosting account is not yours directly, could you tell us who holds it? We
 can approach them, we just do not know who to ask.
@@ -97,6 +95,9 @@ server and AutoSSL can validate normally.
   but we do not know the arrangement.
 - **When it can be done.** Sooner is better: until it is, the store has no working
   hostname and its integrations are down.
+- **Where the Unleashed stock and pricing sync actually runs.** We cannot find
+  an Unleashed plugin in the WordPress install, so whatever keeps the catalogue
+  in step must sit outside it, and we do not know where.
 - **Whether anything else on your side pointed at `masterkraft.com`** that we
   should expect to have broken.
 
@@ -151,9 +152,43 @@ Michael
 - **The honest framing matters here.** We cut the domain over knowing this would
   happen. Better to say so than let Paul discover the store is unreachable and
   work out why.
-- **Check the Unleashed sync today** rather than waiting on Paul. If it pushes to
-  WooCommerce over `masterkraft.com`, it has been failing since the cutover.
-  Orders taken before then are safe; the risk is anything that has tried since.
+- **There is no Unleashed integration inside WooCommerce.** Checked 28 August
+  against the live store: the WooCommerce system status lists 52 active plugins
+  and one inactive (FreightExchange), and not one of them is an Unleashed or ERP
+  connector. Zero occurrences of "unleashed" anywhere in the system status. The
+  only custom REST namespace, `masterkraft/v1`, is two theme helpers
+  (`archive-products`, `archive-product-filters`).
+
+  **The sync is real even so.** Michael confirmed on 4 August that web orders
+  auto-flow into Unleashed, and numeric web order numbers were seen in Unleashed
+  sitting beside the manual `SO-` wholesale ones. So it runs from **outside**
+  WordPress: a middleware or an Unleashed-side connector, not a plugin. That is
+  the sharper worry, not a milder one. Anything outside the server that polls the
+  store almost certainly addresses it as `https://masterkraft.com/wp-json/...`,
+  which has been answering from Vercel since 27 August. We just cannot prove it
+  from here, which is exactly why the question is worth asking rather than
+  asserting.
+- **WP-Cron is enabled** (`wp_cron: true`), which means scheduled jobs fire on
+  visitor page loads. The hostname no longer resolves to that server, so there is
+  no visitor traffic and WP-Cron now effectively never runs. Anything scheduled,
+  including WP All Import Pro's scheduled imports, has been dormant since the
+  cutover unless a server-level cron calls `wp-cron.php` by path. We cannot see
+  server cron over the API, which is one more reason to want the cPanel backup.
+- **The store itself is alive and our credentials still work.** It only lost its
+  DNS name, not its service. Reachable with a valid certificate by pinning the
+  hostname to the old IP:
+
+      curl --resolve www.masterkraft.com:443:103.26.237.235 \
+        -u "$WC_CONSUMER_KEY:$WC_CONSUMER_SECRET" \
+        https://www.masterkraft.com/wp-json/wc/v3/products?per_page=1
+
+  Do not use plain `http://103.26.237.235` for anything authenticated: that sends
+  the consumer key in the clear. The `--resolve` form validates properly, because
+  the server's certificate covers `www.masterkraft.com`.
+- **`Duplicator` v1.5.16.1 is installed and active.** If Paul stalls, and we have
+  WordPress admin, that is a route to the full backup without him. It is a heavy
+  job on a 9.42GB site and it writes to his server, so it is a decision, not a
+  step to take quietly.
 - **You can still reach wp-admin by IP** (`http://103.26.237.235/wp-admin/`),
   though the browser will warn about the certificate and WordPress may redirect
   you back to `masterkraft.com`. If it does, that is siteurl doing its job, and is
