@@ -49,3 +49,7 @@ reports/*.xlsx
 lh-desktop.json
 reports/*.xlsx
 .claude/
+
+# Credentials kept locally, never committed
+Stripe Keys.rtf
+*.rtf
