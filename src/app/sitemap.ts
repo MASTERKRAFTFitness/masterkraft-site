@@ -5,6 +5,8 @@ import { fitouts } from "@/lib/fitouts";
 import { revlSites } from "@/lib/revl";
 import { locations } from "@/lib/locations";
 import { getAllProductSlugs } from "@/lib/woocommerce";
+import { erpUnits } from "@/lib/erp-catalogue";
+import { getUnleashedMap } from "@/lib/unleashed";
 
 export const revalidate = 86400; // rebuild sitemap daily
 
@@ -48,7 +50,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     // Obsolete product URLs 404, so they are not advertised here either:
     // getAllProductSlugs applies both halves of the rule.
-    const products = await getAllProductSlugs();
+    // The ERP is the catalogue, so its units are what the sitemap lists: 165 of
+    // them have no WooCommerce record and would otherwise be sold on the site
+    // and absent from its sitemap. Snapshot slugs stay as the fallback.
+    const erp = await getUnleashedMap().catch(() => ({}));
+    const units = [...erpUnits(erp).values()];
+    const products = units.length
+      ? units.map((u) => ({ slug: u.slug, sku: u.codes[0], modified: undefined }))
+      : await getAllProductSlugs();
     for (const p of products) {
       entries.push({
         url: `${SITE_URL}/product/${p.slug}`,

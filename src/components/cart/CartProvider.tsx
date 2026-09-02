@@ -6,6 +6,7 @@ export type CartItem = {
   id: number; // unique cart key (product id, or variation id for variants)
   productId: number; // WC parent/product id — for order line items
   variationId?: number; // set for variable products
+  sku?: string; // Unleashed ProductCode — what the warehouse and the quote use
   slug: string;
   name: string;
   image?: string;

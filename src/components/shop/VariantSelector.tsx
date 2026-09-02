@@ -1,32 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useVariantSelection } from "@/components/shop/VariantSelection";
 import { trackAddToCart } from "@/lib/analytics";
 
 export type Variant = {
-  id: number;
+  id: number; // cart key: the WooCommerce variation id, or a negative code hash
+  code: string; // Unleashed ProductCode — what the warehouse picks
   label: string;
   priceLabel: string;
   priceValue: number;
   inStock: boolean;
   stockQty?: number;
   image?: string;
+  wooProductId?: number;
+  wooVariationId?: number;
 };
 
 export default function VariantSelector({
-  productId,
   productName,
   productSlug,
   variants,
 }: {
-  productId: number;
+  /** The range's own ERP name, e.g. "Rubber Hex Dumbbell". */
   productName: string;
   productSlug: string;
   variants: Variant[];
 }) {
   const { add } = useCart();
+  const selection = useVariantSelection();
   const [selectedId, setSelectedId] = useState(
     (variants.find((v) => v.inStock) ?? variants[0])?.id
   );
@@ -34,6 +38,16 @@ export default function VariantSelector({
   const [added, setAdded] = useState(false);
 
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
+
+  // Point the gallery at the selected size's photograph. Ranges carry one per
+  // size (26 for the Rubber Hex Dumbbells), so this is the difference between
+  // "a dumbbell" and the 9kg the shopper is actually looking at.
+  const selectedImage = selected?.image;
+  const setImageSrc = selection?.setImageSrc;
+  useEffect(() => {
+    setImageSrc?.(selectedImage);
+  }, [setImageSrc, selectedImage]);
+
   if (!selected) return null;
 
   return (
@@ -51,25 +65,44 @@ export default function VariantSelector({
         · Prices inc. GST
       </p>
 
-      {/* Variant options */}
+      {/* Size picker. A dropdown rather than a row of chips: the ranges run to
+          26 options, which as buttons is a wall that pushes the price and the
+          add-to-cart below the fold on a phone. */}
       <div className="mt-6">
-        <p className="font-mono text-xs uppercase tracking-widest text-ash mb-2">Options</p>
-        <div className="flex flex-wrap gap-2">
-          {variants.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              onClick={() => setSelectedId(v.id)}
-              className={`px-3 py-2 text-sm border transition-colors ${
-                v.id === selectedId
-                  ? "border-accent text-accent-600"
-                  : "border-line text-ink hover:border-ash"
-              } ${!v.inStock ? "opacity-60" : ""}`}
-            >
-              {v.label}
-            </button>
-          ))}
+        <label
+          htmlFor="variant-select"
+          className="block font-mono text-xs uppercase tracking-widest text-ash mb-2"
+        >
+          Size
+        </label>
+        <div className="relative max-w-xs">
+          <select
+            id="variant-select"
+            value={selectedId}
+            onChange={(e) => setSelectedId(Number(e.target.value))}
+            className="w-full appearance-none border border-line bg-white text-ink h-12 pl-4 pr-10 font-mono text-sm focus:outline-none focus:border-accent transition-colors cursor-pointer"
+          >
+            {variants.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.label}
+                {v.priceValue > 0 ? ` — ${v.priceLabel}` : ""}
+                {v.inStock ? "" : " (made to order)"}
+              </option>
+            ))}
+          </select>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ash text-xs"
+          >
+            ▾
+          </span>
         </div>
+        <p className="mt-2 font-mono text-xs uppercase tracking-widest text-ash">
+          Code: {selected.code}
+        </p>
+        <p className="mt-1 text-xs text-ash">
+          {variants.length} {variants.length === 1 ? "option" : "options"} in this range
+        </p>
       </div>
 
       {/* Qty + add */}
@@ -101,8 +134,13 @@ export default function VariantSelector({
             add(
               {
                 id: selected.id,
-                productId,
-                variationId: selected.id,
+                // Only a size the old store also sold can be re-priced against
+                // WooCommerce at card checkout. 0 marks the rest as quote-only,
+                // which the checkout gate reads — they still sell, and the ERP
+                // code below is what the team fulfils from either way.
+                productId: selected.wooProductId ?? 0,
+                variationId: selected.wooVariationId,
+                sku: selected.code,
                 slug: productSlug,
                 name,
                 image: selected.image,

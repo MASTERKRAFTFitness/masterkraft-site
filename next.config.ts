@@ -17,12 +17,23 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "masterkraft.com" },
       { protocol: "https", hostname: "www.masterkraft.com" },
+      // Per-size range photography (2026-09-02). The /public mirror holds one
+      // shot per PRODUCT, taken from WooCommerce parents; it has nothing for the
+      // 258+ individual sizes, whose only photographs are the ERP's. Public,
+      // no auth, ~100 KB each. Listed here so re-enabling the optimiser does not
+      // silently blank every range page; mirroring these into /public the way
+      // scripts/mirror-product-images.mjs did is the way to drop the dependency.
+      { protocol: "https", hostname: "unlappcdn.unleashedsoftware.com" },
     ],
   },
   async redirects() {
     return [
       // WooCommerce used "packages-2"; storefront uses "packages"
       { source: "/equipment/packages-2", destination: "/equipment/packages", permanent: true },
+      // Reformers was a category from 2026-08-27 to 2026-09-02 and never held a
+      // product. The ERP files both reformers under Cardio, so that is where the
+      // URL now goes rather than to a 404.
+      { source: "/equipment/reformers", destination: "/equipment/cardio", permanent: true },
       // Common legacy entry points
       { source: "/shop", destination: "/all-equipment", permanent: true },
       { source: "/equipment", destination: "/all-equipment", permanent: true },

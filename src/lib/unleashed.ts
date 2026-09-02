@@ -13,12 +13,33 @@ import {
   type WcProduct,
 } from "@/lib/woocommerce";
 import { skuAliases } from "@/lib/unleashed-aliases";
+import { getRange } from "@/lib/ranges";
 
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
 
-export type UnleashedEntry = { price: number; stock: number };
-type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
+// The ERP record the site actually uses. Price and stock were the whole of it
+// until 2026-09-02, when ranges started being built from Unleashed rather than
+// from WooCommerce's variable/bundle containers (see lib/ranges.ts): a range
+// needs the product's NAME to know which range it belongs to, its IMAGE, and its
+// BRAND to keep MasterKraft's range apart from the identical Snap, Air Locker,
+// Hyper Health and NO BRAND ranges that sit beside it under the same names.
+export type UnleashedEntry = {
+  price: number;
+  stock: number;
+  /** ProductDescription, e.g. "Rubber Hex Dumbbell - 9kg". */
+  name?: string;
+  /** Default image on Unleashed's own CDN — not the WordPress box. */
+  image?: string;
+  /** ProductBrand.BrandName: MK, SNAP, REVL, AIR LOCKER, NO BRAND, ... */
+  brand?: string;
+  /** ProductGroup.GroupName — the site's categories. See lib/erp-catalogue.ts. */
+  group?: string;
+  /** ProductSubGroup.GroupName — the sub-filter on a category page. */
+  subgroup?: string;
+  sellable?: boolean;
+};
+export type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
 function sign(query: string): string {
   return crypto
@@ -75,14 +96,32 @@ async function buildMap(): Promise<UnleashedMap> {
   // from the committed list in `obsolete.ts`, so this fetch stays at 6 pages
   // rather than 10. See that file for why.
   await Promise.all([
-    fetchAllPages<{ ProductCode?: string; DefaultSellPrice?: number | string }>(
+    fetchAllPages<{
+      ProductCode?: string;
+      DefaultSellPrice?: number | string;
+      ProductDescription?: string;
+      ImageUrl?: string;
+      Images?: { Url?: string; IsDefault?: boolean }[];
+      ProductBrand?: { BrandName?: string };
+      ProductGroup?: { GroupName?: string };
+      ProductSubGroup?: { GroupName?: string };
+      IsSellable?: boolean;
+    }>(
     "Products",
     (p) => {
       if (!p.ProductCode) return;
       const price = parseFloat(String(p.DefaultSellPrice ?? "0"));
+      const image =
+        p.Images?.find((i) => i.IsDefault)?.Url ?? p.Images?.[0]?.Url ?? p.ImageUrl;
       map[p.ProductCode.toUpperCase()] = {
         price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
         stock: 0,
+        name: p.ProductDescription?.trim() || undefined,
+        image: image || undefined,
+        brand: p.ProductBrand?.BrandName?.trim() || undefined,
+        group: p.ProductGroup?.GroupName?.trim() || undefined,
+        subgroup: p.ProductSubGroup?.GroupName?.trim() || undefined,
+        sellable: p.IsSellable !== false,
       };
     }
     ),
@@ -115,7 +154,10 @@ async function buildMap(): Promise<UnleashedMap> {
 // waits on it, so a shorter window just means more visitors paying that. The
 // trade is that a price or stock change in the ERP can take up to an hour to
 // show. Lower it again if stock accuracy starts mattering more than the wait.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-price-stock-map"], {
+// KEY IS VERSIONED. The entry shape changed when name/image/brand were added;
+// a warm cache under the old key would return entries with no `name`, and every
+// range would silently come back empty. Bump the suffix whenever the shape does.
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v4"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });
@@ -141,6 +183,27 @@ export async function enrichCard(product: WcProduct, map: UnleashedMap): Promise
   // above zero, so a real value here would let someone card-checkout a whole
   // range at the cost of its cheapest item. Zero keeps bundles on the quote
   // flow, which is where they were before this label existed.
+  //
+  // A RANGE IS THE EXCEPTION and is priced off its ERP sizes instead. Those
+  // pages now carry a size picker (lib/ranges.ts), so the shopper buys one size
+  // at its own price and the caveat above does not apply: there is no
+  // un-configured range to card-checkout. It also means one source for the
+  // figure - the card used to read WooCommerce's bundle minimum ("From $110")
+  // while the page read Unleashed ("From $90").
+  const range = getRange(product, map);
+  if (range) {
+    const priced = range.sizes.filter((s) => s.price > 0);
+    if (priced.length > 0) {
+      const min = Math.min(...priced.map((s) => s.price));
+      return {
+        priceLabel: `From ${formatPrice(min)}`,
+        priceValue: min,
+        inStock: range.sizes.some((s) => s.stock > 0),
+        source: "unleashed",
+      };
+    }
+  }
+
   const bundleFrom = getBundleFromPrice(product);
   if (bundleFrom !== null) {
     return {

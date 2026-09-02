@@ -126,6 +126,200 @@ call, not a fix to make unasked.
 
 ---
 
+## 0c. Shipped 2026-09-02 - one page per range, sized from Unleashed
+
+**The problem.** A shopper could not choose a weight. The Rubber Hex Dumbbells
+page was one photo, a "From $X" and no picker, and the 26 weights behind it were
+unreachable. Across the catalogue that is **258 sized products with their own
+prices and photographs, none of it selectable.**
+
+**Why it looked hard, and was not.** WooCommerce modelled a range as two
+container records - a hidden `variable` parent holding the variations, and a
+visible `-GROUP` bundle holding nothing. The first cut of this paired them. That
+was the wrong thing to key on: those containers are precisely what is being
+dropped. Of the 27 served products with no Unleashed record, **24 are those
+containers**. Nothing real is missing from the ERP.
+
+**Unleashed does not have containers.** A range there is a set of ordinary
+products whose `ProductDescription` shares a name:
+
+```
+MMDBRH01   "Rubber Hex Dumbbell - 1kg"      $5.00    own photo, own stock
+MMDBRH26   "Rubber Hex Dumbbell - 45kg"     $225.00
+```
+
+So **the name before `" - "` is the range, and nothing else is.** `src/lib/ranges.ts`,
+one function, `getRange(product, unleashedMap)`.
+
+That is better data than WooCommerce ever held: **45 ranges over 399 products**
+against Woo's 32 over 258. Sizes the old store never listed now sell - the PU
+Dumbbells go from 17 to 28, the straight barbell from 10 to 14.
+
+### The three rules that stop it going wrong
+
+1. **Never group on the code stem.** `MWBBFUR` holds a curl barbell AND a straight
+   barbell, both running 10-40kg. `MCBIAR` holds the Classic, Pro and Elite air
+   bikes. Grouping on the stem puts unrelated products behind one picker.
+2. **One brand only.** "Rubber Hex Dumbbell" is 26 products on MK and another 26
+   each on SNAP, NO BRAND, Air Locker and Hyper Health. Without the brand guard a
+   dropdown shows every weight five times at five prices.
+3. **Never merge two name-groups.** An earlier cut merged groups whose sizes did
+   not collide, to rescue stragglers left by half-finished renames in the ERP. It
+   rescued them - and put the Micro Bands in the Power Bands dropdown and mixed kg
+   with lb on the Wall Ball. Disjoint sizes do not mean "same product".
+
+Where a stem holds several real ranges, the codes the page **already sold** decide
+which one is its own. That is what keeps `MWBBFUR-GROUP` on the straight barbell
+(14 sizes) rather than the curl barbell that shares its stem and has more (19).
+
+### What still comes from WooCommerce, and why
+
+The URL and the words. `src/data` is a **frozen text archive** now - nothing is
+fetched from the store - supplying the slug the page is routed by, the marketing
+copy, the features and the spec table. **Unleashed holds no product copy at all:
+`Notes` is empty on all 1,476 sellable records and `ProductDescription` is just a
+name.** Until that copy is written into the ERP, the snapshot is the only place it
+exists. Deleting `src/data` empties every product page of prose.
+
+### Checkout
+
+A cart line now carries the **ERP code** (`sku`), which is what the warehouse picks
+and what the quote email prints. It also carries the WooCommerce ids **when the
+frozen snapshot still has them**, because `resolveOrderLines` re-prices a *paid*
+order against the store. Sizes the old store never listed have no such ids, so
+they carry `productId: 0`, and `canPay` in `checkout/page.tsx` now requires
+`productId > 0`. Those sizes still sell - through the quote flow, which needs
+only a code, a name and a price. Without that guard the customer fills in a card
+form and then hits `resolveOrderLines` failing closed.
+
+### Photography
+
+Per-size shots come from Unleashed's own CDN (`unlappcdn.unleashedsoftware.com`,
+public, no auth, ~100 KB each), allowlisted in `next.config.ts`. The `/public`
+mirror holds one shot per PRODUCT, taken from WooCommerce parents; it has nothing
+for the individual sizes. Mirroring these the way `scripts/mirror-product-images.mjs`
+did is how to drop the external dependency - worth doing, not urgent.
+
+### `npm run report:ranges`
+
+Prints what the ERP's naming is doing wrong, because rule 3 above is only as good
+as the naming:
+
+- **ORPHANS** - a size stranded under an unfinished rename, so it is missing from
+  its picker on the live site. 3 today; `MMDBUR19` is called "Urethane Fixed
+  Dumbbells (Pair) - 7.5kg" while its other 28 are "PU Dumbbells (Pair)". **Fix is
+  one field in Unleashed.** Advisory - read each, some are genuinely separate.
+- **SPLITS** - 40 stems holding more than one real range. Correct, but only one of
+  them can have a page while pages are routed by the old WooCommerce slugs. The
+  Wall Ball (Armatex), 5 sizes, has no page for exactly this reason.
+
+Files: `src/lib/ranges.ts`, `src/lib/ranges.test.ts`, `scripts/range-report.mjs`,
+`src/components/shop/VariantSelection.tsx` (new); `VariantSelector.tsx`,
+`ProductGallery.tsx`, `app/product/[slug]/page.tsx`, `app/checkout/page.tsx`,
+`app/api/quote/route.ts`, `cart/CartProvider.tsx`, `lib/unleashed.ts`,
+`lib/catalogue.ts`, `next.config.ts`.
+
+---
+
+## 0d. Shipped 2026-09-02 - the categories are the ERP's product groups
+
+**The site was showing 157 of the 696 products the ERP sells under MasterKraft
+codes.** 184 cards where the ERP has 319 once a range is counted once. Apparel,
+Lighting and Reformers had been sitting empty since 27 August with a comment
+explaining that their products exist in Unleashed and were never created in
+WooCommerce - which was the visible corner of the real problem.
+
+**`ProductGroup` IS the category now**, the same way the franchisee catalogues
+have always grouped. `src/lib/erp-catalogue.ts`. Nothing maps, nothing is
+maintained by hand: a product appears in Strength because the ERP files it there.
+
+| | before | after |
+|---|---|---|
+| Strength | 11 | **81** |
+| Apparel | 0 | **18** |
+| Weightlifting | 29 | 42 |
+| Mixed Implements | 20 | 41 |
+| Body Weight | 25 | 33 |
+| Rigs & Racks | 11 | 26 |
+| Cardio | 13 | 20 |
+| Flooring | 0 | 8 |
+| Lighting | 0 | 2 |
+
+Sub-filters are `ProductSubGroup` - Dumbbells, Barbells, Wall Mounted, Lower Body
+Machines - which is richer and better kept than the WooCommerce child terms it
+replaces. **165 units had no WooCommerce record at all** and now have a generated
+page: name, ERP code, price, stock, photographs, and a size picker when it is a
+range. No marketing copy, because the ERP has none.
+
+### A UNIT is what earns one card
+
+Either a range (everything sharing a name before `" - "`, one card with a picker)
+or a single product. Same rule the product page uses, so a card and the page it
+opens cannot disagree - `sizesFromCodes` in ranges.ts is the ONE place a size row
+is built. That is what makes 731 products into 319 cards rather than 731.
+
+### Five rules, each of which was a bug first
+
+1. **Never group on the code stem.** `MWBBFUR` is three barbells, `MCBIAR` is the
+   Classic, Pro and Elite air bikes.
+2. **A brand prefix is not a range.** "CONCEPT 2 - Ski Erg with PM5" read as a
+   range gives one "CONCEPT 2" card whose sizes are four whole ergs.
+3. **A trailing `(L)` is a size; a trailing `(Armatex)` is not.** Apparel is named
+   "Sweatshirt (Unisex) (L)", so the `" - "` rule alone gave 52 cards for about a
+   dozen products. The whitelist is XS-3XL and deliberately nothing else.
+4. **NO BRAND fills gaps, it does not duplicate.** N-codes have always counted as
+   ours (`/^(?:[MN]|SC)/`) and Lighting exists only there, but NO BRAND also
+   holds white-label copies of MK ranges - a whole 26-weight `NBMDBRH` beside
+   `MMDBRH`. Same name in the same group: earliest brand in `BRAND_ORDER` wins.
+5. **The loser of a page contest gets its own page, not oblivion.** Three ranges
+   want `/product/urethane-fixed-barbells-2`. The winner is decided by the codes
+   that page ALREADY sold - the same anchor rule ranges.ts uses, shared on purpose
+   - and the others get a slug from their own name. That is how the Fixed PU Curl
+   Barbell (19 sizes) is listed at all; the old store never had a page for it.
+
+### What did NOT change
+
+- **URLs.** Slugs stay hand-written in `categories.ts` and inherited from the
+  snapshot for products. "Rigs & Racks" slugifies to `rigs-and-racks` and this
+  category has lived at `/equipment/rigs-racks` since launch; a change of source
+  is not a reason to break every link into it. `/equipment/reformers` 308s to
+  `/equipment/cardio`, where the ERP files both reformers.
+- **Clearance.** Ex-display stock on A-prefixed codes, still listed from the
+  snapshot with the brand filter off. Unleashed's "Clearance" group holds one
+  product and is not the same thing.
+- **The words.** `src/data` is a frozen text archive supplying copy, features and
+  specs. Deleting it empties every product page of prose.
+
+### If Unleashed is unreachable
+
+Every listing surface - category, all-equipment, search, sitemap - checks for an
+empty map and **falls back to the snapshot**. A visitor sees the old, smaller
+catalogue rather than a site that sells nothing. Worth keeping when editing any
+of them.
+
+### `npm run report:ranges`
+
+Now also reports what the category pages are missing, because the ERP is the
+catalogue and its gaps are holes on live pages:
+
+- **48 with no price** - render "Contact for pricing".
+- **186 with no photograph** - render an empty tile. `masterkraft-portals-franchisee`
+  has `scripts/harvest-unleashed-images.py`, which fills blanks from the ERP's own
+  CDN; the same trick would help here.
+- **2 near-duplicate names** - "Multi Dead Lift" vs "Multi Deadlift", "V Squat"
+  vs "V-Squat". Two cards for one product; fix the name and they merge.
+- Plus the apparel mess: `MAACU02-L "Oversized Hoodie (L)"` beside
+  `MAACU02L "Oversized Hoodie (Unisex) (L)"`, and `MAACU02-XL` is spelled
+  **"Oversided Hoodie (XL)"**. Three hoodie cards where there should be one.
+
+Files: `src/lib/erp-catalogue.ts`, `src/lib/erp-catalogue.test.ts` (new);
+`lib/categories.ts`, `lib/ranges.ts`, `lib/unleashed.ts`,
+`app/equipment/[category]/page.tsx`, `app/all-equipment/page.tsx`,
+`app/product/[slug]/page.tsx`, `app/search/page.tsx`, `app/sitemap.ts`,
+`scripts/range-report.mjs`, `next.config.ts`.
+
+---
+
 ## 1. Start here
 
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.
@@ -257,8 +451,10 @@ Each of these was hit for real. They look like bugs in our code and are not.
 Four rules, all applied at one chokepoint in `src/lib/woocommerce.ts`. **If a
 category shows 0 products, suspect these first.**
 
-512 published products → **184 shown** (plus 36 Clearance; this was recorded as 37
-on 2026-08-20, and three of the 39 raw Clearance products are ERP-retired).
+**SUPERSEDED BY §0d.** The rules below still decide what the WooCommerce snapshot
+serves — Clearance, and the fallback when Unleashed is unreachable — but they no
+longer decide what the site LISTS. Categories come from the ERP's `ProductGroup`
+now, and the count is 319 units, not 184 products.
 
 The rules run against the **committed snapshot** in `src/data/`, not a live call
 (§4). The snapshot is a faithful mirror of what the store published and holds NO
@@ -276,7 +472,8 @@ visibility rules, so these four are still the only thing deciding what appears.
    and sitting in the sitemap.
 3. **Obsolete, WordPress side.** `catalog_visibility: "hidden"` is the store's own
    "do not list this" switch, used both for withdrawn lines and for an old single
-   listing superseded by its `-GROUP` product. 25 products.
+   listing superseded by its `-GROUP` product. 25 products. Unchanged by §0c:
+   ranges no longer read those hidden twins at all, they read the ERP.
 4. **Obsolete, ERP side.** `src/lib/obsolete.ts` reads a **committed list** of 804
    retired Unleashed codes. 15 served products were retired in the ERP while
    WordPress still showed them, including the whole discontinued Selectorize range.
@@ -303,6 +500,12 @@ an order for an already-bought item must not fail because marketing hid it.
   `bundle_price.regular_price.min` as a "From $X". **`priceValue` stays 0 on
   purpose** so a configurable range cannot be card-checked-out at the cost of its
   cheapest item.
+- **A RANGE is the exception** (§0c). It is priced off its ERP sizes, so
+  `priceValue` is the cheapest size and the price filter can finally see it. Safe
+  because the shopper picks a size and buys that, not an un-configured range. This
+  also settles the disagreement `getBundleFromPrice` documents - the card used to
+  say "From $110" off WooCommerce while the page said "From $90" off Unleashed.
+  One source now, and it is the ERP.
 
 ---
 

@@ -4,16 +4,28 @@ import { notFound } from "next/navigation";
 import ProductGallery from "@/components/shop/ProductGallery";
 import {
   getProductBySlug,
-  getProductVariations,
   getProductsByCategory,
   parseProductDetail,
   filterBrandSku,
   getBundleFromPrice,
   formatPrice,
+  type WcProduct,
 } from "@/lib/woocommerce";
-import { getUnleashedMap, enrich, enrichCard, lookupBySku } from "@/lib/unleashed";
+import { getUnleashedMap, enrich, enrichCard, lookupBySku, type EnrichedProduct } from "@/lib/unleashed";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
+import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
+import { sizesFromCodes } from "@/lib/ranges";
+import { erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard } from "@/lib/erp-catalogue";
+
+// Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
+// old store never listed have no WooCommerce variation id, and the cart keys on
+// a number; a negative one can never collide with a real WooCommerce id.
+function hashCode(code: string): number {
+  let h = 0;
+  for (let i = 0; i < code.length; i++) h = (h * 31 + code.charCodeAt(i)) | 0;
+  return Math.abs(h) || 1;
+}
 import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
@@ -47,18 +59,29 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug).catch(() => null);
-  // Obsolete (WooCommerce-hidden) products come back null here, so they 404
-  // rather than serve a page with a live add-to-cart button.
+
+  // TWO SOURCES, ONE PAGE. The ERP is the catalogue (lib/erp-catalogue.ts) and
+  // supplies what is sold — name, code, price, stock, sizes, photographs. The
+  // frozen snapshot supplies the WORDS, which the ERP does not hold at all, and
+  // the URL this page has always lived at.
+  //
+  // A page exists if EITHER has it: 165 units are sold only in the ERP and have
+  // never had a WooCommerce record, and they get a page built from ERP data with
+  // no marketing copy. Obsolete and other-brand products still come back null
+  // from getProductBySlug, so they still 404.
+  //
   // NOTE: this segment deliberately has NO loading.tsx. A loading file wraps the
   // segment in Suspense, which flushes the shell - and a 200 - before this line
   // runs, turning every 404 into a SOFT 404 (404 body, 200 status) that Google
   // would happily index. Re-adding a skeleton here brings that back.
-  if (!product) notFound();
+  const unleashed = await getUnleashedMap().catch(() => ({}));
+  const wooProduct = await getProductBySlug(slug).catch(() => null);
+  const unit = erpUnitBySlug(unleashed, slug);
+  if (!wooProduct && !unit) notFound();
+  const product = wooProduct ?? unitAsProduct(unit!);
 
   const cat = product.categories?.[0];
   const detail = parseProductDetail(product);
-  const unleashed = await getUnleashedMap().catch(() => ({}));
   // A bundle has no price of its own, so label it the same way its card is
   // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
   // than becoming card-payable at the cost of its cheapest item - see enrichCard.
@@ -69,26 +92,35 @@ export default async function ProductPage({
   const inStock = enriched.inStock;
   const stockQty = lookupBySku(unleashed, product.sku)?.stock;
 
-  // Variable products: fetch variations and price each on corrected data.
-  const isVariable = product.type === "variable";
-  let variants: Variant[] = [];
-  if (isVariable) {
-    const raw = await getProductVariations(product.id).catch(() => []);
-    variants = raw.map((v) => {
-      const e = enrich(v, unleashed);
-      return {
-        id: v.id,
-        label: v.attributes?.map((a) => a.option).filter(Boolean).join(" / ") || v.sku || `#${v.id}`,
-        priceLabel: e.priceLabel,
-        priceValue: e.priceValue,
-        inStock: e.inStock,
-        stockQty: e.stockQty,
-        image: v.image?.src ?? product.images?.[0]?.src,
-      };
-    });
-  }
-  const usesVariants = isVariable && variants.length > 0;
+  // THE SIZES COME FROM UNLEASHED, and from the SAME unit the category card was
+  // built from, so a card and the page it opens can never disagree about what is
+  // in the range. sizesFromCodes is the one place a size row is made.
+  const sizes = unit ? sizesFromCodes(unit.codes, unleashed) : [];
+
+  const variants: Variant[] = (unit?.isRange ? sizes : []).map((s) => ({
+    id: s.wooVariationId ?? -hashCode(s.code),
+    code: s.code,
+    label: s.label,
+    priceLabel: s.price > 0 ? formatPrice(s.price) : "Contact for pricing",
+    priceValue: s.price,
+    inStock: s.stock > 0,
+    stockQty: s.stock,
+    image: s.image ?? product.images?.[0]?.src,
+    wooProductId: s.wooProductId,
+    wooVariationId: s.wooVariationId,
+  }));
+  const usesVariants = variants.length > 0;
   const variantPrices = variants.map((v) => v.priceValue).filter((v) => v > 0);
+
+  // Every size's photograph, from Unleashed's own CDN, with the snapshot's
+  // images behind them. Deduplicated by URL.
+  const galleryImages = [
+    ...(usesVariants ? variants : sizes)
+      .map((v) => v.image)
+      .filter((src): src is string => !!src)
+      .map((src) => ({ src, alt: product.name })),
+    ...(product.images ?? []),
+  ].filter((img, i, all) => all.findIndex((o) => o.src === img.src) === i);
 
   const offers = usesVariants
     ? variantPrices.length > 0
@@ -131,9 +163,16 @@ export default async function ProductPage({
     ...offers,
   };
 
-  // Related products from the same category
-  let related: { product: typeof product; enriched: Awaited<ReturnType<typeof enrichCard>> }[] = [];
-  if (cat) {
+  // Related products from the same ERP group, which is what the category pages
+  // now list by. Falls back to the snapshot's category when the ERP is
+  // unreachable, so this block degrades rather than emptying.
+  let related: { product: WcProduct; enriched: EnrichedProduct }[] = [];
+  if (unit) {
+    related = erpUnitsInGroup(unleashed, unit.group)
+      .filter((u) => u.slug !== unit.slug)
+      .slice(0, 4)
+      .map(unitCard);
+  } else if (cat) {
     const rel = await getProductsByCategory(cat.id, { perPage: 24 }).catch(() => null);
     const others = filterBrandSku(rel?.data ?? []).filter((p) => p.id !== product.id).slice(0, 4);
     related = await Promise.all(
@@ -170,9 +209,22 @@ export default async function ProductPage({
         </div>
       </div>
 
+      {/* The picker and the gallery live in two columns of this grid; the
+          provider is what lets choosing 9kg swap the photograph. */}
+      <VariantSelectionProvider>
       <section className="container-mk py-14 grid lg:grid-cols-2 gap-12 lg:gap-16">
-        <ViewItemTracker id={product.id} name={product.name} price={enriched.priceValue} />
-        <ProductGallery images={product.images ?? []} name={product.name} />
+        <ViewItemTracker
+          id={product.id}
+          name={product.name}
+          price={
+            // A range's own priceValue is 0 (it is a bundle); report the cheapest
+            // size instead so view_item is not logged at $0 for 32 products.
+            usesVariants && variantPrices.length > 0
+              ? Math.min(...variantPrices)
+              : enriched.priceValue
+          }
+        />
+        <ProductGallery images={galleryImages} name={product.name} />
 
         <div>
           {cat && (
@@ -180,7 +232,10 @@ export default async function ProductPage({
           )}
           <h1 className="mt-3 text-3xl lg:text-4xl font-bold">{product.name}</h1>
 
-          {product.sku && (
+          {/* A range has no code of its own worth showing — "MMDBRH-GROUP" is a
+              WooCommerce container, not something anyone can order. The picker
+              shows the selected size's ERP code instead. */}
+          {product.sku && !usesVariants && (
             <p className="mt-2 font-mono text-xs uppercase tracking-widest text-ash">
               Code: {product.sku}
             </p>
@@ -196,8 +251,7 @@ export default async function ProductPage({
           <div className="mt-7">
             {usesVariants ? (
               <VariantSelector
-                productId={product.id}
-                productName={product.name}
+                productName={unit?.name ?? product.name}
                 productSlug={product.slug}
                 variants={variants}
               />
@@ -238,6 +292,7 @@ export default async function ProductPage({
           </p>
         </div>
       </section>
+      </VariantSelectionProvider>
 
       {(detail.overviewDescription || detail.features.length > 0 || product.description) && (
         <section className="container-mk pb-14 max-w-3xl">

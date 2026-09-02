@@ -143,13 +143,61 @@ describe("a bundle is priced for display, not for sale", () => {
   // minimum is a guide price. canPay requires every cart item to be above zero,
   // so a real priceValue here would make a whole range card-payable at the cost
   // of its cheapest item.
+  //
+  // The fixture is a REVL Studio Kit, a GENUINE multi-item package. It has to
+  // be: most "-GROUP" bundles are sized ranges with a variable twin and are
+  // now priced off their variations instead — see the next block.
   it("keeps priceValue at 0 so bundles stay on the quote flow", async () => {
+    const { enrichCard } = await import("@/lib/unleashed");
+    const card = await enrichCard(
+      {
+        type: "bundle",
+        sku: "RKST3C01",
+        stock_status: "onbackorder",
+        bundle_price: { regular_price: { min: { incl_tax: "110" } } },
+      } as never,
+      {}
+    );
+    expect(card.priceLabel).toBe("From $110.00");
+    expect(card.priceValue).toBe(0);
+  });
+});
+
+describe("a sized range is priced off the ERP, not off its bundle record", () => {
+  // The Urethane Fixed Barbells are the pair getBundleFromPrice documents: the
+  // WooCommerce bundle minimum ($110) disagreed with the range's own cheapest
+  // size, and it is the range the shopper now picks from. One source, the ERP.
+  const erp = {
+    MWBBFUR01: { price: 90, stock: 2, name: "Fixed PU Straight Barbell - 10kg", brand: "MK", sellable: true },
+    MWBBFUR03: { price: 150, stock: 0, name: "Fixed PU Straight Barbell - 15kg", brand: "MK", sellable: true },
+  };
+
+  it("shows the cheapest size, and a real priceValue the price filter can use", async () => {
     const { enrichCard } = await import("@/lib/unleashed");
     const card = await enrichCard(
       {
         type: "bundle",
         sku: "MWBBFUR-GROUP",
         stock_status: "onbackorder",
+        bundle_price: { regular_price: { min: { incl_tax: "110" } } },
+      } as never,
+      erp
+    );
+    expect(card.priceLabel).toBe("From $90.00");
+    expect(card.priceValue).toBe(90);
+    expect(card.source).toBe("unleashed");
+    // In stock because one size is, even though the WooCommerce record says
+    // backorder — the ERP is what knows.
+    expect(card.inStock).toBe(true);
+  });
+
+  it("falls back to the bundle minimum when the ERP has no range", async () => {
+    const { enrichCard } = await import("@/lib/unleashed");
+    const card = await enrichCard(
+      {
+        type: "bundle",
+        sku: "MWBBFUR-GROUP",
+        stock_status: "instock",
         bundle_price: { regular_price: { min: { incl_tax: "110" } } },
       } as never,
       {}

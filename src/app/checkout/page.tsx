@@ -17,7 +17,14 @@ export default function CheckoutPage() {
   const { items, subtotal, clear, ready } = useCart();
   // Card checkout when Stripe is configured AND every item has a real price.
   // Carts containing "Contact for pricing" items fall back to the quote flow.
-  const canPay = paymentsConfigured && ready && items.length > 0 && items.every((i) => i.price > 0);
+  // A line with no WooCommerce product cannot be re-priced by resolveOrderLines,
+  // which fails closed — so it must never reach the card form. The ERP carries
+  // sizes the old store never listed; those sell through the quote flow.
+  const canPay =
+    paymentsConfigured &&
+    ready &&
+    items.length > 0 &&
+    items.every((i) => i.price > 0 && i.productId > 0);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +62,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contact,
-          items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
+          items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
           subtotal,
         }),
       });
