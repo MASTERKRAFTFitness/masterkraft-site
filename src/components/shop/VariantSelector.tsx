@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useVariantSelection } from "@/components/shop/VariantSelection";
 import { trackAddToCart } from "@/lib/analytics";
+import { variantLine } from "@/lib/variant-line";
 
 export type Variant = {
   id: number; // cart key: the WooCommerce variation id, or a negative code hash
@@ -37,10 +38,10 @@ export default function VariantSelector({
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  // A thumbnail click moves the SELECTION, not just the picture. Every
-  // thumbnail on a range page is a size and is now captioned with it, so
-  // clicking "12kg" and being left on 6kg — picture changed, price did not —
-  // was the confusing half of the old behaviour.
+  // A click in the strip or the table moves the SELECTION, not just the
+  // picture. Every thumbnail on a range page is a size and is captioned with
+  // it, so clicking "12kg" and being left on 6kg — picture changed, price did
+  // not — was the confusing half of the old gallery.
   //
   // Adjusted during render rather than in an effect: this is derived state
   // catching up with a prop, which is the case React documents for it, and it
@@ -49,20 +50,22 @@ export default function VariantSelector({
   const [lastRequest, setLastRequest] = useState(request?.n ?? 0);
   if (request && request.n !== lastRequest) {
     setLastRequest(request.n);
-    const hit = variants.find((v) => v.image === request.src);
+    const hit = variants.find((v) => v.code === request.code);
     if (hit) setSelectedId(hit.id);
   }
 
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
 
-  // Point the gallery at the selected size's photograph. Ranges carry one per
-  // size (26 for the Rubber Hex Dumbbells), so this is the difference between
-  // "a dumbbell" and the 9kg the shopper is actually looking at.
+  // Publish the selection: the gallery shows the right photograph — ranges
+  // carry one per size, 26 for the Rubber Hex Dumbbells, so this is the
+  // difference between "a dumbbell" and the 9kg the shopper is looking at —
+  // and the size table highlights the right row.
+  const selectedCode = selected?.code;
   const selectedImage = selected?.image;
-  const setImageSrc = selection?.setImageSrc;
+  const setSelected = selection?.setSelected;
   useEffect(() => {
-    setImageSrc?.(selectedImage);
-  }, [setImageSrc, selectedImage]);
+    setSelected?.(selectedCode, selectedImage);
+  }, [setSelected, selectedCode, selectedImage]);
 
   if (!selected) return null;
 
@@ -146,25 +149,12 @@ export default function VariantSelector({
           type="button"
           className="btn btn-accent"
           onClick={() => {
-            const name = `${productName} - ${selected.label}`;
-            add(
-              {
-                id: selected.id,
-                // Only a size the old store also sold can be re-priced against
-                // WooCommerce at card checkout. 0 marks the rest as quote-only,
-                // which the checkout gate reads — they still sell, and the ERP
-                // code below is what the team fulfils from either way.
-                productId: selected.wooProductId ?? 0,
-                variationId: selected.wooVariationId,
-                sku: selected.code,
-                slug: productSlug,
-                name,
-                image: selected.image,
-                price: selected.priceValue,
-              },
-              qty
-            );
-            trackAddToCart({ id: selected.id, name, price: selected.priceValue }, qty);
+            // Built by lib/variant-line, which the size table's ADD also uses,
+            // so the two paths cannot put the same size in the cart twice under
+            // two different keys.
+            const line = variantLine(productName, productSlug, selected);
+            add(line, qty);
+            trackAddToCart({ id: line.id, name: line.name, price: line.price }, qty);
             setAdded(true);
             setQty(1);
             setTimeout(() => setAdded(false), 2500);

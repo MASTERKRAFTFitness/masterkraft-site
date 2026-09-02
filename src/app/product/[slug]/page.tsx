@@ -15,6 +15,7 @@ import { getUnleashedMap, enrich, enrichCard, lookupBySku, type EnrichedProduct 
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
+import SizeTable from "@/components/shop/SizeTable";
 import { sizesFromCodes } from "@/lib/ranges";
 import { erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard } from "@/lib/erp-catalogue";
 
@@ -127,9 +128,9 @@ export default async function ProductPage({
   // so a caption cannot disagree with the dropdown. Where two sizes share a
   // photograph the strip shows it once and the first size owns the caption,
   // which is why later ones do not overwrite.
-  const galleryLabels: Record<string, string> = {};
+  const galleryLabels: Record<string, { label: string; code: string }> = {};
   for (const v of variants) {
-    if (v.image && !galleryLabels[v.image]) galleryLabels[v.image] = v.label;
+    if (v.image && !galleryLabels[v.image]) galleryLabels[v.image] = { label: v.label, code: v.code };
   }
 
   const offers = usesVariants
@@ -302,6 +303,18 @@ export default async function ProductPage({
           </p>
         </div>
       </section>
+
+      {/* Inside the provider, below the buy box: the size cell selects, which
+          moves the picker and the photograph above it. */}
+      {usesVariants && (
+        <section className="container-mk pb-4">
+          <SizeTable
+            productName={unit?.name ?? product.name}
+            productSlug={product.slug}
+            variants={variants}
+          />
+        </section>
+      )}
       </VariantSelectionProvider>
 
       {(detail.overviewDescription || detail.features.length > 0 || product.description) && (

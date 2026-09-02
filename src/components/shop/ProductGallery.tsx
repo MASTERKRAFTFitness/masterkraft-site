@@ -13,12 +13,13 @@ export default function ProductGallery({
   images: WcImage[];
   name: string;
   /**
-   * Size label per photograph, "…/9kg.jpg" -> "9kg", for a range. Passed from
-   * the page rather than published through the selection context so the
-   * captions are in the server HTML: through context they appeared a frame
-   * after hydration and shifted the strip under the shopper's cursor.
+   * The size each photograph belongs to, keyed by src — its caption and the ERP
+   * code a click asks for. Passed from the page rather than published through
+   * the selection context so the captions are in the server HTML: through
+   * context they arrived a frame after hydration and shifted the strip under
+   * the shopper's cursor.
    */
-  labels?: Record<string, string>;
+  labels?: Record<string, { label: string; code: string }>;
 }) {
   const [zoom, setZoom] = useState(false);
 
@@ -35,7 +36,7 @@ export default function ProductGallery({
   // effect.
   const selection = useVariantSelection();
   const selectedSrc = selection?.imageSrc;
-  const requestImage = selection?.requestImage;
+  const requestSize = selection?.requestSize;
   const [override, setOverride] = useState<number | null>(null);
   const [lastSelected, setLastSelected] = useState(selectedSrc);
   if (selectedSrc !== lastSelected) {
@@ -88,13 +89,14 @@ export default function ProductGallery({
       {images.length > 1 && (
         <div className="mt-4 grid grid-cols-5 gap-3 max-h-72 overflow-y-auto pr-1">
           {images.map((img, i) => {
-            const label = labels?.[img.src];
+            const size = labels?.[img.src];
+            const label = size?.label;
             return (
               <button
                 key={i}
                 // A labelled thumbnail belongs to a size, so it asks the picker
                 // to select it. Everything else is still a plain image swap.
-                onClick={() => (label && requestImage ? requestImage(img.src) : setOverride(i))}
+                onClick={() => (size && requestSize ? requestSize(size.code) : setOverride(i))}
                 aria-label={label ? `Select ${label}` : `View image ${i + 1}`}
                 aria-pressed={label ? i === active : undefined}
                 className={`bg-[#e6e6e6] border overflow-hidden transition-colors ${
