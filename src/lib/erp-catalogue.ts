@@ -107,7 +107,7 @@ const GARMENT_SIZE = /\s*\((XS|S|M|L|XL|XXL|2XL|3XL)\)\s*$/i;
 //                                   BRAND. Four distinct ergs, and reading it as
 //                                   a range collapses them into one card whose
 //                                   "sizes" are whole products.
-function splitUnitName(full: string, brand?: string): { name: string; size: string } {
+export function splitUnitName(full: string, brand?: string): { name: string; size: string } {
   const garment = full.match(GARMENT_SIZE);
   if (garment) return { name: full.replace(GARMENT_SIZE, "").trim(), size: garment[1].toUpperCase() };
   const i = full.indexOf(SEP);
