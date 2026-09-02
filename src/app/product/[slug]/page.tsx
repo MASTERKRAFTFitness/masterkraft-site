@@ -351,6 +351,34 @@ export default async function ProductPage({
               )}
             </div>
           )}
+
+          {/* Specs follow the features in the same column. As a full-width band
+              below they were centred in their own max-w-3xl, which lined up with
+              neither column and read as a stray block. */}
+          {detail.specs.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Specifications</h2>
+              <dl className="divide-y divide-line">
+                {detail.specs.map((s, i) => (
+                  <div key={i} className="grid grid-cols-3 gap-4 py-3">
+                    <dt className="font-mono text-xs uppercase tracking-widest text-ash">
+                      {s.label}
+                    </dt>
+                    <dd className="col-span-2 text-ink leading-relaxed">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              {detail.packageInclusions && (
+                <div className="mt-8">
+                  <h3 className="font-semibold text-ink mb-3">Package inclusions</h3>
+                  <div
+                    className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-3"
+                    dangerouslySetInnerHTML={{ __html: detail.packageInclusions }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* A THIRD GRID CHILD, not a child of the gallery, and the order is
@@ -368,29 +396,6 @@ export default async function ProductPage({
         )}
       </section>
       </VariantSelectionProvider>
-
-      {detail.specs.length > 0 && (
-        <section className="container-mk pb-20 max-w-3xl">
-          <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Specifications</h2>
-          <dl className="divide-y divide-line">
-            {detail.specs.map((s, i) => (
-              <div key={i} className="grid grid-cols-3 gap-4 py-3">
-                <dt className="font-mono text-xs uppercase tracking-widest text-ash">{s.label}</dt>
-                <dd className="col-span-2 text-ink leading-relaxed">{s.value}</dd>
-              </div>
-            ))}
-          </dl>
-          {detail.packageInclusions && (
-            <div className="mt-8">
-              <h3 className="font-semibold text-ink mb-3">Package inclusions</h3>
-              <div
-                className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-3"
-                dangerouslySetInnerHTML={{ __html: detail.packageInclusions }}
-              />
-            </div>
-          )}
-        </section>
-      )}
 
       {related.length > 0 && (
         <section className="bg-smoke">

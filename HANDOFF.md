@@ -22,8 +22,10 @@ left on Netregistry deliberately, and a real message was received after the chan
 the card form is hidden and every cart goes to the quote flow. Two things have to
 happen before card checkout returns, in either order:
 
-1. **Stripe live keys** in Vercel Production. Still `pk_test` as at 27 August,
-   confirmed by reading the deployed bundle. Michael sets these.
+1. **Stripe live keys** in Vercel Production. Still `pk_test_51OgYExS…`,
+   re-confirmed **3 September** by reading the deployed bundle. Michael sets these.
+   Nothing is mis-selling meanwhile - quote mode hides the card form - but this
+   stays the top item because card checkout cannot return without it.
 2. **Paul moves WooCommerce to a subdomain** (`docs/email-paul-subdomain.md`),
    then `WC_STORE_URL` changes and `NEXT_PUBLIC_CHECKOUT_MODE` is removed.
 
@@ -300,7 +302,11 @@ of them.
 ### `npm run report:ranges`
 
 Now also reports what the category pages are missing, because the ERP is the
-catalogue and its gaps are holes on live pages:
+catalogue and its gaps are holes on live pages.
+
+> **Superseded 3 September.** The counts below are as at 2 September.
+> `npm run report:punchlist` (§0e) replaces this list with a per-field punch list
+> and is the one to work from.
 
 - **48 with no price** - render "Contact for pricing".
 - **186 with no photograph** - render an empty tile. `masterkraft-portals-franchisee`
@@ -317,6 +323,175 @@ Files: `src/lib/erp-catalogue.ts`, `src/lib/erp-catalogue.test.ts` (new);
 `app/equipment/[category]/page.tsx`, `app/all-equipment/page.tsx`,
 `app/product/[slug]/page.tsx`, `app/search/page.tsx`, `app/sitemap.ts`,
 `scripts/range-report.mjs`, `next.config.ts`.
+
+---
+
+## 0e. Shipped 2026-09-03 - what a range costs, and every size in it
+
+Deployed to production and verified on `masterkraft.com`. Five changes, all on top
+of §0c/§0d: the ERP was already the catalogue, but a card would not say what a
+range cost end to end and a shopper could not see two sizes at once.
+
+`cc5ed0f`, `b3892f5`, `3b0ff30`, plus `6418e20` (retirements) and `e600caf`
+(metadata).
+
+### The card spans the price
+
+`From $40.00` became `$40.00 – $300.00`. The old label hid that the top of the
+High Grip Dead Balls is seven times the bottom, and it collapsed three different
+situations into one. There are now three, and the distinction matters:
+
+| Label | Means |
+| --- | --- |
+| `$40.00 – $300.00` | The sizes cost different amounts. |
+| `From $40.00` | Some sizes are unpriced, so the top is genuinely unknown and must not be implied. |
+| `$65.00` | Every size costs the same - the apparel ranges. "From" on a flat price is noise. |
+
+`ErpUnit` gained `priceMax` and `pricedCount` to tell the last two apart.
+
+### And says what is in the range
+
+`16 sizes · 6kg – 75kg` under the price, from `enriched.rangeLabel`.
+
+**The span reads the measurement each label OPENS with, not the whole label.**
+The competition kettlebells are eleven plain weights and one
+`6kg (Aluminium)`; on the whole label that is either nonsense or nothing, and on
+the leading measurement it is `12 sizes · 6kg – 40kg`. A unit is required, which
+is what keeps `2 Tier (10 Pair) 1.0` out - a bare leading number is a model
+number as often as a size. A label with no measurement gets the count alone:
+`Set of 6 – Set of 10` is not a span.
+
+### The thumbnails are labelled, and clicking one selects that size
+
+Each thumbnail on a range page is captioned with its weight and moves the
+selection, so the price and the add-to-cart follow. Previously a click swapped
+the picture only, which is how the page could show a 12kg ball above a 6kg price.
+
+Captions are passed from the page (`galleryLabels`), not published through the
+selection context - through context they arrived a frame after hydration and
+shifted the strip under the cursor.
+
+### The size table
+
+The franchisee catalogue's table, on the storefront: size, ERP code,
+availability, price, ADD. The dropdown is the right control for buying one
+dumbbell and the wrong shape for a gym comparing 26 weights and buying eight.
+
+**Prices are inc-GST here, unlike the franchisee catalogue's ex-GST column.** The
+storefront quotes inc-GST everywhere else on the page and a table that switched
+convention halfway down would be misread.
+
+### The page is two columns all the way down
+
+The table is in the LEFT column under the thumbnails. **Product Overview,
+Features and Specifications all moved up into the RIGHT column**, under the
+price, in that order.
+
+Overview and Specifications were each a full-width band in their own centred
+`max-w-3xl`, which lined up with neither column and read as stray blocks below
+the fold. They are now the same 598px column as the price at 1440.
+
+### Garment sizes were ordered alphabetically
+
+The Long Sleeve Tee picker read **`L, M, S, XL`** on the live site. Garment
+labels carry no number, so the numeric sort fell through to `localeCompare`.
+`compareSizeLabels` in `ranges.ts` now ranks them by body and is the ONE
+ordering, read by the picker, the card's span and the captions. It also writes
+out a comparison that had been leaning on `Infinity - Infinity` being `NaN` and
+`NaN` being falsy.
+
+### Four rules that are load-bearing
+
+Break any of these and it regresses quietly:
+
+1. **One owner, two askers.** Three controls can now change the selected size -
+   dropdown, thumbnail strip, table. The picker OWNS it, keyed by ERP code; the
+   strip and the table only ask, and the picker answers by moving the code and
+   the photograph together. Two owners fight over one value.
+2. **The ask carries a counter.** Click 9kg, choose 12kg in the dropdown, click
+   9kg again: with the code alone the second ask sets state to the value it
+   already holds, React skips the render, and the control goes dead.
+3. **One cart-line builder** - `lib/variant-line.ts`. Two add paths exist now,
+   and `productId: 0` is what routes a size the old store never listed to the
+   quote flow instead of card checkout. A second copy would drift. Verified:
+   adding 9kg from the table then 9kg from the picker gives ONE line at qty 2.
+4. **The table is a grid SIBLING, not a child of the gallery column.** Nested it
+   renders before the buy box on a phone, pushing price and Add to Cart below 26
+   rows. `lg:row-span-2` on the right column is what still places it under the
+   thumbnails on desktop - without it row 1 is sized by the taller column and the
+   table lands 317px below the strip. Measured at 1440: 317px -> 64px.
+
+### Retirements and metadata
+
+`6418e20` - Unleashed retired 66 SKUs during the day (`SMDBPRH`, `SMDBRH`,
+`SMDBVR`, `SBSAROL01`). All SNAP-branded, so nothing a customer sees changed, but
+`check:obsolete` refuses to ship a stale list and that is what it is for.
+
+`e600caf` - `generateMetadata` resolved the snapshot only, so the 165 ERP-only
+units went out as `Product | MASTERKRAFT` in search results with no og:title, on
+pages the sitemap advertises. It now falls back to the ERP unit the way the page
+body already did.
+
+### `npm run report:punchlist`
+
+New. Writes `reports/erp-punchlist.md` and `.csv` - **170 fixes, every one a
+field in Unleashed**, no code change and no deploy, because the site rebuilds its
+cards from the ERP every 15 minutes.
+
+| Problem | Rows | Field |
+| --- | ---: | --- |
+| No photo anywhere | 62 | Product > Images |
+| Size has no photo | 59 | Product > Images |
+| No price | 39 | Default Sell Price |
+| Two cards, one product | 5 | Product Description |
+| No card - not on the site | 3 | Product Description |
+| Filed under the wrong group | 1 | Product Group |
+| Size has no price | 1 | Default Sell Price |
+
+**49 cards across 19 families would collapse into one picker from a rename
+alone.** `Artificial Turf Black (2m x 10m / 15m / 20m)`,
+`Coloured Bumper Plates (Set of 6 / 8 / 10)` and so on. The site groups on the
+part before `" - "`, so renaming to `Coloured Bumper Plates - Set of 8` makes the
+dropdown appear by itself, and the franchisee catalogues get it too.
+
+This was deliberately NOT done in code. Reading every trailing bracket as an
+option is the trap from §0d that put `Wall Ball (Armatex)` and `Wall Ball` behind
+one picker at two prices. Five of the nineteen are judgement calls - Olympic
+Power Rack 1.0-5.0 may be five different racks rather than five options on one.
+
+**19 cards hide a second product.** Two ERP records share a name under two code
+schemes - `MRSPFW02` and `MSSPFW02` are both "Olympic Power Rack 2.0" - and only
+the first is ever sold. Merge them or give them different names.
+
+### Known limits
+
+- **A product gets ONE dropdown.** `Olympic Urethane Weight Plates` would need
+  grip x weight. That one is a code change, not a rename.
+- **15 thumbnails against 16 options** on the dead ball. 70kg has no ERP photo,
+  falls back to the shared product image, and dedupes out of the strip. Data.
+
+### Deploys went quiet twice
+
+Three deploy attempts, two of which produced **no deployment at all** - the CLI
+gave no useful output and nothing appeared in Vercel. Same silent class of
+failure as the git-author block on 2 September (§0d era), cause not established
+this time because the third attempt simply worked.
+
+**Always confirm a deploy landed rather than assuming:**
+
+```
+npx vercel@latest ls --scope masterkraft
+```
+
+The top row must be minutes old and `Ready`. If it hangs on `Building…`, rerun
+with `--debug` - that is what surfaced `readyState: BLOCKED` last time. Never
+pipe the deploy through `tail`; it hides the reason.
+
+Files: `src/lib/variant-line.ts`, `src/components/shop/SizeTable.tsx`,
+`scripts/erp-punchlist.report.ts` (all new); `lib/erp-catalogue.ts`,
+`lib/ranges.ts`, `lib/unleashed.ts`, `components/shop/ProductCard.tsx`,
+`ProductGallery.tsx`, `VariantSelection.tsx`, `VariantSelector.tsx`,
+`app/product/[slug]/page.tsx`.
 
 ---
 
@@ -919,6 +1094,27 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 - **Fix the deploy gate** (§1 DEPLOY). `check:catalogue` cannot pass while
   WooCommerce is unreachable, so it blocks every deploy and is being stepped past.
   It should degrade to a warning rather than fail hard.
+
+**Added 3 September (see §0e).**
+
+- **170 catalogue fixes in Unleashed.** `npm run report:punchlist` writes
+  `reports/erp-punchlist.md` grouped by category, every row one field on one
+  product. No deploy needed - the site re-reads the ERP every 15 minutes. The
+  biggest single win is photography: 121 of the 170 are a missing image, and
+  `masterkraft-portals-franchisee` has `scripts/harvest-unleashed-images.py`
+  which fills blanks from the ERP's own CDN.
+- **Decide the 19 rename families.** 49 cards that would collapse into one card
+  with a picker if renamed to the `Name - Option` shape. Listed in §0e; five are
+  judgement calls that need someone who knows whether Olympic Power Rack 1.0-5.0
+  are five racks or five options.
+- **Resolve the 19 duplicate-name pairs.** Two ERP records, one name, two code
+  schemes, only the first ever sold.
+- **Vercel seat for `michael@masterkraft.com`** is still invite-pending and needs
+  an account at that address; the invite must be accepted from that session or
+  the seat rebinds to the gmail login. Carried from 2 September.
+- **Set the git identity in the other MasterKraft repos** before their next
+  deploy - they inherit the global PartTimeCMO address and will hit the same
+  block. One line each: `git config user.email "marketing@masterkraft.com"`.
 
 - **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
   promoted yet.** Three things gate it, and two are promises the page makes:
