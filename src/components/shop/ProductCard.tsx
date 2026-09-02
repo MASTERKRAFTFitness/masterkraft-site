@@ -48,6 +48,11 @@ export default function ProductCard({
         )}
         <span className="text-ink">{enriched.priceLabel}</span>
       </div>
+      {/* Not uppercased, unlike the SKU line above it: text-transform turns
+          "4kg – 8kg" into "4KG – 8KG", and a unit shouted is a unit misread. */}
+      {enriched.rangeLabel && (
+        <p className="mt-1 font-mono text-[11px] tracking-wide text-ash">{enriched.rangeLabel}</p>
+      )}
     </Link>
   );
 }

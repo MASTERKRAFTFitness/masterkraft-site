@@ -37,6 +37,22 @@ export default function VariantSelector({
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  // A thumbnail click moves the SELECTION, not just the picture. Every
+  // thumbnail on a range page is a size and is now captioned with it, so
+  // clicking "12kg" and being left on 6kg — picture changed, price did not —
+  // was the confusing half of the old behaviour.
+  //
+  // Adjusted during render rather than in an effect: this is derived state
+  // catching up with a prop, which is the case React documents for it, and it
+  // spares the extra paint on the wrong size an effect would give.
+  const request = selection?.request;
+  const [lastRequest, setLastRequest] = useState(request?.n ?? 0);
+  if (request && request.n !== lastRequest) {
+    setLastRequest(request.n);
+    const hit = variants.find((v) => v.image === request.src);
+    if (hit) setSelectedId(hit.id);
+  }
+
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
 
   // Point the gallery at the selected size's photograph. Ranges carry one per

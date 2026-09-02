@@ -5,15 +5,37 @@ import { useEffect, useState } from "react";
 import { useVariantSelection } from "@/components/shop/VariantSelection";
 import type { WcImage } from "@/lib/woocommerce";
 
-export default function ProductGallery({ images, name }: { images: WcImage[]; name: string }) {
+export default function ProductGallery({
+  images,
+  name,
+  labels,
+}: {
+  images: WcImage[];
+  name: string;
+  /**
+   * Size label per photograph, "…/9kg.jpg" -> "9kg", for a range. Passed from
+   * the page rather than published through the selection context so the
+   * captions are in the server HTML: through context they appeared a frame
+   * after hydration and shifted the strip under the shopper's cursor.
+   */
+  labels?: Record<string, string>;
+}) {
   const [zoom, setZoom] = useState(false);
 
   // On a range page the gallery holds every size's photograph and the picker
   // says which one is being looked at, so the shown image is DERIVED from the
-  // selection rather than owned here. A thumbnail click overrides it, and the
-  // override is cleared the moment the shopper picks a different size — the
-  // React "adjust state during render" pattern, not an effect.
-  const selectedSrc = useVariantSelection()?.imageSrc;
+  // selection rather than owned here.
+  //
+  // A THUMBNAIL CLICK ASKS THE PICKER, it does not override the image. Each
+  // thumbnail on a range page IS a size — it is captioned "9kg" — so clicking
+  // one has to move the price and the add-to-cart with it. The override below
+  // survives only for galleries with no picker (a simple product's extra
+  // photographs) and for the lightbox arrows, and is cleared the moment the
+  // shopper picks a different size — "adjust state during render", not an
+  // effect.
+  const selection = useVariantSelection();
+  const selectedSrc = selection?.imageSrc;
+  const requestImage = selection?.requestImage;
   const [override, setOverride] = useState<number | null>(null);
   const [lastSelected, setLastSelected] = useState(selectedSrc);
   if (selectedSrc !== lastSelected) {
@@ -64,19 +86,36 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
       {/* A range runs to 26 photographs, so the strip scrolls rather than
           truncating at 10 and hiding two thirds of the rack. */}
       {images.length > 1 && (
-        <div className="mt-4 grid grid-cols-5 gap-3 max-h-64 overflow-y-auto pr-1">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setOverride(i)}
-              aria-label={`View image ${i + 1}`}
-              className={`relative aspect-square bg-[#e6e6e6] border overflow-hidden transition-colors ${
-                i === active ? "border-accent" : "border-line hover:border-ash"
-              }`}
-            >
-              <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
-            </button>
-          ))}
+        <div className="mt-4 grid grid-cols-5 gap-3 max-h-72 overflow-y-auto pr-1">
+          {images.map((img, i) => {
+            const label = labels?.[img.src];
+            return (
+              <button
+                key={i}
+                // A labelled thumbnail belongs to a size, so it asks the picker
+                // to select it. Everything else is still a plain image swap.
+                onClick={() => (label && requestImage ? requestImage(img.src) : setOverride(i))}
+                aria-label={label ? `Select ${label}` : `View image ${i + 1}`}
+                aria-pressed={label ? i === active : undefined}
+                className={`bg-[#e6e6e6] border overflow-hidden transition-colors ${
+                  i === active ? "border-accent" : "border-line hover:border-ash"
+                }`}
+              >
+                <span className="relative block aspect-square">
+                  <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
+                </span>
+                {label && (
+                  <span
+                    className={`block pb-1.5 text-center font-mono text-[11px] leading-none ${
+                      i === active ? "text-ink" : "text-ash"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 

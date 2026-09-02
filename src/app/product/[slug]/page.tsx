@@ -122,6 +122,16 @@ export default async function ProductPage({
     ...(product.images ?? []),
   ].filter((img, i, all) => all.findIndex((o) => o.src === img.src) === i);
 
+  // Which size each of those photographs is, so the strip can caption them and a
+  // click on one can select it. Built from the same `variants` the picker gets,
+  // so a caption cannot disagree with the dropdown. Where two sizes share a
+  // photograph the strip shows it once and the first size owns the caption,
+  // which is why later ones do not overwrite.
+  const galleryLabels: Record<string, string> = {};
+  for (const v of variants) {
+    if (v.image && !galleryLabels[v.image]) galleryLabels[v.image] = v.label;
+  }
+
   const offers = usesVariants
     ? variantPrices.length > 0
       ? {
@@ -224,7 +234,7 @@ export default async function ProductPage({
               : enriched.priceValue
           }
         />
-        <ProductGallery images={galleryImages} name={product.name} />
+        <ProductGallery images={galleryImages} name={product.name} labels={galleryLabels} />
 
         <div>
           {cat && (

@@ -143,7 +143,7 @@ describe("the ERP is the catalogue", () => {
     expect(unitCard(unit).enriched.priceLabel).toBe("$50.00");
   });
 
-  it("labels a range as From, and an unpriced product as POA", () => {
+  it("spans a range's price, and calls an unpriced product POA", () => {
     const map = erp([
       ["MMDBRH01", "Rubber Hex Dumbbell - 1kg", 5, "Mixed Implements"],
       ["MMDBRH12", "Rubber Hex Dumbbell - 10kg", 50, "Mixed Implements"],
@@ -152,9 +152,92 @@ describe("the ERP is the catalogue", () => {
     const units = [...erpUnits(map).values()];
     const range = units.find((u) => u.isRange)!;
     const bench = units.find((u) => u.name === "Multi Adjustable Bench")!;
-    expect(unitCard(range).enriched.priceLabel).toBe("From $5.00");
+    expect(unitCard(range).enriched.priceLabel).toBe("$5.00 – $50.00");
     expect(unitCard(bench).enriched.priceLabel).toBe("Contact for pricing");
     expect(unitCard(bench).enriched.priceValue).toBe(0);
+  });
+
+  it("only says From when the top of the range is genuinely unknown", () => {
+    // One size priced, one not. The dear end is not "the same as the cheap end",
+    // which is what a bare "$5.00" would claim, so this one keeps "From".
+    const map = erp([
+      ["MMDBRH01", "Rubber Hex Dumbbell - 1kg", 5, "Mixed Implements"],
+      ["MMDBRH12", "Rubber Hex Dumbbell - 10kg", 0, "Mixed Implements"],
+    ]);
+    expect(unitCard([...erpUnits(map).values()][0]).enriched.priceLabel).toBe("From $5.00");
+  });
+
+  it("drops From when every size costs the same", () => {
+    // The apparel ranges. "From $65.00" on a flat price is noise.
+    const map = erp([
+      ["MAACU01S", "Sweatshirt (Unisex) (S)", 65, "Apparel"],
+      ["MAACU01M", "Sweatshirt (Unisex) (M)", 65, "Apparel"],
+    ]);
+    expect(unitCard([...erpUnits(map).values()][0]).enriched.priceLabel).toBe("$65.00");
+  });
+
+  it("tells the card how many sizes there are, and how far they run", () => {
+    const map = erp([
+      ["MMDEHG01", "High Grip Dead Ball - 6kg", 40, "Mixed Implements"],
+      ["MMDEHG04", "High Grip Dead Ball - 15kg", 70, "Mixed Implements"],
+      ["MMDEHG16", "High Grip Dead Ball - 75kg", 300, "Mixed Implements"],
+    ]);
+    expect(unitCard([...erpUnits(map).values()][0]).enriched.rangeLabel).toBe("3 sizes · 6kg – 75kg");
+  });
+
+  it("counts the sizes but will not span ends that are not comparable", () => {
+    // "Set of 6 – Set of 10" reads as nonsense, so the span goes and the count
+    // stays. A garment range spans fine, because S…XL is an order.
+    const sets = erp([
+      ["MWPA01", "Coloured Bumper Plates - Set of 6", 700, "Weightlifting"],
+      ["MWPA02", "Coloured Bumper Plates - Set of 10", 1200, "Weightlifting"],
+    ]);
+    expect(unitCard([...erpUnits(sets).values()][0]).enriched.rangeLabel).toBe("2 sizes");
+
+    // A model number is not a size either: "2 Tier … 1.0" opens with a bare
+    // number and no unit, so it does not earn a span.
+    const racks = erp([
+      ["MEFRKB01", "Kettlebell Rack - 2 Tier (10 Pair) 1.0", 900, "Equipment Storage"],
+      ["MEFRKB02", "Kettlebell Rack - 3 Tier (15 Pair) 1.0", 1100, "Equipment Storage"],
+    ]);
+    expect(unitCard([...erpUnits(racks).values()][0]).enriched.rangeLabel).toBe("2 sizes");
+
+    const tees = erp([
+      ["MAALS01L", "Long Sleeve Tee (Unisex) (L)", 65, "Apparel"],
+      ["MAALS01S", "Long Sleeve Tee (Unisex) (S)", 65, "Apparel"],
+      ["MAALS01XL", "Long Sleeve Tee (Unisex) (XL)", 65, "Apparel"],
+    ]);
+    expect(unitCard([...erpUnits(tees).values()][0]).enriched.rangeLabel).toBe("3 sizes · S – XL");
+  });
+
+  it("spans on the measurement, not the whole label", () => {
+    // The competition kettlebells: one size carries a material in brackets and
+    // eleven do not. "6kg (Aluminium) – 40kg" is ugly and "12 sizes" alone
+    // throws away the useful half, so the span reads the weights.
+    const map = erp([
+      ["MMKBPGC01", "Competition Kettlebell - 6kg (Aluminium)", 60, "Mixed Implements"],
+      ["MMKBPGC02", "Competition Kettlebell - 8kg", 70, "Mixed Implements"],
+      ["MMKBPGC12", "Competition Kettlebell - 40kg", 260, "Mixed Implements"],
+    ]);
+    expect(unitCard([...erpUnits(map).values()][0]).enriched.rangeLabel).toBe("3 sizes · 6kg – 40kg");
+  });
+
+  it("leaves a single product with no size line at all", () => {
+    const map = erp([["MBCTMA01", "Multi Adjustable Bench", 900, "Strength"]]);
+    expect(unitCard([...erpUnits(map).values()][0]).enriched.rangeLabel).toBeUndefined();
+  });
+
+  it("orders garment sizes by body, not by alphabet", () => {
+    // Shipped as "L, M, S, XL" on the Long Sleeve Tee: garment labels carry no
+    // number, so the numeric sort left them to localeCompare. The picker, the
+    // card's span and the thumbnail captions all read this one order.
+    const map = erp([
+      ["MAALS01L", "Long Sleeve Tee (Unisex) (L)", 65, "Apparel"],
+      ["MAALS01XL", "Long Sleeve Tee (Unisex) (XL)", 65, "Apparel"],
+      ["MAALS01S", "Long Sleeve Tee (Unisex) (S)", 65, "Apparel"],
+      ["MAALS01M", "Long Sleeve Tee (Unisex) (M)", 65, "Apparel"],
+    ]);
+    expect([...erpUnits(map).values()][0].sizes).toEqual(["S", "M", "L", "XL"]);
   });
 
   it("offers sub-filters from ProductSubGroup, counted", () => {

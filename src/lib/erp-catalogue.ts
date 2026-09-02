@@ -23,7 +23,7 @@
 // from ERP data alone.
 import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
-import { anchorCodes } from "@/lib/ranges";
+import { anchorCodes, compareSizeLabels } from "@/lib/ranges";
 import { filterListable, formatPrice, type WcProduct } from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
 
@@ -39,6 +39,17 @@ export type ErpUnit = {
   isRange: boolean;
   /** Cheapest size, GST-inclusive. 0 means price on application. */
   price: number;
+  /**
+   * Dearest PRICED size, so a card can show "$40.00 – $300.00" rather than
+   * "From $40.00". Equal to `price` when only one size carries a price — which
+   * is not the same as every size costing the same, so see unitCard for how the
+   * two are told apart.
+   */
+  priceMax: number;
+  /** Size labels in picker order: "6kg" … "75kg", or "S" … "XL". */
+  sizes: string[];
+  /** How many sizes carry a price. Below `codes.length`, the top of the range is unknown. */
+  pricedCount: number;
   inStock: boolean;
   image?: string;
   /** The snapshot page this unit is routed by, when it has one. */
@@ -164,11 +175,6 @@ function wooPageFor(codes: string[]): WcProduct | undefined {
   return undefined;
 }
 
-function sizeNumber(label: string): number {
-  const m = label.match(/-?\d+(?:\.\d+)?/);
-  return m ? parseFloat(m[0]) : Number.POSITIVE_INFINITY;
-}
-
 /**
  * Every unit the site sells, keyed by slug. Empty if the ERP is unreachable,
  * which every caller must treat as "fall back to the snapshot" rather than as
@@ -199,7 +205,7 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
   const draft: (ErpUnit & { page?: WcProduct })[] = [];
   for (const [key, members] of groups) {
     const [brand, group, name] = key.split("\u0000");
-    members.sort((a, b) => sizeNumber(a.size) - sizeNumber(b.size) || a.size.localeCompare(b.size));
+    members.sort((a, b) => compareSizeLabels(a.size, b.size));
 
     const priced = members.filter((m) => m.entry.price > 0);
     const page = wooPageFor(members.map((m) => m.code));
@@ -213,6 +219,9 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
       codes: members.map((m) => m.code),
       isRange: members.length > 1 && members.every((m) => m.size),
       price: priced.length ? Math.min(...priced.map((m) => m.entry.price)) : 0,
+      priceMax: priced.length ? Math.max(...priced.map((m) => m.entry.price)) : 0,
+      sizes: members.map((m) => m.size).filter(Boolean),
+      pricedCount: priced.length,
       inStock: members.some((m) => m.entry.stock > 0),
       image: members.find((m) => m.entry.image)?.entry.image,
       wooSlug: page?.slug,
@@ -350,24 +359,63 @@ export function searchErpUnits(map: UnleashedMap, query: string): ErpUnit[] {
     .map((s) => s.unit);
 }
 
+// A span is only honest when its two ends mean the same thing. "6kg – 75kg" and
+// "S – XL" read as a range; "Set of 6 – Set of 10" does not, and neither would
+// "6kg (Aluminium) – 40kg".
+//
+// So a span is built from the MEASUREMENT each label opens with, not from the
+// whole label — the competition kettlebells are "6kg (Aluminium)" then eleven
+// plain weights, and "6kg – 40kg" is both true and the thing a buyer wants. The
+// unit is required, which is what keeps "2 Tier (10 Pair) 1.0" out: a bare
+// leading number is a model number as often as a size.
+const MEASUREMENT = /^(\d+(?:\.\d+)?\s*(?:kg|g|lb|mm|cm|m|in|"))\b/i;
+const GARMENT_SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL"]);
+
+function sizeSpan(sizes: string[]): string | undefined {
+  if (sizes.length < 2) return undefined;
+  const first = sizes[0];
+  const last = sizes[sizes.length - 1];
+  if (sizes.every((s) => GARMENT_SIZES.has(s.toUpperCase()))) return `${first} – ${last}`;
+  const measured = sizes.map((s) => s.match(MEASUREMENT)?.[1]);
+  if (measured.some((m) => !m)) return undefined;
+  return `${measured[0]} – ${measured[measured.length - 1]}`;
+}
+
 /**
  * A unit as the `{ product, enriched }` pair every listing surface already
  * takes, so ProductCard, the grids, the sorting and the price filter are all
  * untouched by the change of source.
  */
 export function unitCard(unit: ErpUnit): { product: WcProduct; enriched: EnrichedProduct } {
+  const span = unit.isRange ? sizeSpan(unit.sizes) : undefined;
   return {
     product: unitAsProduct(unit),
     enriched: {
-      // A range is a "From", a single product is its price, and 0 stays
-      // "Contact for pricing" exactly as it did off WooCommerce.
+      // WHAT THE PRICE SAYS, and why there are three shapes rather than one.
+      //
+      //   $40.00 – $300.00   the sizes cost different amounts. The useful one:
+      //                      "From $40.00" hid that the top of the dead balls is
+      //                      seven times the bottom.
+      //   From $40.00        one size is priced and the rest are not, so the
+      //                      real top is unknown and must not be implied.
+      //   $65.00             every size costs the same (the apparel ranges).
+      //                      "From" on a flat price is just noise.
+      //
+      // 0 stays "Contact for pricing" exactly as it did off WooCommerce.
       priceLabel:
         unit.price > 0
-          ? unit.isRange
-            ? `From ${formatPrice(unit.price)}`
-            : formatPrice(unit.price)
+          ? unit.priceMax > unit.price
+            ? `${formatPrice(unit.price)} – ${formatPrice(unit.priceMax)}`
+            : unit.isRange && unit.pricedCount < unit.codes.length
+              ? `From ${formatPrice(unit.price)}`
+              : formatPrice(unit.price)
           : "Contact for pricing",
       priceValue: unit.price,
+      // "16 sizes · 6kg – 75kg". What a buyer scanning the grid actually wants
+      // to know about a range, and the one thing the old card could not say.
+      rangeLabel: unit.isRange
+        ? `${unit.codes.length} size${unit.codes.length === 1 ? "" : "s"}${span ? ` · ${span}` : ""}`
+        : undefined,
       inStock: unit.inStock,
       source: "unleashed",
     },

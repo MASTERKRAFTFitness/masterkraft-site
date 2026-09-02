@@ -113,6 +113,37 @@ export function anchorCodes(product: WcProduct): string[] {
  * a single product, or a genuine multi-item package like the REVL Studio Kits.
  */
 
+// Garment sizes have no number in them, so a numeric sort leaves them to
+// localeCompare and the picker reads "L, M, S, XL" — which is what shipped, and
+// what the Long Sleeve Tee showed until this rank existed. Ranked here rather
+// than in the picker so the card, the page and the size line all agree.
+const GARMENT_RANK = ["XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL"];
+
+/**
+ * How two size labels order: smallest number first, garments in body order, and
+ * anything else alphabetically. The ONE ordering, shared by the picker
+ * (sizesFromCodes below), the card's "6kg – 75kg" line and erpUnits' members, so
+ * a range cannot be listed in one order and pictured in another.
+ */
+export function compareSizeLabels(a: string, b: string): number {
+  const ga = GARMENT_RANK.indexOf(a.toUpperCase());
+  const gb = GARMENT_RANK.indexOf(b.toUpperCase());
+  if (ga >= 0 && gb >= 0) return ga - gb;
+  const n = (t: string) => {
+    const m = t.match(/-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : Number.POSITIVE_INFINITY;
+  };
+  const na = n(a);
+  const nb = n(b);
+  // Written out rather than as `na - nb || localeCompare`, because two
+  // unnumbered labels give Infinity - Infinity = NaN, which is not a legal
+  // comparator result — it only worked before by NaN happening to be falsy.
+  if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb || a.localeCompare(b);
+  if (Number.isFinite(na)) return -1;
+  if (Number.isFinite(nb)) return 1;
+  return a.localeCompare(b);
+}
+
 /**
  * The picker's rows for a set of ERP codes, priced and stocked from the ERP and
  * ordered smallest first. This is the ONE place a size row is built, so the card
@@ -142,11 +173,7 @@ export function sizesFromCodes(codes: string[], map: UnleashedMap): RangeSize[] 
       });
     }
   }
-  const n = (t: string) => {
-    const m = t.match(/-?\d+(?:\.\d+)?/);
-    return m ? parseFloat(m[0]) : Number.POSITIVE_INFINITY;
-  };
-  return rows.sort((a, b) => n(a.label) - n(b.label) || a.label.localeCompare(b.label));
+  return rows.sort((a, b) => compareSizeLabels(a.label, b.label));
 }
 
 export function getRange(product: WcProduct, map: UnleashedMap): ProductRange | null {

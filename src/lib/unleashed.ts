@@ -419,6 +419,11 @@ export type EnrichedProduct = {
   priceLabel: string;
   priceValue: number; // numeric inc-GST unit price for the cart
   compareAtLabel?: string;
+  /**
+   * "16 sizes · 6kg – 75kg" on a range card. Set only by erp-catalogue's
+   * unitCard, so a WooCommerce-sourced card renders exactly as it did.
+   */
+  rangeLabel?: string;
   inStock: boolean;
   stockQty?: number;
   source: "unleashed" | "website";
