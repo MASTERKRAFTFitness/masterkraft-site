@@ -223,7 +223,10 @@ export default async function ProductPage({
       {/* The picker and the gallery live in two columns of this grid; the
           provider is what lets choosing 9kg swap the photograph. */}
       <VariantSelectionProvider>
-      <section className="container-mk py-14 grid lg:grid-cols-2 gap-12 lg:gap-16">
+      {/* items-start, so the two columns size to their own content. Without it
+          the short column stretches to match the tall one and the overview
+          floats in the middle of its own whitespace. */}
+      <section className="container-mk py-14 grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
         <ViewItemTracker
           id={product.id}
           name={product.name}
@@ -237,7 +240,12 @@ export default async function ProductPage({
         />
         <ProductGallery images={galleryImages} name={product.name} labels={galleryLabels} />
 
-        <div>
+        {/* RIGHT: name, price, picker, then the words.
+            row-span-2 so this column occupies BOTH rows rather than making the
+            first one as tall as itself. Without it the row stretches to this
+            column's height and the size table lands 300px below the thumbnails
+            with nothing in between. */}
+        <div className="lg:row-span-2">
           {cat && (
             <p className="font-mono text-xs tracking-widest text-accent-600 uppercase">{cat.name}</p>
           )}
@@ -301,47 +309,52 @@ export default async function ProductPage({
             Add items to your cart and request a tailored quote - our team confirms
             pricing, freight and lead times for your order.
           </p>
-        </div>
-      </section>
 
-      {/* Inside the provider, below the buy box: the size cell selects, which
-          moves the picker and the photograph above it. */}
-      {usesVariants && (
-        <section className="container-mk pb-4">
+          {/* The overview reads directly under the price rather than as a
+              full-width band below the fold, so the copy that sells the thing
+              is beside the control that buys it. */}
+          {(detail.overviewDescription || detail.features.length > 0 || product.description) && (
+            <div className="mt-12">
+              <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Product Overview</h2>
+              {detail.overviewDescription ? (
+                <p className="text-ash leading-relaxed mb-6">{detail.overviewDescription}</p>
+              ) : (
+                product.description && (
+                  <div
+                    className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_strong]:text-ink [&_img]:my-4"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
+                )
+              )}
+              {detail.features.length > 0 && (
+                <>
+                  <h3 className="font-semibold text-ink mt-2 mb-3">Features</h3>
+                  <ul className="list-disc pl-5 space-y-2 text-ash leading-relaxed">
+                    {detail.features.map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* A THIRD GRID CHILD, not a child of the gallery, and the order is
+            what makes both layouts right. On desktop it lands in row 2 of the
+            left column — under the thumbnails, left-justified, filling a column
+            that would otherwise stop at the strip while the buy column runs on.
+            On a phone the grid is one column, so it falls AFTER the price and
+            the picker rather than shoving them below 26 rows. */}
+        {usesVariants && (
           <SizeTable
             productName={unit?.name ?? product.name}
             productSlug={product.slug}
             variants={variants}
           />
-        </section>
-      )}
+        )}
+      </section>
       </VariantSelectionProvider>
-
-      {(detail.overviewDescription || detail.features.length > 0 || product.description) && (
-        <section className="container-mk pb-14 max-w-3xl">
-          <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Product Overview</h2>
-          {detail.overviewDescription ? (
-            <p className="text-ash leading-relaxed mb-6">{detail.overviewDescription}</p>
-          ) : (
-            product.description && (
-              <div
-                className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_strong]:text-ink [&_img]:my-4"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            )
-          )}
-          {detail.features.length > 0 && (
-            <>
-              <h3 className="font-semibold text-ink mt-2 mb-3">Features</h3>
-              <ul className="list-disc pl-5 space-y-2 text-ash leading-relaxed">
-                {detail.features.map((f, i) => (
-                  <li key={i}>{f}</li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-      )}
 
       {detail.specs.length > 0 && (
         <section className="container-mk pb-20 max-w-3xl">

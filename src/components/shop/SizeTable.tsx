@@ -35,30 +35,31 @@ export default function SizeTable({
   if (variants.length < 2) return null;
 
   return (
-    <section className="mt-16 border-t border-line pt-10">
+    <section>
       <h2 className="font-mono text-xs uppercase tracking-widest text-ash">
         Available sizes ({variants.length})
       </h2>
 
       {/* Scrolls in its own box rather than running the page to 26 rows tall,
-          and keeps the header in view while it does. */}
-      <div className="mt-4 max-h-[30rem] overflow-y-auto border border-line">
+          and keeps the header in view while it does. overflow-x as well as -y
+          because this now sits in half a grid column, not the full width. */}
+      <div className="mt-4 max-h-[30rem] overflow-auto border border-line">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-[#f6f6f6] z-10">
             <tr className="font-mono text-[11px] uppercase tracking-widest text-ash">
-              <th scope="col" className="px-4 py-3 font-normal">
+              <th scope="col" className="px-3 py-3 font-normal">
                 Size
               </th>
-              <th scope="col" className="px-4 py-3 font-normal">
+              <th scope="col" className="px-3 py-3 font-normal">
                 Code
               </th>
-              <th scope="col" className="px-4 py-3 font-normal">
+              <th scope="col" className="px-3 py-3 font-normal">
                 Availability
               </th>
-              <th scope="col" className="px-4 py-3 font-normal text-right">
+              <th scope="col" className="px-3 py-3 font-normal text-right">
                 Price inc GST
               </th>
-              <th scope="col" className="px-4 py-3">
+              <th scope="col" className="px-3 py-3">
                 <span className="sr-only">Add to cart</span>
               </th>
             </tr>
@@ -75,7 +76,7 @@ export default function SizeTable({
                 >
                   {/* The size cell selects, so the table drives the picture and
                       the picker above it rather than sitting apart from them. */}
-                  <th scope="row" className="px-4 py-2.5 font-normal">
+                  <th scope="row" className="px-3 py-2.5 font-normal">
                     <button
                       type="button"
                       onClick={() => selection?.requestSize(v.code)}
@@ -87,10 +88,10 @@ export default function SizeTable({
                       {v.label}
                     </button>
                   </th>
-                  <td className="px-4 py-2.5 font-mono text-[11px] uppercase tracking-widest text-ash">
+                  <td className="px-3 py-2.5 font-mono text-[11px] uppercase tracking-widest text-ash">
                     {v.code}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-[11px] uppercase tracking-widest text-ash">
+                  <td className="px-3 py-2.5 font-mono text-[11px] uppercase tracking-widest text-ash">
                     {v.inStock ? (
                       <span className="inline-flex items-center gap-1.5 text-ink/70">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -100,8 +101,8 @@ export default function SizeTable({
                       "Made to order"
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-sm">{v.priceLabel}</td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-3 py-2.5 text-right font-mono text-sm">{v.priceLabel}</td>
+                  <td className="px-3 py-2.5 text-right">
                     <button
                       type="button"
                       onClick={() => {
@@ -114,7 +115,7 @@ export default function SizeTable({
                           2000
                         );
                       }}
-                      className="border border-line px-4 py-1.5 font-mono text-[11px] uppercase tracking-widest hover:border-accent hover:text-accent-600 transition-colors"
+                      className="border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide hover:border-accent hover:text-accent-600 transition-colors"
                     >
                       {justAdded === v.code ? "Added" : "Add"}
                     </button>
