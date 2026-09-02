@@ -9,6 +9,7 @@ import {
   searchErpUnits,
   slugify,
   unitCard,
+  unitDescription,
 } from "@/lib/erp-catalogue";
 import type { UnleashedMap } from "@/lib/unleashed";
 
@@ -270,5 +271,39 @@ describe("the ERP is the catalogue", () => {
     // ERP_GROUPS is what the navigation is built from; a group missing from it
     // would be products with nowhere to appear.
     expect(new Set(ERP_GROUPS).size).toBe(ERP_GROUPS.length);
+  });
+});
+
+describe("a unit describes itself when the snapshot has no words for it", () => {
+  it("gives a range its sizes and its price span", () => {
+    const units = erpUnits(
+      erp([
+        ["MMDBRH01", "Rubber Hex Dumbbell - 1kg", 5, "Mixed Implements"],
+        ["MMDBRH12", "Rubber Hex Dumbbell - 10kg", 50, "Mixed Implements"],
+      ])
+    );
+    const range = [...units.values()][0];
+    expect(unitDescription(range)).toBe(
+      "Buy Rubber Hex Dumbbell at MASTERKRAFT. 2 sizes \u00b7 1kg \u2013 10kg. $5.00 \u2013 $50.00 inc. GST."
+    );
+  });
+
+  it("says a single product's price without pretending it is a range", () => {
+    const units = erpUnits(erp([["MBCTMA01", "Multi Adjustable Bench", 900, "Strength"]]));
+    const bench = [...units.values()][0];
+    expect(unitDescription(bench)).toBe("Buy Multi Adjustable Bench at MASTERKRAFT. $900.00 inc. GST.");
+  });
+
+  it("never invents a price for a unit that has none", () => {
+    const units = erpUnits(erp([["MBCTMA02", "Custom Rig", 0, "Rigs & Racks"]]));
+    const rig = [...units.values()][0];
+    expect(unitDescription(rig)).toBe("Buy Custom Rig at MASTERKRAFT. Contact for pricing.");
+  });
+
+  it("stays inside the length a search snippet will show", () => {
+    const units = erpUnits(
+      erp([["MBCTMA03", "Multi Adjustable Bench With A Deliberately Very Long Product Name Indeed That Runs On", 900, "Strength"]])
+    );
+    expect(unitDescription([...units.values()][0]).length).toBeLessThanOrEqual(155);
   });
 });

@@ -422,6 +422,21 @@ export function unitCard(unit: ErpUnit): { product: WcProduct; enriched: Enriche
   };
 }
 
+/**
+ * A meta description for a unit the frozen snapshot has no words for. The ERP
+ * holds no marketing copy at all, so this is assembled from what it DOES hold,
+ * in the same phrasing the unit's card already uses — the sizes and the price,
+ * and nothing invented. Without it the 165 ERP-only pages go to search with the
+ * site's generic description or none.
+ */
+export function unitDescription(unit: ErpUnit): string {
+  const { priceLabel, rangeLabel } = unitCard(unit).enriched;
+  const parts = [`Buy ${unit.name} at MASTERKRAFT`];
+  if (rangeLabel) parts.push(rangeLabel);
+  parts.push(unit.price > 0 ? `${priceLabel} inc. GST` : priceLabel);
+  return `${parts.join(". ")}.`.slice(0, 155);
+}
+
 function hash(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;

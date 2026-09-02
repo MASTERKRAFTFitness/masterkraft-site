@@ -17,7 +17,7 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { sizesFromCodes } from "@/lib/ranges";
-import { erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard } from "@/lib/erp-catalogue";
+import { erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
 // old store never listed have no WooCommerce variation id, and the cart keys on
@@ -41,11 +41,24 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const p = await getProductBySlug(slug).catch(() => null);
+  // THE SAME TWO SOURCES, IN THE SAME ORDER, as the page body below - see its
+  // comment. Resolving the snapshot alone here gave the 165 ERP-only units the
+  // generic "Product | MASTERKRAFT" in search results and no og:title to share,
+  // on pages the sitemap advertises. The ERP is only consulted when the snapshot
+  // has nothing, so a snapshot-backed page keeps the words it has always had.
+  const wooProduct = await getProductBySlug(slug).catch(() => null);
+  const unit = wooProduct
+    ? undefined
+    : erpUnitBySlug(await getUnleashedMap().catch(() => ({})), slug);
+  const p = wooProduct ?? (unit && unitAsProduct(unit));
   if (!p) return { title: "Product" };
   return {
     title: `${p.name}`,
-    description: p.short_description?.replace(/<[^>]*>/g, "").slice(0, 155) || undefined,
+    // The ERP holds no marketing copy, so an ERP-only page describes itself with
+    // the sizes and price its card carries rather than going out bare.
+    description:
+      p.short_description?.replace(/<[^>]*>/g, "").slice(0, 155) ||
+      (unit ? unitDescription(unit) : undefined),
     alternates: { canonical: `/product/${slug}` },
     openGraph: {
       title: p.name,
