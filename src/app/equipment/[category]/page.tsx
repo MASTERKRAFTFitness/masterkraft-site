@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { after } from "next/server";
-import { recordNotFound } from "@/lib/not-found-log";
 import PageHero from "@/components/marketing/PageHero";
 import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
@@ -47,13 +45,11 @@ export default async function CategoryPage({
 }) {
   const { category } = await params;
   const c = getCategory(category);
-  if (!c) {
-    // A dead /equipment/ URL is the likeliest kind to be an old link worth
-    // redirecting, and the slug is right here — no request header needed.
-    // See lib/not-found-log.ts for why the path is passed rather than read.
-    after(() => recordNotFound(`/equipment/${encodeURIComponent(category)}`));
-    notFound();
-  }
+  // Unreachable: layout.tsx has already 404'd on an unknown category, before
+  // loading.tsx could stream a 200 over the top of it. Kept because it is what
+  // narrows `c` for everything below, and because a guard that only holds while
+  // a sibling file exists should say so rather than disappear.
+  if (!c) notFound();
 
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
