@@ -495,6 +495,95 @@ Files: `src/lib/variant-line.ts`, `src/components/shop/SizeTable.tsx`,
 
 ---
 
+## 0f. Shipped later on 2026-09-03 - what the outside world can reach
+
+Three changes about URLs rather than about products: what this site still serves
+that it should not, what it stopped serving at the cutover and never redirected,
+and how we find out what else is missing. `c97e985`, `e29894e`, `1ca536a`.
+
+### `c97e985` REVL is off the site, which the rule always said it was
+
+`FOREIGN_BRAND_SKU_RE` named REVL "R" in its own comment but only ever matched
+S and F. So **63 R-SKU products stayed servable** - excluded from every listing
+by the M/N brand filter, and still answering 200 on a direct URL, and still in
+the sitemap. Unlisted is not the same as not on the website, which is the exact
+thing the rule was added to fix for Snap and Fernwood.
+
+What those 63 are matters more than the count. Only 15 are named "REVL ...".
+The other **48 are REVL's own-brand copies of lines we sell under the SAME
+names** - Abdominal Mat, Olympic Barbell - 20kg, Premium Rubber Hex Dumbbells,
+Wall Balls - one for one against the Snap set already excluded. Indexed, they
+competed with our own pages for our own product names.
+
+Servable product pages **283 -> 220**. Nothing linked to them: the REVL fitout
+pages are editorial and fetch no products, and Clearance is all A-prefixed
+ex-display stock. **SC is untouched and tested to stay that way** - the Concept2
+ergs are named "C2", SKU'd "SC", and stay by the 2026-08-20 decision.
+
+### `e29894e` The inbound links that have 404ed since 27 August
+
+The internal link graph was already clean - 497 URLs crawled from the homepage,
+all 200. What was broken was everything pointing IN. Since the apex moved,
+**69 `/product-category/` archives and 225 product URLs** answered 404, none of
+it reachable from inside the site, so nothing surfaced it. The biggest archive
+covered 106 products.
+
+WooCommerce's own term tree picks the destinations: each site category records
+the Woo term it used to list from, so walking a term up its parents maps 66 of
+the 69 non-empty archives with nobody guessing. The three that do not resolve
+are not equipment categories - `new-products` is promotional, `freight-delivery`
+was never a product, and `studio-kit` is REVL's own kit on R-SKUs, which points
+at `/revl-fitouts` rather than bait-and-switching to a MasterKraft category.
+
+**GENERATED, BECAUSE THE ORDERING IS DANGEROUS.** Config redirects match BEFORE
+routing, so a redirect whose source still serves does not lose an argument with
+the page - it deletes it. The generator therefore imports the visibility rules
+rather than restating them, and refuses to write a map that collides with a
+servable URL.
+
+362 redirects against Vercel's ceiling of 1,024. **The generator fails at 900**,
+which is the signal to move to the Proxy + Bloom filter approach in the Next
+docs rather than quietly ship a map the platform truncates.
+
+### `1ca536a` The site records its own 404s
+
+The redirect map above was written from what the old store served - a complete
+account of what the cutover broke and no account of what anyone actually
+requests. So `/admin/dead-links` now reads back a table of 404s, busiest first,
+marking whether a crawler or a person asked. A crawler means it is still
+indexed; a person means something still links to it and someone just failed to
+buy something.
+
+**One row per PATH, not per request** - the traffic is mostly crawlers, so
+aggregating bounds the table by how many dead URLs exist rather than by how hard
+we are being crawled. Counting is a Postgres function so simultaneous hits
+increment rather than race.
+
+**The obvious implementation would have cost the whole site.** `not-found.tsx`
+cannot see the path it was rendered for, so the natural move is a header from
+Proxy plus `headers()` in the 404 page - which takes the build from 35 static
+routes to NONE, because a root not-found that reads request headers cannot be
+prerendered and any route can fall back to it. Measured, not assumed. Instead
+the path is passed in by callers that already know it: a catch-all route at the
+lowest routing precedence, plus the five existing `notFound()` call sites, which
+have their slug in params.
+
+> **NOT LIVE YET - the Supabase migration has not been applied.** Until it is,
+> `recordNotFound` finds no database and no-ops, the same posture `admin-db`
+> takes. `supabase/migrations/20260903_not_found_hits.sql`.
+
+### One question these two left open, on purpose
+
+**8 R-prefixed slugs still serve** - `pro-bumper-plates`, `power-bands`,
+`retail-rack` and five more - and are in the sitemap, despite failing the brand
+rule `c97e985` just tightened. `erpUnits()` filters on the ERP's **brand field**,
+not the SKU prefix, so a product Unleashed calls MK or NO BRAND on an R-code
+comes through. Whether the ERP or the SKU is right about those is a real
+question and a redirect map was the wrong place to answer it, so they were left
+alone. See §10.
+
+---
+
 ## 1. Start here
 
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.
@@ -1115,6 +1204,24 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 - **Set the git identity in the other MasterKraft repos** before their next
   deploy - they inherit the global PartTimeCMO address and will hit the same
   block. One line each: `git config user.email "marketing@masterkraft.com"`.
+
+**Added later on 3 September (see §0f).**
+
+- **Apply the 404-log migration.** `supabase/migrations/20260903_not_found_hits.sql`
+  is committed and deployed but never run, so `/admin/dead-links` is an empty
+  page and `recordNotFound` silently no-ops. Nothing breaks meanwhile; the point
+  of the log is that the next redirect map gets argued from evidence rather than
+  from what the old store happened to serve, and it collects nothing until this
+  is applied.
+- **Decide whether the ERP or the SKU prefix is right about 8 products.**
+  `pro-bumper-plates`, `power-bands`, `retail-rack` and five more serve and sit
+  in the sitemap on R-prefixed codes, because `erpUnits()` reads the ERP's brand
+  field while the visibility rule reads the SKU. One of the two is wrong about
+  these. If the ERP is right the codes want fixing in Unleashed; if the SKU is
+  right the brand filter needs to reach the ERP path too.
+- **Watch the redirect count.** 362 of Vercel's 1,024, and the generator hard
+  fails at 900 rather than shipping a truncated map. At that point the move is
+  the Proxy + Bloom filter approach in the Next docs.
 
 - **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
   promoted yet.** Three things gate it, and two are promises the page makes:
