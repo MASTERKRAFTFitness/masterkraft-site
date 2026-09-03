@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
+import { recordNotFound } from "@/lib/not-found-log";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
@@ -43,7 +45,13 @@ export default async function LocationPage({
 }) {
   const { city } = await params;
   const loc = getLocation(city);
-  if (!loc) notFound();
+  if (!loc) {
+    // A dead /gym-fitouts/ URL is the likeliest kind to be an old link worth
+    // redirecting, and the slug is right here — no request header needed.
+    // See lib/not-found-log.ts for why the path is passed rather than read.
+    after(() => recordNotFound(`/gym-fitouts/${encodeURIComponent(city)}`));
+    notFound();
+  }
 
   const areaName = loc.state ? `${loc.city}, ${loc.state}` : loc.city;
   const revlClubs = revlClubsForRegion(loc.slug);

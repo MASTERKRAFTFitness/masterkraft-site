@@ -4,6 +4,7 @@ import PageHero from "@/components/marketing/PageHero";
 import ProductCard from "@/components/shop/ProductCard";
 import { searchProducts, type WcProduct } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard } from "@/lib/unleashed";
+import { searchErpUnits, unitCard } from "@/lib/erp-catalogue";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -25,13 +26,27 @@ export default async function SearchPage({
   if (q) {
     const unleashed = await getUnleashedMap().catch(() => ({}));
     try {
-      const res = await searchProducts(q, { page, perPage: 24 });
-      products = res.data;
-      total = res.total;
-      totalPages = res.totalPages;
-      const cards = await Promise.all(
-        products.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
-      );
+      // Search the ERP, which is the catalogue. It holds 165 units that have no
+      // WooCommerce record at all, and a product that is sold but unfindable is
+      // not really on the site. Falls back to the snapshot when the ERP is
+      // unreachable, so search degrades rather than returning nothing.
+      const erpUsable = Object.keys(unleashed).length > 0;
+      let cards: { product: WcProduct; enriched: Awaited<ReturnType<typeof enrichCard>> }[];
+      if (erpUsable) {
+        const hits = searchErpUnits(unleashed, q);
+        total = hits.length;
+        totalPages = Math.max(1, Math.ceil(total / 24));
+        cards = hits.slice((page - 1) * 24, page * 24).map(unitCard);
+        products = cards.map((c) => c.product);
+      } else {
+        const res = await searchProducts(q, { page, perPage: 24 });
+        products = res.data;
+        total = res.total;
+        totalPages = res.totalPages;
+        cards = await Promise.all(
+          products.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
+        );
+      }
       return (
         <>
           <PageHero eyebrow="Search" title={`Results for “${q}”`} subtitle={`${total} product${total === 1 ? "" : "s"} found`} />

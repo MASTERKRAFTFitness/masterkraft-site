@@ -8,12 +8,12 @@ import PriceRangeFilter from "@/components/shop/PriceRangeFilter";
 import { categories, getCategory } from "@/lib/categories";
 import {
   getAllProductsByCategory,
-  getCategoryChildren,
   getCategoryDescription,
   type WcProduct,
   type WcCategoryChild,
 } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
+import { erpSubgroups, erpUnitsInGroup, unitCard } from "@/lib/erp-catalogue";
 
 export function generateStaticParams() {
   return categories.map((c) => ({ category: c.slug }));
@@ -45,6 +45,10 @@ export default async function CategoryPage({
 }) {
   const { category } = await params;
   const c = getCategory(category);
+  // Unreachable: layout.tsx has already 404'd on an unknown category, before
+  // loading.tsx could stream a 200 over the top of it. Kept because it is what
+  // narrows `c` for everything below, and because a guard that only holds while
+  // a sibling file exists should say so rather than disappear.
   if (!c) notFound();
 
   const sp = await searchParams;
@@ -54,16 +58,21 @@ export default async function CategoryPage({
   const priceMin = sp.min && !isNaN(parseFloat(sp.min)) ? parseFloat(sp.min) : undefined;
   const priceMax = sp.max && !isNaN(parseFloat(sp.max)) ? parseFloat(sp.max) : undefined;
 
-  // These three are independent, and WooCommerce answers in 1.5-2.5s per request,
-  // so awaiting them in turn cost the sum of all three before a product was even
-  // requested. In parallel it costs the slowest one.
-  const [unleashed, children, categoryDescription] = await Promise.all([
+  // MEMBERSHIP COMES FROM THE ERP. `erpGroup` is the category; a product is here
+  // because Unleashed files it here. The WooCommerce term is still read for the
+  // SEO copy the snapshot holds, and as the fallback below.
+  const [unleashed, categoryDescription] = await Promise.all([
     getUnleashedMap().catch(() => ({})),
-    c.wcId ? getCategoryChildren(c.wcId).catch(() => [] as WcCategoryChild[]) : [],
     c.wcId ? getCategoryDescription(c.wcId).catch(() => "") : "",
   ]);
+
+  // Sub-filters are ProductSubGroup — "Dumbbells", "Barbells", "Wall Mounted" —
+  // which is both richer and better maintained than the WooCommerce child terms
+  // it replaces.
+  const children: WcCategoryChild[] = c.erpGroup
+    ? erpSubgroups(unleashed, c.erpGroup).map((s, i) => ({ id: i + 1, ...s }))
+    : [];
   const activeSub = subSlug ? children.find((s) => s.slug === subSlug) : undefined;
-  const targetId = activeSub?.id ?? c.wcId;
 
   let cards: { product: WcProduct; enriched: EnrichedProduct }[] = [];
   let total = 0;
@@ -74,19 +83,27 @@ export default async function CategoryPage({
 
   try {
     {
-      // Always fetch the full (M/N-filtered) category, enrich (incl. variable
-      // "From"), then filter/sort on CORRECTED prices and paginate in-memory.
-      // Full-fetch keeps product counts correct after the brand-SKU filter.
-      // Clearance is ex-display / end-of-line stock with A-prefixed SKUs, so it
-      // opts out of the M/N brand-SKU filter that the branded categories use.
-      // Obsolete products are already gone: getAllProductsByCategory applies
-      // both halves of the rule (see isObsolete in woocommerce.ts).
-      const all = !targetId ? [] : await getAllProductsByCategory(targetId, {
-        brandFilter: c.slug !== "clearance",
-      });
-      let enrichedAll = await Promise.all(
-        all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
-      );
+      let enrichedAll: { product: WcProduct; enriched: EnrichedProduct }[];
+
+      // CLEARANCE IS THE CARVE-OUT, and so is an unreachable ERP. Clearance is
+      // ex-display stock on A-prefixed codes that Unleashed does not group, so
+      // it keeps listing from the snapshot with the brand filter off. And if the
+      // ERP map came back empty — the API is down, or throttling — every category
+      // falls back to the snapshot rather than telling a visitor we sell nothing.
+      const erpUsable = !!c.erpGroup && Object.keys(unleashed).length > 0;
+      if (erpUsable) {
+        let units = erpUnitsInGroup(unleashed, c.erpGroup!);
+        if (activeSub) units = units.filter((u) => u.subgroup === activeSub.name);
+        enrichedAll = units.map(unitCard);
+      } else {
+        const all = !c.wcId
+          ? []
+          : await getAllProductsByCategory(c.wcId, { brandFilter: c.slug !== "clearance" });
+        enrichedAll = await Promise.all(
+          all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
+        );
+      }
+
       if (priceMin !== undefined) {
         enrichedAll = enrichedAll.filter((x) => x.enriched.priceValue >= priceMin);
       }

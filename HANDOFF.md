@@ -22,8 +22,10 @@ left on Netregistry deliberately, and a real message was received after the chan
 the card form is hidden and every cart goes to the quote flow. Two things have to
 happen before card checkout returns, in either order:
 
-1. **Stripe live keys** in Vercel Production. Still `pk_test` as at 27 August,
-   confirmed by reading the deployed bundle. Michael sets these.
+1. **Stripe live keys** in Vercel Production. Still `pk_test_51OgYExS…`,
+   re-confirmed **3 September** by reading the deployed bundle. Michael sets these.
+   Nothing is mis-selling meanwhile - quote mode hides the card form - but this
+   stays the top item because card checkout cannot return without it.
 2. **Paul moves WooCommerce to a subdomain** (`docs/email-paul-subdomain.md`),
    then `WC_STORE_URL` changes and `NEXT_PUBLIC_CHECKOUT_MODE` is removed.
 
@@ -123,6 +125,498 @@ with the rest of the legal content. Now `masterkraft.com/privacy-policy`.
 competition that closed **29 April 2023** (Australian Fitness Expo Sydney, $1,795
 Air Rowing Machine), presented as current. Removing live legal copy is Michael's
 call, not a fix to make unasked.
+
+---
+
+## 0c. Shipped 2026-09-02 - one page per range, sized from Unleashed
+
+**The problem.** A shopper could not choose a weight. The Rubber Hex Dumbbells
+page was one photo, a "From $X" and no picker, and the 26 weights behind it were
+unreachable. Across the catalogue that is **258 sized products with their own
+prices and photographs, none of it selectable.**
+
+**Why it looked hard, and was not.** WooCommerce modelled a range as two
+container records - a hidden `variable` parent holding the variations, and a
+visible `-GROUP` bundle holding nothing. The first cut of this paired them. That
+was the wrong thing to key on: those containers are precisely what is being
+dropped. Of the 27 served products with no Unleashed record, **24 are those
+containers**. Nothing real is missing from the ERP.
+
+**Unleashed does not have containers.** A range there is a set of ordinary
+products whose `ProductDescription` shares a name:
+
+```
+MMDBRH01   "Rubber Hex Dumbbell - 1kg"      $5.00    own photo, own stock
+MMDBRH26   "Rubber Hex Dumbbell - 45kg"     $225.00
+```
+
+So **the name before `" - "` is the range, and nothing else is.** `src/lib/ranges.ts`,
+one function, `getRange(product, unleashedMap)`.
+
+That is better data than WooCommerce ever held: **45 ranges over 399 products**
+against Woo's 32 over 258. Sizes the old store never listed now sell - the PU
+Dumbbells go from 17 to 28, the straight barbell from 10 to 14.
+
+### The three rules that stop it going wrong
+
+1. **Never group on the code stem.** `MWBBFUR` holds a curl barbell AND a straight
+   barbell, both running 10-40kg. `MCBIAR` holds the Classic, Pro and Elite air
+   bikes. Grouping on the stem puts unrelated products behind one picker.
+2. **One brand only.** "Rubber Hex Dumbbell" is 26 products on MK and another 26
+   each on SNAP, NO BRAND, Air Locker and Hyper Health. Without the brand guard a
+   dropdown shows every weight five times at five prices.
+3. **Never merge two name-groups.** An earlier cut merged groups whose sizes did
+   not collide, to rescue stragglers left by half-finished renames in the ERP. It
+   rescued them - and put the Micro Bands in the Power Bands dropdown and mixed kg
+   with lb on the Wall Ball. Disjoint sizes do not mean "same product".
+
+Where a stem holds several real ranges, the codes the page **already sold** decide
+which one is its own. That is what keeps `MWBBFUR-GROUP` on the straight barbell
+(14 sizes) rather than the curl barbell that shares its stem and has more (19).
+
+### What still comes from WooCommerce, and why
+
+The URL and the words. `src/data` is a **frozen text archive** now - nothing is
+fetched from the store - supplying the slug the page is routed by, the marketing
+copy, the features and the spec table. **Unleashed holds no product copy at all:
+`Notes` is empty on all 1,476 sellable records and `ProductDescription` is just a
+name.** Until that copy is written into the ERP, the snapshot is the only place it
+exists. Deleting `src/data` empties every product page of prose.
+
+### Checkout
+
+A cart line now carries the **ERP code** (`sku`), which is what the warehouse picks
+and what the quote email prints. It also carries the WooCommerce ids **when the
+frozen snapshot still has them**, because `resolveOrderLines` re-prices a *paid*
+order against the store. Sizes the old store never listed have no such ids, so
+they carry `productId: 0`, and `canPay` in `checkout/page.tsx` now requires
+`productId > 0`. Those sizes still sell - through the quote flow, which needs
+only a code, a name and a price. Without that guard the customer fills in a card
+form and then hits `resolveOrderLines` failing closed.
+
+### Photography
+
+Per-size shots come from Unleashed's own CDN (`unlappcdn.unleashedsoftware.com`,
+public, no auth, ~100 KB each), allowlisted in `next.config.ts`. The `/public`
+mirror holds one shot per PRODUCT, taken from WooCommerce parents; it has nothing
+for the individual sizes. Mirroring these the way `scripts/mirror-product-images.mjs`
+did is how to drop the external dependency - worth doing, not urgent.
+
+### `npm run report:ranges`
+
+Prints what the ERP's naming is doing wrong, because rule 3 above is only as good
+as the naming:
+
+- **ORPHANS** - a size stranded under an unfinished rename, so it is missing from
+  its picker on the live site. 3 today; `MMDBUR19` is called "Urethane Fixed
+  Dumbbells (Pair) - 7.5kg" while its other 28 are "PU Dumbbells (Pair)". **Fix is
+  one field in Unleashed.** Advisory - read each, some are genuinely separate.
+- **SPLITS** - 40 stems holding more than one real range. Correct, but only one of
+  them can have a page while pages are routed by the old WooCommerce slugs. The
+  Wall Ball (Armatex), 5 sizes, has no page for exactly this reason.
+
+Files: `src/lib/ranges.ts`, `src/lib/ranges.test.ts`, `scripts/range-report.mjs`,
+`src/components/shop/VariantSelection.tsx` (new); `VariantSelector.tsx`,
+`ProductGallery.tsx`, `app/product/[slug]/page.tsx`, `app/checkout/page.tsx`,
+`app/api/quote/route.ts`, `cart/CartProvider.tsx`, `lib/unleashed.ts`,
+`lib/catalogue.ts`, `next.config.ts`.
+
+---
+
+## 0d. Shipped 2026-09-02 - the categories are the ERP's product groups
+
+**The site was showing 157 of the 696 products the ERP sells under MasterKraft
+codes.** 184 cards where the ERP has 319 once a range is counted once. Apparel,
+Lighting and Reformers had been sitting empty since 27 August with a comment
+explaining that their products exist in Unleashed and were never created in
+WooCommerce - which was the visible corner of the real problem.
+
+**`ProductGroup` IS the category now**, the same way the franchisee catalogues
+have always grouped. `src/lib/erp-catalogue.ts`. Nothing maps, nothing is
+maintained by hand: a product appears in Strength because the ERP files it there.
+
+| | before | after |
+|---|---|---|
+| Strength | 11 | **81** |
+| Apparel | 0 | **18** |
+| Weightlifting | 29 | 42 |
+| Mixed Implements | 20 | 41 |
+| Body Weight | 25 | 33 |
+| Rigs & Racks | 11 | 26 |
+| Cardio | 13 | 20 |
+| Flooring | 0 | 8 |
+| Lighting | 0 | 2 |
+
+Sub-filters are `ProductSubGroup` - Dumbbells, Barbells, Wall Mounted, Lower Body
+Machines - which is richer and better kept than the WooCommerce child terms it
+replaces. **165 units had no WooCommerce record at all** and now have a generated
+page: name, ERP code, price, stock, photographs, and a size picker when it is a
+range. No marketing copy, because the ERP has none.
+
+### A UNIT is what earns one card
+
+Either a range (everything sharing a name before `" - "`, one card with a picker)
+or a single product. Same rule the product page uses, so a card and the page it
+opens cannot disagree - `sizesFromCodes` in ranges.ts is the ONE place a size row
+is built. That is what makes 731 products into 319 cards rather than 731.
+
+### Five rules, each of which was a bug first
+
+1. **Never group on the code stem.** `MWBBFUR` is three barbells, `MCBIAR` is the
+   Classic, Pro and Elite air bikes.
+2. **A brand prefix is not a range.** "CONCEPT 2 - Ski Erg with PM5" read as a
+   range gives one "CONCEPT 2" card whose sizes are four whole ergs.
+3. **A trailing `(L)` is a size; a trailing `(Armatex)` is not.** Apparel is named
+   "Sweatshirt (Unisex) (L)", so the `" - "` rule alone gave 52 cards for about a
+   dozen products. The whitelist is XS-3XL and deliberately nothing else.
+4. **NO BRAND fills gaps, it does not duplicate.** N-codes have always counted as
+   ours (`/^(?:[MN]|SC)/`) and Lighting exists only there, but NO BRAND also
+   holds white-label copies of MK ranges - a whole 26-weight `NBMDBRH` beside
+   `MMDBRH`. Same name in the same group: earliest brand in `BRAND_ORDER` wins.
+5. **The loser of a page contest gets its own page, not oblivion.** Three ranges
+   want `/product/urethane-fixed-barbells-2`. The winner is decided by the codes
+   that page ALREADY sold - the same anchor rule ranges.ts uses, shared on purpose
+   - and the others get a slug from their own name. That is how the Fixed PU Curl
+   Barbell (19 sizes) is listed at all; the old store never had a page for it.
+
+### What did NOT change
+
+- **URLs.** Slugs stay hand-written in `categories.ts` and inherited from the
+  snapshot for products. "Rigs & Racks" slugifies to `rigs-and-racks` and this
+  category has lived at `/equipment/rigs-racks` since launch; a change of source
+  is not a reason to break every link into it. `/equipment/reformers` 308s to
+  `/equipment/cardio`, where the ERP files both reformers.
+- **Clearance.** Ex-display stock on A-prefixed codes, still listed from the
+  snapshot with the brand filter off. Unleashed's "Clearance" group holds one
+  product and is not the same thing.
+- **The words.** `src/data` is a frozen text archive supplying copy, features and
+  specs. Deleting it empties every product page of prose.
+
+### If Unleashed is unreachable
+
+Every listing surface - category, all-equipment, search, sitemap - checks for an
+empty map and **falls back to the snapshot**. A visitor sees the old, smaller
+catalogue rather than a site that sells nothing. Worth keeping when editing any
+of them.
+
+### `npm run report:ranges`
+
+Now also reports what the category pages are missing, because the ERP is the
+catalogue and its gaps are holes on live pages.
+
+> **Superseded 3 September.** The counts below are as at 2 September.
+> `npm run report:punchlist` (§0e) replaces this list with a per-field punch list
+> and is the one to work from.
+
+- **48 with no price** - render "Contact for pricing".
+- **186 with no photograph** - render an empty tile. `masterkraft-portals-franchisee`
+  has `scripts/harvest-unleashed-images.py`, which fills blanks from the ERP's own
+  CDN; the same trick would help here.
+- **2 near-duplicate names** - "Multi Dead Lift" vs "Multi Deadlift", "V Squat"
+  vs "V-Squat". Two cards for one product; fix the name and they merge.
+- Plus the apparel mess: `MAACU02-L "Oversized Hoodie (L)"` beside
+  `MAACU02L "Oversized Hoodie (Unisex) (L)"`, and `MAACU02-XL` is spelled
+  **"Oversided Hoodie (XL)"**. Three hoodie cards where there should be one.
+
+Files: `src/lib/erp-catalogue.ts`, `src/lib/erp-catalogue.test.ts` (new);
+`lib/categories.ts`, `lib/ranges.ts`, `lib/unleashed.ts`,
+`app/equipment/[category]/page.tsx`, `app/all-equipment/page.tsx`,
+`app/product/[slug]/page.tsx`, `app/search/page.tsx`, `app/sitemap.ts`,
+`scripts/range-report.mjs`, `next.config.ts`.
+
+---
+
+## 0e. Shipped 2026-09-03 - what a range costs, and every size in it
+
+Deployed to production and verified on `masterkraft.com`. Five changes, all on top
+of §0c/§0d: the ERP was already the catalogue, but a card would not say what a
+range cost end to end and a shopper could not see two sizes at once.
+
+`cc5ed0f`, `b3892f5`, `3b0ff30`, plus `6418e20` (retirements) and `e600caf`
+(metadata).
+
+### The card spans the price
+
+`From $40.00` became `$40.00 – $300.00`. The old label hid that the top of the
+High Grip Dead Balls is seven times the bottom, and it collapsed three different
+situations into one. There are now three, and the distinction matters:
+
+| Label | Means |
+| --- | --- |
+| `$40.00 – $300.00` | The sizes cost different amounts. |
+| `From $40.00` | Some sizes are unpriced, so the top is genuinely unknown and must not be implied. |
+| `$65.00` | Every size costs the same - the apparel ranges. "From" on a flat price is noise. |
+
+`ErpUnit` gained `priceMax` and `pricedCount` to tell the last two apart.
+
+### And says what is in the range
+
+`16 sizes · 6kg – 75kg` under the price, from `enriched.rangeLabel`.
+
+**The span reads the measurement each label OPENS with, not the whole label.**
+The competition kettlebells are eleven plain weights and one
+`6kg (Aluminium)`; on the whole label that is either nonsense or nothing, and on
+the leading measurement it is `12 sizes · 6kg – 40kg`. A unit is required, which
+is what keeps `2 Tier (10 Pair) 1.0` out - a bare leading number is a model
+number as often as a size. A label with no measurement gets the count alone:
+`Set of 6 – Set of 10` is not a span.
+
+### The thumbnails are labelled, and clicking one selects that size
+
+Each thumbnail on a range page is captioned with its weight and moves the
+selection, so the price and the add-to-cart follow. Previously a click swapped
+the picture only, which is how the page could show a 12kg ball above a 6kg price.
+
+Captions are passed from the page (`galleryLabels`), not published through the
+selection context - through context they arrived a frame after hydration and
+shifted the strip under the cursor.
+
+### The size table
+
+The franchisee catalogue's table, on the storefront: size, ERP code,
+availability, price, ADD. The dropdown is the right control for buying one
+dumbbell and the wrong shape for a gym comparing 26 weights and buying eight.
+
+**Prices are inc-GST here, unlike the franchisee catalogue's ex-GST column.** The
+storefront quotes inc-GST everywhere else on the page and a table that switched
+convention halfway down would be misread.
+
+### The page is two columns all the way down
+
+The table is in the LEFT column under the thumbnails. **Product Overview,
+Features and Specifications all moved up into the RIGHT column**, under the
+price, in that order.
+
+Overview and Specifications were each a full-width band in their own centred
+`max-w-3xl`, which lined up with neither column and read as stray blocks below
+the fold. They are now the same 598px column as the price at 1440.
+
+### Garment sizes were ordered alphabetically
+
+The Long Sleeve Tee picker read **`L, M, S, XL`** on the live site. Garment
+labels carry no number, so the numeric sort fell through to `localeCompare`.
+`compareSizeLabels` in `ranges.ts` now ranks them by body and is the ONE
+ordering, read by the picker, the card's span and the captions. It also writes
+out a comparison that had been leaning on `Infinity - Infinity` being `NaN` and
+`NaN` being falsy.
+
+### Four rules that are load-bearing
+
+Break any of these and it regresses quietly:
+
+1. **One owner, two askers.** Three controls can now change the selected size -
+   dropdown, thumbnail strip, table. The picker OWNS it, keyed by ERP code; the
+   strip and the table only ask, and the picker answers by moving the code and
+   the photograph together. Two owners fight over one value.
+2. **The ask carries a counter.** Click 9kg, choose 12kg in the dropdown, click
+   9kg again: with the code alone the second ask sets state to the value it
+   already holds, React skips the render, and the control goes dead.
+3. **One cart-line builder** - `lib/variant-line.ts`. Two add paths exist now,
+   and `productId: 0` is what routes a size the old store never listed to the
+   quote flow instead of card checkout. A second copy would drift. Verified:
+   adding 9kg from the table then 9kg from the picker gives ONE line at qty 2.
+4. **The table is a grid SIBLING, not a child of the gallery column.** Nested it
+   renders before the buy box on a phone, pushing price and Add to Cart below 26
+   rows. `lg:row-span-2` on the right column is what still places it under the
+   thumbnails on desktop - without it row 1 is sized by the taller column and the
+   table lands 317px below the strip. Measured at 1440: 317px -> 64px.
+
+### Retirements and metadata
+
+`6418e20` - Unleashed retired 66 SKUs during the day (`SMDBPRH`, `SMDBRH`,
+`SMDBVR`, `SBSAROL01`). All SNAP-branded, so nothing a customer sees changed, but
+`check:obsolete` refuses to ship a stale list and that is what it is for.
+
+`e600caf` - `generateMetadata` resolved the snapshot only, so the 165 ERP-only
+units went out as `Product | MASTERKRAFT` in search results with no og:title, on
+pages the sitemap advertises. It now falls back to the ERP unit the way the page
+body already did.
+
+### `npm run report:punchlist`
+
+New. Writes `reports/erp-punchlist.md` and `.csv` - **170 fixes, every one a
+field in Unleashed**, no code change and no deploy, because the site rebuilds its
+cards from the ERP every 15 minutes.
+
+| Problem | Rows | Field |
+| --- | ---: | --- |
+| No photo anywhere | 62 | Product > Images |
+| Size has no photo | 59 | Product > Images |
+| No price | 39 | Default Sell Price |
+| Two cards, one product | 5 | Product Description |
+| No card - not on the site | 3 | Product Description |
+| Filed under the wrong group | 1 | Product Group |
+| Size has no price | 1 | Default Sell Price |
+
+**49 cards across 19 families would collapse into one picker from a rename
+alone.** `Artificial Turf Black (2m x 10m / 15m / 20m)`,
+`Coloured Bumper Plates (Set of 6 / 8 / 10)` and so on. The site groups on the
+part before `" - "`, so renaming to `Coloured Bumper Plates - Set of 8` makes the
+dropdown appear by itself, and the franchisee catalogues get it too.
+
+This was deliberately NOT done in code. Reading every trailing bracket as an
+option is the trap from §0d that put `Wall Ball (Armatex)` and `Wall Ball` behind
+one picker at two prices. Five of the nineteen are judgement calls - Olympic
+Power Rack 1.0-5.0 may be five different racks rather than five options on one.
+
+**19 cards hide a second product.** Two ERP records share a name under two code
+schemes - `MRSPFW02` and `MSSPFW02` are both "Olympic Power Rack 2.0" - and only
+the first is ever sold. Merge them or give them different names.
+
+### Known limits
+
+- **A product gets ONE dropdown.** `Olympic Urethane Weight Plates` would need
+  grip x weight. That one is a code change, not a rename.
+- **15 thumbnails against 16 options** on the dead ball. 70kg has no ERP photo,
+  falls back to the shared product image, and dedupes out of the strip. Data.
+
+### Deploys went quiet twice
+
+Three deploy attempts, two of which produced **no deployment at all** - the CLI
+gave no useful output and nothing appeared in Vercel. Same silent class of
+failure as the git-author block on 2 September (§0d era), cause not established
+this time because the third attempt simply worked.
+
+**Always confirm a deploy landed rather than assuming:**
+
+```
+npx vercel@latest ls --scope masterkraft
+```
+
+The top row must be minutes old and `Ready`. If it hangs on `Building…`, rerun
+with `--debug` - that is what surfaced `readyState: BLOCKED` last time. Never
+pipe the deploy through `tail`; it hides the reason.
+
+Files: `src/lib/variant-line.ts`, `src/components/shop/SizeTable.tsx`,
+`scripts/erp-punchlist.report.ts` (all new); `lib/erp-catalogue.ts`,
+`lib/ranges.ts`, `lib/unleashed.ts`, `components/shop/ProductCard.tsx`,
+`ProductGallery.tsx`, `VariantSelection.tsx`, `VariantSelector.tsx`,
+`app/product/[slug]/page.tsx`.
+
+---
+
+## 0f. Shipped later on 2026-09-03 - what the outside world can reach
+
+Four changes about URLs rather than about products: what this site still serves
+that it should not, what it stopped serving at the cutover and never redirected,
+how we find out what else is missing, and a dead URL that was answering 200.
+`c97e985`, `e29894e`, `1ca536a`, `4dfe075`.
+
+### `c97e985` REVL is off the site, which the rule always said it was
+
+`FOREIGN_BRAND_SKU_RE` named REVL "R" in its own comment but only ever matched
+S and F. So **63 R-SKU products stayed servable** - excluded from every listing
+by the M/N brand filter, and still answering 200 on a direct URL, and still in
+the sitemap. Unlisted is not the same as not on the website, which is the exact
+thing the rule was added to fix for Snap and Fernwood.
+
+What those 63 are matters more than the count. Only 15 are named "REVL ...".
+The other **48 are REVL's own-brand copies of lines we sell under the SAME
+names** - Abdominal Mat, Olympic Barbell - 20kg, Premium Rubber Hex Dumbbells,
+Wall Balls - one for one against the Snap set already excluded. Indexed, they
+competed with our own pages for our own product names.
+
+Servable product pages **283 -> 220**. Nothing linked to them: the REVL fitout
+pages are editorial and fetch no products, and Clearance is all A-prefixed
+ex-display stock. **SC is untouched and tested to stay that way** - the Concept2
+ergs are named "C2", SKU'd "SC", and stay by the 2026-08-20 decision.
+
+### `e29894e` The inbound links that have 404ed since 27 August
+
+The internal link graph was already clean - 497 URLs crawled from the homepage,
+all 200. What was broken was everything pointing IN. Since the apex moved,
+**69 `/product-category/` archives and 225 product URLs** answered 404, none of
+it reachable from inside the site, so nothing surfaced it. The biggest archive
+covered 106 products.
+
+WooCommerce's own term tree picks the destinations: each site category records
+the Woo term it used to list from, so walking a term up its parents maps 66 of
+the 69 non-empty archives with nobody guessing. The three that do not resolve
+are not equipment categories - `new-products` is promotional, `freight-delivery`
+was never a product, and `studio-kit` is REVL's own kit on R-SKUs, which points
+at `/revl-fitouts` rather than bait-and-switching to a MasterKraft category.
+
+**GENERATED, BECAUSE THE ORDERING IS DANGEROUS.** Config redirects match BEFORE
+routing, so a redirect whose source still serves does not lose an argument with
+the page - it deletes it. The generator therefore imports the visibility rules
+rather than restating them, and refuses to write a map that collides with a
+servable URL.
+
+362 redirects against Vercel's ceiling of 1,024. **The generator fails at 900**,
+which is the signal to move to the Proxy + Bloom filter approach in the Next
+docs rather than quietly ship a map the platform truncates.
+
+### `1ca536a` The site records its own 404s
+
+The redirect map above was written from what the old store served - a complete
+account of what the cutover broke and no account of what anyone actually
+requests. So `/admin/dead-links` now reads back a table of 404s, busiest first,
+marking whether a crawler or a person asked. A crawler means it is still
+indexed; a person means something still links to it and someone just failed to
+buy something.
+
+**One row per PATH, not per request** - the traffic is mostly crawlers, so
+aggregating bounds the table by how many dead URLs exist rather than by how hard
+we are being crawled. Counting is a Postgres function so simultaneous hits
+increment rather than race.
+
+**The obvious implementation would have cost the whole site.** `not-found.tsx`
+cannot see the path it was rendered for, so the natural move is a header from
+Proxy plus `headers()` in the 404 page - which takes the build from 35 static
+routes to NONE, because a root not-found that reads request headers cannot be
+prerendered and any route can fall back to it. Measured, not assumed. Instead
+the path is passed in by callers that already know it: a catch-all route at the
+lowest routing precedence, plus the five existing `notFound()` call sites, which
+have their slug in params.
+
+> **NOT LIVE, AND NOT BECAUSE ANYONE FORGOT.** There is no database behind it
+> yet. `recordNotFound` calls `adminDb()`, which returns null unless
+> `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set - and **neither exists
+> in Vercel, in any environment** (checked 3 September: zero matches for
+> `SUPABASE` across the whole project). So it no-ops, exactly as designed.
+>
+> It is the SAME blocker as §13b, not a second one. The MasterKraft Supabase
+> project `pmydkwszkgjnolrcnenh` sits in an org that neither the 25 August nor
+> the 3 September session could reach - the API answers "you do not have
+> permission" for that ref, and the only project this account can see is an
+> unrelated one. So **two migrations are now queued behind one credential**:
+> `20260825_admin_identity_and_audit.sql` and
+> `20260903_not_found_hits.sql`, in that order.
+>
+> Nothing is broken meanwhile - the site is built to run without a database and
+> does. What it costs is that the log collects nothing, so the evidence the next
+> redirect map should be argued from is not accumulating, and every day this
+> waits is a day of 404s nobody can see. See §10.
+
+### `4dfe075` A dead category URL said 200
+
+`/equipment/anything-at-all` answered **200 with the 404 page inside it**. The
+`loading.tsx` in that segment wraps the page in Suspense; the moment its
+fallback renders the headers are already sent, so `notFound()` in `page.tsx`
+could change the body and not the status. Same trap the product page documents
+and sidesteps by having no `loading.tsx` at all.
+
+Not as bad as it looks - Next marks a streamed 404 `noindex` and the live page
+carried it, so Google was not indexing these. What a 200 on a dead URL does
+break is everything that counts on the STATUS: link checkers, Search Console's
+soft-404 report, and the 404 log added an hour earlier.
+
+Fixed **without losing the skeleton**. A layout renders outside its own
+segment's Suspense boundary, so a check there still runs while the status can be
+set. It has to be cheap and must not suspend or it starts the stream itself -
+`getCategory` is a lookup over twelve committed entries, no `await`. Deleting
+`loading.tsx` would also have worked and would have cost the skeleton on a page
+that waits on Unleashed, which is a bad trade for a status code.
+
+### One question these two left open, on purpose
+
+**8 R-prefixed slugs still serve** - `pro-bumper-plates`, `power-bands`,
+`retail-rack` and five more - and are in the sitemap, despite failing the brand
+rule `c97e985` just tightened. `erpUnits()` filters on the ERP's **brand field**,
+not the SKU prefix, so a product Unleashed calls MK or NO BRAND on an R-code
+comes through. Whether the ERP or the SKU is right about those is a real
+question and a redirect map was the wrong place to answer it, so they were left
+alone. See §10.
 
 ---
 
@@ -257,8 +751,10 @@ Each of these was hit for real. They look like bugs in our code and are not.
 Four rules, all applied at one chokepoint in `src/lib/woocommerce.ts`. **If a
 category shows 0 products, suspect these first.**
 
-512 published products → **184 shown** (plus 36 Clearance; this was recorded as 37
-on 2026-08-20, and three of the 39 raw Clearance products are ERP-retired).
+**SUPERSEDED BY §0d.** The rules below still decide what the WooCommerce snapshot
+serves — Clearance, and the fallback when Unleashed is unreachable — but they no
+longer decide what the site LISTS. Categories come from the ERP's `ProductGroup`
+now, and the count is 319 units, not 184 products.
 
 The rules run against the **committed snapshot** in `src/data/`, not a live call
 (§4). The snapshot is a faithful mirror of what the store published and holds NO
@@ -276,7 +772,8 @@ visibility rules, so these four are still the only thing deciding what appears.
    and sitting in the sitemap.
 3. **Obsolete, WordPress side.** `catalog_visibility: "hidden"` is the store's own
    "do not list this" switch, used both for withdrawn lines and for an old single
-   listing superseded by its `-GROUP` product. 25 products.
+   listing superseded by its `-GROUP` product. 25 products. Unchanged by §0c:
+   ranges no longer read those hidden twins at all, they read the ERP.
 4. **Obsolete, ERP side.** `src/lib/obsolete.ts` reads a **committed list** of 804
    retired Unleashed codes. 15 served products were retired in the ERP while
    WordPress still showed them, including the whole discontinued Selectorize range.
@@ -303,6 +800,12 @@ an order for an already-bought item must not fail because marketing hid it.
   `bundle_price.regular_price.min` as a "From $X". **`priceValue` stays 0 on
   purpose** so a configurable range cannot be card-checked-out at the cost of its
   cheapest item.
+- **A RANGE is the exception** (§0c). It is priced off its ERP sizes, so
+  `priceValue` is the cheapest size and the price filter can finally see it. Safe
+  because the shopper picks a size and buys that, not an un-configured range. This
+  also settles the disagreement `getBundleFromPrice` documents - the card used to
+  say "From $110" off WooCommerce while the page said "From $90" off Unleashed.
+  One source now, and it is the ERP.
 
 ---
 
@@ -716,6 +1219,63 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 - **Fix the deploy gate** (§1 DEPLOY). `check:catalogue` cannot pass while
   WooCommerce is unreachable, so it blocks every deploy and is being stepped past.
   It should degrade to a warning rather than fail hard.
+
+**Added 3 September (see §0e).**
+
+- **170 catalogue fixes in Unleashed.** `npm run report:punchlist` writes
+  `reports/erp-punchlist.md` grouped by category, every row one field on one
+  product. No deploy needed - the site re-reads the ERP every 15 minutes. The
+  biggest single win is photography: 121 of the 170 are a missing image, and
+  `masterkraft-portals-franchisee` has `scripts/harvest-unleashed-images.py`
+  which fills blanks from the ERP's own CDN.
+- **Decide the 19 rename families.** 49 cards that would collapse into one card
+  with a picker if renamed to the `Name - Option` shape. Listed in §0e; five are
+  judgement calls that need someone who knows whether Olympic Power Rack 1.0-5.0
+  are five racks or five options.
+- **Resolve the 19 duplicate-name pairs.** Two ERP records, one name, two code
+  schemes, only the first ever sold.
+- **Vercel seat for `michael@masterkraft.com`** is still invite-pending and needs
+  an account at that address; the invite must be accepted from that session or
+  the seat rebinds to the gmail login. Carried from 2 September.
+- **Set the git identity in the other MasterKraft repos** before their next
+  deploy - they inherit the global PartTimeCMO address and will hit the same
+  block. One line each: `git config user.email "marketing@masterkraft.com"`.
+
+**Added later on 3 September (see §0f).**
+
+- **Get at the MasterKraft Supabase project. This is one task, not two, and it
+  has been open since 25 August.** Two migrations are queued behind a single
+  credential:
+  1. `supabase/migrations/20260825_admin_identity_and_audit.sql` - the admin
+     console's identity and audit tables (§13b).
+  2. `supabase/migrations/20260903_not_found_hits.sql` - the 404 log (§0f).
+
+  **Why neither has run:** project `pmydkwszkgjnolrcnenh` lives in an org that
+  no session so far has been able to reach - the Supabase API returns "you do
+  not have permission" for that ref, and the only project visible to this
+  account is an unrelated one. Separately, **`SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` are not set in Vercel in any environment**
+  (verified 3 September). `.env.local` has both names present and empty.
+
+  So it is NOT "run a migration". It is: reach the project, run both in order,
+  then set both env vars in Vercel Production plus `ADMIN_BOOTSTRAP_EMAILS`.
+  The service role key bypasses RLS - it must be a Production secret and must
+  never take a `NEXT_PUBLIC_` prefix.
+
+  **What it costs while it waits.** Nothing breaks: `adminDb()` returns null and
+  both features degrade by design. But `/admin` has been running without its
+  identity and audit tables since 25 August, and the 404 log records nothing, so
+  every day of dead-URL traffic since 3 September is evidence that is simply
+  gone. The redirect map cannot be argued from evidence that was never collected.
+- **Decide whether the ERP or the SKU prefix is right about 8 products.**
+  `pro-bumper-plates`, `power-bands`, `retail-rack` and five more serve and sit
+  in the sitemap on R-prefixed codes, because `erpUnits()` reads the ERP's brand
+  field while the visibility rule reads the SKU. One of the two is wrong about
+  these. If the ERP is right the codes want fixing in Unleashed; if the SKU is
+  right the brand filter needs to reach the ERP path too.
+- **Watch the redirect count.** 362 of Vercel's 1,024, and the generator hard
+  fails at 900 rather than shipping a truncated map. At that point the move is
+  the Proxy + Bloom filter approach in the Next docs.
 
 - **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
   promoted yet.** Three things gate it, and two are promises the page makes:
@@ -1138,6 +1698,12 @@ service role key reaches them, and only from server code.
 > The SQL was validated against a real Postgres inside a transaction that was
 > rolled back: tables, foreign keys, the insert/approve flow and RLS all checked
 > out, and nothing persisted.
+>
+> **Still true on 3 September, and now blocking a second thing.** Re-checked
+> that day: the API still answers "you do not have permission" for that ref, and
+> `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are set in no Vercel environment
+> at all. The 404 log (§0f) is queued behind the same credential, so this is one
+> access problem holding two features rather than two separate jobs. §10.
 
 ### Still open
 

@@ -9,7 +9,10 @@ import { submitHubspotForm } from "@/lib/hubspot";
 // Every step degrades gracefully: an unconfigured/failed side-effect is logged
 // but never blocks the customer's submission.
 
-type QuoteItem = { id: number; name: string; qty: number; price: number };
+// `sku` is the Unleashed ProductCode. The ERP now carries sizes the old store
+// never listed, so the code is the only identifier that is certain to mean
+// something to whoever fulfils the quote.
+type QuoteItem = { id: number; name: string; qty: number; price: number; sku?: string };
 type QuoteContact = {
   name?: string;
   email?: string;
@@ -87,7 +90,7 @@ async function sendEmail(
   const rows = items
     .map(
       (i) =>
-        `<tr><td style="padding:6px 12px 6px 0">${escape(i.name)}</td><td style="padding:6px 0;text-align:center">${i.qty}</td><td style="padding:6px 0;text-align:right">${money(i.price * i.qty)}</td></tr>`
+        `<tr><td style="padding:6px 12px 6px 0">${escape(i.name)}${i.sku ? `<br><span style="color:#777;font:12px monospace">${escape(i.sku)}</span>` : ""}</td><td style="padding:6px 0;text-align:center">${i.qty}</td><td style="padding:6px 0;text-align:right">${money(i.price * i.qty)}</td></tr>`
     )
     .join("");
 

@@ -2,19 +2,57 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useVariantSelection } from "@/components/shop/VariantSelection";
 import type { WcImage } from "@/lib/woocommerce";
 
-export default function ProductGallery({ images, name }: { images: WcImage[]; name: string }) {
-  const [active, setActive] = useState(0);
+export default function ProductGallery({
+  images,
+  name,
+  labels,
+}: {
+  images: WcImage[];
+  name: string;
+  /**
+   * The size each photograph belongs to, keyed by src — its caption and the ERP
+   * code a click asks for. Passed from the page rather than published through
+   * the selection context so the captions are in the server HTML: through
+   * context they arrived a frame after hydration and shifted the strip under
+   * the shopper's cursor.
+   */
+  labels?: Record<string, { label: string; code: string }>;
+}) {
   const [zoom, setZoom] = useState(false);
+
+  // On a range page the gallery holds every size's photograph and the picker
+  // says which one is being looked at, so the shown image is DERIVED from the
+  // selection rather than owned here.
+  //
+  // A THUMBNAIL CLICK ASKS THE PICKER, it does not override the image. Each
+  // thumbnail on a range page IS a size — it is captioned "9kg" — so clicking
+  // one has to move the price and the add-to-cart with it. The override below
+  // survives only for galleries with no picker (a simple product's extra
+  // photographs) and for the lightbox arrows, and is cleared the moment the
+  // shopper picks a different size — "adjust state during render", not an
+  // effect.
+  const selection = useVariantSelection();
+  const selectedSrc = selection?.imageSrc;
+  const requestSize = selection?.requestSize;
+  const [override, setOverride] = useState<number | null>(null);
+  const [lastSelected, setLastSelected] = useState(selectedSrc);
+  if (selectedSrc !== lastSelected) {
+    setLastSelected(selectedSrc);
+    setOverride(null);
+  }
+  const fromSelection = selectedSrc ? images.findIndex((img) => img.src === selectedSrc) : -1;
+  const active = override ?? (fromSelection >= 0 ? fromSelection : 0);
   const main = images[active] ?? images[0];
 
   useEffect(() => {
     if (!zoom) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setZoom(false);
-      if (e.key === "ArrowRight") setActive((a) => (a + 1) % images.length);
-      if (e.key === "ArrowLeft") setActive((a) => (a - 1 + images.length) % images.length);
+      if (e.key === "ArrowRight") setOverride((active + 1) % images.length);
+      if (e.key === "ArrowLeft") setOverride((active - 1 + images.length) % images.length);
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -22,7 +60,7 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [zoom, images.length]);
+  }, [zoom, images.length, active]);
 
   return (
     <div>
@@ -46,20 +84,40 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
         )}
       </button>
 
+      {/* A range runs to 26 photographs, so the strip scrolls rather than
+          truncating at 10 and hiding two thirds of the rack. */}
       {images.length > 1 && (
-        <div className="mt-4 grid grid-cols-5 gap-3">
-          {images.slice(0, 10).map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setActive(i)}
-              aria-label={`View image ${i + 1}`}
-              className={`relative aspect-square bg-[#e6e6e6] border overflow-hidden transition-colors ${
-                i === active ? "border-accent" : "border-line hover:border-ash"
-              }`}
-            >
-              <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
-            </button>
-          ))}
+        <div className="mt-4 grid grid-cols-5 gap-3 max-h-72 overflow-y-auto pr-1">
+          {images.map((img, i) => {
+            const size = labels?.[img.src];
+            const label = size?.label;
+            return (
+              <button
+                key={i}
+                // A labelled thumbnail belongs to a size, so it asks the picker
+                // to select it. Everything else is still a plain image swap.
+                onClick={() => (size && requestSize ? requestSize(size.code) : setOverride(i))}
+                aria-label={label ? `Select ${label}` : `View image ${i + 1}`}
+                aria-pressed={label ? i === active : undefined}
+                className={`bg-[#e6e6e6] border overflow-hidden transition-colors ${
+                  i === active ? "border-accent" : "border-line hover:border-ash"
+                }`}
+              >
+                <span className="relative block aspect-square">
+                  <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
+                </span>
+                {label && (
+                  <span
+                    className={`block pb-1.5 text-center font-mono text-[11px] leading-none ${
+                      i === active ? "text-ink" : "text-ash"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -84,14 +142,14 @@ export default function ProductGallery({ images, name }: { images: WcImage[]; na
           {images.length > 1 && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); setActive((a) => (a - 1 + images.length) % images.length); }}
+                onClick={(e) => { e.stopPropagation(); setOverride((active - 1 + images.length) % images.length); }}
                 aria-label="Previous image"
                 className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center text-white/70 hover:text-white text-3xl"
               >
                 ‹
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); setActive((a) => (a + 1) % images.length); }}
+                onClick={(e) => { e.stopPropagation(); setOverride((active + 1) % images.length); }}
                 aria-label="Next image"
                 className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 flex items-center justify-center text-white/70 hover:text-white text-3xl"
               >

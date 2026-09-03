@@ -70,6 +70,8 @@ cPanel and sits on CloudLoop infrastructure (`103.26.237.235`, reverse DNS
 4. **Check the Unleashed sync** and repoint it at the new address.
 
 We can handle the DNS record ourselves, and the WordPress Site URL change after.
+Worth flagging that the Site URL is **hardcoded in `wp-config.php`**, not held in
+the database, so it is three `define()` lines rather than a Settings change.
 
 **Either way works for us:**
 
@@ -95,9 +97,14 @@ server and AutoSSL can validate normally.
   but we do not know the arrangement.
 - **When it can be done.** Sooner is better: until it is, the store has no working
   hostname and its integrations are down.
-- **Where the Unleashed stock and pricing sync actually runs.** We cannot find
-  an Unleashed plugin in the WordPress install, so whatever keeps the catalogue
-  in step must sit outside it, and we do not know where.
+- **The Wbsync account.** We have worked out that the Unleashed sync runs through
+  Wbsync, against a WooCommerce API key whose last successful call was 27 August
+  at 09:12, which is when we repointed the domain. Who holds that account, and
+  can it be transferred to us? Until it is repointed, orders are not reaching
+  Unleashed.
+- **The Bitbucket repository** `efront_au/masterkraft`, which holds the theme
+  source and the deployment pipeline, and the pipeline's deployment variables and
+  SSH keys. We had not appreciated the site was a custom build until we looked.
 - **Whether anything else on your side pointed at `masterkraft.com`** that we
   should expect to have broken.
 
@@ -109,7 +116,8 @@ server and AutoSSL can validate normally.
 - **The CloudLoop arrangement** and who is billed for it, so we can take that over
   cleanly rather than leaving you paying for our site.
 - **Any plugin, theme or service licences** tied to your accounts rather than ours.
-- **How the Unleashed sync is configured**, and where its credentials live.
+- **The Wbsync integration**: account ownership, billing, and its credentials.
+- **The Bitbucket repo and its deployment pipeline**, including who has access.
 - **Payment gateway configuration** on the WooCommerce side.
 - **Backups**: what exists, where, and how far back.
 - **Anything custom** you have built or patched that would not be obvious to

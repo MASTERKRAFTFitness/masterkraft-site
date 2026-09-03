@@ -30,9 +30,14 @@ export default async function AdminPage() {
         </div>
         <div className="flex items-center gap-4 text-xs text-ash">
           {mode === "supabase" && (
-            <Link href="/admin/activity" className="underline underline-offset-2 hover:text-ink transition-colors">
-              Activity
-            </Link>
+            <>
+              <Link href="/admin/activity" className="underline underline-offset-2 hover:text-ink transition-colors">
+                Activity
+              </Link>
+              <Link href="/admin/dead-links" className="underline underline-offset-2 hover:text-ink transition-colors">
+                Dead links
+              </Link>
+            </>
           )}
           {session?.email && <span className="font-mono">{session.email}</span>}
           <SignOutButton />

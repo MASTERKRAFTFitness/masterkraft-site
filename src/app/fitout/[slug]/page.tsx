@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
+import { recordNotFound } from "@/lib/not-found-log";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
@@ -33,7 +35,13 @@ export default async function FitoutTypePage({
 }) {
   const { slug } = await params;
   const f = getFitout(slug);
-  if (!f) notFound();
+  if (!f) {
+    // A dead /fitout/ URL is the likeliest kind to be an old link worth
+    // redirecting, and the slug is right here — no request header needed.
+    // See lib/not-found-log.ts for why the path is passed rather than read.
+    after(() => recordNotFound(`/fitout/${encodeURIComponent(slug)}`));
+    notFound();
+  }
 
   const others = fitouts.filter((x) => x.slug !== f.slug);
 

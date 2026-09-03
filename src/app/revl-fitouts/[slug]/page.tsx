@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
+import { recordNotFound } from "@/lib/not-found-log";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { revlSites, getRevlSite } from "@/lib/revl";
@@ -32,7 +34,13 @@ export default async function RevlSitePage({
 }) {
   const { slug } = await params;
   const s = getRevlSite(slug);
-  if (!s) notFound();
+  if (!s) {
+    // A dead /revl-fitouts/ URL is the likeliest kind to be an old link worth
+    // redirecting, and the slug is right here — no request header needed.
+    // See lib/not-found-log.ts for why the path is passed rather than read.
+    after(() => recordNotFound(`/revl-fitouts/${encodeURIComponent(slug)}`));
+    notFound();
+  }
 
   return (
     <>
