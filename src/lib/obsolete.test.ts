@@ -73,9 +73,19 @@ describe("obsolete products (the ERP half)", () => {
 });
 
 describe("other companies' branded ranges", () => {
-  it("excludes Snap (S) and Fernwood (F)", () => {
+  it("excludes Snap (S), Fernwood (F) and REVL (R)", () => {
     expect(isForeignBrandSku("SEFRDB13")).toBe(true); // Snap dumbbell rack
     expect(isForeignBrandSku("FAAAU01")).toBe(true);
+    expect(isForeignBrandSku("RKST3C01")).toBe(true); // REVL Studio Kit
+  });
+
+  // The REVL range is not just the products NAMED "REVL ...". Most of it is
+  // own-brand copies of lines we sell under the same names, one per Snap
+  // equivalent, and those are the ones worth keeping out of the index.
+  it("excludes the REVL copies that share our own product names", () => {
+    for (const sku of ["RBCTMA01", "RWBBOL02", "RMDBRH-GROUP", "RMWAARM-GROUP"]) {
+      expect(isForeignBrandSku(sku)).toBe(true);
+    }
   });
 
   // Named "C2", SKU'd "SC", coded "C2*" in Unleashed. A range MasterKraft
