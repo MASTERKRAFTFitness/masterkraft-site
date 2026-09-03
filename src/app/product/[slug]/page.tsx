@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { recordNotFound } from "@/lib/not-found-log";
+import { siteCategoryFor } from "@/lib/categories";
+import { categoryTerms } from "@/lib/catalogue";
 import ProductGallery from "@/components/shop/ProductGallery";
 import {
   getProductBySlug,
@@ -103,6 +105,19 @@ export default async function ProductPage({
   const product = wooProduct ?? unitAsProduct(unit!);
 
   const cat = product.categories?.[0];
+
+  // WHERE THE BREADCRUMB POINTS IS NOT WHERE `cat` SAYS. A product's own
+  // category is a WooCommerce child term ("Chest & Shoulder Machines") or a
+  // slugified ERP group ("rigs-and-racks"), and most of those are not pages —
+  // 27 of them 404'd from this breadcrumb, and from its JSON-LD, until
+  // 2026-09-03. See siteCategoryFor. `cat` itself still names the specific
+  // term, which is better copy for the eyebrow and is not a link.
+  //
+  // The first category that resolves wins; if none does the crumb is dropped
+  // rather than pointed somewhere wrong.
+  const crumb = (product.categories ?? [])
+    .map((c) => siteCategoryFor(c, categoryTerms()))
+    .find(Boolean);
   const detail = parseProductDetail(product);
   // A bundle has no price of its own, so label it the same way its card is
   // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
@@ -217,10 +232,10 @@ export default async function ProductPage({
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Equipment", item: `${SITE_URL}/all-equipment` },
-      ...(cat
-        ? [{ "@type": "ListItem", position: 2, name: cat.name, item: `${SITE_URL}/equipment/${cat.slug}` }]
+      ...(crumb
+        ? [{ "@type": "ListItem", position: 2, name: crumb.label, item: `${SITE_URL}/equipment/${crumb.slug}` }]
         : []),
-      { "@type": "ListItem", position: cat ? 3 : 2, name: product.name, item: `${SITE_URL}/product/${product.slug}` },
+      { "@type": "ListItem", position: crumb ? 3 : 2, name: product.name, item: `${SITE_URL}/product/${product.slug}` },
     ],
   };
 
@@ -232,10 +247,10 @@ export default async function ProductPage({
       <div className="bg-carbon text-white pt-28 pb-6">
         <div className="container-mk font-mono text-xs tracking-widest uppercase text-white/60">
           <Link href="/all-equipment" className="hover:text-accent">Equipment</Link>
-          {cat && (
+          {crumb && (
             <>
               {" / "}
-              <Link href={`/equipment/${cat.slug}`} className="hover:text-accent">{cat.name}</Link>
+              <Link href={`/equipment/${crumb.slug}`} className="hover:text-accent">{crumb.label}</Link>
             </>
           )}
         </div>

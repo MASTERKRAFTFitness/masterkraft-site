@@ -52,3 +52,58 @@ export const categories: Category[] = [
 export function getCategory(slug: string) {
   return categories.find((c) => c.slug === slug);
 }
+
+/**
+ * The category page a product actually belongs on.
+ *
+ * NEEDED BECAUSE A PRODUCT'S OWN CATEGORY IS NOT ONE OF THESE TWELVE. Both
+ * kinds of product carry a category that does not name a page:
+ *
+ *   WOOCOMMERCE PRODUCTS carry one of the store's 80 terms — "Chest & Shoulder
+ *   Machines", "Kettlebells", "Bumper Plates". Only twelve of those are pages.
+ *   The rest are children, and a link built from the raw slug is a 404.
+ *
+ *   ERP UNITS carry `slugify(group)`, and the slugs here are deliberately NOT
+ *   derived from the group name — see the note at the top of this file. "Rigs &
+ *   Racks" slugifies to `rigs-and-racks`; the page has lived at `rigs-racks`
+ *   since launch. Same product, different string, 404.
+ *
+ * Both were live on the product page's breadcrumb until 2026-09-03, one of them
+ * in the BreadcrumbList JSON-LD as well, and neither was visible because the
+ * category page answered those URLs with a 200 and a "Page not found" body. See
+ * the layout beside `equipment/[category]/page.tsx`.
+ *
+ * Resolution runs cheapest first: an exact page slug, then the ERP group, then
+ * WooCommerce's own term tree — a child term walks up its parents until it
+ * reaches the term a page lists from. Returns undefined rather than guessing,
+ * so a caller can drop the crumb instead of linking somewhere wrong.
+ */
+export function siteCategoryFor(
+  cat: { id?: number; name?: string; slug?: string } | undefined,
+  terms: { id: number; parent: number }[]
+): Category | undefined {
+  if (!cat) return undefined;
+
+  if (cat.slug) {
+    const direct = categories.find((c) => c.slug === cat.slug);
+    if (direct) return direct;
+  }
+
+  if (cat.name) {
+    const byGroup = categories.find((c) => c.erpGroup === cat.name);
+    if (byGroup) return byGroup;
+  }
+
+  if (typeof cat.id === "number" && cat.id > 0) {
+    const byId = new Map(terms.map((t) => [t.id, t]));
+    let cur = byId.get(cat.id);
+    // Bounded: a cycle in the term tree must not hang a render.
+    for (let hops = 0; cur && hops < 10; hops++) {
+      const page = categories.find((c) => c.wcId === cur!.id);
+      if (page) return page;
+      cur = byId.get(cur.parent);
+    }
+  }
+
+  return undefined;
+}
