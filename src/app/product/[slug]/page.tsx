@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
+import { recordNotFound } from "@/lib/not-found-log";
 import ProductGallery from "@/components/shop/ProductGallery";
 import {
   getProductBySlug,
@@ -91,7 +93,13 @@ export default async function ProductPage({
   const unleashed = await getUnleashedMap().catch(() => ({}));
   const wooProduct = await getProductBySlug(slug).catch(() => null);
   const unit = erpUnitBySlug(unleashed, slug);
-  if (!wooProduct && !unit) notFound();
+  if (!wooProduct && !unit) {
+    // A dead /product/ URL is the likeliest kind to be an old link worth
+    // redirecting, and the slug is right here — no request header needed.
+    // See lib/not-found-log.ts for why the path is passed rather than read.
+    after(() => recordNotFound(`/product/${encodeURIComponent(slug)}`));
+    notFound();
+  }
   const product = wooProduct ?? unitAsProduct(unit!);
 
   const cat = product.categories?.[0];
