@@ -569,9 +569,24 @@ the path is passed in by callers that already know it: a catch-all route at the
 lowest routing precedence, plus the five existing `notFound()` call sites, which
 have their slug in params.
 
-> **NOT LIVE YET - the Supabase migration has not been applied.** Until it is,
-> `recordNotFound` finds no database and no-ops, the same posture `admin-db`
-> takes. `supabase/migrations/20260903_not_found_hits.sql`.
+> **NOT LIVE, AND NOT BECAUSE ANYONE FORGOT.** There is no database behind it
+> yet. `recordNotFound` calls `adminDb()`, which returns null unless
+> `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set - and **neither exists
+> in Vercel, in any environment** (checked 3 September: zero matches for
+> `SUPABASE` across the whole project). So it no-ops, exactly as designed.
+>
+> It is the SAME blocker as §13b, not a second one. The MasterKraft Supabase
+> project `pmydkwszkgjnolrcnenh` sits in an org that neither the 25 August nor
+> the 3 September session could reach - the API answers "you do not have
+> permission" for that ref, and the only project this account can see is an
+> unrelated one. So **two migrations are now queued behind one credential**:
+> `20260825_admin_identity_and_audit.sql` and
+> `20260903_not_found_hits.sql`, in that order.
+>
+> Nothing is broken meanwhile - the site is built to run without a database and
+> does. What it costs is that the log collects nothing, so the evidence the next
+> redirect map should be argued from is not accumulating, and every day this
+> waits is a day of 404s nobody can see. See §10.
 
 ### `4dfe075` A dead category URL said 200
 
@@ -1228,12 +1243,30 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 
 **Added later on 3 September (see §0f).**
 
-- **Apply the 404-log migration.** `supabase/migrations/20260903_not_found_hits.sql`
-  is committed and deployed but never run, so `/admin/dead-links` is an empty
-  page and `recordNotFound` silently no-ops. Nothing breaks meanwhile; the point
-  of the log is that the next redirect map gets argued from evidence rather than
-  from what the old store happened to serve, and it collects nothing until this
-  is applied.
+- **Get at the MasterKraft Supabase project. This is one task, not two, and it
+  has been open since 25 August.** Two migrations are queued behind a single
+  credential:
+  1. `supabase/migrations/20260825_admin_identity_and_audit.sql` - the admin
+     console's identity and audit tables (§13b).
+  2. `supabase/migrations/20260903_not_found_hits.sql` - the 404 log (§0f).
+
+  **Why neither has run:** project `pmydkwszkgjnolrcnenh` lives in an org that
+  no session so far has been able to reach - the Supabase API returns "you do
+  not have permission" for that ref, and the only project visible to this
+  account is an unrelated one. Separately, **`SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` are not set in Vercel in any environment**
+  (verified 3 September). `.env.local` has both names present and empty.
+
+  So it is NOT "run a migration". It is: reach the project, run both in order,
+  then set both env vars in Vercel Production plus `ADMIN_BOOTSTRAP_EMAILS`.
+  The service role key bypasses RLS - it must be a Production secret and must
+  never take a `NEXT_PUBLIC_` prefix.
+
+  **What it costs while it waits.** Nothing breaks: `adminDb()` returns null and
+  both features degrade by design. But `/admin` has been running without its
+  identity and audit tables since 25 August, and the 404 log records nothing, so
+  every day of dead-URL traffic since 3 September is evidence that is simply
+  gone. The redirect map cannot be argued from evidence that was never collected.
 - **Decide whether the ERP or the SKU prefix is right about 8 products.**
   `pro-bumper-plates`, `power-bands`, `retail-rack` and five more serve and sit
   in the sitemap on R-prefixed codes, because `erpUnits()` reads the ERP's brand
@@ -1665,6 +1698,12 @@ service role key reaches them, and only from server code.
 > The SQL was validated against a real Postgres inside a transaction that was
 > rolled back: tables, foreign keys, the insert/approve flow and RLS all checked
 > out, and nothing persisted.
+>
+> **Still true on 3 September, and now blocking a second thing.** Re-checked
+> that day: the API still answers "you do not have permission" for that ref, and
+> `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are set in no Vercel environment
+> at all. The 404 log (§0f) is queued behind the same credential, so this is one
+> access problem holding two features rather than two separate jobs. §10.
 
 ### Still open
 
