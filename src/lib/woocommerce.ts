@@ -109,8 +109,8 @@ export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
 }
 
 // OTHER COMPANIES' BRANDED RANGES must never appear on masterkraft.com:
-// S = Snap, F = Fernwood. The M/N brand filter already keeps them out of the
-// listings, but two routes bypassed it:
+// S = Snap, F = Fernwood, R = REVL. The M/N brand filter already keeps them out
+// of the listings, but two routes bypassed it:
 //   1. Clearance runs with `brandFilter: false` to show A-prefixed ex-display
 //      stock, so a Snap or Fernwood item filed there would have been listed.
 //   2. `getProductBySlug` applied no brand filter at all, so all 149 of their
@@ -122,7 +122,15 @@ export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
 // C2 Ski Erg Floor Stand), a range MasterKraft distributes. They are named "C2"
 // but carry SC SKUs, and they stay on the site (confirmed 2026-08-20). Note
 // UNLEASHED codes that same range C2*, which is a different scheme again.
-const FOREIGN_BRAND_SKU_RE = /^(?:S(?!C)|F)/i;
+//
+// R WAS THE GAP. This comment named REVL from the start and the rule did not
+// cover it, so 63 R-SKU products kept servable pages and sitemap entries. Only
+// 15 of them are named "REVL ..."; the other 48 are REVL's own-brand copies of
+// lines we also sell, carrying the SAME names as ours — "Abdominal Mat",
+// "Olympic Barbell - 20kg", "Premium Rubber Hex Dumbbells", "Wall Balls" — one
+// per S-SKU Snap equivalent. Indexed, they compete with our own pages for our
+// own product names.
+const FOREIGN_BRAND_SKU_RE = /^(?:S(?!C)|F|R)/i;
 export function isForeignBrandSku(sku?: string): boolean {
   return !!sku && FOREIGN_BRAND_SKU_RE.test(sku.trim());
 }
