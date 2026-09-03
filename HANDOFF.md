@@ -497,9 +497,10 @@ Files: `src/lib/variant-line.ts`, `src/components/shop/SizeTable.tsx`,
 
 ## 0f. Shipped later on 2026-09-03 - what the outside world can reach
 
-Three changes about URLs rather than about products: what this site still serves
+Four changes about URLs rather than about products: what this site still serves
 that it should not, what it stopped serving at the cutover and never redirected,
-and how we find out what else is missing. `c97e985`, `e29894e`, `1ca536a`.
+how we find out what else is missing, and a dead URL that was answering 200.
+`c97e985`, `e29894e`, `1ca536a`, `4dfe075`.
 
 ### `c97e985` REVL is off the site, which the rule always said it was
 
@@ -571,6 +572,26 @@ have their slug in params.
 > **NOT LIVE YET - the Supabase migration has not been applied.** Until it is,
 > `recordNotFound` finds no database and no-ops, the same posture `admin-db`
 > takes. `supabase/migrations/20260903_not_found_hits.sql`.
+
+### `4dfe075` A dead category URL said 200
+
+`/equipment/anything-at-all` answered **200 with the 404 page inside it**. The
+`loading.tsx` in that segment wraps the page in Suspense; the moment its
+fallback renders the headers are already sent, so `notFound()` in `page.tsx`
+could change the body and not the status. Same trap the product page documents
+and sidesteps by having no `loading.tsx` at all.
+
+Not as bad as it looks - Next marks a streamed 404 `noindex` and the live page
+carried it, so Google was not indexing these. What a 200 on a dead URL does
+break is everything that counts on the STATUS: link checkers, Search Console's
+soft-404 report, and the 404 log added an hour earlier.
+
+Fixed **without losing the skeleton**. A layout renders outside its own
+segment's Suspense boundary, so a check there still runs while the status can be
+set. It has to be cheap and must not suspend or it starts the stream itself -
+`getCategory` is a lookup over twelve committed entries, no `await`. Deleting
+`loading.tsx` would also have worked and would have cost the skeleton on a page
+that waits on Unleashed, which is a bad trade for a status code.
 
 ### One question these two left open, on purpose
 
