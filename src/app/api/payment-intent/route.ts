@@ -1,11 +1,25 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef } from "@/lib/woo-orders";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
 export async function POST(request: Request) {
+  // QUOTE-ONLY IS A SERVER RULE, NOT A HIDDEN FORM. The checkout page reads the
+  // same flag to render the quote flow, but that only stops the browser we
+  // shipped. This route is a public endpoint: without this check, quote mode
+  // means "the card form is hidden" rather than "no card may be charged", and a
+  // direct POST would start a real payment against live keys while every page
+  // on the site promised a quote.
+  if (quoteOnly) {
+    return NextResponse.json(
+      { ok: false, error: "Card payment is unavailable. Please request a quote." },
+      { status: 503 }
+    );
+  }
+
   if (!stripe) {
     return NextResponse.json({ ok: false, error: "Payments not configured" }, { status: 503 });
   }
