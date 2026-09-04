@@ -114,10 +114,24 @@ a smaller attack surface on a box that now holds order data.
 
 1. `WC_STORE_URL=https://shop.masterkraft.com` in Vercel Production
 2. **Remove** `NEXT_PUBLIC_CHECKOUT_MODE`, which restores card checkout
-3. Redeploy
-4. Verify a product page prices correctly, then a real checkout
+3. `WC_WRITE_ENABLED=true` in Vercel Production. It was set to `false` on
+   2026-09-04: with the store unreachable, `createOrder` in `/api/quote` threw on
+   every submission trying to mirror the quote as a pending WooCommerce order.
+   The throw was caught, so quotes kept reaching the inbox and HubSpot, but the
+   WP pending-order queue has been empty since the cutover. Setting it back to
+   `true` restores that mirror.
+4. Redeploy
+5. Verify a product page prices correctly, then a real checkout
 
-Card checkout also needs Stripe live keys, which is independent of all of this.
+Stripe live keys are **done**: `pk_live`/`sk_live` went into Vercel Production on
+2026-09-04 and are deployed. `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is stored
+non-sensitive, so `vercel env ls` reads it back. Card checkout stays off
+regardless until step 2 — `paymentsConfigured` needs both a key and card mode.
+
+Do steps 1 and 2 together. `/api/payment-intent` is not gated by
+`NEXT_PUBLIC_CHECKOUT_MODE` — it only checks that a secret key exists. Today the
+unreachable store is what stops it. Fix the hostname while quote mode is still
+on and a direct POST could mint live PaymentIntents.
 
 ## Step 7: only then, decommission
 
