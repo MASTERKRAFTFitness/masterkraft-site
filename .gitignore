@@ -53,3 +53,6 @@ reports/*.xlsx
 # Credentials kept locally, never committed
 Stripe Keys.rtf
 *.rtf
+
+# supabase CLI scratch
+supabase/.temp
