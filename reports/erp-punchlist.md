@@ -1,6 +1,6 @@
 # ERP catalogue punch list
 
-Generated 2026-09-02 from 1429 Unleashed products.
+Generated 2026-09-04 from 1429 Unleashed products.
 319 cards across 11 categories. **170 fixes**, all of them fields in Unleashed.
 
 Every row is one field on one product. Nothing here needs a code change or a deploy —
@@ -219,28 +219,28 @@ the site rebuilds its cards from the ERP every 15 minutes.
 
 **NO PHOTO anywhere** — 16
 
-- `MAACU09L` High Rise Leggings (Woman) (L)
-- `MAACU04L` Long Sleeve Tee (Unisex) (L)
-- `MAACU02L` Oversized Hoodie (Unisex) (L)
-- `MAACU03L` Oversized Tee (Unisex) (L)
-- `MAACU10L` Relaxed Short Sleeve Tee (Woman) (L)
-- `MAACU07L` Short Sleeve Polo (Male) (L)
-- `MAACU05L` Short Sleeve Tee (Male) (L)
+- `MAACU09S` High Rise Leggings (Woman) (S)
+- `MAACU04S` Long Sleeve Tee (Unisex) (S)
+- `MAACU02S` Oversized Hoodie (Unisex) (S)
+- `MAACU03S` Oversized Tee (Unisex) (S)
+- `MAACU10S` Relaxed Short Sleeve Tee (Woman) (S)
+- `MAACU07S` Short Sleeve Polo (Male) (S)
+- `MAACU05S` Short Sleeve Tee (Male) (S)
 - `MAAAU03` Socks
-- `MAACU12L` Sports Bra (Woman) (L)
+- `MAACU12M` Sports Bra (Woman) (S)
 - `MAAACO01` Sweat Towel
-- `MAACU01L` Sweatshirt (Unisex) (L)
-- `MAACU08L` Tank (Male) (L)
+- `MAACU01S` Sweatshirt (Unisex) (S)
+- `MAACU08S` Tank (Male) (S)
 - …and 4 more, in the CSV.
 
 **NO PRICE** — 2
 
 - `MAACU02-XL` Oversided Hoodie (XL)
-- `MAACU02-L` Oversized Hoodie (L)
+- `MAACU02-S` Oversized Hoodie (S)
 
 **TWO CARDS, ONE PRODUCT** — 1
 
-- `MAACU02-L / MAACU02-XL` Oversized Hoodie  vs  Oversided Hoodie
+- `MAACU02-S / MAACU02-XL` Oversized Hoodie  vs  Oversided Hoodie
 
 ### Lighting
 

@@ -10,7 +10,7 @@ Generated 2026-09-04 · `npm run report:dimensions`
 | Disagree | 0 | Both hold a carton and they differ by more than 2%. Someone picks. |
 | Store value suspect | 1 | The old store's carton has a side over 300cm — millimetres in a centimetre field. |
 | Needs measuring — OURS | 429 | M/N/SC codes. Neither system knows. A tape measure, not a lookup. |
-| Needs measuring — other brands | 318 | Snap, REVL and Fernwood. Not sold here; arguably not our job at all. |
+| Needs measuring — portal brands | 318 | Snap, REVL, Fernwood. Live products, sold through the portals and catalogues rather than the public site. |
 
 ## How to import
 
@@ -36,8 +36,10 @@ measured.
 
 ## Needs measuring, by category
 
-The real work, and only the M/N/SC codes the site actually sells. Nothing can
-supply these — they have to be measured.
+The M/N/SC codes the public site sells. Nothing can supply these — they have
+to be measured. The portal brands need the same treatment on their own list;
+they are separated here because it is a different channel, not because it
+does not count.
 
 | category | products |
 |---|---:|

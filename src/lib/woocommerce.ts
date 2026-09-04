@@ -108,31 +108,55 @@ export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
   return items.filter((i) => isBrandSku(i.sku));
 }
 
-// OTHER COMPANIES' BRANDED RANGES must never appear on masterkraft.com:
-// S = Snap, F = Fernwood, R = REVL. The M/N brand filter already keeps them out
-// of the listings, but two routes bypassed it:
-//   1. Clearance runs with `brandFilter: false` to show A-prefixed ex-display
-//      stock, so a Snap or Fernwood item filed there would have been listed.
-//   2. `getProductBySlug` applied no brand filter at all, so all 149 of their
-//      product pages answered 200 on a direct URL even though nothing linked to
-//      them. Unlisted is not the same as not on the website.
-// Excluded explicitly so the rule holds however a product is categorised.
+// WHAT MAY HAVE A PAGE ON THE PUBLIC SITE. An ALLOWLIST, deliberately.
 //
-// SC IS DELIBERATELY EXEMPT: those are the Concept2 ergs (C2 Rower, C2 Ski Erg,
-// C2 Ski Erg Floor Stand), a range MasterKraft distributes. They are named "C2"
-// but carry SC SKUs, and they stay on the site (confirmed 2026-08-20). Note
-// UNLEASHED codes that same range C2*, which is a different scheme again.
+//   M, N   MasterKraft's own, and unbranded stock on N-codes.
+//   SC     the Concept2 ergs MasterKraft distributes under its own name. Named
+//          "C2", SKU'd SC, and they stay (confirmed 2026-08-20). Unleashed codes
+//          the same range C2*, a different scheme again.
+//   A      third-party ex-display clearance, listed only on /clearance, which
+//          runs with brandFilter: false.
 //
-// R WAS THE GAP. This comment named REVL from the start and the rule did not
-// cover it, so 63 R-SKU products kept servable pages and sitemap entries. Only
-// 15 of them are named "REVL ..."; the other 48 are REVL's own-brand copies of
-// lines we also sell, carrying the SAME names as ours — "Abdominal Mat",
-// "Olympic Barbell - 20kg", "Premium Rubber Hex Dumbbells", "Wall Balls" — one
-// per S-SKU Snap equivalent. Indexed, they compete with our own pages for our
-// own product names.
-const FOREIGN_BRAND_SKU_RE = /^(?:S(?!C)|F|R)/i;
-export function isForeignBrandSku(sku?: string): boolean {
-  return !!sku && FOREIGN_BRAND_SKU_RE.test(sku.trim());
+// EVERYTHING ELSE IS A CHANNEL DECISION, NOT A "WE DO NOT SELL IT". S = Snap,
+// F = Fernwood, R = REVL are live products MasterKraft supplies to those brands;
+// they belong in the franchisee portals and the catalogues, and they are absent
+// HERE because masterkraft.com is the public storefront. Their data is worth
+// maintaining in the ERP for exactly the same reasons ours is — see
+// reports/erp-dimensions.md, which counts them separately rather than off.
+//
+// THIS USED TO BE A DENYLIST, AND THAT IS THE BUG IT CAUSED. The rule named
+// S and F, the comment beside it also named REVL, and R was never added — so 63
+// R-SKU products answered 200 on a direct URL and sat in the sitemap for months.
+// Only 15 were named "REVL ..."; the rest were REVL-branded builds of lines we
+// sell publicly, under the SAME names as ours, competing with our own pages.
+//
+// Inverting it makes the default safe. Gold's and Jetts are coming and will be
+// the same arrangement: with a denylist their codes are public from the day they
+// land until somebody remembers this file. With an allowlist they are portal-only
+// until somebody decides otherwise, which is the way round the business rule
+// actually runs. Adding a brand to the PUBLIC site is now the deliberate act.
+//
+// A product with no SKU gets no page, for the same reason.
+const PUBLIC_SITE_SKU_RE = /^(?:[MN]|SC|A)/i;
+
+/** May this product have a page on masterkraft.com at all? */
+export function isPublicSiteSku(sku?: string): boolean {
+  return !!sku && PUBLIC_SITE_SKU_RE.test(sku.trim());
+}
+
+// The KNOWN client brands, named explicitly. Not the complement of the
+// allowlist: a code with an unrecognised prefix is not public, but that does not
+// make it a portal brand — it makes it unknown. Reporting and the admin agent
+// want the difference, and the serving rule above wants neither.
+//
+// Gold's and Jetts go here when their prefixes are known. Nothing on the public
+// site depends on this list being complete, which is the whole point of the
+// allowlist above.
+const PORTAL_BRAND_RE = /^(?:S(?!C)|F|R)/i;
+
+/** Snap, Fernwood, REVL: live products, sold through the portals and catalogues. */
+export function isPortalOnlyBrand(sku?: string): boolean {
+  return !!sku && PORTAL_BRAND_RE.test(sku.trim());
 }
 
 // OBSOLETE PRODUCTS. Two systems retire products independently and the site
@@ -159,7 +183,7 @@ export function isObsolete(p: Retirable): boolean {
 
 // Never served, for any reason: retired, hidden, or another company's brand.
 function isUnservable(p: Retirable): boolean {
-  return isObsolete(p) || isForeignBrandSku(p.sku);
+  return isObsolete(p) || !isPublicSiteSku(p.sku);
 }
 
 // "search" means search-only (excluded from catalogue listings); "catalog"

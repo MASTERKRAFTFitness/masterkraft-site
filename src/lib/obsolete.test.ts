@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   filterListable,
   filterSearchable,
-  isForeignBrandSku,
+  isPortalOnlyBrand,
+  isPublicSiteSku,
   isObsolete,
 } from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
@@ -30,9 +31,11 @@ describe("obsolete products", () => {
   });
 
   it("honours the two one-sided WooCommerce visibilities", () => {
-    const items = [p("A", "catalog"), p("B", "search")];
-    expect(filterListable(items).map((i) => i.sku)).toEqual(["A"]); // search-only is not listed
-    expect(filterSearchable(items).map((i) => i.sku)).toEqual(["B"]); // catalog-only is not searched
+    // Real-shaped codes: both have to clear the public-site allowlist, or this
+    // asserts the brand rule instead of the visibility rule it is named for.
+    const items = [p("MAAA0001", "catalog"), p("MAAA0002", "search")];
+    expect(filterListable(items).map((i) => i.sku)).toEqual(["MAAA0001"]); // search-only is not listed
+    expect(filterSearchable(items).map((i) => i.sku)).toEqual(["MAAA0002"]); // catalog-only is not searched
   });
 });
 
@@ -72,35 +75,42 @@ describe("obsolete products (the ERP half)", () => {
   });
 });
 
-describe("other companies' branded ranges", () => {
-  it("excludes Snap (S), Fernwood (F) and REVL (R)", () => {
-    expect(isForeignBrandSku("SEFRDB13")).toBe(true); // Snap dumbbell rack
-    expect(isForeignBrandSku("FAAAU01")).toBe(true);
-    expect(isForeignBrandSku("RKST3C01")).toBe(true); // REVL Studio Kit
+describe("what may have a page on the public site", () => {
+  it("keeps the portal brands off it — Snap (S), Fernwood (F), REVL (R)", () => {
+    expect(isPortalOnlyBrand("SEFRDB13")).toBe(true); // Snap dumbbell rack
+    expect(isPortalOnlyBrand("FAAAU01")).toBe(true);
+    expect(isPortalOnlyBrand("RKST3C01")).toBe(true); // REVL Studio Kit
   });
 
   // The REVL range is not just the products NAMED "REVL ...". Most of it is
-  // own-brand copies of lines we sell under the same names, one per Snap
-  // equivalent, and those are the ones worth keeping out of the index.
-  it("excludes the REVL copies that share our own product names", () => {
+  // REVL-branded builds of lines we sell publicly, under the same names, one per
+  // Snap equivalent — those are the ones that competed with our own pages.
+  it("excludes the REVL builds that share our own product names", () => {
     for (const sku of ["RBCTMA01", "RWBBOL02", "RMDBRH-GROUP", "RMWAARM-GROUP"]) {
-      expect(isForeignBrandSku(sku)).toBe(true);
+      expect(isPortalOnlyBrand(sku)).toBe(true);
     }
   });
 
   // Named "C2", SKU'd "SC", coded "C2*" in Unleashed. A range MasterKraft
   // distributes, kept on the site by decision 2026-08-20.
   it("keeps the Concept2 range, whose SKUs start SC", () => {
-    expect(isForeignBrandSku("SCRWAR04")).toBe(false);
-    expect(isForeignBrandSku("SCSTAR03")).toBe(false);
-    expect(isForeignBrandSku("SCSTACC04")).toBe(false);
+    expect(isPortalOnlyBrand("SCRWAR04")).toBe(false);
+    expect(isPortalOnlyBrand("SCSTAR03")).toBe(false);
+    expect(isPortalOnlyBrand("SCSTACC04")).toBe(false);
   });
 
   it("leaves MasterKraft, unbranded and clearance stock alone", () => {
-    expect(isForeignBrandSku("MMDBRH-GROUP")).toBe(false);
-    expect(isForeignBrandSku("NBWBFW01")).toBe(false);
-    expect(isForeignBrandSku("AWWPCP01")).toBe(false); // A = third-party clearance
-    expect(isForeignBrandSku(undefined)).toBe(false);
+    expect(isPortalOnlyBrand("MMDBRH-GROUP")).toBe(false);
+    expect(isPortalOnlyBrand("NBWBFW01")).toBe(false);
+    expect(isPortalOnlyBrand("AWWPCP01")).toBe(false); // A = third-party clearance
+    expect(isPortalOnlyBrand(undefined)).toBe(false);
+  });
+
+  // A code we do not recognise is not a portal brand, it is unknown. It still
+  // gets no page — that is the allowlist's job, not this one's.
+  it("does not call an unknown prefix a portal brand", () => {
+    expect(isPortalOnlyBrand("ZZNEW001")).toBe(false);
+    expect(isPublicSiteSku("ZZNEW001")).toBe(false);
   });
 
   // Clearance runs with brandFilter: false, so this is the only thing stopping a
@@ -109,5 +119,33 @@ describe("other companies' branded ranges", () => {
     // AWWPCP01 is real, currently-served clearance stock: A-prefixed, not retired.
     const items = [{ sku: "SEFRDB13" }, { sku: "AWWPCP01" }, { sku: "SCRWAR04" }];
     expect(filterListable(items).map((i) => i.sku)).toEqual(["AWWPCP01", "SCRWAR04"]);
+  });
+
+  // THE POINT OF THE ALLOWLIST. A denylist let REVL onto the site for months
+  // because nobody added R to it. Gold's and Jetts are coming on the same
+  // arrangement, so an unknown prefix must be OFF the public site by default —
+  // otherwise their codes are public from the day they land.
+  it("keeps a brand nobody has heard of yet off the site by default", () => {
+    for (const sku of ["GAACU01", "JBCTMA01", "ZZNEW001"]) {
+      expect(isPublicSiteSku(sku)).toBe(false);
+    }
+  });
+
+  it("still lets clearance and our own codes through", () => {
+    for (const sku of ["MMDBRH-GROUP", "NBWBFW01", "SCRWAR04", "AWWPCP01"]) {
+      expect(isPublicSiteSku(sku)).toBe(true);
+    }
+    // No SKU is not a licence to serve a page.
+    expect(isPublicSiteSku(undefined)).toBe(false);
+  });
+});
+
+describe("the allowlist changes nothing today", () => {
+  // Inverting the rule is only safe if it serves exactly what the denylist did.
+  // 220 is what the live sitemap carried after the REVL exclusion shipped, so
+  // if this number moves, a real product just gained or lost a page.
+  it("serves the same 220 products the denylist did", async () => {
+    const { allProducts } = await import("@/lib/catalogue");
+    expect(filterListable(allProducts()).length).toBe(220);
   });
 });

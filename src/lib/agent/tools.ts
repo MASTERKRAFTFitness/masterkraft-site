@@ -7,7 +7,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import { allProducts, productBySlug, searchCatalogue } from "@/lib/catalogue";
-import { formatPrice, isForeignBrandSku, type WcProduct } from "@/lib/woocommerce";
+import { formatPrice, isPortalOnlyBrand, type WcProduct } from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
 import { parseProductDetail } from "@/lib/spec";
 import { enrich, getLiveEntries, getShipmentsForOrder, getUnleashedMap } from "@/lib/unleashed";
@@ -204,7 +204,9 @@ const getProductTool: AgentTool = {
       stock_qty: live ? live.stock : e?.stockQty ?? null,
       stock_basis: live?.live ? "read live from the ERP just now" : "up to 60 minutes old, the live read failed",
       retired: isRetiredSku(product.sku),
-      foreign_brand: isForeignBrandSku(product.sku),
+      // Not "we don't sell it" — it is sold through the franchisee portals and
+      // the catalogues rather than listed on masterkraft.com.
+      portal_only_brand: isPortalOnlyBrand(product.sku),
       categories: product.categories?.map((c) => c.name) ?? [],
       overview: detail.overviewDescription || detail.overviewShort || product.short_description || null,
       features: detail.features ?? [],

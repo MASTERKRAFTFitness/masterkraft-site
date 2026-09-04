@@ -73,9 +73,12 @@ type RawProduct = {
   ProductBrand?: { BrandName?: string } | null;
 };
 
-// The site's own brand rule (lib/woocommerce BRAND_SKU_RE). Measuring a Snap or
-// REVL carton is not our job — those products are not sold here — so a list that
-// does not separate them reads as four times the work it is.
+// The site's own brand rule (lib/woocommerce BRAND_SKU_RE). Split out because
+// these are two audiences, NOT because one of them does not matter: the S/F/R
+// codes are live products sold through the franchisee portals and the
+// catalogues, just never listed on masterkraft.com. Their cartons are worth the
+// same as ours to whoever picks them — it is simply a different list, for a
+// different channel, and probably a different person.
 const OURS = /^(?:[MN]|SC)/i;
 
 async function productsPage(n: number) {
@@ -242,7 +245,7 @@ it("erp dimensions", { timeout: 300_000 }, async () => {
     `| Disagree | ${conflict.length} | Both hold a carton and they differ by more than ${TOLERANCE * 100}%. Someone picks. |`,
     `| Store value suspect | ${suspect.length} | The old store's carton has a side over ${IMPLAUSIBLE_CM}cm — millimetres in a centimetre field. |`,
     `| Needs measuring — OURS | ${ourMeasure.length} | M/N/SC codes. Neither system knows. A tape measure, not a lookup. |`,
-    `| Needs measuring — other brands | ${measure.length - ourMeasure.length} | Snap, REVL and Fernwood. Not sold here; arguably not our job at all. |`,
+    `| Needs measuring — portal brands | ${measure.length - ourMeasure.length} | Snap, REVL, Fernwood. Live products, sold through the portals and catalogues rather than the public site. |`,
     "",
     "## How to import",
     "",
@@ -266,8 +269,10 @@ it("erp dimensions", { timeout: 300_000 }, async () => {
     "",
     "## Needs measuring, by category",
     "",
-    "The real work, and only the M/N/SC codes the site actually sells. Nothing can",
-    "supply these — they have to be measured.",
+    "The M/N/SC codes the public site sells. Nothing can supply these — they have",
+    "to be measured. The portal brands need the same treatment on their own list;",
+    "they are separated here because it is a different channel, not because it",
+    "does not count.",
     "",
     "| category | products |",
     "|---|---:|",
