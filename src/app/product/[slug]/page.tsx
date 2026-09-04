@@ -331,6 +331,10 @@ export default async function ProductPage({
                     product={{
                       id: product.id,
                       productId: product.id,
+                      // The ERP code, so the server re-prices this line off the
+                      // ERP rather than off a live WooCommerce. The size paths
+                      // have always sent it (lib/variant-line); this one did not.
+                      sku: product.sku,
                       slug: product.slug,
                       name: product.name,
                       image: product.images?.[0]?.src,

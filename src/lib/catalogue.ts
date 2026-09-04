@@ -46,6 +46,18 @@ export function productBySlug(slug: string): WcProduct | undefined {
   return BY_SLUG.get(slug);
 }
 
+const BY_ID = new Map(PRODUCTS.map((p) => [p.id, p]));
+
+/**
+ * The snapshot's copy of a product, by WooCommerce id.
+ *
+ * Added for freight: carton dimensions were being fetched from the LIVE store
+ * for products whose dimensions are already committed here.
+ */
+export function productById(id: number): WcProduct | undefined {
+  return BY_ID.get(id);
+}
+
 export function variationsFor(productId: number): WcVariation[] {
   return VARIATIONS[String(productId)] ?? [];
 }

@@ -9,7 +9,7 @@ import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 export const runtime = "nodejs";
 
 type Body = {
-  items?: { productId?: number; variationId?: number; quantity?: number }[];
+  items?: { productId?: number; variationId?: number; quantity?: number; sku?: string }[];
   delivery?: DeliveryInput;
   serviceId?: string;
 };
@@ -22,12 +22,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "error" }, { status: 400 });
   }
 
+  // Keep a line that has EITHER handle. A size the old store never listed has
+  // productId 0 and only its ERP code, and dropping it here would quote freight
+  // for a lighter consignment than the one we actually ship.
   const refs = (body.items ?? [])
-    .filter((i) => typeof i.productId === "number")
+    .filter((i) => typeof i.productId === "number" || typeof i.sku === "string")
     .map((i) => ({
-      productId: i.productId as number,
+      productId: typeof i.productId === "number" ? i.productId : 0,
       variationId: i.variationId,
       quantity: i.quantity ?? 1,
+      sku: typeof i.sku === "string" ? i.sku : undefined,
     }));
   if (refs.length === 0) {
     return NextResponse.json({ ok: false, reason: "error", detail: "no items" });

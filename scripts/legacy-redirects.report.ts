@@ -46,7 +46,7 @@ import { it } from "vitest";
 import { erpUnits } from "@/lib/erp-catalogue";
 import { allProducts, categoryTerms, type CategoryTerm } from "@/lib/catalogue";
 import { categories } from "@/lib/categories";
-import { isForeignBrandSku, isObsolete } from "@/lib/woocommerce";
+import { isPortalOnlyBrand, isObsolete } from "@/lib/woocommerce";
 import type { UnleashedMap, UnleashedEntry } from "@/lib/unleashed";
 
 const OUT = "src/data/legacy-redirects.json";
@@ -189,7 +189,7 @@ it("writes the legacy redirect map", async () => {
   const products = allProducts();
   let rescued = 0;
   for (const p of products) {
-    const unservable = isObsolete(p) || isForeignBrandSku(p.sku);
+    const unservable = isObsolete(p) || isPortalOnlyBrand(p.sku);
     if (!unservable) continue;
     if (erpSlugs.has(p.slug)) {
       rescued++;
@@ -222,7 +222,7 @@ it("writes the legacy redirect map", async () => {
   // deletes a working page, and config redirects are matched before routing, so
   // nothing downstream can veto it.
   const servable = new Set(
-    products.filter((p) => !(isObsolete(p) || isForeignBrandSku(p.sku))).map((p) => `/product/${p.slug}`)
+    products.filter((p) => !(isObsolete(p) || isPortalOnlyBrand(p.sku))).map((p) => `/product/${p.slug}`)
   );
   for (const s of erpSlugs) servable.add(`/product/${s}`);
   const collisions = redirects.filter((r) => servable.has(r.source));
