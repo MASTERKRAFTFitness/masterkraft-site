@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { stripe, quoteOnlyMode } from "@/lib/stripe";
 import { resolveOrderLines, type CartRef } from "@/lib/woo-orders";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 
@@ -8,6 +8,14 @@ import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 export async function POST(request: Request) {
   if (!stripe) {
     return NextResponse.json({ ok: false, error: "Payments not configured" }, { status: 503 });
+  }
+  // The site is not offering card checkout. The form is hidden client-side; this
+  // is the same answer for anyone who skips the form.
+  if (quoteOnlyMode()) {
+    return NextResponse.json(
+      { ok: false, error: "Card checkout is unavailable. Please request a quote." },
+      { status: 503 }
+    );
   }
 
   let items: CartRef[];

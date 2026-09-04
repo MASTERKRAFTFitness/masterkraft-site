@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { stripe, quoteOnlyMode } from "@/lib/stripe";
 import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/woo-orders";
 import { placeOrder, orderingEnabled, orderMetadata, existingOrderOn } from "@/lib/orders";
 
@@ -24,6 +24,14 @@ export async function POST(request: Request) {
   const { items, billing, shipping, paymentIntentId, customerNote } = payload;
   if (!Array.isArray(items) || items.length === 0 || !billing?.email) {
     return NextResponse.json({ ok: false, error: "Missing items or billing email" }, { status: 400 });
+  }
+  // Same gate as the PaymentIntent, for the same reason: quote mode has to mean
+  // something to a caller that never loaded the page.
+  if (quoteOnlyMode()) {
+    return NextResponse.json(
+      { ok: false, error: "Card checkout is unavailable. Please request a quote." },
+      { status: 503 }
+    );
   }
   if (!orderingEnabled()) {
     return NextResponse.json({ ok: false, error: "Order creation is not enabled" }, { status: 503 });
