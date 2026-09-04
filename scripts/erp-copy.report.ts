@@ -103,8 +103,21 @@ async function productsPage(n: number) {
   return res.json() as Promise<{ Items: RawProduct[]; Pagination?: { NumberOfPages?: number } }>;
 }
 
+// MINIMAL QUOTING, and it is not a style choice.
+//
+// Unleashed's import matches header cells literally, and quoting them broke it:
+// with a BOM the first cell arrives as `\ufeff"*Product Code"` — the quote is not
+// at position 0, so it is never unquoted, and the import fails with
+// "*Product Code. Column is missing from the template." Its own template is
+// unquoted, so this now quotes ONLY the fields that need it: a comma, a quote or
+// a newline. Warranty is the one that does — "Internal Frame: 12 months, Cover:
+// 3 months".
+const cell = (v: string | number) => {
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
 const csv = (rows: (string | number)[][]) =>
-  rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n") + "\n";
+  rows.map((r) => r.map(cell).join(",")).join("\n") + "\n";
 
 /** "L 1,665 × W 805 × H 585 mm" -> millimetres, per axis, whichever are present. */
 function axesMm(v: string): { l?: number; w?: number; h?: number } {
