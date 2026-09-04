@@ -2,7 +2,7 @@
 
 Generated 2026-09-04 · `npm run report:dimensions`
 
-1425 sellable, non-obsolete products in Unleashed.
+1475 sellable, non-obsolete products in Unleashed.
 
 | | count | what it is |
 |---|---:|---|
@@ -10,7 +10,7 @@ Generated 2026-09-04 · `npm run report:dimensions`
 | Disagree | 0 | Both hold a carton and they differ by more than 2%. Someone picks. |
 | Store value suspect | 1 | The old store's carton has a side over 300cm — millimetres in a centimetre field. |
 | Needs measuring — OURS | 429 | M/N/SC codes. Neither system knows. A tape measure, not a lookup. |
-| Needs measuring — portal brands | 318 | Snap, REVL, Fernwood. Live products, sold through the portals and catalogues rather than the public site. |
+| Needs measuring — portal brands | 357 | Snap, REVL, Fernwood. Live products, sold through the portals and catalogues rather than the public site. |
 
 ## How to import
 

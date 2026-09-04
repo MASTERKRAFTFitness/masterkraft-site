@@ -1,8 +1,16 @@
 -- The words for a category, which have nowhere else to live at all.
 --
--- 67 of the old store's 80 category terms carry SEO copy, and it is the one
--- piece of the WooCommerce content with NO possible home in the ERP. Checked
--- rather than assumed: Unleashed's ProductGroups expose exactly four fields —
+-- 67 of the old store's 80 category terms carry SEO copy, but COUNT THEM
+-- PROPERLY before believing that number: only 10 are top-level terms, which are
+-- the category pages. The other 57 belong to child terms, which the site renders
+-- as sub-filter chips carrying a name and a count and no copy at all. So this
+-- table is for roughly ten paragraphs, not sixty-seven, and a schema keyed on
+-- group_name deliberately has nowhere to put the child-term copy — inventing one
+-- would be storing content for a surface that does not exist.
+--
+-- What it does hold is the one piece of WooCommerce content with NO possible
+-- home in the ERP. Checked rather than assumed: ProductGroups expose exactly
+-- four fields —
 --
 --   GroupName, ParentGroupGuid, Guid, LastModifiedOn
 --

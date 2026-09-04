@@ -10,5 +10,9 @@ import { fileURLToPath } from "node:url";
 // out of the default `npm test` include, which stays offline and pure.
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-  test: { environment: "node", include: ["scripts/*.report.ts"] },
+  // *.report.ts writes files; *.load.ts writes to Supabase. Same shape — both
+  // need the "@/" alias and the JSON data imports so they use the app's real
+  // parser rather than a drifting copy — and both are kept out of `npm test`,
+  // which stays offline and pure.
+  test: { environment: "node", include: ["scripts/*.report.ts", "scripts/*.load.ts"] },
 });

@@ -1,6 +1,6 @@
 # ERP catalogue punch list
 
-Generated 2026-09-04 from 1429 Unleashed products.
+Generated 2026-09-04 from 1479 Unleashed products.
 319 cards across 11 categories. **170 fixes**, all of them fields in Unleashed.
 
 Every row is one field on one product. Nothing here needs a code change or a deploy —
