@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import {
-  resolveOrderLines,
-  createWooOrder,
-  ordersEnabled,
-  type CartRef,
-  type OrderAddress,
-} from "@/lib/woo-orders";
+import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/woo-orders";
+import { placeOrder, orderingEnabled, orderMetadata, existingOrderOn } from "@/lib/orders";
 
 // Called after the customer pays. Verifies the PaymentIntent succeeded and that
-// the paid amount matches the SERVER-repriced total, then creates the WC order.
+// the paid amount matches the SERVER-repriced total, then places the order.
+//
+// WHICH SYSTEM the order lands in is lib/orders' business, not this route's.
 export async function POST(request: Request) {
   let payload: {
     items?: CartRef[];
@@ -28,7 +25,7 @@ export async function POST(request: Request) {
   if (!Array.isArray(items) || items.length === 0 || !billing?.email) {
     return NextResponse.json({ ok: false, error: "Missing items or billing email" }, { status: 400 });
   }
-  if (!ordersEnabled()) {
+  if (!orderingEnabled()) {
     return NextResponse.json({ ok: false, error: "Order creation is not enabled" }, { status: 503 });
   }
 
@@ -50,12 +47,18 @@ export async function POST(request: Request) {
 
   // Idempotency: if we already created an order for this PaymentIntent, return it
   // instead of creating a duplicate. Guards against retries and double-submits,
-  // where the same succeeded payment would otherwise mint a second WC order.
-  if (intent.metadata?.wc_order_id) {
+  // where the same succeeded payment would otherwise mint a second order.
+  //
+  // Reads both the neutral keys and the older wc_* ones, so an intent created
+  // before the backend switch still short-circuits. The id stays a STRING: an
+  // Unleashed Guid is not a number, and coercing it would return NaN to a
+  // customer whose card had already been charged.
+  const already = existingOrderOn(intent.metadata);
+  if (already) {
     return NextResponse.json({
       ok: true,
-      orderId: Number(intent.metadata.wc_order_id),
-      orderNumber: intent.metadata.wc_order_number || intent.metadata.wc_order_id,
+      orderId: already.id,
+      orderNumber: already.orderNumber,
       idempotent: true,
     });
   }
@@ -94,7 +97,7 @@ export async function POST(request: Request) {
 
   let order;
   try {
-    order = await createWooOrder({
+    order = await placeOrder({
       billing,
       shipping,
       lines,
@@ -120,12 +123,10 @@ export async function POST(request: Request) {
   // than creating a duplicate. Best-effort: the order already exists, so never
   // fail the response if this write doesn't land.
   try {
-    await stripe.paymentIntents.update(paymentIntentId, {
-      metadata: { wc_order_id: String(order.id), wc_order_number: String(order.number) },
-    });
+    await stripe.paymentIntents.update(paymentIntentId, { metadata: orderMetadata(order) });
   } catch (e) {
     console.warn("[order] could not tag PaymentIntent with order id", e);
   }
 
-  return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.number });
+  return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.orderNumber });
 }

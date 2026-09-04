@@ -6,7 +6,11 @@
 import { getProductById, getVariation } from "@/lib/woocommerce";
 import { getUnleashedMap, enrich, lookupBySku } from "@/lib/unleashed";
 
-const STORE = process.env.WC_STORE_URL;
+// READ AT CALL TIME. As a module-level const this froze at import, which made
+// the gate below unable to see a value set afterwards and untestable — the same
+// fault as the freight code in lib/unleashed-orders. No behaviour change in the
+// server runtime, where the variable is present before this module loads.
+const storeUrl = () => process.env.WC_STORE_URL;
 // The store has GST (10%) enabled and adds it on top of submitted line totals.
 // Our unitPrice is GST-INCLUSIVE, so we divide it back out before submitting.
 const GST = 1.1;
@@ -146,7 +150,7 @@ export type WooOrderResult = {
 };
 
 export function ordersEnabled(): boolean {
-  return process.env.WC_WRITE_ENABLED === "true" && !!STORE;
+  return process.env.WC_WRITE_ENABLED === "true" && !!storeUrl();
 }
 
 export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderResult> {
@@ -205,7 +209,7 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
     ...(input.paymentIntentId ? { transaction_id: input.paymentIntentId } : {}),
   };
 
-  const res = await fetch(`${STORE}/wp-json/wc/v3/orders`, {
+  const res = await fetch(`${storeUrl()}/wp-json/wc/v3/orders`, {
     method: "POST",
     headers: { Authorization: authHeader(), "Content-Type": "application/json" },
     body: JSON.stringify(body),

@@ -82,11 +82,21 @@ export type CustomerStrategy = "generic" | "per-order" | "match-email";
 
 export type CustomerRef = { CustomerCode: string } | { Guid: string };
 
+/**
+ * Deliberately the same shape as woo-orders' OrderAddress, and deliberately not
+ * imported from it: an OrderAddress satisfies this structurally, so the caller
+ * hands the same object to either backend with no mapping, and this module keeps
+ * no dependency on the one it is meant to replace.
+ *
+ * `email` is optional to match. The route rejects an order without one long
+ * before it reaches here, so every reader below simply tolerates its absence
+ * rather than pretending it is guaranteed.
+ */
 export type Billing = {
   first_name?: string;
   last_name?: string;
   company?: string;
-  email: string;
+  email?: string;
   phone?: string;
   address_1?: string;
   address_2?: string;
@@ -130,7 +140,7 @@ export async function resolveCustomer(billing: Billing): Promise<CustomerRef> {
   // email. Guessing either would put bad rows in the ERP.
   throw new Error(
     `Customer strategy "${strategy}" is not implemented yet, so the order for ` +
-      `${billing.email} was not written — see the decision note in lib/unleashed-orders.ts`
+      `${billing.email ?? "an unknown buyer"} was not written — see the decision note in lib/unleashed-orders.ts`
   );
 }
 
@@ -165,7 +175,7 @@ const exGst = (incGst: number) => Math.round((incGst / GST) * 10000) / 10000;
 const isoDay = (d: Date) => d.toISOString();
 
 function nameOf(b: Billing): string {
-  return [b.first_name, b.last_name].filter(Boolean).join(" ").trim() || b.company || b.email;
+  return [b.first_name, b.last_name].filter(Boolean).join(" ").trim() || b.company || b.email || "";
 }
 
 /**
@@ -181,7 +191,7 @@ export function buildComments(input: CreateUnleashedOrderInput): string {
   const parts = [
     "Website order.",
     `Buyer: ${nameOf(b)}`,
-    `Email: ${b.email}`,
+    b.email ? `Email: ${b.email}` : "",
     b.phone ? `Phone: ${b.phone}` : "",
     b.company ? `Company: ${b.company}` : "",
     input.paymentIntentId ? `Stripe: ${input.paymentIntentId}` : "",
