@@ -18,6 +18,8 @@ import {
   createUnleashedOrder,
   ordersEnabled as unleashedOrdersEnabled,
 } from "@/lib/unleashed-orders";
+import { productBySku } from "@/lib/catalogue";
+import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
 
 export type OrderBackend = "woocommerce" | "unleashed";
 
@@ -110,4 +112,141 @@ export function existingOrderOn(
   const id = m.order_id || m.wc_order_id;
   if (!id) return null;
   return { id, orderNumber: m.order_number || m.wc_order_number || id };
+}
+
+// ---------------------------------------------------------------------------
+// QUOTES
+//
+// A quote request is not a sale, and the site's real mechanism for one is the
+// email to the team. Writing it into an order system as well is a convenience
+// for whoever picks it up, and it has always been optional: the WooCommerce
+// version created a `pending` order and has been dormant since WC_WRITE_ENABLED
+// went false.
+//
+// SEPARATELY GATED, because "should a quote request appear in the ERP's order
+// book" is a commercial question nobody has answered, and answering it wrong
+// inflates the order book with speculation. UNLEASHED_QUOTE_ORDERS turns it on;
+// without it the quote still emails and still reaches HubSpot, which is the
+// behaviour today.
+// ---------------------------------------------------------------------------
+
+export type QuoteItemInput = {
+  /** Cart key. NOT a product id — for a size the old store never listed it is a negative hash. */
+  id?: number;
+  /** Unleashed ProductCode. The only identifier certain to mean something. */
+  sku?: string;
+  name: string;
+  qty: number;
+};
+
+export type QuoteContactInput = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  location?: string;
+  notes?: string;
+};
+
+export function quoteOrdersEnabled(): boolean {
+  return orderBackend() === "unleashed"
+    ? process.env.UNLEASHED_QUOTE_ORDERS === "true" && unleashedOrdersEnabled()
+    : wooOrdersEnabled();
+}
+
+/**
+ * Record a quote request in whichever order system is live, if either is.
+ *
+ * Returns "skipped" rather than throwing when it is switched off: the customer's
+ * submission must never fail because a side effect is unconfigured. The caller
+ * already treats a thrown error the same way.
+ */
+export async function placeQuote(
+  contact: QuoteContactInput,
+  items: QuoteItemInput[]
+): Promise<"created" | "skipped"> {
+  if (!quoteOrdersEnabled()) return "skipped";
+
+  if (orderBackend() === "unleashed") {
+    const erp = await getUnleashedMap().catch(() => ({}));
+    const lines = items
+      .filter((i) => !!i.sku)
+      .map((i) => {
+        const entry = lookupBySku(erp, i.sku);
+        return {
+          productId: 0,
+          sku: i.sku,
+          quantity: Math.max(1, Math.floor(i.qty || 1)),
+          // The ERP's price, never the client's. A quote carrying a number the
+          // customer's browser supplied is a number nobody can stand behind.
+          unitPrice: entry?.price ?? 0,
+          name: entry?.name ?? i.name,
+        };
+      });
+    if (lines.length === 0) return "skipped";
+
+    const [first, ...rest] = (contact.name ?? "").split(" ");
+    await createUnleashedOrder({
+      billing: {
+        first_name: first,
+        last_name: rest.join(" "),
+        email: contact.email,
+        phone: contact.phone,
+        company: contact.company,
+      },
+      lines,
+      customerNote:
+        `QUOTE REQUEST — not a sale.` +
+        `${contact.location ? ` Delivery: ${contact.location}.` : ""}` +
+        `${contact.notes ? ` Notes: ${contact.notes}` : ""}`,
+    });
+    return "created";
+  }
+
+  return createWooQuoteOrder(contact, items);
+}
+
+async function createWooQuoteOrder(
+  contact: QuoteContactInput,
+  items: QuoteItemInput[]
+): Promise<"created" | "skipped"> {
+  const key = process.env.WC_CONSUMER_KEY;
+  const secret = process.env.WC_CONSUMER_SECRET;
+  const store = process.env.WC_STORE_URL;
+  if (!key || !secret || !store) return "skipped";
+
+  // THE ID SENT HERE WAS WRONG. It was the CART KEY, which for a variant is the
+  // variation id and for a size the old store never listed is a NEGATIVE hash —
+  // neither of which is a product_id WooCommerce can attach a line to. Resolve
+  // it from the ERP code against the snapshot instead, and drop a line we cannot
+  // identify rather than posting a number that means something else.
+  const line_items = items
+    .map((i) => {
+      const id = (i.sku ? productBySku(i.sku)?.id : undefined) ?? (i.id && i.id > 0 ? i.id : undefined);
+      return id ? { product_id: id, quantity: Math.max(1, Math.floor(i.qty || 1)) } : null;
+    })
+    .filter((l): l is { product_id: number; quantity: number } => l !== null);
+  if (line_items.length === 0) return "skipped";
+
+  const [firstName, ...rest] = (contact.name ?? "").split(" ");
+  const auth = "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
+  const res = await fetch(`${store}/wp-json/wc/v3/orders`, {
+    method: "POST",
+    headers: { Authorization: auth, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status: "pending",
+      set_paid: false,
+      billing: {
+        first_name: firstName || contact.name,
+        last_name: rest.join(" "),
+        email: contact.email,
+        phone: contact.phone,
+        company: contact.company,
+      },
+      line_items,
+      customer_note: `Website quote request.${contact.location ? ` Delivery: ${contact.location}.` : ""}${contact.notes ? ` Notes: ${contact.notes}` : ""}`,
+    }),
+  });
+  if (!res.ok) throw new Error(`WC orders ${res.status}`);
+  return "created";
 }

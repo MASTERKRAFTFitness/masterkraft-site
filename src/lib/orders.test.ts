@@ -16,7 +16,7 @@ vi.mock("@/lib/unleashed-orders", async (orig) => ({
   createUnleashedOrder: (...a: unknown[]) => createUnleashedOrder(...a),
 }));
 
-const { placeOrder, orderBackend, orderingEnabled, orderMetadata, existingOrderOn } =
+const { placeOrder, placeQuote, orderBackend, orderingEnabled, quoteOrdersEnabled, orderMetadata, existingOrderOn } =
   await import("@/lib/orders");
 
 const env = { ...process.env };
@@ -24,6 +24,7 @@ beforeEach(() => {
   createWooOrder.mockReset();
   createUnleashedOrder.mockReset();
   delete process.env.UNLEASHED_WRITE_ENABLED;
+  delete process.env.UNLEASHED_QUOTE_ORDERS;
   delete process.env.WC_WRITE_ENABLED;
   process.env.WC_STORE_URL = "https://store.example";
 });
@@ -138,5 +139,57 @@ describe("one card charge cannot become two orders", () => {
     expect(existingOrderOn({})).toBeNull();
     expect(existingOrderOn(null)).toBeNull();
     expect(existingOrderOn(undefined)).toBeNull();
+  });
+});
+
+describe("a quote is not a sale", () => {
+  const contact = { name: "Dana Okafor", email: "dana@example.com", location: "Geelong" };
+  const items = [
+    { id: -817263, sku: "MMDBRH12", name: "Rubber Hex Dumbbell - 10kg", qty: 2 },
+    { id: 4711, sku: "MBCTMA01", name: "Multi Adjustable Bench", qty: 1 },
+  ];
+
+  it("does nothing at all when no order system is switched on", async () => {
+    await expect(placeQuote(contact, items)).resolves.toBe("skipped");
+    expect(createWooOrder).not.toHaveBeenCalled();
+    expect(createUnleashedOrder).not.toHaveBeenCalled();
+  });
+
+  it("stays out of the ERP order book unless that is asked for separately", async () => {
+    // Writing every quote request into the ERP inflates the order book with
+    // speculation, so the order flag alone is deliberately not enough.
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    expect(quoteOrdersEnabled()).toBe(false);
+    await expect(placeQuote(contact, items)).resolves.toBe("skipped");
+    expect(createUnleashedOrder).not.toHaveBeenCalled();
+  });
+
+  it("writes an ERP quote once both flags are set, marked as not a sale", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    createUnleashedOrder.mockResolvedValue({ guid: "g", orderNumber: "SO-9", status: "Parked", total: 0 });
+    await expect(placeQuote(contact, items)).resolves.toBe("created");
+    const arg = createUnleashedOrder.mock.calls[0][0];
+    expect(arg.customerNote).toMatch(/QUOTE REQUEST — not a sale/);
+    expect(arg.customerNote).toContain("Geelong");
+    expect(arg.billing).toMatchObject({ first_name: "Dana", last_name: "Okafor", email: "dana@example.com" });
+    expect(arg.lines.map((l: { sku: string }) => l.sku)).toEqual(["MMDBRH12", "MBCTMA01"]);
+  });
+
+  it("never carries a price the customer's browser supplied", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    createUnleashedOrder.mockResolvedValue({ guid: "g", orderNumber: "SO-9", status: "Parked", total: 0 });
+    // The ERP map is empty in this test, so every line prices at 0 rather than
+    // taking whatever arrived in the request body.
+    await placeQuote(contact, [{ ...items[0], sku: "MMDBRH12" }]);
+    expect(createUnleashedOrder.mock.calls[0][0].lines[0].unitPrice).toBe(0);
+  });
+
+  it("skips lines with no ERP code rather than inventing one", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    await expect(placeQuote(contact, [{ id: 1, name: "Mystery", qty: 1 }])).resolves.toBe("skipped");
+    expect(createUnleashedOrder).not.toHaveBeenCalled();
   });
 });
