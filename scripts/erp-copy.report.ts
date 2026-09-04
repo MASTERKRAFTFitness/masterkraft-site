@@ -69,6 +69,19 @@ const ATTRIBUTES = ["Assembled size", "Colour", "Material", "Warranty"] as const
 /** Must match the set created in Unleashed exactly. */
 const ATTRIBUTE_SET = process.env.UNLEASHED_ATTRIBUTE_SET || "Product Detail";
 
+// Unleashed caps an attribute value at 50 characters: "The value is too large for
+// this field and should contain no more than 50 letters." It also ABORTS the
+// whole import on the first offending row rather than skipping it — a 328-row
+// file stopped at row 12 and left 10 products updated.
+//
+// OVER-LENGTH VALUES ARE OMITTED, NOT TRUNCATED, and that is a deliberate choice
+// about warranties. Cutting "(1) Frame- 5 years (2) Blocks, pulleys, plates,
+// rods- 3 years (3) Foam, bearings, coatings- 1 year ..." at 50 characters
+// states a warranty that ends where it does not. The full text stays on the
+// website, and every dropped value is listed in the review file for someone to
+// write a short version of.
+const MAX_ATTRIBUTE = 50;
+
 const env = Object.fromEntries(
   readFileSync(".env.local", "utf8")
     .split("\n")
@@ -233,7 +246,14 @@ it("erp copy", { timeout: 300_000 }, async () => {
   // in an import file by accident.
   const attrRows = inErp.filter((r) => Object.keys(r.attrs).length);
   const attrHeader = ["*Product Code", "*Attribute Set", ...ATTRIBUTES];
-  const attrRow = (r: Row) => [r.code, ATTRIBUTE_SET, ...ATTRIBUTES.map((a) => r.attrs[a] ?? "")];
+  const tooLong: string[][] = [];
+  const fit = (r: Row, a: string) => {
+    const v = r.attrs[a] ?? "";
+    if (v.length <= MAX_ATTRIBUTE) return v;
+    tooLong.push([r.code, r.name, a, String(v.length), v]);
+    return "";
+  };
+  const attrRow = (r: Row) => [r.code, ATTRIBUTE_SET, ...ATTRIBUTES.map((a) => fit(r, a))];
   // BOM, as Unleashed's own template carries one.
   const withBom = (body: string) => "\ufeff" + body;
   writeFileSync(ATTRS_CSV, withBom(csv([attrHeader, ...attrRows.map(attrRow)])));
@@ -250,6 +270,11 @@ it("erp copy", { timeout: 300_000 }, async () => {
   );
 
   writeFileSync(CARTONS_CSV, csv([["*Product Code", "Width", "Height", "Depth", "Weight"], ...cartons]));
+
+  writeFileSync(
+    "reports/erp-copy-attributes-toolong.csv",
+    csv([["Product Code", "Name", "Field", "Length", "Full value"], ...tooLong])
+  );
 
   const attrCount = (label: string) => inErp.filter((r) => r.attrs[label]).length;
   const longest = Math.max(0, ...inErp.map((r) => r.notes.length));
@@ -282,6 +307,17 @@ it("erp copy", { timeout: 300_000 }, async () => {
     "| field | products |",
     "|---|---:|",
     ...ATTRIBUTES.map((a) => `| ${a} | ${attrCount(a)} |`),
+    "",
+    "## Values that will not fit",
+    "",
+    `Unleashed caps an attribute at ${MAX_ATTRIBUTE} characters and aborts the whole import on the`,
+    `first row that breaks it. ${tooLong.length} values are over, across ${new Set(tooLong.map((t) => t[0])).size} products —`,
+    "mostly multi-part warranties.",
+    "",
+    "They are **omitted, not truncated**: a warranty cut at 50 characters states",
+    "cover that ends where it does not. The full text is in",
+    "`reports/erp-copy-attributes-toolong.csv` for someone to write a short version",
+    "of, and it stays on the website meanwhile.",
     "",
     "## The prose",
     "",

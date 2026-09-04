@@ -29,6 +29,17 @@ proving the import format before committing the rest.
 | Material | 322 |
 | Warranty | 318 |
 
+## Values that will not fit
+
+Unleashed caps an attribute at 50 characters and aborts the whole import on the
+first row that breaks it. 19 values are over, across 19 products —
+mostly multi-part warranties.
+
+They are **omitted, not truncated**: a warranty cut at 50 characters states
+cover that ends where it does not. The full text is in
+`reports/erp-copy-attributes-toolong.csv` for someone to write a short version
+of, and it stays on the website meanwhile.
+
 ## The prose
 
 `reports/erp-copy-notes.csv` — 335 products, longest 1,537 characters.
