@@ -26,15 +26,22 @@ type Billing = {
   country: string;
 };
 
+// The ONE place a cart becomes server refs, and it feeds both the freight quote
+// and the payment intent — so a field dropped here is dropped from both.
+//
+// sku is the ERP ProductCode. The server re-prices and re-measures from it, and
+// for a size the old store never listed it is the ONLY handle: those carry
+// productId 0, which resolves to nothing on its own.
 function refsFrom(items: CartItem[]) {
   return items.map((i) => ({
     productId: i.productId ?? i.id,
     variationId: i.variationId,
     quantity: i.qty,
+    sku: i.sku,
   }));
 }
 
-type OrderRef = { productId: number; variationId?: number; quantity: number };
+type OrderRef = { productId: number; variationId?: number; quantity: number; sku?: string };
 
 export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: string) => void }) {
   const { items, subtotal, lock, unlock } = useCart();

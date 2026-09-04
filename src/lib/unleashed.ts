@@ -44,6 +44,20 @@ export type UnleashedEntry = {
    * written without a second round trip per line.
    */
   guid?: string;
+  /**
+   * Carton, as the ERP holds it. SAME UNITS as the WooCommerce snapshot —
+   * verified across the 307 codes carrying dimensions in both, where weight and
+   * largest-dimension ratios are exactly 1.000.
+   *
+   * THE AXES ARE NOT IN THE SAME ORDER, which is the part that bites. The
+   * snapshot's length/width/height map to Width/Depth/Height here, not to
+   * Width/Height/Depth: 77/52/62 in the snapshot is 77/62/52 in the ERP. See
+   * lib/freight-server.ts, which is the only place that translates.
+   */
+  widthCm?: number;
+  heightCm?: number;
+  depthCm?: number;
+  weightKg?: number;
 };
 export type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
@@ -113,6 +127,10 @@ async function buildMap(): Promise<UnleashedMap> {
       ProductSubGroup?: { GroupName?: string };
       IsSellable?: boolean;
       Guid?: string;
+      Width?: number;
+      Height?: number;
+      Depth?: number;
+      Weight?: number;
     }>(
     "Products",
     (p) => {
@@ -130,6 +148,10 @@ async function buildMap(): Promise<UnleashedMap> {
         subgroup: p.ProductSubGroup?.GroupName?.trim() || undefined,
         sellable: p.IsSellable !== false,
         guid: p.Guid || undefined,
+        widthCm: p.Width || undefined,
+        heightCm: p.Height || undefined,
+        depthCm: p.Depth || undefined,
+        weightKg: p.Weight || undefined,
       };
     }
     ),
@@ -165,7 +187,7 @@ async function buildMap(): Promise<UnleashedMap> {
 // KEY IS VERSIONED. The entry shape changed when name/image/brand were added;
 // a warm cache under the old key would return entries with no `name`, and every
 // range would silently come back empty. Bump the suffix whenever the shape does.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v5"], {
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v6"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });

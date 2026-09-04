@@ -4,7 +4,8 @@
 // the payment-intent route (which decides what to actually charge) go through
 // here, so the two can never disagree about what a delivery costs.
 
-import { getProductById, getVariation } from "@/lib/woocommerce";
+import { productById, variationsFor } from "@/lib/catalogue";
+import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
 import { quoteFreight, collectionAddress, type FreightItem, type FreightOption } from "@/lib/freight";
 
 export type DeliveryInput = {
@@ -14,45 +15,74 @@ export type DeliveryInput = {
   country?: string;
 };
 
-export type CartRefLike = { productId: number; variationId?: number; quantity: number };
+export type CartRefLike = {
+  productId: number;
+  variationId?: number;
+  quantity: number;
+  /** Unleashed ProductCode. The only handle an ERP-only line has. */
+  sku?: string;
+};
 
 const num = (v: unknown): number => {
   const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, ""));
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
-/** Resolve carton weight and dimensions from WooCommerce, never from the client. */
+/**
+ * Resolve carton weight and dimensions on the SERVER, never from the client.
+ *
+ * TWO SOURCES, SNAPSHOT FIRST. These came from a LIVE WooCommerce, for data that
+ * has been committed in src/data all along — so a freight quote depended on a
+ * store that has had no hostname since 27 August. The snapshot answers for 84%
+ * of servable products against the ERP's 47%, so it leads; the ERP fills the
+ * lines the snapshot has never had, which is every ERP-only unit and every size
+ * the old store did not list.
+ *
+ * THE TWO AGREE ON UNITS AND DISAGREE ON AXES. Across the 307 codes carrying
+ * dimensions in both, weight and largest-dimension ratios are exactly 1.000 —
+ * same units, no conversion. But the ERP orders them Width/Height/Depth against
+ * the snapshot's length/width/height, so 77/52/62 there is 77/62/52 here. The
+ * mapping below is length=Width, width=Depth, height=Height, and it is the whole
+ * reason this translation lives in one place: reading them positionally would
+ * scramble every carton it filled in.
+ */
 export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightItem[]> {
+  const erp = await getUnleashedMap().catch(() => ({}));
   const items: FreightItem[] = [];
+
   for (const ref of refs) {
-    const product = await getProductById(ref.productId).catch(() => null);
     const quantity = Math.max(1, Math.floor(ref.quantity ?? 1));
-    if (!product) {
-      // Unknown line counts as unquotable rather than being dropped, which would
-      // under-declare the consignment and under-charge the delivery.
-      items.push({
-        sku: `product-${ref.productId}`,
-        name: "Unknown",
-        quantity,
-        weightKg: 0,
-        lengthCm: 0,
-        widthCm: 0,
-        heightCm: 0,
-      });
-      continue;
-    }
+    const product = ref.productId ? productById(ref.productId) : undefined;
     // A variation can carry its own carton; fall back to the parent's.
     const variation = ref.variationId
-      ? await getVariation(ref.productId, ref.variationId).catch(() => null)
-      : null;
+      ? variationsFor(ref.productId).find((v) => v.id === ref.variationId)
+      : undefined;
+
+    const code = (ref.sku || variation?.sku || product?.sku || "").trim();
+    const unit = code ? lookupBySku(erp, code) : null;
+
+    const weightKg =
+      num(variation?.weight) || num(product?.weight) || num(unit?.weightKg);
+    const lengthCm =
+      num(variation?.dimensions?.length) || num(product?.dimensions?.length) || num(unit?.widthCm);
+    const widthCm =
+      num(variation?.dimensions?.width) || num(product?.dimensions?.width) || num(unit?.depthCm);
+    const heightCm =
+      num(variation?.dimensions?.height) || num(product?.dimensions?.height) || num(unit?.heightCm);
+
+    // An unresolvable line counts as UNQUOTABLE rather than being dropped.
+    // Dropping it would under-declare the consignment and under-charge the
+    // delivery, which the carrier discovers and we absorb. Zeroes make the
+    // quote fail loudly instead. This is why the fallbacks above never
+    // part-fill: a carton with a weight and no dimensions is not a carton.
     items.push({
-      sku: product.sku ?? String(ref.productId),
-      name: product.name,
+      sku: code || (ref.productId ? String(ref.productId) : "unknown"),
+      name: product?.name ?? unit?.name ?? "Unknown",
       quantity,
-      weightKg: num(variation?.weight) || num(product.weight),
-      lengthCm: num(variation?.dimensions?.length) || num(product.dimensions?.length),
-      widthCm: num(variation?.dimensions?.width) || num(product.dimensions?.width),
-      heightCm: num(variation?.dimensions?.height) || num(product.dimensions?.height),
+      weightKg,
+      lengthCm,
+      widthCm,
+      heightCm,
     });
   }
   return items;
