@@ -38,6 +38,12 @@ export type UnleashedEntry = {
   /** ProductSubGroup.GroupName — the sub-filter on a category page. */
   subgroup?: string;
   sellable?: boolean;
+  /**
+   * The ERP's own primary key. Unleashed identifies a product on a sales order
+   * line by Guid; ProductCode is the human handle. Carried so an order can be
+   * written without a second round trip per line.
+   */
+  guid?: string;
 };
 export type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
@@ -106,6 +112,7 @@ async function buildMap(): Promise<UnleashedMap> {
       ProductGroup?: { GroupName?: string };
       ProductSubGroup?: { GroupName?: string };
       IsSellable?: boolean;
+      Guid?: string;
     }>(
     "Products",
     (p) => {
@@ -122,6 +129,7 @@ async function buildMap(): Promise<UnleashedMap> {
         group: p.ProductGroup?.GroupName?.trim() || undefined,
         subgroup: p.ProductSubGroup?.GroupName?.trim() || undefined,
         sellable: p.IsSellable !== false,
+        guid: p.Guid || undefined,
       };
     }
     ),
@@ -157,7 +165,7 @@ async function buildMap(): Promise<UnleashedMap> {
 // KEY IS VERSIONED. The entry shape changed when name/image/brand were added;
 // a warm cache under the old key would return entries with no `name`, and every
 // range would silently come back empty. Bump the suffix whenever the shape does.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v4"], {
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v5"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });
