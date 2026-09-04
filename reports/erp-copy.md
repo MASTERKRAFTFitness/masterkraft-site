@@ -15,13 +15,18 @@ sellable record in Unleashed — those are the ones that can be enriched today.
 
 These have nowhere to live in Unleashed today. Define an Attribute Set with
 them first (Settings → System Settings → Attribute Sets), then import
-`reports/erp-copy-attributes.csv`.
+`reports/erp-copy-attributes.csv` — in Unleashed's own template shape, including the required
+`*Attribute Set` column naming **Product Detail**. Import it at Inventory >
+Products > Import/Export > Product Attributes.
+
+`reports/erp-copy-attributes-one.csv` is the same file with a single row, for
+proving the import format before committing the rest.
 
 | field | products |
 |---|---:|
 | Assembled size | 328 |
-| Material | 322 |
 | Colour | 320 |
+| Material | 322 |
 | Warranty | 318 |
 
 ## The prose

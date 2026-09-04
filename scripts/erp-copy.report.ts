@@ -52,8 +52,22 @@ const ATTRS_CSV = "reports/erp-copy-attributes.csv";
 const NOTES_CSV = "reports/erp-copy-notes.csv";
 const CARTONS_CSV = "reports/erp-copy-cartons.csv";
 
-/** The four the ERP has nowhere else to put. Order is the import's column order. */
-const ATTRIBUTES = ["Assembled size", "Material", "Colour", "Warranty"] as const;
+// The four the ERP has nowhere else to put.
+//
+// ORDER AND HEADER ARE NOT OURS TO CHOOSE. Unleashed generates a template per
+// attribute set (Inventory > Products > Import/Export > Product Attributes), and
+// that template is the contract:
+//
+//   *Product Code,*Attribute Set,Assembled size,Colour,Material,Warranty
+//
+// Alphabetical, and led by a REQUIRED *Attribute Set column that names the set
+// each row belongs to — so one file both assigns the set and fills the values.
+// An earlier version of this report guessed the shape, omitted that column and
+// ordered the rest by importance; it would have been rejected.
+const ATTRIBUTES = ["Assembled size", "Colour", "Material", "Warranty"] as const;
+
+/** Must match the set created in Unleashed exactly. */
+const ATTRIBUTE_SET = process.env.UNLEASHED_ATTRIBUTE_SET || "Product Detail";
 
 const env = Object.fromEntries(
   readFileSync(".env.local", "utf8")
@@ -200,15 +214,22 @@ it("erp copy", { timeout: 300_000 }, async () => {
 
   mkdirSync("reports", { recursive: true });
 
-  writeFileSync(
-    ATTRS_CSV,
-    csv([
-      ["*Product Code", "Channel", ...ATTRIBUTES],
-      ...inErp
-        .filter((r) => Object.keys(r.attrs).length)
-        .map((r) => [r.code, r.channel, ...ATTRIBUTES.map((a) => r.attrs[a] ?? "")]),
-    ])
-  );
+  // IMPORT-READY: the product code and the attribute columns, nothing else.
+  // A "Channel" column was useful to read and is not a field Unleashed knows —
+  // the per-channel counts live in the summary instead, where they cannot end up
+  // in an import file by accident.
+  const attrRows = inErp.filter((r) => Object.keys(r.attrs).length);
+  const attrHeader = ["*Product Code", "*Attribute Set", ...ATTRIBUTES];
+  const attrRow = (r: Row) => [r.code, ATTRIBUTE_SET, ...ATTRIBUTES.map((a) => r.attrs[a] ?? "")];
+  // BOM, as Unleashed's own template carries one.
+  const withBom = (body: string) => "\ufeff" + body;
+  writeFileSync(ATTRS_CSV, withBom(csv([attrHeader, ...attrRows.map(attrRow)])));
+
+  // One row, for proving the import format before committing 300+ of them.
+  const probe = attrRows.find((r) => r.code === "MBCTMA01") ?? attrRows[0];
+  if (probe) {
+    writeFileSync("reports/erp-copy-attributes-one.csv", withBom(csv([attrHeader, attrRow(probe)])));
+  }
 
   writeFileSync(
     NOTES_CSV,
@@ -238,7 +259,12 @@ it("erp copy", { timeout: 300_000 }, async () => {
     "",
     "These have nowhere to live in Unleashed today. Define an Attribute Set with",
     "them first (Settings → System Settings → Attribute Sets), then import",
-    `\`${ATTRS_CSV}\`.`,
+    `\`${ATTRS_CSV}\` — in Unleashed's own template shape, including the required`,
+    `\`*Attribute Set\` column naming **${ATTRIBUTE_SET}**. Import it at Inventory >`,
+    "Products > Import/Export > Product Attributes.",
+    "",
+    "`reports/erp-copy-attributes-one.csv` is the same file with a single row, for",
+    "proving the import format before committing the rest.",
     "",
     "| field | products |",
     "|---|---:|",
