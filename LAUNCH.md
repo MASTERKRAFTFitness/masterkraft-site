@@ -109,21 +109,67 @@ card payment you need all of:
 
 ---
 
-## 1b. Freight (Australia Post) ⚙️🔎🧠
+## 1b. Freight (two carriers, priced against each other) ⚙️🔎🧠
 
-**Carrier switched from Interparcel to Australia Post (Michael, 2026-08-24.)** The
-adapter is built against their Postage Assessment Calculator API. It turns on when:
+**Australia Post and Easyship are now BOTH asked on every quote, in parallel, and
+the cheapest wins** (added 2026-09-05, `src/lib/freight.ts`). They win opposite
+ends of the catalogue, so neither is redundant — see `docs/easyship-evaluation.md`
+for the measurements. Freight turns on when:
 
-- ⚙️ `AUSPOST_API_KEY` — from the MasterKraft Australia Post account. **Not yet set
-  in `.env.local` or in Vercel.** Until it is, freight stays off.
+- ✅ `AUSPOST_API_KEY` — from the MasterKraft Australia Post account. Set in
+  `.env.local` and in Vercel Production; verified live 2026-08-25.
+- ⚙️ `EASYSHIP_API_TOKEN` — the production access token from the Easyship
+  dashboard, API & Webhooks, integration "MASTERKRAFT Website". **Not yet set in
+  `.env.local` or in Vercel.** Until it is, the router runs Australia Post alone
+  and every bulky cart still says "Calculated on quote".
 - ✅ `FREIGHT_COLLECTION_POSTCODE=3074` (Thomastown VIC) — the despatch warehouse.
-  Set in `.env.local` 2026-08-24. **Still needs adding in Vercel**, or freight
-  works locally and silently does nothing in production.
-- ⚙️ `FREIGHT_MARGIN_PERCENT` — handling margin. **Defaults to 15** (Michael,
-  2026-08-20); set it only to change that.
+- ⚙️ `FREIGHT_COLLECTION_LINE1` — street line of the despatch warehouse
+  (`8/337-339 Settlement Rd`). Australia Post ignores it; **Easyship requires a
+  street on both ends** and falls back to a placeholder without it.
+- ⚙️ `FREIGHT_MARGIN_PERCENT` — handling margin, applied to BOTH carriers.
+  **Defaults to 15** (Michael, 2026-08-20); set it only to change that.
+- ⚙️ `EASYSHIP_PRICES_INCLUDE_GST` — defaults to `true`, which matches what the
+  Easyship dashboard shows. Same trap as its Australia Post twin: wrong in the
+  other direction undercharges every freight-bearing order by 10%.
 
-**Until they are set the checkout says "Calculated on quote" and charges goods
-only. It never says "Free".**
+**ONE CARRIER IS ENOUGH TO QUOTE.** A carrier that is unconfigured or broken is
+dropped and the other still answers. Only an empty pool falls back to "Calculated
+on quote" — and it never says "Free".
+
+**Verify with `npm run check:carriers`**, which quotes three real carts through
+the actual router and prints which carrier won each. `npm run report:carriers`
+prices the two separately across all six lanes and tests rate stability.
+
+### Quotes are cached, and that is load-bearing
+
+`src/lib/freight-cache.ts` sits in front of both carriers, keyed on the cartons,
+the destination, the margin and the GST flags.
+
+- ⚙️ `FREIGHT_CACHE_TTL_SECONDS` — successful quotes. **Defaults to 900** (15
+  minutes: longer than a checkout, far shorter than a rate card). `0` disables.
+- ⚙️ `FREIGHT_CACHE_ERROR_TTL_SECONDS` — failures. **Defaults to 60**, so a
+  carrier that is down or over quota is not re-asked on every keystroke.
+
+**It is not only a cost control.** The checkout quotes to DISPLAY and
+payment-intent quotes again to CHARGE; serving both from one cached answer means
+the two cannot disagree, which removes the "rate drifted between the quote and
+the charge" failure that refuses an order after the card is captured.
+
+It is in-memory and therefore per-lambda on Vercel. The display-then-charge pair
+usually lands on the same warm instance; a cold start misses and costs what it
+costs today.
+
+### ⚠️ The Easyship trial allowance is already exhausted
+
+**Every Easyship call currently returns `403 usage_limit`.** It took ~90 calls on
+2026-09-05, all of it building and testing, not real traffic. The account is a
+free Plus trial with no payment method, expiring in 13 days, with zero shipments.
+
+Nothing is broken by this — the router fails soft and Australia Post answers
+alone — but **the bulky half of the catalogue is back on "Calculated on quote"
+until the allowance resets or the plan is upgraded**, and nothing surfaces the
+403 to anyone. Read `docs/easyship-evaluation.md` before this carries real
+orders, and add an alert on Easyship 403s.
 
 ### 🧠 Decision, Michael 2026-08-24: heavy carts go to the quote flow
 
@@ -131,10 +177,12 @@ Once the key is set, a cart Australia Post cannot carry is **not** charged for g
 with freight invoiced later. It is pushed to the quote flow, the same way an item
 priced on application already is. Nobody is charged with an unknown delivery cost.
 
-**Know what this changes on launch day:** every rack, machine and rig stops being
-buyable by card the moment `AUSPOST_API_KEY` reaches Vercel. That is roughly
-two-thirds of the catalogue moving from "add to cart" to "request a quote". It is
-deliberate. §1d is how to get them back.
+**This is what `EASYSHIP_API_TOKEN` changes.** With Australia Post alone, every
+rack, machine and rig is unbuyable by card — 107 of 186 measured products, moved
+from "add to cart" to "request a quote". Easyship prices that whole segment
+(verified to 601kg and 268cm), so setting the token moves them back the other way.
+Decide deliberately: that is a lot of catalogue becoming card-buyable at a freight
+price nobody has yet checked against a real invoice.
 
 The rejection message now explains itself per reason, so a Sydney customer buying a
 250kg machine is told it ships as freight, not that their address failed.

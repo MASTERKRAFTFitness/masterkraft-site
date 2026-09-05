@@ -836,7 +836,70 @@ snapshot is rebuilt and committed. Nothing rebuilds it automatically.
 
 ---
 
-## 5. Freight (Australia Post)
+## 5. Freight (Australia Post + Easyship, priced against each other)
+
+### The second carrier arrived 2026-09-05
+
+**`quoteFreight()` now asks BOTH carriers in parallel and returns the best of the
+pooled options.** Australia Post via PAC as before; Easyship via
+`POST https://public-api.easyship.com/2024-09/rates`, fronting TNT, Aramex,
+CouriersPlease, Allied, Toll, FedEx, Hubbed and UPS.
+
+**Neither carrier is redundant — they win opposite ends of this catalogue.**
+Measured against the live accounts, Thomastown to a capital
+(`docs/easyship-evaluation.md`):
+
+| carton | lane | AusPost | Easyship |
+|---|---|---|---|
+| 1kg satchel | Perth | **$10.20** | $17.70 |
+| 21kg, 63x53x35 | Melbourne | $30.70 | **$27.94** |
+| 21kg, 63x53x35 | Perth | $149.45 | **$111.20** |
+| 43kg, 150x60x60 | Sydney | *refused* | **$180.84** |
+| 601kg, 200x100x120 | Sydney | *refused* | **$619.96** |
+
+Australia Post charges a FLAT national rate under about 2kg, which Easyship cannot
+beat, then turns steeply zoned and loses badly. Above the parcel limits it does not
+compete at all. So the router asks both and lets `selectOptions()` choose.
+
+**What changed structurally:** an over-limit carton no longer fails the cart, it
+just rules Australia Post out. `oversize` is now only returned when there is no
+second carrier configured to take it. One carrier failing is not a failure; both
+failing is. Option ids are namespaced (`auspost:CODE`, `easyship:UUID`) because
+they travel to the browser and come back to be re-priced when the card is charged.
+
+**`EASYSHIP_API_TOKEN` is NOT set yet**, in `.env.local` or Vercel. Until it is,
+the router runs Australia Post alone and behaves exactly as it did before. See
+`LAUNCH.md` §1b.
+
+- `npm run check:carriers` — three real carts through the actual router, prints
+  which carrier won each, then re-quotes one to prove the cache is serving it.
+- `npm run report:carriers` — prices both separately across all six lanes,
+  weighted by the real destination mix, and tests whether an Easyship rate is
+  stable across two identical calls.
+
+**Quotes are cached** (`src/lib/freight-cache.ts`, 15 min, 60s for failures).
+That is not only about the metered endpoint: display and charge now come from ONE
+carrier answer, so they cannot disagree and refuse an order after the card is
+captured. In-memory, so per-lambda on Vercel.
+
+**⚠️ The Easyship trial allowance was exhausted on 2026-09-05** — ~90 calls of
+building and testing, not traffic — and every call now returns `403 usage_limit`.
+The router fails soft, so nothing broke, but the bulky half is back on
+"Calculated on quote" and nothing surfaces the 403. Two measurements were lost to
+it: rate stability and the AusPost/Easyship crossover weight.
+
+**Two integration traps, recorded so nobody rediscovers them:** an item needs a
+`category` slug (we send `sport_leisure`, HS 9506910000) or every call 422s, and
+the useful half of an Easyship error lives in `error.details`, not `error.message`.
+
+**Four things the evaluation did NOT settle**, all in
+`docs/easyship-evaluation.md`: rate stability across our two quotes, whether the
+invoice matches the quote, tailgate and two-person delivery (still nobody's job),
+and the fact that TNT returned the only rate on every bulky quote. The account is
+also a trial with no payment method and zero shipments. **One real bulky
+consignment answers most of it.**
+
+### Australia Post, as it was
 
 **LIVE in production.** `AUSPOST_API_KEY` and all four `FREIGHT_COLLECTION_*` are
 set in Vercel Production, and the deployment serving the site is newer than they
@@ -881,10 +944,11 @@ PAC prices parcels: 22kg, 105cm longest side, 0.25m³. Of 338 listed products, 2
 carry usable carton data and **111 fit those limits**. 96 are over 22kg and 109 over
 105cm. Racks, rigs, machines and benches are pallet freight and always were.
 
-`quoteFreight` checks the limits **before** calling the API and returns `oversize`,
-which the checkout renders as "Calculated on quote". **The heavy two-thirds still
-need a second carrier** (Mainfreight / Freight Exchange, both already named on the
-Shipping page). That is a commercial decision, not outstanding code.
+`quoteFreight` checks the limits **before** calling PAC, because PAC would only
+reject them. **That is no longer where the story ends:** since 2026-09-05 an
+over-limit consignment goes to Easyship instead of straight to the quote flow, and
+only falls back to "Calculated on quote" if Easyship is unconfigured or fails. See
+the top of this section.
 
 **Correction to earlier versions of this doc:** the "85% quotable / 33 products
 missing dimensions" figure was measured over a narrower set than the shop serves.
@@ -896,7 +960,7 @@ reach card checkout.
 
 ### How it hangs together
 
-- `src/lib/freight.ts` is the domain logic and the AusPost transport,
+- `src/lib/freight.ts` is the domain logic and BOTH carrier transports,
   `src/lib/freight-server.ts` resolves a cart against WooCommerce, and **both the
   quote route and the payment-intent route go through it**, so the price shown and
   the price charged cannot disagree.
