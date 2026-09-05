@@ -6,6 +6,27 @@ export const SITE_URL =
 
 export const SITE_NAME = "MASTERKRAFT";
 
+/**
+ * A site-relative path made absolute, for the places a bare "/foo.jpg" is wrong.
+ *
+ * THE JSON-LD IS THE REASON THIS EXISTS. Google requires every URL in Product
+ * structured data to be fully qualified, and after the 27 August image mirror
+ * every product photograph is served from /product-images/<sku>-1.jpg — a path,
+ * not a URL. next/image resolves those against the current origin and renders
+ * them fine, which is why the breakage is invisible on the page and only shows
+ * up as products missing from Google's free listings and rich results.
+ *
+ * Already-absolute inputs pass through untouched: variant photography still
+ * comes straight from the Unleashed CDN, and prefixing that would 404.
+ */
+export function absoluteUrl(src: string | undefined | null): string {
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  // Protocol-relative (//cdn.example/x.jpg) is absolute apart from the scheme.
+  if (src.startsWith("//")) return `https:${src}`;
+  return `${SITE_URL}/${src.replace(/^\/+/, "")}`;
+}
+
 // Search-engine indexing is OFF by default so the Vercel preview and any staging
 // subdomain are never indexed. Set NEXT_PUBLIC_ALLOW_INDEX=true only on the final
 // production domain at launch.

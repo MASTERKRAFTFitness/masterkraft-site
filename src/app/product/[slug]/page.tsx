@@ -34,7 +34,7 @@ function hashCode(code: string): number {
 import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, absoluteUrl } from "@/lib/site";
 
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
@@ -203,7 +203,9 @@ export default async function ProductPage({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    image: (product.images ?? []).map((i) => i.src).slice(0, 5),
+    // Absolute, because the mirror serves these as bare /product-images paths
+    // and Google rejects a relative URL in structured data. See absoluteUrl.
+    image: (product.images ?? []).map((i) => absoluteUrl(i.src)).filter(Boolean).slice(0, 5),
     description: product.short_description?.replace(/<[^>]*>/g, "").trim() || undefined,
     sku: product.sku || undefined,
     brand: { "@type": "Brand", name: "MasterKraft" },

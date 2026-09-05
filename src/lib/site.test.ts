@@ -18,6 +18,49 @@ afterEach(() => {
   vi.resetModules();
 });
 
+describe("absoluteUrl", () => {
+  const live = { NEXT_PUBLIC_SITE_URL: "https://masterkraft.com" };
+
+  it("qualifies the mirror's bare product-image paths", async () => {
+    const { absoluteUrl } = await withEnv(live);
+    // The exact shape the JSON-LD was emitting relative before this existed.
+    expect(absoluteUrl("/product-images/AMBXPBG03-1.jpg")).toBe(
+      "https://masterkraft.com/product-images/AMBXPBG03-1.jpg",
+    );
+    expect(absoluteUrl("product-images/AMBXPBG03-1.jpg")).toBe(
+      "https://masterkraft.com/product-images/AMBXPBG03-1.jpg",
+    );
+    // No doubled slash where the path already carries one.
+    expect(absoluteUrl("//product-images/x.jpg")).not.toContain("masterkraft.com//");
+  });
+
+  it("leaves absolute URLs alone", async () => {
+    const { absoluteUrl } = await withEnv(live);
+    // Variant photography is the Unleashed CDN's; prefixing it would 404.
+    const cdn = "https://unlappcdn.unleashedsoftware.com/x.jpg";
+    expect(absoluteUrl(cdn)).toBe(cdn);
+    expect(absoluteUrl("http://example.test/x.jpg")).toBe("http://example.test/x.jpg");
+    expect(absoluteUrl("HTTPS://example.test/x.jpg")).toBe("HTTPS://example.test/x.jpg");
+    expect(absoluteUrl("//cdn.example.test/x.jpg")).toBe("https://cdn.example.test/x.jpg");
+  });
+
+  it("returns empty for nothing, so the caller can filter it out", async () => {
+    const { absoluteUrl } = await withEnv(live);
+    expect(absoluteUrl("")).toBe("");
+    expect(absoluteUrl(undefined)).toBe("");
+    expect(absoluteUrl(null)).toBe("");
+  });
+
+  it("follows SITE_URL to whatever host the deployment answers on", async () => {
+    const { absoluteUrl } = await withEnv({
+      NEXT_PUBLIC_SITE_URL: "https://web.test.masterkraft.com",
+    });
+    expect(absoluteUrl("/product-images/x.jpg")).toBe(
+      "https://web.test.masterkraft.com/product-images/x.jpg",
+    );
+  });
+});
+
 describe("isIndexableHost", () => {
   const live = { NEXT_PUBLIC_ALLOW_INDEX: "true", NEXT_PUBLIC_SITE_URL: "https://masterkraft.com" };
 
