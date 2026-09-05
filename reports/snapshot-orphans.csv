@@ -1,0 +1,147 @@
+SKU,Name,Slug,Channel,-GROUP wrapper,Obsolete,Image renders,Servable on site
+ABPBMS-01-1,Plyometric Box 45cm,plyometric-box-45cm,clearance,false,false,true,true
+ABRPPO,Power Bands,power-bands-alt-v,clearance,false,false,true,true
+AMDBRH,Rubber Hex Dumbbells,rubber-hex-dumbbell-alt-v,clearance,false,false,true,true
+AMDEHG,High Grip Dead Ball,high-grip-dead-ball-alt-v,clearance,false,false,true,true
+AMKBUR-GROUP,Urethane Competition Kettlebells (Single),urethane-competition-kettlebells-single,clearance,true,false,true,true
+AWWPCB,Competition Bumper Plates,competition-bumper-plates-alt-v,clearance,false,false,true,true
+AWWPOU,Olympic Urethane Weight Plates,olympic-urethane-weight-plates-alt-v,clearance,false,false,true,true
+MBASADJ-GROUP,Group Fitness Step,group-fitness-step,public,true,false,true,true
+MBRMRL,Foam Roller,foam-roller-v,public,false,false,true,true
+MFRFRR-GROUP,Impact Lock Rubber Tiles,impact-lock-rubber-tiles,public,true,false,true,true
+MMDBPRH-GROUP,Premium Rubber Hex Dumbbell,premium-rubber-hex-dumbbell-3,public,true,false,true,true
+MMDBRH-GROUP,Rubber Hex Dumbbells,rubber-hex-dumbbell-group,public,true,false,true,true
+MMDBUR-GROUP,Urethane Fixed Dumbbells,urethane-fixed-dumbbells-2,public,true,false,true,true
+MMDBVR-GROUP,Virgin Rubber Fixed Dumbbells,virgin-rubber-fixed-dumbbells,public,true,false,true,true
+MMDEHG-GROUP,High Grip Dead Ball,high-grip-dead-ball-4,public,true,false,true,true
+MMDESH-GROUP,Dead Balls,dead-ball-2,public,true,false,true,true
+MMKBPGC-GROUP,Competition Kettlebells,competition-kettlebells,public,true,false,true,true
+MMKBUR-GROUP,Urethane Competition Kettlebells (Single),urethane-competition-kettlebell-3,public,true,false,true,true
+MMMBPR-GROUP,Medicine Ball,medicine-ball-2,public,true,false,true,true
+MMPWPBG-GROUP,Power Bag,power-bag-2,public,true,false,true,true
+MMWAARM-GROUP,Wall Ball,wall-ball-3,public,true,false,true,true
+MWBBFRU-GROUP,Rubber Fixed Barbells,rubber-fixed-barbells-2,public,true,false,true,true
+MWBBFRZ-GROUP,Rubber EZ Fixed Barbells,rubber-ez-fixed-barbells-2,public,true,false,true,true
+MWBBFUR,Urethane Fixed Barbells,urethane-fixed-barbells-v,public,false,false,true,true
+MWBBFUR-GROUP,Urethane Fixed Barbells,urethane-fixed-barbells-2,public,true,false,true,true
+MWWPCB-GROUP,Coloured Bumper Plates,coloured-bumper-plates,public,true,false,true,true
+MWWPCNB-GROUP,Competition Bumper Plates,competition-bumper-plates-3,public,true,false,true,true
+MWWPCP-GROUP,Change Plates,change-plates,public,true,false,true,true
+MWWPOPR-GROUP,Olympic Premium Rubber Weight Plates,olympic-premium-rubber-weight-plates-2,public,true,false,true,true
+MWWPOU,Olympic Urethane Weight Plates,olympic-urethane-weight-plates,public,false,false,true,true
+MWWPOU-GROUP,Olympic Urethane Weight Plates,olympic-urethane-weight-plates-3,public,true,false,true,true
+ABPBMS-01,Plyometric Box 30cm,plyometric-box-30cm,clearance,false,true,true,false
+AEBXACC01,Storage Bin,storage-bin,clearance,false,true,true,false
+AWBBOL05,Olympic Hex Deadlift Barbell (400mm Loadable Sleeves),olympic-hex-deadlift-barbell-350mm-loadable-sleeves,clearance,false,true,true,false
+MBASADJ,Group Fitness Step,group-fitness-step-v,public,false,true,true,false
+MBPBSB,Foam Plyometric Box,foam-plyometric-box-v,public,false,true,true,false
+MFAFRR,Acoustic Underlay,acoustic-underlay-v,public,false,true,true,false
+MFAFRR-GROUP,Acoustic Underlay,acoustic-underlay,public,true,true,true,false
+MFATSY01,Artificial Turf Green (2m X 20m),artificial-turf-green-2m-x-20m,public,false,true,true,false
+MFATSY02,Artificial Turf Blue With White Line (2m X 15m),artificial-turf-blue-with-white-line-2m-x-15m,public,false,true,true,false
+MFRFRR,Impact Lock Rubber Tiles,impact-lock-rubber-tiles-v,public,false,true,true,false
+MFRFRR02,Impact-Lock Rubber Tiles – 20mm (Custom Branding),impact-lock-rubber-tiles-custom-branding,public,false,true,true,false
+MMDBPRH,Premium Rubber Hex Dumbbell,premium-rubber-hex-dumbbell-v,public,false,true,true,false
+MMDBRH,Rubber Hex Dumbbells,rubber-hex-dumbbell-v,public,false,true,true,false
+MMDBUR,Urethane Fixed Dumbbells,urethane-fixed-dumbbells-v,public,false,true,true,false
+MMDBVR,Virgin Rubber Fixed Dumbbells,virgin-rubber-fixed-dumbbells-v,public,false,true,true,false
+MMDEHG,High Grip Dead Ball,high-grip-dead-ball-3,public,false,true,true,false
+MMDESH,Dead Ball,dead-ball-v,public,false,true,true,false
+MMGFWTB,Aerobic Weighted Exercise Bars,aerobic-weighted-exercise-bars-v,public,false,true,true,false
+MMGFWTB-GROUP,Aerobic Weighted Exercise Bars,aerobic-weighted-exercise-bars-2,public,true,true,true,false
+MMKBPGC,Competition Kettlebell,competition-kettlebell-v,public,false,true,true,false
+MMKBUR,Urethane Competition Kettlebells,urethane-competition-kettlebells-v,public,false,true,true,false
+MMMBPR,Medicine Ball,medicine-ball-v,public,false,true,true,false
+MMPWPBG,Power Bag,power-bag-v,public,false,true,true,false
+MMWAARM,Wall Balls,wall-balls-v,public,false,true,true,false
+MMWAARM-2,Wall Balls,wall-balls,public,false,true,true,false
+MSAMSE01,Ab/Back Extension Machine Pro (Selectorize),ab-back-extension-machine-pro-selectorize,public,false,true,true,false
+MSBMSE01,Lat Pulldown Machine Elite (Selectorize),lat-pulldown-machine-elite-selectorize,public,false,true,true,false
+MSBMSE02,Lat Pulldown & Seated Row Machine Pro (Selectorize),lat-pulldown-seated-row-machine-pro-selectorize,public,false,true,true,false
+MSBMSE03,Seated Horizontal Pull Machine Elite (Selectorize),seated-horizontal-pull-machine-elite-selectorize,public,false,true,true,false
+MSBTSE01,Assisted Chin & Dip Machine Elite (Selectorize),assisted-chin-dip-machine-elite-selectorize,public,false,true,true,false
+MSBTSE02,Arm Curl Machine Elite (Selectorize),arm-curl-machine-elite-selectorize,public,false,true,true,false
+MSCSSE02,Pec Deck & Rear Deltoid Machine Elite (Selectorize),pec-deck-rear-deltoid-machine-elite-selectorize,public,false,true,true,false
+MSCSSE03,Chest Press Machine Elite (Selectorize),chest-press-machine-elite-selectorize,public,false,true,true,false
+MSCSSE05,Multi Press Machine Pro (Selectorize),multi-press-machine-pro-selectorize,public,false,true,true,false
+MSLBB01,Glute Ham Bench Pro,glute-ham-bench-pro,public,false,true,true,false
+MSLBSE02,Lying Leg Curl Machine Elite (Selectorize),lying-leg-curl-machine-elite-selectorize,public,false,true,true,false
+MSLBSE06,Leg Extension & Leg Curl Machine Pro (Selectorize),leg-extension-leg-curl-machine-pro-selectorize,public,false,true,true,false
+MWBBFRU,Rubber Fixed Barbells,rubber-fixed-barbells-v,public,false,true,true,false
+MWBBFRZ,Rubber EZ Fixed Barbells,rubber-ez-fixed-barbells-v,public,false,true,true,false
+MWWPCB,Coloured Bumper Plates,coloured-bumper-plates-v,public,false,true,true,false
+MWWPCNB,Competition Bumper Plates,competition-bumper-plates-v,public,false,true,true,false
+MWWPCP,Change Plates,change-plates-v,public,false,true,true,false
+MWWPOPR,Olympic Premium Rubber Weight Plates,olympic-premium-rubber-weight-plates-v,public,false,true,true,false
+RBRPPO,Power Bands,power-bands-2,portal,false,true,true,false
+RBRPPO-GROUP,Power Bands,power-bands,portal,true,false,true,false
+RBRPPOM,Micro Bands,micro-bands,portal,false,true,true,false
+RBRPPOM-GROUP,Micro Bands,micro-bands-revl,portal,true,false,true,false
+RFDA,Logistics Allowance,logistics-allowance,portal,false,false,true,false
+RFRFRR,Acoustic Underlay,acoustic-underlay-r-v,portal,false,true,true,false
+RFRFRR,REVL Impact-Lock Rubber Tiles,impact-lock-rubber-tiles-rev-v,portal,false,true,true,false
+RFRFRR-1,Acoustic Underlay,acoustic-underlay-group,portal,false,false,true,false
+RFRFRR-GROUP,REVL Impact-Lock Rubber Tiles,revl-impact-lock-rubber-tiles,portal,true,false,true,false
+RMDBRH,Premium Rubber Hex Dumbbell,premium-rubber-hex-dumbbell-2,portal,false,true,true,false
+RMDBRH-GROUP,Premium Rubber Hex Dumbbells,premium-rubber-hex-dumbbells,portal,true,false,true,false
+RMDEHG,High Grip Dead Ball,high-grip-dead-ball-2,portal,false,true,true,false
+RMDEHG-GROUP,High Grip Dead Balls,high-grip-dead-balls,portal,true,false,true,false
+RMKBPGC,Competition Kettlebell,competition-kettlebell-2,portal,false,true,true,false
+RMKBPGC-GROUP,Competition Kettlebells,competition-kettlebells-2,portal,true,false,true,false
+RMWAARM,Wall Balls,wall-balls-3,portal,false,true,true,false
+RMWAARM-GROUP,Wall Balls,wall-balls-2,portal,true,false,true,false
+RRSPATT,Rig Crossbeam Single Pipe,rig-crossbeam-single-pipe-2,portal,false,true,true,false
+RRSPATT-GROUP,Rig Crossbeam Single Pipes,rig-crossbeam-single-pipes,portal,true,false,true,false
+RWWPCNB,Pro Bumper Plates,pro-bumper-plates-2,portal,false,true,true,false
+RWWPCNB-GROUP,Pro Bumper Plates,pro-bumper-plates,portal,true,false,true,false
+RWWPCP,Change Plates,change-plates-revl-2,portal,false,true,true,false
+RWWPCP-GROUP,Change Plates,change-plates-revl,portal,true,false,true,false
+SBASADJ,Group Fitness Step,group-fitness-step-v-sf,portal,false,true,false,false
+SBASADJ-GROUP,Group Fitness Step,group-fitness-step-sf,portal,true,false,false,false
+SBPBSB,Foam Plyometric Box,foam-plyometric-box-v-sf,portal,false,true,false,false
+SBRMRL,Foam Roller,foam-roller-v-sf,portal,false,false,false,false
+SFAFRR,Acoustic Underlay,acoustic-underlay-v-sf,portal,false,true,false,false
+SFAFRR-GROUP,Acoustic Underlay,acoustic-underlay-sf,portal,true,true,false,false
+SFRFRR,Impact Lock Rubber Tiles,impact-lock-rubber-tiles-v-sf,portal,false,true,false,false
+SFRFRR-GROUP,Impact Lock Rubber Tiles,impact-lock-rubber-tiles-sf,portal,true,false,false,false
+SFRFRR02,Impact-Lock Rubber Tiles – 20mm (Custom Branding),impact-lock-rubber-tiles-custom-branding-sf,portal,false,true,false,false
+SMDBPRH,Premium Rubber Hex Dumbbell,premium-rubber-hex-dumbbell-v-sf,portal,false,true,false,false
+SMDBPRH-GROUP,Premium Rubber Hex Dumbbell,premium-rubber-hex-dumbbell-3-sf,portal,true,false,false,false
+SMDBRH,Rubber Hex Dumbbells,rubber-hex-dumbbell-v-sf,portal,false,true,false,false
+SMDBRH-GROUP,Rubber Hex Dumbbells,rubber-hex-dumbbell-group-sf,portal,true,false,false,false
+SMDBUR,Urethane Fixed Dumbbells,urethane-fixed-dumbbells-v-sf,portal,false,true,false,false
+SMDBUR-GROUP,Urethane Fixed Dumbbells,urethane-fixed-dumbbells-2-sf,portal,true,false,false,false
+SMDBVR,Virgin Rubber Fixed Dumbbells,virgin-rubber-fixed-dumbbells-v-sf,portal,false,true,false,false
+SMDBVR-GROUP,Virgin Rubber Fixed Dumbbells,virgin-rubber-fixed-dumbbells-sf,portal,true,false,false,false
+SMDEHG,High Grip Dead Ball,high-grip-dead-ball-3-sf,portal,false,true,false,false
+SMDEHG-GROUP,High Grip Dead Ball,high-grip-dead-ball-4-sf,portal,true,false,false,false
+SMDESH,Dead Ball,dead-ball-v-sf,portal,false,true,false,false
+SMDESH-GROUP,Dead Balls,dead-ball-2-sf,portal,true,false,false,false
+SMGFWTB,Aerobic Weighted Exercise Bars,aerobic-weighted-exercise-bars-v-sf,portal,false,true,false,false
+SMGFWTB-GROUP,Aerobic Weighted Exercise Bars,aerobic-weighted-exercise-bars-2-sf,portal,true,true,false,false
+SMKBPGC,Competition Kettlebell,competition-kettlebell-v-sf,portal,false,true,false,false
+SMKBPGC-GROUP,Competition Kettlebells,competition-kettlebells-sf,portal,true,false,false,false
+SMKBUR,Urethane Competition Kettlebells,urethane-competition-kettlebells-v-sf,portal,false,true,false,false
+SMKBUR-GROUP,Urethane Competition Kettlebells (Single),urethane-competition-kettlebell-3-sf,portal,true,false,false,false
+SMMBPR,Medicine Ball,medicine-ball-v-sf,portal,false,true,false,false
+SMMBPR-GROUP,Medicine Ball,medicine-ball-2-sf,portal,true,false,false,false
+SMPWPBG,Power Bag,power-bag-v-sf,portal,false,true,false,false
+SMPWPBG-GROUP,Power Bag,power-bag-2-sf,portal,true,false,false,false
+SMWAARM,Wall Balls,wall-balls-v-sf,portal,false,true,false,false
+SMWAARM-2,Wall Balls,wall-balls-sf,portal,false,true,false,false
+SMWAARM-GROUP,Wall Ball,wall-ball-3-sf,portal,true,false,false,false
+SWBBFRU,Rubber Fixed Barbells,rubber-fixed-barbells-v-sf,portal,false,true,false,false
+SWBBFRU-GROUP,Rubber Fixed Barbells,rubber-fixed-barbells-2-sf,portal,true,false,false,false
+SWBBFRZ,Rubber EZ Fixed Barbells,rubber-ez-fixed-barbells-v-sf,portal,false,true,false,false
+SWBBFRZ-GROUP,Rubber EZ Fixed Barbells,rubber-ez-fixed-barbells-2-sf,portal,true,false,false,false
+SWBBFUR,Urethane Fixed Barbells,urethane-fixed-barbells-v-sf,portal,false,false,false,false
+SWBBFUR-GROUP,Urethane Fixed Barbells,urethane-fixed-barbells-2-sf,portal,true,false,false,false
+SWWPCB,Coloured Bumper Plates,coloured-bumper-plates-v-sf,portal,false,true,false,false
+SWWPCB-GROUP,Coloured Bumper Plates,coloured-bumper-plates-sf,portal,true,false,false,false
+SWWPCNB,Pro Bumper Plates,pro-bumper-plates-2-sf,portal,false,true,false,false
+SWWPCP,Change Plates,change-plates-v-sf,portal,false,true,false,false
+SWWPCP-GROUP,Change Plates,change-plates-sf,portal,true,false,false,false
+SWWPOPR,Olympic Premium Rubber Weight Plates,olympic-premium-rubber-weight-plates-v-sf,portal,false,true,false,false
+SWWPOPR-GROUP,Olympic Premium Rubber Weight Plates,olympic-premium-rubber-weight-plates-2-sf,portal,true,false,false,false
+SWWPOU,Olympic Urethane Weight Plates,olympic-urethane-weight-plates-sf,portal,false,false,false,false
+SWWPOU-GROUP,Olympic Urethane Weight Plates,olympic-urethane-weight-plates-3-sf,portal,true,false,false,false
