@@ -41,6 +41,7 @@
 // carrier and must stay stable for identical inputs, or the re-quote fails to
 // match and the order is refused after the card is captured.
 
+import { reportCarrierFailure } from "@/lib/freight-alert";
 import {
   cacheErrorTtlSeconds,
   cacheTtlSeconds,
@@ -664,10 +665,20 @@ export async function quoteFreight(
 
   const options: FreightOption[] = [];
   const errors: string[] = [];
-  for (const r of [ap, es]) {
+  for (const [carrier, r] of [
+    ["Australia Post", ap],
+    ["Easyship", es],
+  ] as const) {
     if (r === null) continue;
-    if ("error" in r) errors.push(r.error);
-    else options.push(...r);
+    if ("error" in r) {
+      errors.push(`${carrier}: ${r.error}`);
+      // Say so out loud. A carrier dropping out of the pool is invisible from
+      // the outside - the other one answers and the checkout carries on - which
+      // is how an exhausted Easyship allowance went unnoticed for an afternoon.
+      reportCarrierFailure(carrier, r.error);
+    } else {
+      options.push(...r);
+    }
   }
 
   // Nothing could carry it. Say WHY in the most useful order: an over-limit

@@ -340,7 +340,13 @@ describe("what the customer is actually charged", () => {
         headers: { "Content-Type": "application/json" },
       })) as typeof fetch;
     const q = await quoteFreight([item()], delivery);
-    expect(q).toMatchObject({ ok: false, reason: "error", detail: "Length exceeds maximum" });
+    // The detail names the carrier, because with two of them "it failed" is not
+    // enough to act on.
+    expect(q).toMatchObject({
+      ok: false,
+      reason: "error",
+      detail: "Australia Post: Length exceeds maximum",
+    });
   });
 
   it("treats an empty service list as unquotable", async () => {

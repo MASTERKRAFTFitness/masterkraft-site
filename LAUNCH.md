@@ -159,6 +159,24 @@ It is in-memory and therefore per-lambda on Vercel. The display-then-charge pair
 usually lands on the same warm instance; a cold start misses and costs what it
 costs today.
 
+### A carrier that stops answering now says so
+
+`src/lib/freight-alert.ts`. The router fails soft, so a dead carrier is invisible
+from the outside — which is how an exhausted Easyship allowance went unnoticed
+for an afternoon on 2026-09-05. Every carrier failure is now logged as
+`[freight] <carrier> failed (<kind>): <detail>`, and the two kinds that do NOT
+fix themselves — an exhausted quota and a rejected credential — also send one
+email. A network blip stays quiet, because a false alarm at 2am costs more trust
+than it buys.
+
+- ⚙️ `FREIGHT_ALERT_EMAIL` — who to tell. Falls back to `QUOTE_TO_EMAIL`.
+  Needs `RESEND_API_KEY` and `QUOTE_FROM_EMAIL`, both already set.
+- ⚙️ `FREIGHT_ALERT_COOLDOWN_MINUTES` — **defaults to 360** (6 hours), so a busy
+  checkout sends one mail per problem rather than one per request.
+
+Alerting is fire-and-forget and swallows its own errors: it can never slow down
+or break a checkout.
+
 ### ⚠️ The Easyship trial allowance is already exhausted
 
 **Every Easyship call currently returns `403 usage_limit`.** It took ~90 calls on
