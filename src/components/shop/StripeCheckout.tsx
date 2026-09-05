@@ -91,7 +91,16 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
       country: "AU",
     };
     const refs = refsFrom(items);
-    const delivery = { city: b.city, state: b.state, postcode: b.postcode, country: "Australia" };
+    // line1 is here for Easyship, whose schema requires a street on both ends.
+    // The SAME object goes to the quote call and to payment-intent, so the price
+    // shown and the price charged are quoted from identical inputs.
+    const delivery = {
+      line1: b.address_1,
+      city: b.city,
+      state: b.state,
+      postcode: b.postcode,
+      country: "Australia",
+    };
     try {
       // Ask for the delivery options first so the summary can show them, then
       // create the intent for the chosen one. The server re-quotes either way;

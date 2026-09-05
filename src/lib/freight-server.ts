@@ -6,13 +6,15 @@
 
 import { productById, variationsFor } from "@/lib/catalogue";
 import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
-import { quoteFreight, collectionAddress, type FreightItem, type FreightOption } from "@/lib/freight";
+import { quoteFreight, freightConfigured, type FreightItem, type FreightOption } from "@/lib/freight";
 
 export type DeliveryInput = {
   city?: string;
   state?: string;
   postcode?: string;
   country?: string;
+  /** Street line. Australia Post ignores it; Easyship's schema requires one. */
+  line1?: string;
 };
 
 export type CartRefLike = {
@@ -99,9 +101,9 @@ export type FreightDecision = {
 /**
  * Price the delivery for a cart.
  *
- * `required` is false until Australia Post is configured. Until then the checkout
- * carries on as it does today, with freight confirmed on quote - it must still
- * never claim freight is free. Once a key and a collection address exist,
+ * `required` is false until at least one carrier is configured. Until then the
+ * checkout carries on as it does today, with freight confirmed on quote - it must
+ * still never claim freight is free. Once credentials and a collection address exist,
  * freight becomes part of the charge, and a cart that cannot be quoted goes to
  * the quote flow rather than being charged with an unknown delivery cost.
  *
@@ -113,8 +115,7 @@ export async function quoteFreightForRefs(
   delivery?: DeliveryInput,
   chosenServiceId?: string
 ): Promise<FreightDecision> {
-  const configured = Boolean(process.env.AUSPOST_API_KEY) && collectionAddress() !== null;
-  if (!configured) {
+  if (!freightConfigured()) {
     return { required: false, selected: null, options: [], reason: "not_configured" };
   }
 
@@ -130,6 +131,7 @@ export async function quoteFreightForRefs(
     state: delivery?.state?.trim(),
     postcode,
     country: delivery?.country?.trim() || "Australia",
+    line1: delivery?.line1?.trim(),
   });
 
   if (!quote.ok) {
