@@ -1,7 +1,10 @@
 # Work summary email — 6 September 2026
 
 **Draft. Not sent.** No recipient set. Attach `reports/unshippable-products.xlsx`.
-Figures refreshed against live Unleashed on 2026-09-06 at 19:40.
+Figures taken from live Unleashed on 2026-09-06 at 20:25, counting OUR BRANDS
+ONLY (MK, Concept 2, No Brand). Unleashed also holds REVL, SNAP, Golds,
+Fernwood, Hyper Health and Air Locker stock that is not on the site - counting
+it was the mistake in the previous pass.
 
 ---
 
@@ -78,23 +81,26 @@ bad quote, it removed a working sales path from the most valuable things we sell
 - **Apparel stays**, measured or not. It ships in a satchel, and a satchel has
   known dimensions, so it quotes without anyone touching Unleashed.
 
-Where that leaves us today, counted across everything Unleashed lists as
-sellable and priced (1,347 products):
+Where that leaves us today. These are **our own brands only** - MasterKraft,
+Concept 2 and unbranded stock. Unleashed also holds REVL, SNAP, Golds, Fernwood,
+Hyper Health and Air Locker product, none of which is on the site and none of
+which is counted below:
 
 | | |
 |---|---|
-| **fully measured** - freight quotes automatically at checkout | **694 (52%)** |
-| over $500 and unmeasured - on the site, priced by us on enquiry | 122 |
-| under $500 and unmeasured - hidden for now | 531 |
+| sellable and priced | 703 |
+| **fully measured** - freight quotes automatically at checkout | **312 (44%)** |
+| over $500 and unmeasured - on the site, priced by us on enquiry | 94 |
+| under $500 and unmeasured - hidden for now | 297 |
 
 **284 product pages are live on the site.** One page usually covers a range, so
 that is fewer pages than products.
 
 **I want to be straight that this is a bigger job than it first looked.** My
-earlier note said 33 products were affected. That was the count of what a
-customer could see and not buy; the real measurement backlog across the ERP is
-**653 products**, and it is concentrated in Mixed Implements (244),
-Weightlifting (128), Apparel (64) and Strength (58).
+earlier note said 33 products were affected. That was the count a customer could
+see and not buy; the real measurement backlog on our own brands is **391
+products**, concentrated in Mixed Implements, Weightlifting, Apparel and
+Strength.
 
 **The attached spreadsheet is the 33 that matter most** - the ones already on the
 site that a customer can reach. They are the place to start, and the good news is
@@ -147,7 +153,7 @@ Michael
 
 - [ ] Set the recipients. Steve and Gaetana, based on `docs/email-steve-gaetana-update.md`?
 - [ ] Attach `reports/unshippable-products.xlsx`. It is the 33 site-visible
-      products, NOT the 653-product ERP backlog, and the email now says so.
+      products, NOT the 391-product backlog on our own brands, and the email says so.
       Regenerate it if the catalogue has moved — the list is derived, not typed,
       and 36 millimetre fixes plus 13 recovered cartons have landed since.
 - [x] The visibility rule is live in production (`HIDE_UNSHIPPABLE=true`, with the
