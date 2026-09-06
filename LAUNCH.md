@@ -185,6 +185,8 @@ does nothing in production.
 | `FREIGHT_ALERT_EMAIL` | optional | falls back to `QUOTE_TO_EMAIL` |
 | `FREIGHT_ALERT_COOLDOWN_MINUTES` | optional | defaults **360** |
 | `RESEND_API_KEY`, `QUOTE_FROM_EMAIL` | ✅ set | needed for the alert to email rather than only log |
+| `FREIGHT_CARRIERS` | optional | allowlist, defaults to **both**. `easyship` or `auspost` narrows it. See below before narrowing it. |
+| `FREIGHT_MAX_AUTO_QUOTE` | optional | ceiling in dollars; **unset means no cap** |
 | `NEXT_PUBLIC_CHECKOUT_MODE` | ⚙️ `quote` | **remove it to switch card checkout, and therefore freight, back on** |
 
 Set the two MISSING ones and redeploy — a Vercel env change does not reach a
@@ -251,6 +253,27 @@ range and the bulky items that price sensibly sell themselves, and everything
 expensive still reaches a human. Raise it as real invoices confirm what bulky
 freight actually costs. That is the alternative to the all-or-nothing choice of
 switching 107 unvalidated products on at once.
+
+### 🧠 Both carriers, and why narrowing to one costs money
+
+`FREIGHT_CARRIERS` is an allowlist and **defaults to both**. Considered narrowing
+it to Easyship alone on 2026-09-06 for a single dispatch workflow, and kept both
+after measuring what that costs:
+
+```
+1kg parcel, Thomastown -> Perth
+  $11.73  Australia Post Extra small   <- wins
+  $47.20  UPS Express Saver (via Easyship)
+```
+
+Four times the price on the light end, because Australia Post charges a flat
+national rate under about 2kg that no reseller matches. PAC calls are also free
+where Easyship's are metered, so consolidating roughly doubles metered volume.
+
+**If one dispatch workflow is the goal, the right move is not this flag.** It is
+connecting the Australia Post account INSIDE Easyship, under "Your own courier
+accounts", so their rates still appear but labels, tracking and the ERP write-back
+all come from one platform. That needs a paid plan and a payment method.
 
 ### 🧠 Bulky freight is priced on VOLUME, and it is expensive
 

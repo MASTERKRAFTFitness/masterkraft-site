@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { clearFreightCache, freightCacheStats } from "@/lib/freight-cache";
 import {
   collectionAddress,
+  enabledCarriers,
   isOversize,
   itemsToParcels,
   marginPercent,
@@ -777,5 +778,108 @@ describe("the ceiling on what we will quote online", () => {
     const q = await quoteFreight([item()], delivery);
     expect(q.ok).toBe(false);
     if (!q.ok) expect(q.reason).not.toBe("no_services");
+  });
+});
+
+// Michael's call, 2026-09-06: everything through Easyship, for one dispatch
+// workflow, one label source and one tracking feed. Made configuration rather
+// than a deletion so the measured-best setup is one variable away.
+describe("choosing which carriers to ask", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let hits: string[] = [];
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.EASYSHIP_API_TOKEN = "test-token";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    hits = [];
+    clearFreightCache();
+    globalThis.fetch = (async (url: string) => {
+      const u = String(url);
+      hits.push(u);
+      const body = u.includes("easyship")
+        ? { rates: [{ total_charge: 30, courier_service: { id: "es1", name: "TNT - Road Express" } }] }
+        : { services: { service: [{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }] } };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+    clearFreightCache();
+  });
+
+  const asked = (who: string) => hits.some((u) => u.includes(who));
+
+  // Unset must keep both. Nothing should change carrier behaviour because a
+  // variable was forgotten.
+  it("asks both when unconfigured", async () => {
+    delete process.env.FREIGHT_CARRIERS;
+    expect([...enabledCarriers()].sort()).toEqual(["auspost", "easyship"]);
+    await quoteFreight([item()], delivery);
+    expect(asked("auspost")).toBe(true);
+    expect(asked("easyship")).toBe(true);
+  });
+
+  it("routes everything through Easyship when told to", async () => {
+    process.env.FREIGHT_CARRIERS = "easyship";
+    const q = await quoteFreight([item()], delivery);
+    expect(asked("auspost")).toBe(false);
+    expect(asked("easyship")).toBe(true);
+    // Easyship's $30 wins by default, even though Australia Post would have
+    // quoted $20. That is the cost of the decision, asserted rather than implied.
+    if (q.ok) expect(q.options[0].price).toBe(30);
+  });
+
+  it("can be pointed at Australia Post alone", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    const q = await quoteFreight([item()], delivery);
+    expect(asked("easyship")).toBe(false);
+    if (q.ok) expect(q.options[0].price).toBe(20);
+  });
+
+  // With Easyship the only carrier, an over-limit carton is its problem alone -
+  // and it can actually carry it, which Australia Post never could.
+  it("still prices a bulky cart with Easyship alone", async () => {
+    process.env.FREIGHT_CARRIERS = "easyship";
+    const q = await quoteFreight([barbell()], delivery);
+    expect(q.ok).toBe(true);
+    expect(asked("auspost")).toBe(false);
+  });
+
+  // Australia Post alone cannot carry it, so it goes where it went before any
+  // of this existed.
+  it("sends a bulky cart to the quote flow with Australia Post alone", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    expect(await quoteFreight([barbell()], delivery)).toMatchObject({
+      ok: false,
+      reason: "oversize",
+    });
+  });
+
+  // Freight must not read as "on" when the allowlist leaves nobody to ask.
+  it("is not configured when the allowlist excludes every carrier", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    delete process.env.AUSPOST_API_KEY;
+    expect(await quoteFreight([item()], delivery)).toEqual({
+      ok: false,
+      reason: "not_configured",
+    });
+  });
+
+  // The allowlist changes the answer, so a cached price must not outlive it.
+  it("does not serve a price across a change of carrier", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    const a = await quoteFreight([item()], delivery);
+    process.env.FREIGHT_CARRIERS = "easyship";
+    const b = await quoteFreight([item()], delivery);
+    if (a.ok && b.ok) expect(b.options[0].price).not.toBe(a.options[0].price);
   });
 });

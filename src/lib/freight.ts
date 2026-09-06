@@ -200,6 +200,42 @@ export function maxAutoQuote(): number {
   return Number.isFinite(v) && v > 0 ? v : 0;
 }
 
+/**
+ * Which carriers the router is allowed to ask, from `FREIGHT_CARRIERS`.
+ *
+ * A comma-separated allowlist. Unset means BOTH, which is the measured-best
+ * configuration and must stay the default: nothing should change carrier
+ * behaviour because a variable was forgotten.
+ *
+ *   FREIGHT_CARRIERS=easyship           everything through Easyship
+ *   FREIGHT_CARRIERS=auspost            parcels only, bulky to the quote flow
+ *   FREIGHT_CARRIERS=auspost,easyship   both, priced against each other
+ *
+ * WHAT SETTING THIS TO `easyship` COSTS, so the trade is on the record rather
+ * than rediscovered. Australia Post charges a FLAT national rate under about
+ * 2kg that Easyship cannot match - 1kg to Perth measured at $10.20 direct
+ * against $17.70 through Easyship on 2026-09-05 - and PAC calls are free while
+ * Easyship's rates endpoint is metered against a monthly allowance. Routing
+ * everything through one reseller therefore makes light parcels dearer and
+ * roughly doubles metered call volume.
+ *
+ * It buys one dispatch workflow, one label source, one invoice and one tracking
+ * feed, which is a real operational argument and Michael's call (2026-09-06).
+ * The better version of it is connecting the Australia Post account INSIDE
+ * Easyship, so their rates still appear but everything ships from one platform;
+ * that needs a paid plan and a payment method on the account.
+ */
+export function enabledCarriers(): Set<string> {
+  const raw = (process.env.FREIGHT_CARRIERS ?? "").trim();
+  if (!raw) return new Set(["auspost", "easyship"]);
+  return new Set(
+    raw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
 export function collectionAddress(): FreightAddress | null {
   const postcode = process.env.FREIGHT_COLLECTION_POSTCODE;
   const city = process.env.FREIGHT_COLLECTION_CITY;
@@ -223,9 +259,11 @@ export function collectionAddress(): FreightAddress | null {
  * Easyship-only deployment and charge goods with no delivery.
  */
 export function freightConfigured(): boolean {
-  return (
-    collectionAddress() !== null &&
-    Boolean(process.env.AUSPOST_API_KEY || process.env.EASYSHIP_API_TOKEN)
+  if (collectionAddress() === null) return false;
+  const on = enabledCarriers();
+  return Boolean(
+    (on.has("auspost") && process.env.AUSPOST_API_KEY) ||
+      (on.has("easyship") && process.env.EASYSHIP_API_TOKEN)
   );
 }
 
@@ -614,7 +652,7 @@ function cacheKey(parcels: Parcel[], collection: FreightAddress, delivery: Freig
   const to = [delivery.postcode, delivery.city, delivery.state ?? "", delivery.country]
     .map((v) => v.trim().toLowerCase())
     .join("|");
-  const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}`;
+  const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}|${[...enabledCarriers()].sort().join("+")}`;
   return `${collection.postcode}>${to}>${boxes}>${config}`;
 }
 
@@ -677,8 +715,9 @@ export async function quoteFreight(
   // Australia Post out. PAC would reject the request, so asking is a wasted call
   // and a slower checkout.
   const oversize = oversizeSkus(items);
-  const askAusPost = Boolean(auspostKey) && oversize.length === 0;
-  const askEasyship = Boolean(easyshipToken);
+  const on = enabledCarriers();
+  const askAusPost = on.has("auspost") && Boolean(auspostKey) && oversize.length === 0;
+  const askEasyship = on.has("easyship") && Boolean(easyshipToken);
 
   const [ap, es] = await Promise.all([
     askAusPost
