@@ -527,7 +527,14 @@ async function quoteEasyship(
   // suburb, postcode and the carton, so a placeholder keeps a quote on screen
   // while the customer is still typing their address. It is never used to
   // dispatch anything - booking a real consignment will carry the real address.
-  const line = (a: FreightAddress) => a.line1?.trim() || "1 Main St";
+  // TRUNCATED AT 35, because Easyship rejects the WHOLE request if either street
+  // line is longer - "origin_address.line_1 is too long (maximum is 35
+  // characters)" - and it took down every Easyship quote in production on
+  // 2026-09-06 when FREIGHT_COLLECTION_LINE1 was set to a full address rather
+  // than a street. A carrier must not be lost to a config typo, and a slightly
+  // clipped street on a rating call costs nothing: it is the suburb and postcode
+  // that price the consignment.
+  const line = (a: FreightAddress) => (a.line1?.trim() || "1 Main St").slice(0, 35);
   const body = {
     origin_address: {
       line_1: line(collection),

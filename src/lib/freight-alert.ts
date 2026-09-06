@@ -12,9 +12,14 @@
 // site kept quoting Australia Post, the checkout kept working, and the only
 // reason it was noticed is that someone happened to be running the report.
 //
-// SO: log always, and email for the two failures that do not fix themselves -
-// an exhausted quota and a rejected credential. A network blip is noise and
-// resolves on its own; those two persist until a person acts.
+// SO: log always, and email for the three failures that do not fix themselves -
+// an exhausted quota, a rejected credential, and a malformed request. A network
+// blip is noise and resolves on its own; those three persist until a person acts.
+//
+// The third was added the hard way. On 2026-09-06 a 35-character limit on a
+// street line meant Easyship rejected EVERY quote in production. It was logged,
+// classified transient, and would never have been emailed - the site quietly
+// served Australia Post alone and looked entirely healthy from outside.
 //
 // NEVER BLOCKS A QUOTE. Every call here is fire-and-forget and swallows its own
 // errors. An alerting system that can slow down or break a checkout is worse
@@ -23,7 +28,7 @@
 /** How long to stay quiet after alerting about the same thing. */
 const DEFAULT_COOLDOWN_MINUTES = 360; // 6 hours
 
-export type CarrierFailure = "quota" | "auth" | "transient";
+export type CarrierFailure = "quota" | "auth" | "config" | "transient";
 
 /** Last time each carrier+kind was emailed about, so a busy hour sends one mail. */
 const lastAlerted = new Map<string, number>();
@@ -36,14 +41,27 @@ const cooldownMs = (): number => {
 /**
  * What kind of failure this is, from the carrier's own words.
  *
- * Deliberately conservative: anything not clearly a quota or a credential is
- * `transient` and gets logged without waking anyone. A false alarm at 2am costs
- * more trust than it buys.
+ * Deliberately conservative: anything not clearly a quota, a credential or a
+ * malformed request is `transient` and gets logged without waking anyone. A
+ * false alarm at 2am costs more trust than it buys.
  */
 export function classifyFailure(detail: string): CarrierFailure {
   const d = detail.toLowerCase();
   if (d.includes("usage limit") || d.includes("usage_limit") || d.includes("quota")) {
     return "quota";
+  }
+  // A malformed request never fixes itself, and it fails EVERY quote rather than
+  // some. Classified as needing a human after a 35-character street line silently
+  // removed Easyship from production on 2026-09-06 - logged, but as "transient",
+  // so nobody would have been told.
+  if (
+    d.includes("not valid") ||
+    d.includes("invalid_content") ||
+    d.includes("too long") ||
+    d.includes("can't be blank") ||
+    d.includes("is required")
+  ) {
+    return "config";
   }
   if (
     d.includes("unauthor") ||
@@ -95,10 +113,20 @@ export function reportCarrierFailure(carrier: string, detail: string): void {
   const subject =
     kind === "quota"
       ? `MasterKraft freight: ${carrier} has hit its API limit`
-      : `MasterKraft freight: ${carrier} rejected our credentials`;
+      : kind === "config"
+        ? `MasterKraft freight: ${carrier} is rejecting our requests`
+        : `MasterKraft freight: ${carrier} rejected our credentials`;
 
   const body =
-    kind === "quota"
+    kind === "config"
+      ? `${carrier} is refusing every freight quote because our request is malformed.\n\n` +
+        `${detail}\n\n` +
+        `This will not fix itself and it affects EVERY quote, not some. The other ` +
+        `carrier is still answering and anything it cannot carry falls back to ` +
+        `"Calculated on quote", so nothing is broken for customers - but that ` +
+        `carrier is effectively switched off until someone acts.\n\n` +
+        `Usually a configuration value rather than code. Then run: npm run check:carriers`
+      : kind === "quota"
       ? `${carrier} is refusing freight quotes because the API allowance is used up.\n\n` +
         `${detail}\n\n` +
         `Nothing is broken for customers - the other carrier still answers and anything ` +

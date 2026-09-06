@@ -18,8 +18,17 @@ describe("classifying a carrier failure", () => {
     expect(classifyFailure("Invalid API key provided")).toBe("auth");
   });
 
+  // Added the hard way: a 35-character street line made Easyship reject EVERY
+  // quote in production, and it was logged as transient so nobody was told.
+  it("recognises a request we are sending wrong", () => {
+    expect(
+      classifyFailure("The request body content is not valid. origin_address.line_1 is too long (maximum is 35 characters)")
+    ).toBe("config");
+    expect(classifyFailure("parcels[0].items[0].category can't be blank")).toBe("config");
+  });
+
   // A false alarm at 2am costs more trust than it buys, so anything that is not
-  // clearly a quota or a credential resolves on its own and stays quiet.
+  // clearly a quota, a credential or a malformed request stays quiet.
   it("treats anything else as transient", () => {
     expect(classifyFailure("ECONNREFUSED")).toBe("transient");
     expect(classifyFailure("HTTP 503")).toBe("transient");
@@ -80,6 +89,12 @@ describe("alerting a human", () => {
     reportCarrierFailure("Australia Post", "API usage limit exceeded");
     await settle();
     expect(sent).toHaveLength(3);
+  });
+
+  it("emails when we are sending a malformed request", async () => {
+    reportCarrierFailure("Easyship", "The request body content is not valid. line_1 is too long");
+    await settle();
+    expect(sent[0]).toContain("rejecting our requests");
   });
 
   it("stays quiet about a network blip", async () => {
