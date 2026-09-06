@@ -24,6 +24,7 @@
 import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
 import { anchorCodes, compareSizeLabels } from "@/lib/ranges";
+import { defaultCartonFor } from "@/lib/freight";
 import { filterListable, formatPrice, type WcProduct } from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
 
@@ -131,6 +132,11 @@ const plausible = (l: number, w: number, h: number) =>
 
 /** Can this ERP code be freight-quoted, from either source? */
 function codeIsShippable(code: string, entry: UnleashedEntry): boolean {
+  // Some groups have one honest shape and no measurements at all. Apparel is 95
+  // products with zero weights and zero dimensions, and every one goes in the
+  // same satchel - lib/freight's defaultCartonFor supplies it to the quote, so
+  // the product is genuinely shippable and belongs on the site.
+  if (defaultCartonFor(entry.group)) return true;
   const snap = wooPages().get(code.toUpperCase());
   const snapKg = cartonNum(snap?.weight);
   const erpKg = cartonNum(entry.weightKg);

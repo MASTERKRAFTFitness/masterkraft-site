@@ -8,6 +8,7 @@ import { productById, variationsFor } from "@/lib/catalogue";
 import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
 import {
   quoteFreight,
+  defaultCartonFor,
   freightConfigured,
   isPlausibleCarton,
   type FreightItem,
@@ -94,10 +95,16 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
       // The ERP's own axis order, mapped once, here.
       { l: num(unit?.widthCm), w: num(unit?.depthCm), h: num(unit?.heightCm) },
     ];
-    const carton =
-      candidates.find(
-        (c) => c.l > 0 && c.w > 0 && c.h > 0 && isPlausibleCarton({ weight: weightKg, length: c.l, width: c.w, height: c.h })
-      ) ?? { l: 0, w: 0, h: 0 };
+    const found = candidates.find(
+      (c) => c.l > 0 && c.w > 0 && c.h > 0 && isPlausibleCarton({ weight: weightKg, length: c.l, width: c.w, height: c.h })
+    );
+
+    // Nothing measured, but some groups have one honest shape. Apparel goes in a
+    // satchel; see defaultCartonFor. The default supplies the WEIGHT as well,
+    // because those products carry neither - a carton with no weight is not a
+    // carton, and half a default is worse than none.
+    const satchel = found ? null : defaultCartonFor(unit?.group);
+    const carton = found ?? (satchel ? { l: satchel.length, w: satchel.width, h: satchel.height } : { l: 0, w: 0, h: 0 });
     const lengthCm = carton.l;
     const widthCm = carton.w;
     const heightCm = carton.h;
@@ -111,7 +118,7 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
       sku: code || (ref.productId ? String(ref.productId) : "unknown"),
       name: product?.name ?? unit?.name ?? "Unknown",
       quantity,
-      weightKg,
+      weightKg: weightKg || satchel?.weight || 0,
       lengthCm,
       widthCm,
       heightCm,

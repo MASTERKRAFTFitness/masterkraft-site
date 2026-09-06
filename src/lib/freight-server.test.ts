@@ -40,6 +40,8 @@ const erp: UnleashedMap = {
     widthCm: 77, heightCm: 62, depthCm: 52, weightKg: 35,
   },
   MNOCARTON: { price: 50, stock: 1, name: "No Carton" },
+  // Apparel: no weight, no dimensions, and none needed.
+  MAPPAREL1: { price: 80, stock: 1, name: "Sweatshirt (Unisex)", group: "Apparel" },
   // The corrected carton, as the unit-fix import writes it into Unleashed.
   ABPBSB04: {
     price: 200, stock: 1, name: "Foam Plyometric Box 12in",
@@ -160,6 +162,33 @@ describe("a carton that could not be real is not used", () => {
   // With no plausible carton anywhere the line is unquotable, which fails the
   // whole cart loudly rather than shipping an under-declared consignment.
   it("reports nothing rather than a number nobody believes", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 202, sku: "MNODIMS1", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([0, 0, 0]);
+  });
+});
+
+// Apparel is 95 products with zero weights and zero dimensions, and every one
+// goes in the same satchel. Measuring them to learn that is not work worth doing.
+describe("the satchel default", () => {
+  it("gives an apparel product a carton and a weight", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 0, sku: "MAPPAREL1", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([40, 30, 10]);
+    expect(item.weightKg).toBe(1);
+  });
+
+  // The default must never override something real.
+  it("does not override a measured product", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 101, sku: "MBPB3I101", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([77, 52, 62]);
+    expect(item.weightKg).toBe(35);
+  });
+
+  // And it applies to apparel ONLY: "no dimensions" in Strength spans a 2kg
+  // collar and a 300kg rack, so there is no honest default there.
+  it("leaves an unmeasured non-apparel product unquotable", async () => {
     const { refsToFreightItems } = await import("@/lib/freight-server");
     const [item] = await refsToFreightItems([{ productId: 202, sku: "MNODIMS1", quantity: 1 }]);
     expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([0, 0, 0]);

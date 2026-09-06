@@ -326,6 +326,33 @@ export function isPlausibleCarton(p: Parcel): boolean {
   return (p.length * p.width * p.height) / 1e6 <= MAX_PLAUSIBLE_VOLUME_M3;
 }
 
+// A DEFAULT CARTON, FOR THE ONE CASE WHERE GUESSING IS HONEST.
+//
+// This codebase refuses to guess a carton everywhere else, and it is right to:
+// an invented box under-declares a consignment, the carrier finds out, and we
+// absorb the difference. That argument does not hold for a t-shirt.
+//
+// Apparel is 95 products with ZERO weights and ZERO dimensions recorded, and
+// measuring 95 hoodies to discover they go in a satchel is not work worth doing.
+// Every one of them fits the same satchel, and the numbers below are chosen to
+// be GENEROUS rather than accurate: over-declaring raises the price the customer
+// is quoted, which is recoverable, while under-declaring produces a carrier
+// invoice larger than what we charged, which is not.
+//
+// 40 x 30 x 10cm at 1kg is 0.012m3 - comfortably a parcel by every Australia Post
+// limit, so apparel prices as a satchel rather than as freight.
+//
+// KEEP THIS LIST SHORT. It is defensible for apparel because the whole group is
+// one shape. It would not be defensible for Strength, where "no dimensions"
+// spans a 2kg collar and a 300kg rack.
+export const SATCHEL_GROUPS = new Set(["Apparel"]);
+export const DEFAULT_SATCHEL: Parcel = { weight: 1, length: 40, width: 30, height: 10 };
+
+/** The stand-in carton for a group that has one, or null for everything else. */
+export function defaultCartonFor(group?: string): Parcel | null {
+  return group && SATCHEL_GROUPS.has(group) ? { ...DEFAULT_SATCHEL } : null;
+}
+
 /** True when a carton is outside what Australia Post will carry as a parcel. */
 export function isOversize(p: Parcel): boolean {
   const volumeM3 = (p.length * p.width * p.height) / 1e6;
