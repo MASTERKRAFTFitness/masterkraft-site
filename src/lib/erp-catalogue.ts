@@ -101,6 +101,47 @@ const EXCLUDED_GROUPS = new Set(["Other Costs", "Clearance", "Storage"]);
 const BRAND_ORDER = ["MK", "CONCEPT 2", "NO BRAND"];
 const OUR_BRANDS = new Set(BRAND_ORDER);
 
+// HIDE WHAT CANNOT BE SHIPPED (Michael, 2026-09-06).
+//
+// Freight needs a weight AND all three carton dimensions. Without them
+// itemsToParcels returns `incomplete_dimensions` and the WHOLE cart is
+// unquotable, not just the line - so one unmeasured product is a tripwire under
+// every basket it can join.
+//
+// THIS HAS TO LIVE HERE, not only in woocommerce.ts. filterListable covers the
+// snapshot-backed listings, but product pages and the sitemap resolve through
+// erpUnitBySlug and erpUnits, which build from the ERP map. Hiding in one and
+// not the other leaves a product absent from every listing and still answering
+// 200 on its own URL, which is worse than either.
+//
+// IT MUST CONSULT BOTH SOURCES. lib/freight-server resolves a carton from the
+// snapshot first and falls back to the ERP, and 18 products get theirs only from
+// the snapshot. Judging on the ERP alone would hide products that quote
+// perfectly well.
+const cartonNum = (v: unknown) => {
+  const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+/** Same bounds as lib/freight's isPlausibleCarton: this is data entry, not carrier limits. */
+const plausible = (l: number, w: number, h: number) =>
+  l > 0 && w > 0 && h > 0 &&
+  [l, w, h].every((x) => x >= 0.5 && x <= 300) &&
+  (l * w * h) / 1e6 <= 3;
+
+/** Can this ERP code be freight-quoted, from either source? */
+function codeIsShippable(code: string, entry: UnleashedEntry): boolean {
+  const snap = wooPages().get(code.toUpperCase());
+  const snapKg = cartonNum(snap?.weight);
+  const erpKg = cartonNum(entry.weightKg);
+  if (!snapKg && !erpKg) return false;
+  if (plausible(cartonNum(snap?.dimensions?.length), cartonNum(snap?.dimensions?.width), cartonNum(snap?.dimensions?.height))) return true;
+  // The ERP's own axis order.
+  return plausible(cartonNum(entry.widthCm), cartonNum(entry.depthCm), cartonNum(entry.heightCm));
+}
+
+const hideUnshippable = () => process.env.HIDE_UNSHIPPABLE === "true";
+
 const SEP = " - ";
 
 // Garment sizes. Apparel is named "Sweatshirt (Unisex) (L)" rather than
@@ -191,6 +232,9 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
     if (entry.sellable === false || !entry.name || !entry.group) continue;
     if (!OUR_BRANDS.has(entry.brand ?? "")) continue;
     if (EXCLUDED_GROUPS.has(entry.group)) continue;
+    // Drop the individual SIZE, not the whole range: a rack that is measured in
+    // three sizes and not in a fourth should still sell the three.
+    if (hideUnshippable() && !codeIsShippable(code, entry)) continue;
     const { name, size } = splitUnitName(entry.name, entry.brand);
     if (!name) continue;
     // NUL-joined, not space-joined: "Mixed Implements" and "Rubber Hex
