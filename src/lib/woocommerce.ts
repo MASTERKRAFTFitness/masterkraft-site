@@ -175,7 +175,12 @@ export function isPortalOnlyBrand(sku?: string): boolean {
 //
 // A MISSING `catalog_visibility` counts as visible: it has to be asked for in
 // `_fields`, so a caller that forgets it must not silently empty the page.
-type Retirable = { catalog_visibility?: string; sku?: string };
+type Retirable = {
+  catalog_visibility?: string;
+  sku?: string;
+  weight?: string;
+  dimensions?: { length?: string; width?: string; height?: string };
+};
 
 export function isObsolete(p: Retirable): boolean {
   return p.catalog_visibility === "hidden" || isRetiredSku(p.sku);
@@ -186,11 +191,52 @@ function isUnservable(p: Retirable): boolean {
   return isObsolete(p) || !isPublicSiteSku(p.sku);
 }
 
+// UNSHIPPABLE PRODUCTS, hidden on request (Michael, 2026-09-06).
+//
+// Freight needs a weight AND all three carton dimensions; without them
+// itemsToParcels returns `incomplete_dimensions` and the WHOLE cart becomes
+// unquotable, not just the line. So an unmeasured product is a tripwire under
+// every basket it can join, and 34 of the 220 served products are one.
+//
+// OFF BY DEFAULT, and that is deliberate. Hiding a product also removes it from
+// the quote flow, which is a working sales path - these are not broken listings,
+// they are listings a human has to price freight for. The 34 include the C2
+// rower and ski erg at $1,250 and $1,200. Set HIDE_UNSHIPPABLE=true to hide them,
+// and expect to be asked where the ergs went.
+//
+// THE FIX IS A TAPE MEASURE, NOT THIS FLAG. 34 products is an afternoon, and
+// every one measured turns the flag back off for that product automatically.
+// reports/unshippable-products.xlsx is the list.
+const hideUnshippable = () => process.env.HIDE_UNSHIPPABLE === "true";
+
+const num = (v: unknown) => {
+  const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+/** Same bounds as lib/freight's isPlausibleCarton, duplicated here rather than
+ * imported to keep this module free of the freight domain - it is the one
+ * chokepoint every visibility rule already lives at. */
+function isShippable(p: { weight?: string; dimensions?: { length?: string; width?: string; height?: string } }): boolean {
+  const kg = num(p.weight);
+  const l = num(p.dimensions?.length);
+  const w = num(p.dimensions?.width);
+  const h = num(p.dimensions?.height);
+  if (!kg || !l || !w || !h) return false;
+  if ([l, w, h].some((s) => s < 0.5 || s > 300)) return false;
+  return (l * w * h) / 1e6 <= 3;
+}
+
 // "search" means search-only (excluded from catalogue listings); "catalog"
 // means catalogue-only (excluded from search). Nothing in the store uses either
 // today, but honouring them keeps us faithful to WooCommerce's own semantics.
 export function filterListable<T extends Retirable>(items: T[]): T[] {
-  return items.filter((i) => !isUnservable(i) && i.catalog_visibility !== "search");
+  return items.filter(
+    (i) =>
+      !isUnservable(i) &&
+      i.catalog_visibility !== "search" &&
+      (!hideUnshippable() || isShippable(i))
+  );
 }
 
 export function filterSearchable<T extends Retirable>(items: T[]): T[] {
