@@ -66,8 +66,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
+    // A LINE WITH NO ERP CODE IS ALREADY DEAD, and it is dropped here without
+    // asking the server anything.
+    //
+    // `sku` only became part of a cart line on 2026-09-02, so a basket saved
+    // before that has lines carrying nothing but a WooCommerce id. Nothing can
+    // be done with such a line: cart-eligibility refuses to charge for it,
+    // freight cannot be quoted without the ERP code, and it cannot be written to
+    // an Unleashed order. It also cannot be matched against the availability
+    // check below, so left alone it would sit in the basket forever - the exact
+    // failure this whole path exists to prevent.
+    //
+    // This does not need the network, so unlike the check below it does not fail
+    // open. There is nothing to be uncertain about: no code, no line.
+    const unusable = restored.filter((i) => !i.sku);
+    const usable = restored.filter((i) => i.sku);
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (restored.length > 0) setItems(restored);
+    if (usable.length > 0) setItems(usable);
+    if (unusable.length > 0) setRemoved(unusable.map((i) => i.name));
     setReady(true);
 
     // THE CART OUTLIVES THE CATALOGUE. It is stored in this browser, so a
@@ -75,7 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // portal brand, or hidden for want of a measured carton. Left alone, the
     // customer reaches a checkout they cannot complete for a line they can no
     // longer open to remove, and has to empty the whole basket to escape.
-    const skus = restored.map((i) => i.sku).filter((s): s is string => !!s);
+    const skus = usable.map((i) => i.sku).filter((s): s is string => !!s);
     if (skus.length === 0) return;
 
     let live = true;
@@ -88,9 +105,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .then((d: { unavailable?: string[] }) => {
         const gone = new Set((d.unavailable ?? []).map((s) => s.toUpperCase()));
         if (!live || gone.size === 0) return;
-        // Name them before dropping them, so the notice can say WHICH.
-        setRemoved(restored.filter((i) => i.sku && gone.has(i.sku.toUpperCase())).map((i) => i.name));
-        setItems((prev) => prev.filter((i) => !i.sku || !gone.has(i.sku.toUpperCase())));
+        // Name them before dropping them, so the notice can say WHICH. Appended,
+        // not assigned: any line already dropped for having no code must stay
+        // named in the same notice.
+        setRemoved((prev) => [
+          ...prev,
+          ...usable.filter((i) => i.sku && gone.has(i.sku.toUpperCase())).map((i) => i.name),
+        ]);
+        setItems((prev) => prev.filter((i) => i.sku && !gone.has(i.sku.toUpperCase())));
       })
       // Fails open: a basket must not be emptied by a network error.
       .catch(() => {});
