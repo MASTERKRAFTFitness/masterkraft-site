@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
-import { track, trackBeginCheckout } from "@/lib/analytics";
+import { trackBeginCheckout, trackLead } from "@/lib/analytics";
 import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout from "@/components/shop/StripeCheckout";
 
@@ -68,7 +68,7 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      track("generate_lead", { currency: "AUD", value: subtotal, items: items.length });
+      trackLead(subtotal, items.length);
       clear();
       setDone(true);
     } catch (err) {

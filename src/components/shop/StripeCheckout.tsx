@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
-import { track } from "@/lib/analytics";
+import { trackPurchase } from "@/lib/analytics";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
@@ -331,7 +331,7 @@ function PayForm({
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Order could not be recorded.");
-      track("purchase", { currency: "AUD", value: charge, transaction_id: data.orderNumber });
+      trackPurchase({ id: String(data.orderNumber), value: charge });
       // Hand the confirmation up to the page BEFORE clearing the cart: clearing
       // flips the page's canPay gate and unmounts this component, so the page
       // must own the "order confirmed" screen for it to survive.
