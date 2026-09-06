@@ -60,7 +60,9 @@ export default function NavProgress() {
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="rounded-2xl bg-carbon/85 backdrop-blur-sm px-6 py-5 shadow-xl">
+      {/* text-white sets the mark's currentColor - without it the spinner is
+          black on a near-black panel. */}
+      <div className="rounded-2xl bg-carbon/85 text-white backdrop-blur-sm px-6 py-5 shadow-xl">
         <BrandSpinner size={44} />
       </div>
     </div>
