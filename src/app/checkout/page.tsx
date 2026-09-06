@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { trackBeginCheckout, trackLead } from "@/lib/analytics";
+import { cartSellableByCard } from "@/lib/cart-eligibility";
 import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout from "@/components/shop/StripeCheckout";
 
@@ -17,14 +18,10 @@ export default function CheckoutPage() {
   const { items, subtotal, clear, ready } = useCart();
   // Card checkout when Stripe is configured AND every item has a real price.
   // Carts containing "Contact for pricing" items fall back to the quote flow.
-  // A line with no WooCommerce product cannot be re-priced by resolveOrderLines,
-  // which fails closed — so it must never reach the card form. The ERP carries
-  // sizes the old store never listed; those sell through the quote flow.
-  const canPay =
-    paymentsConfigured &&
-    ready &&
-    items.length > 0 &&
-    items.every((i) => i.price > 0 && i.productId > 0);
+  // Every line must be re-pricable server-side before a card is charged. That
+  // rule lives in lib/cart-eligibility, which explains why it is now the ERP
+  // ProductCode that decides it and no longer the WooCommerce product id.
+  const canPay = paymentsConfigured && ready && cartSellableByCard(items);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
