@@ -25,8 +25,12 @@ Everything that could be finished without the domain switchover has been.
   (283) matches the servable set exactly. No console errors. Mobile pass clean.
 
 **Blockers, all waiting on the domain (§2):**
-1. ⚙️ **Stripe is in TEST mode.** `pk_test` is baked into the deployed bundle, so
-   the card form renders and every real card would be declined.
+1. ~~⚙️ **Stripe is in TEST mode.**~~ **Live keys are in** (Michael, 2026-09-06).
+   Not independently confirmed by reading the bundle, because it cannot be: the
+   site is in quote mode, so no publishable key is shipped to the browser at all
+   (12 chunks checked 2026-09-06, no `pk_live` and no `pk_test`). Vercel's own
+   dashboard is the only place this is visible. **Stripe is no longer the gate —
+   see the checkout-mode line below.**
 2. ⚙️ `NEXT_PUBLIC_SITE_URL` is `https://web.test.masterkraft.com`, so every
    canonical, sitemap entry and share link points at a test subdomain.
 3. ⚙️ `NEXT_PUBLIC_ALLOW_INDEX` is **not set at all**, so `robots.txt` is
@@ -92,12 +96,33 @@ Resend. If the vars below are absent the submission is accepted but **goes nowhe
 confirm (a) the email lands and (b) a HubSpot contact/submission appears. (This
 creates a real contact + email, so do it deliberately as the final check.)
 
-### Card checkout — only if launching with payments 🧠
-**Correction (2026-08-20): checkout is NOT quote-only as configured.**
-`paymentsConfigured` in `src/lib/stripe-client.ts` is simply "a publishable key is
-present", and staging has a **`pk_test`** key set, so the card form shows and would
-reject real cards. To launch quote-only, **remove the Stripe keys**. To enable live
-card payment you need all of:
+### Card checkout — the one remaining gate ⚙️🔎
+
+**Superseded (2026-09-06).** The 2026-08-20 correction below said
+`paymentsConfigured` was "simply a publishable key is present", so quote-only
+meant removing the Stripe keys. **That is no longer how the code works.** It now
+reads `!!key && checkoutMode === "card"`, and `payment-intent` refuses with a 503
+on the server as well, so the flag is a real rule rather than a hidden form.
+
+**Production is in QUOTE MODE right now.** Verified 2026-09-06 by fetching
+`https://masterkraft.com/checkout`: it serves the banner "Card payment is briefly
+unavailable while we move our systems", which renders only when
+`checkoutMode === "quote"`.
+
+**This is what stops freight running in production.** In quote mode
+`paymentsConfigured` is false, so `canPay` is false, so `StripeCheckout` never
+renders, so `/api/freight/quote` is never called. Both carriers, the cache and
+the alerting are all correct and all dormant until this flag changes.
+
+To enable live card payment, now that the keys are in:
+- 🧠 the decision that bulky products should be card-buyable at a freight price
+  no invoice has yet validated. See `docs/easyship-evaluation.md`.
+- ⚙️ **remove `NEXT_PUBLIC_CHECKOUT_MODE` from Vercel Production** (or set it to
+  `card`). Nothing else switches the card form back on.
+- ⚙️ the freight variables below, or freight works locally and silently does
+  nothing in production.
+
+Historical, kept because it explains the shape of the code:
 - 🧠 decision to go live with payments now vs. later.
 - ⚙️ `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` — from the store's
   Stripe account.
@@ -135,6 +160,35 @@ for the measurements. Freight turns on when:
 **ONE CARRIER IS ENOUGH TO QUOTE.** A carrier that is unconfigured or broken is
 dropped and the other still answers. Only an empty pool falls back to "Calculated
 on quote" — and it never says "Free".
+
+### The Vercel Production checklist for freight
+
+Everything the freight path reads, from `grep process.env` across `freight.ts`,
+`freight-cache.ts`, `freight-alert.ts` and `freight-server.ts`. **Anything marked
+MISSING is only in `.env.local` today**, which means it works on a laptop and
+does nothing in production.
+
+| variable | state | notes |
+|---|---|---|
+| `AUSPOST_API_KEY` | ✅ set | verified live 2026-08-25 |
+| `EASYSHIP_API_TOKEN` | ⚙️ **MISSING** | Easyship dashboard, API & Webhooks, "MASTERKRAFT Website" |
+| `FREIGHT_COLLECTION_POSTCODE` | ✅ set | `3074` |
+| `FREIGHT_COLLECTION_CITY` | ✅ set | `Thomastown` |
+| `FREIGHT_COLLECTION_STATE` | ✅ set | `VIC` |
+| `FREIGHT_COLLECTION_COUNTRY` | optional | defaults to `Australia` |
+| `FREIGHT_COLLECTION_LINE1` | ⚙️ **MISSING** | `8/337-339 Settlement Rd`. AusPost ignores it; **Easyship requires a street on both ends** and falls back to a placeholder |
+| `FREIGHT_MARGIN_PERCENT` | optional | defaults to **15**, applied to both carriers |
+| `AUSPOST_PRICES_INCLUDE_GST` | optional | defaults `true` |
+| `EASYSHIP_PRICES_INCLUDE_GST` | optional | defaults `true` |
+| `FREIGHT_CACHE_TTL_SECONDS` | optional | defaults **900**; `0` disables |
+| `FREIGHT_CACHE_ERROR_TTL_SECONDS` | optional | defaults **60** |
+| `FREIGHT_ALERT_EMAIL` | optional | falls back to `QUOTE_TO_EMAIL` |
+| `FREIGHT_ALERT_COOLDOWN_MINUTES` | optional | defaults **360** |
+| `RESEND_API_KEY`, `QUOTE_FROM_EMAIL` | ✅ set | needed for the alert to email rather than only log |
+| `NEXT_PUBLIC_CHECKOUT_MODE` | ⚙️ `quote` | **remove it to switch card checkout, and therefore freight, back on** |
+
+Set the two MISSING ones and redeploy — a Vercel env change does not reach a
+build that already shipped.
 
 **Verify with `npm run check:carriers`**, which quotes three real carts through
 the actual router and prints which carrier won each. `npm run report:carriers`

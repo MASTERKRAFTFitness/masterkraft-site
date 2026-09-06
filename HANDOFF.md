@@ -22,12 +22,22 @@ left on Netregistry deliberately, and a real message was received after the chan
 the card form is hidden and every cart goes to the quote flow. Two things have to
 happen before card checkout returns, in either order:
 
-1. **Stripe live keys** in Vercel Production. Still `pk_test_51OgYExS…`,
-   re-confirmed **3 September** by reading the deployed bundle. Michael sets these.
-   Nothing is mis-selling meanwhile - quote mode hides the card form - but this
-   stays the top item because card checkout cannot return without it.
+1. ~~**Stripe live keys** in Vercel Production.~~ **Done** - live keys are in
+   (Michael, 2026-09-06). This can no longer be confirmed from the bundle the way
+   3 September's `pk_test_51OgYExS…` was: quote mode means no publishable key is
+   shipped to the browser at all, and 12 chunks checked on 2026-09-06 carry
+   neither `pk_live` nor `pk_test`. Vercel's dashboard is the only view of it.
+   **So the flag itself is now the only thing standing between here and card
+   checkout** - and `NEXT_PUBLIC_CHECKOUT_MODE=quote` is confirmed still live,
+   because `https://masterkraft.com/checkout` served the quote-mode banner
+   ("Card payment is briefly unavailable...") when fetched on 2026-09-06.
 2. **Paul moves WooCommerce to a subdomain** (`docs/email-paul-subdomain.md`),
    then `WC_STORE_URL` changes and `NEXT_PUBLIC_CHECKOUT_MODE` is removed.
+
+**Freight is dormant until that flag changes.** In quote mode `paymentsConfigured`
+is false, so `canPay` is false, so `StripeCheckout` never renders, so
+`/api/freight/quote` is never called. The two-carrier router, the quote cache and
+the carrier alerting are all live in the code and all unreachable in production.
 
 The buy path (payment-intent, order, freight quote) is the only thing that reads
 the live store. Everything a visitor browses comes from the committed snapshot,
