@@ -126,9 +126,16 @@ function freightMessage(reason?: string): string {
     // alternative is telling them their delivery is too expensive to sell them,
     // which is true, useless, and reads as a rebuke.
     case "too_expensive":
-      return "This order ships as freight rather than parcel post, so we price delivery per order. Request a quote and our team will confirm the cost with you.";
+    // ALSO the same sentence, and this one matters most (Michael, 2026-09-06).
+    // It used to say "we don't have shipping dimensions on file", which tells a
+    // customer about OUR record-keeping and invites the obvious question. It is
+    // also the wrong frame: only items over the enquiry threshold reach checkout
+    // unmeasured - the under-$500 ones are hidden - so in practice these are
+    // racks, trainers and machines that ship as freight and were always going to
+    // be priced by a person. That is what the customer needs to know, and it is
+    // true whether or not anybody has measured the carton.
     case "incomplete_dimensions":
-      return "We don't have shipping dimensions on file for one or more items in this order. Request a quote and our team will confirm delivery with you.";
+      return "This order ships as freight rather than parcel post, so we price delivery per order. Request a quote and our team will confirm the cost with you.";
     case "no_delivery_address":
       return "Please enter your delivery suburb and postcode so we can calculate freight.";
     default:
