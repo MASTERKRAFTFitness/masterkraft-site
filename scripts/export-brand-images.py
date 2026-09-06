@@ -22,9 +22,17 @@ MODES
   white        JPEG on flat white, for a layout that wants opaque assets.
   tile         JPEG on #e6e6e6, matching the shop. Rarely what a catalogue wants.
 
-IN-SCENE PHOTOGRAPHY IS PASSED THROUGH UNTOUCHED and marked in the manifest. A
-lifestyle shot has no flat backdrop to remove, and cutting one out would take
-the room with it.
+A SWEEP IS RECOGNISED BY BEING FLAT, NOT BY BEING PALE. SNAP shoots its plates,
+barbells and caps on flat BLACK, which the shop's lightness floor rejects and a
+white page renders as a black box — the same defect as the white one, inverted.
+So `is_studio` asks whether the border is all one colour instead: measured here,
+sweeps score 1.00 and a photo whose subject runs off the frame scores 0.71-0.84.
+
+WHAT IS PASSED THROUGH UNTOUCHED, and marked in the manifest: photography where
+the subject reaches the frame edge, which is mostly the worn-apparel shots.
+There is no backdrop to lift off those without taking the model with it, and a
+black tee on a black sweep cannot be separated by colour at all. Those few need
+a person with a pen tool, and the manifest is where to find them.
 
 Writes a manifest.csv beside the images — code, description, mode, and whether a
 backdrop was found — so the catalogue can be laid out from it directly.
@@ -138,7 +146,7 @@ def main():
             continue
 
         colour = bd.backdrop_colour(im)
-        studio = bd.is_studio(colour)
+        studio = bd.is_studio(im)
         safe = re.sub(r"[^A-Za-z0-9_-]", "_", code)
 
         if args.mode == "transparent":
@@ -164,7 +172,7 @@ def main():
             "code": code,
             "description": desc,
             "file": name,
-            "backdrop": "removed" if studio else "in-scene, left as shot",
+            "backdrop": "removed" if studio else "subject reaches the frame edge - left as shot",
             "backdrop_colour": "#%02x%02x%02x" % colour,
         })
 
