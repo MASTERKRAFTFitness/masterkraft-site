@@ -21,6 +21,12 @@ mode.
 1484 products read from Unleashed; the rest are retired, flagged obsolete,
 or priced at $0 which is "contact for pricing" and never reaches card checkout.
 
+⚠️ **This counts EVERY sellable ERP code, not only what the public site lists.**
+The site is a brand allowlist, so REVL and other non-MasterKraft codes are in this
+denominator but are not on masterkraft.com at all. The customer-facing quote-only
+share is therefore **lower than the headline** above. Treat this as the ceiling on
+the problem, not its size, and narrow it by brand before quoting it to anyone.
+
 ## Where the quote-only lines are
 
 Groups with three or more sellable products, worst coverage first.
