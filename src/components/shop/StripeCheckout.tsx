@@ -6,6 +6,7 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
 import { trackPurchase } from "@/lib/analytics";
+import { freightMessage } from "@/lib/freight-message";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
@@ -65,6 +66,17 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
   const [freight, setFreight] = useState<{ service: string; carrier: string; price: number } | null>(null);
   const [freightServiceId, setFreightServiceId] = useState<string | undefined>(undefined);
   const [freightRequired, setFreightRequired] = useState(false);
+  // FREIGHT IS QUOTED IN ITS OWN STEP NOW (Michael, 2026-09-06). It used to be
+  // quoted and charged behind one button, so the first time a customer saw the
+  // delivery cost was the screen where they were asked for a card. They now
+  // press Calculate Freight, see the price in the summary, and only then get a
+  // Continue to Payment button.
+  //
+  // `quoted` means "the freight shown belongs to what is in the form RIGHT NOW".
+  // Any edit to the form clears it, because a price quoted for one address must
+  // never be the price charged for another.
+  const [quoted, setQuoted] = useState(false);
+  const [freightReason, setFreightReason] = useState<string | null>(null);
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,13 +84,16 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
   // Safety net: never leave the cart locked if the customer navigates away
   // mid-payment (unmount) without going back or completing.
   useEffect(() => unlock, [unlock]);
+  // Freight was quoted AND there is something to charge for. When freight is
+  // required but could not be priced there is no card path, so the button stays
+  // on Calculate Freight and the message below explains why.
+  const canContinue = quoted && !(freightRequired && !freight);
+  const freightNotice = quoted && freightRequired && !freight ? freightMessage(freightReason ?? undefined) : null;
 
-  async function startPayment(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const f = new FormData(e.currentTarget);
-    const b: Billing = {
+  /** Everything the customer typed, in the shape both calls below want. */
+  function billingFrom(form: HTMLFormElement): Billing {
+    const f = new FormData(form);
+    return {
       first_name: String(f.get("first_name") ?? ""),
       last_name: String(f.get("last_name") ?? ""),
       email: String(f.get("email") ?? ""),
@@ -90,52 +105,72 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
       postcode: String(f.get("postcode") ?? ""),
       country: "AU",
     };
-    const refs = refsFrom(items);
-    // line1 is here for Easyship, whose schema requires a street on both ends.
-    // The SAME object goes to the quote call and to payment-intent, so the price
-    // shown and the price charged are quoted from identical inputs.
-    const delivery = {
-      line1: b.address_1,
-      city: b.city,
-      state: b.state,
-      postcode: b.postcode,
-      country: "Australia",
-    };
-    try {
-      // Ask for the delivery options first so the summary can show them, then
-      // create the intent for the chosen one. The server re-quotes either way;
-      // the id below is a choice, not a price.
-      const fq = await fetch("/api/freight/quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: refs, delivery, serviceId: freightServiceId }),
-      })
-        .then((r) => r.json())
-        .catch(() => null);
-      if (fq) {
-        setFreightRequired(Boolean(fq.required));
-        // The server returns the cheapest plus, where one exists, a faster
-        // service. Letting the customer switch between them needs an
-        // address -> options -> payment step that does not exist yet, so for now
-        // the cheapest is taken. See LAUNCH.md.
-        if (fq.selected?.id) setFreightServiceId(fq.selected.id);
-      }
+  }
 
-      const res = await fetch("/api/payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: refs, delivery, freightServiceId: fq?.selected?.id ?? freightServiceId }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
-      setBilling(b);
-      setOrderRefs(refs);
-      setClientSecret(data.clientSecret);
-      setServerTotal(typeof data.amount === "number" ? data.amount : null);
-      setServerGoods(typeof data.goodsTotal === "number" ? data.goodsTotal : null);
-      setFreight(data.freight ?? null);
-      setPhase("payment");
-      lock(); // freeze the cart while this payment is in flight
+  // line1 is here for Easyship, whose schema requires a street on both ends. The
+  // SAME object goes to the quote call and to payment-intent, so the price shown
+  // and the price charged are quoted from identical inputs.
+  const deliveryFrom = (b: Billing) => ({
+    line1: b.address_1,
+    city: b.city,
+    state: b.state,
+    postcode: b.postcode,
+    country: "Australia",
+  });
+
+  /** Step one: price the delivery and show it, charging nothing. */
+  async function calculateFreight(b: Billing) {
+    const fq = await fetch("/api/freight/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: refsFrom(items), delivery: deliveryFrom(b), serviceId: freightServiceId }),
+    })
+      .then((r) => r.json())
+      .catch(() => null);
+    if (!fq) throw new Error("We couldn't calculate delivery just now. Please try again.");
+    setFreightRequired(Boolean(fq.required));
+    setFreightReason(fq.reason ?? null);
+    // The server returns the cheapest plus, where one exists, a faster service.
+    // Letting the customer switch between them needs a chooser that does not
+    // exist yet, so the cheapest is taken. See LAUNCH.md.
+    if (fq.selected?.id) setFreightServiceId(fq.selected.id);
+    setFreight(
+      fq.selected
+        ? { service: fq.selected.service, carrier: fq.selected.carrier, price: fq.selected.price }
+        : null
+    );
+    setQuoted(true);
+  }
+
+  /** Step two: create the PaymentIntent for the freight already on screen. */
+  async function startPayment(b: Billing) {
+    const refs = refsFrom(items);
+    const delivery = deliveryFrom(b);
+    const res = await fetch("/api/payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: refs, delivery, freightServiceId }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
+    setBilling(b);
+    setOrderRefs(refs);
+    setClientSecret(data.clientSecret);
+    setServerTotal(typeof data.amount === "number" ? data.amount : null);
+    setServerGoods(typeof data.goodsTotal === "number" ? data.goodsTotal : null);
+    setFreight(data.freight ?? null);
+    setPhase("payment");
+    lock(); // freeze the cart while this payment is in flight
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const b = billingFrom(e.currentTarget);
+    setLoading(true);
+    setError(null);
+    try {
+      if (canContinue) await startPayment(b);
+      else await calculateFreight(b);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -143,11 +178,23 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
     }
   }
 
+  // A quote belongs to the address it was quoted for. Any edit throws it away
+  // rather than letting a stale price sit above a changed postcode.
+  function invalidateQuote() {
+    if (!quoted) return;
+    setQuoted(false);
+    setFreight(null);
+    setFreightReason(null);
+    setFreightServiceId(undefined);
+    setServerTotal(null);
+  }
+
+
   return (
     <div className="grid lg:grid-cols-[1.4fr_1fr] gap-12">
       <div>
         {phase === "details" && (
-          <form onSubmit={startPayment} className="space-y-4">
+          <form onSubmit={onSubmit} onChange={invalidateQuote} className="space-y-4">
             <h2 className="font-display uppercase tracking-wide text-lg mb-2">Billing & Delivery</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <input name="first_name" required aria-label="First name" placeholder="First name" className={fieldClass} />
@@ -171,10 +218,25 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
               </select>
               <input name="postcode" required aria-label="Postcode" placeholder="Postcode" className={fieldClass} />
             </div>
-            {error && <p className="text-accent-600 text-sm">{error}</p>}
+            {(error || freightNotice) && (
+              <p className="text-accent-600 text-sm">{error ?? freightNotice}</p>
+            )}
             <button type="submit" disabled={loading} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
-              {loading ? "…" : "Continue to Payment"} <span aria-hidden>→</span>
+              {loading
+                ? canContinue
+                  ? "…"
+                  : "Calculating…"
+                : canContinue
+                  ? "Continue to Payment"
+                  : "Calculate Freight"}{" "}
+              <span aria-hidden>→</span>
             </button>
+            {canContinue && (
+              <p className="text-xs text-ash">
+                Delivery is priced for the address above. Change any detail and it is
+                recalculated before you pay.
+              </p>
+            )}
           </form>
         )}
 
@@ -228,17 +290,22 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
                 </span>
               )}
             </span>
+          ) : !quoted ? (
+            <span className="text-right text-xs text-ash max-w-[60%]">
+              Enter your delivery address
+            </span>
           ) : (
             <span className="text-right text-xs text-ash max-w-[60%]">
-              {freightRequired
-                ? "Confirmed on quote"
-                : "Calculated on quote"}
+              {freightRequired ? "Confirmed on quote" : "Calculated on quote"}
             </span>
           )}
         </div>
         <div className="flex justify-between font-mono text-base py-3 mt-2 border-t border-line font-semibold">
           <span>Total</span>
-          <span>{aud.format(serverTotal ?? subtotal)}</span>
+          {/* serverTotal is authoritative once the intent exists. Before that,
+              show the quoted freight added on, so the number the customer agrees
+              to is the number on screen. */}
+          <span>{aud.format(serverTotal ?? subtotal + (freight?.price ?? 0))}</span>
         </div>
       </aside>
     </div>
