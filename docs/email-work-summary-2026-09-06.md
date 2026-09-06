@@ -60,8 +60,30 @@ if one product in a basket is missing them the *entire* basket becomes unquotabl
 — not just that line. So an unmeasured product is not a gap in a listing, it is a
 tripwire under every order it can join.
 
-**33 products are affected and are attached as a spreadsheet.** They are hidden
-from the site for now.
+Hiding everything unmeasured turned out to be the wrong answer, though, because
+it also hid the flagship equipment: a $9,299 massage rolling machine, an $8,775
+functional training system, $6,485 power racks. Those were never going to quote
+online anyway — they are pallet freight and have always sold through the quote
+flow, where a person prices delivery. Hiding them did not protect anybody from a
+bad quote, it removed a working sales path from the most valuable things we sell.
+
+**So the rule is about value, not measurement alone:**
+
+- **Over $500, or priced "contact for pricing" — stays on the site.** The customer
+  enquires and a person answers, which is the right handling for a
+  nine-thousand-dollar machine whether or not anyone has measured its carton.
+- **Under $500 and unmeasured — hidden.** It cannot be bought, and nobody is going
+  to send an enquiry about a $20 strap.
+- **Apparel stays**, measured or not. It ships in a satchel, and a satchel has
+  known dimensions, so it quotes without anyone touching Unleashed.
+
+Where that leaves us today: **284 product pages are live, and 353 of 493 sellable
+items — 72% — can be bought and delivered online right now.**
+
+**The attached spreadsheet is the measurement backlog: 33 products missing a
+weight or a dimension.** Some are hidden by the rule above; the expensive ones are
+still on the site for enquiry. Either way they cannot be bought online until
+somebody enters the numbers.
 
 The good news is that it is a smaller job than 33 sounds:
 
@@ -74,8 +96,7 @@ the values in Unleashed — Weight, and Width/Depth/Height — puts the product 
 on the site automatically.
 
 Worth knowing what is on that list: the **C2 Rower ($1,250)** and **C2 Ski Erg
-($1,200)** are both there, and both need a single measurement. They are the
-highest-value items we are currently not showing.
+($1,200)** are both there, and both need a single measurement.
 
 We also found a batch of products whose dimensions had been entered in
 **millimetres in a centimetre field** — a 12-inch foam box recorded as 850 x 1000
@@ -107,10 +128,8 @@ Michael
 - [ ] Set the recipients. Steve and Gaetana, based on `docs/email-steve-gaetana-update.md`?
 - [ ] Attach `reports/unshippable-products.xlsx` (regenerate if the catalogue has
       changed — the list is derived, not typed).
-- [ ] **Decide whether the 33 are actually hidden before saying so.**
-      `HIDE_UNSHIPPABLE` is off in production right now, so the email currently
-      claims something that is not yet true. Either set it, or soften that line to
-      "will be hidden".
+- [x] The visibility rule is live in production (`HIDE_UNSHIPPABLE=true`, with the
+      $500 enquiry threshold). The section above describes what actually shipped.
 - [ ] The Easyship-versus-$145 comparison is honest but it is also our walk-away
       number. Fine internally; cut it if this goes wider.
 - [ ] Check the days off are the ones you mean: Wednesday 9 September, and Monday
