@@ -1593,8 +1593,23 @@ WC write) remain unverifiable without a live test.
 - **REVL** always uppercase. No public email address on the site.
 - Server components by default; `'use client'` only when needed.
 - **Verify on staging after deploying. Do not ask the client to check.**
-- Tests: `npx vitest run` (69). Lint and typecheck before committing; the repo has
-  2 pre-existing lint errors, so compare against `HEAD` rather than expecting zero.
+- Tests: `npx vitest run`. Lint and typecheck before committing; `npm run lint`
+  is clean as of 2026-09-06, so any error you see is yours.
+- **An Unleashed product import BLANKS every column you leave out.** It is not a
+  patch, it is a replace, and the only reason a 5-column "just fix the
+  dimensions" file does not silently wipe Notes, Barcode, prices, Product Group,
+  brand and tax settings is that Unit of Measure refuses to be cleared and takes
+  the whole row down with it. Learned the hard way on 2026-09-06: the import
+  failed with "Unit of Measure. The value was empty."
+  **So: Export first (Inventory > Products > Import/Export > Export), keep every
+  column, change only the cells you mean to change, and import those rows.**
+  `reports/carton-unit-fix-unleashed.csv` is what that looks like - 58 columns,
+  36 rows, three cells different per row. Verify afterwards by diffing the API's
+  full product object before and after; only Width/Height/Depth, LastModifiedOn
+  and LastModifiedBy should move.
+- Unleashed lives at `go.unleashed.erp.accessacloud.com`, NOT
+  `go.unleashedsoftware.com` - the latter is a different tenant host and will
+  bounce you to a login you cannot satisfy.
 - Relevant memories: `reference_masterkraft_woocommerce`, `reference_masterkraft_brand`,
   `reference_masterkraft_revl_galleries`, `reference_masterkraft_deploy`,
   `reference_masterkraft_unleashed`.
