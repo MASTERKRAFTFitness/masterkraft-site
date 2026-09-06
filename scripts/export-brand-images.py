@@ -148,6 +148,19 @@ def main():
         colour = bd.backdrop_colour(im)
         studio = bd.is_studio(im)
         safe = re.sub(r"[^A-Za-z0-9_-]", "_", code)
+        # Say WHICH gate stopped it, so the manifest tells whoever picks these
+        # up by hand what they are dealing with rather than just that it failed.
+        if studio:
+            reason = "removed"
+        else:
+            uniformity, _ = bd.border_uniformity(im)
+            r, g, b = colour
+            if max(abs(r - g), abs(g - b), abs(r - b)) > bd.COLOR_SPREAD:
+                reason = "coloured backdrop - deliberate, left as shot"
+            elif uniformity < bd.UNIFORM:
+                reason = "in-scene photograph - no sweep to remove"
+            else:
+                reason = "product too close in tone to its backdrop - needs a pen tool"
 
         if args.mode == "transparent":
             out = bd.cutout(im)

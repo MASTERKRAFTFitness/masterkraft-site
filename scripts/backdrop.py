@@ -110,7 +110,8 @@ def normalize(im):
     return out
 
 
-UNIFORM = 0.95  # this much of the border on one colour means a sweep, not a scene
+UNIFORM = 0.5      # below this the border is a room, not a sweep
+MIN_CONTRAST = 40  # a product this close to its backdrop cannot be cut from it
 
 
 def border_uniformity(im):
@@ -133,18 +134,43 @@ def border_uniformity(im):
     return hit / len(edge), dominant
 
 
+def contrast_gap(im, colour):
+    """How far the product's midtone sits from the backdrop's, in luminance.
+
+    The mask separates product from backdrop BY COLOUR, so it can only work
+    where there is a colour difference to separate. This measures whether there
+    is one.
+    """
+    mask = backdrop_mask(im, colour)
+    grey = im.convert("L").resize((150, 150))
+    keep = ImageChops.invert(mask).resize((150, 150))
+    vals = sorted(v for v, k in zip(grey.getdata(), keep.getdata()) if k > 128)
+    if not vals:
+        return 0
+    return abs(vals[len(vals) // 2] - (colour[0] + colour[1] + colour[2]) // 3)
+
+
 def is_studio(im):
-    """Is the product standing on a flat neutral sweep — of ANY shade?
+    """Is the product on a flat neutral sweep that can actually be cut away?
 
     Deliberately a different question from `needs_normalizing`, which asks the
     shop's: "does this fail to match the tile?". A cutout asks whether there is
-    a backdrop at all, so it answers yes to #e6e6e6 — invisible on a tile
-    painted to match it, a grey box on white paper — and yes to the flat BLACK
-    sweep SNAP shoots its plates and barbells on, which the shop's lightness
-    floor rejects and a white catalogue page renders as a black box.
+    a removable backdrop at all, so it answers yes to #e6e6e6 — invisible on a
+    tile painted to match it, a grey box on white paper — and yes to the flat
+    BLACK sweep SNAP shoots its plates and barbells on, which a lightness floor
+    would reject and a white page renders as a black box.
 
-    Uniformity replaces that lightness floor, because "flat all the way round"
-    is what actually distinguishes a sweep from a room.
+    THE GATE IS CONTRAST, NOT LIGHTNESS OR UNIFORMITY. Both of those were tried
+    and both were wrong. A lightness floor throws away the black sweeps. A
+    uniformity floor throws away every shot where the product runs off the edge
+    of the frame — which cut perfectly well. What actually fails is a product
+    the same tone as its backdrop: SNAP's black tee on a black sweep comes back
+    gouged, because there is no colour difference to separate. Measured across
+    that photography the two groups do not overlap — the unsalvageable ones sit
+    at a gap of 19-27 and everything that cuts cleanly sits at 43 or above.
+
+    Uniformity survives only as a floor against a genuine room, where the border
+    is not one colour at all.
     """
     if im.mode != "RGB":
         im = im.convert("RGB")
@@ -152,7 +178,9 @@ def is_studio(im):
     r, g, b = colour
     if max(abs(r - g), abs(g - b), abs(r - b)) > COLOR_SPREAD:
         return False  # coloured backdrop (turf, a gym floor) - intentional
-    return uniformity >= UNIFORM
+    if uniformity < UNIFORM:
+        return False  # a scene, not a sweep
+    return contrast_gap(im, colour) >= MIN_CONTRAST
 
 
 def cutout(im):
