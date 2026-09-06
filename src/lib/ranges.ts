@@ -27,7 +27,7 @@
 // written into the ERP the snapshot is the only place it exists.
 import { allProducts, productBySku, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
-import type { WcProduct } from "@/lib/woocommerce";
+import { getCompareAtValue, type WcProduct } from "@/lib/woocommerce";
 
 export type RangeSize = {
   /** Unleashed ProductCode — the thing the cart and the ERP agree on. */
@@ -37,6 +37,27 @@ export type RangeSize = {
   price: number; // GST-inclusive, from the ERP
   stock: number;
   image?: string;
+  /**
+   * The store's own RRP for this size, GST-inclusive, when the snapshot records
+   * a markdown on it AND that RRP is above the ERP price we now charge. The
+   * strike-through beside a range card's "From $X"; absent means show none.
+   *
+   * IT COMES FROM WOOCOMMERCE BECAUSE THE ERP HAS NO SALE CONCEPT. Unleashed
+   * holds one DefaultSellPrice per code and no notion of "was", so a range
+   * card - which prices off the ERP - had nothing to strike and lost its SALE
+   * badge, while the 31 clearance products priced straight off the snapshot
+   * kept theirs. Five clearance ranges sat on /equipment/clearance looking
+   * full price: Competition Bumper Plates, High Grip Dead Ball, Olympic
+   * Urethane Weight Plates, Power Bands and Rubber Hex Dumbbells.
+   *
+   * THE ABOVE-PRICE GUARD IS NOT DECORATION. Price comes from the ERP and this
+   * comes from the store, and the two disagree by a per-range constant: the
+   * ERP charges 0.50x the store's sale price on the bumper plates and 1.45x on
+   * the urethane plates. Mixing sources can therefore produce an RRP at or
+   * below what we are charging, which would render as a strike-through under a
+   * bigger number. Suppressed rather than shown.
+   */
+  compareAt?: number;
   // The WooCommerce ids for this size, when the frozen snapshot still has it.
   // ONLY the card path needs these: resolveOrderLines re-prices a paid order
   // against the store. The ERP carries sizes the old store never listed (28 PU
@@ -58,16 +79,26 @@ const SEP = " - ";
 
 // ERP code -> the WooCommerce variation that used to sell it. Built once from
 // the frozen snapshot; see wooProductId on RangeSize for why it exists at all.
-let WOO_BY_CODE: Map<string, { productId: number; variationId: number }> | null = null;
+type WooTwin = { productId: number; variationId: number; compareAt: number };
 
-function wooIdsFor(code: string): { productId: number; variationId: number } | undefined {
+let WOO_BY_CODE: Map<string, WooTwin> | null = null;
+
+function wooIdsFor(code: string): WooTwin | undefined {
   if (!WOO_BY_CODE) {
     WOO_BY_CODE = new Map();
     for (const p of allProducts()) {
       for (const v of variationsFor(p.id)) {
         const sku = v.sku?.trim().toUpperCase();
         if (sku && !WOO_BY_CODE.has(sku)) {
-          WOO_BY_CODE.set(sku, { productId: p.id, variationId: v.id });
+          // The markdown is read off the VARIATION, not off its parent. A
+          // variable product's own regular_price/sale_price are empty strings —
+          // the container holds no price — which is why the parent looked
+          // un-discounted to every caller that asked it.
+          WOO_BY_CODE.set(sku, {
+            productId: p.id,
+            variationId: v.id,
+            compareAt: getCompareAtValue(v),
+          });
         }
       }
     }
@@ -168,6 +199,7 @@ export function sizesFromCodes(codes: string[], map: UnleashedMap): RangeSize[] 
         price: entry.price,
         stock: entry.stock,
         image: entry.image,
+        compareAt: woo && woo.compareAt > entry.price ? woo.compareAt : undefined,
         wooProductId: woo?.productId,
         wooVariationId: woo?.variationId,
       });

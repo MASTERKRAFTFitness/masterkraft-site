@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { formatPrice, getBundleFromPrice, getPricing, getPriceValue } from "@/lib/woocommerce";
+import {
+  formatPrice,
+  getBundleFromPrice,
+  getCompareAtValue,
+  getPricing,
+  getPriceValue,
+} from "@/lib/woocommerce";
 import { lookupBySku, enrich, type UnleashedEntry } from "@/lib/unleashed";
 import { skuAliases } from "@/lib/unleashed-aliases";
 
@@ -204,5 +210,91 @@ describe("a sized range is priced off the ERP, not off its bundle record", () =>
     );
     expect(card.priceLabel).toBe("From $110.00");
     expect(card.priceValue).toBe(0);
+  });
+});
+
+describe("getCompareAtValue (the RRP worth striking through)", () => {
+  it("returns the regular price, GST-inclusive, when there is a real markdown", () => {
+    expect(getCompareAtValue({ regular_price: "100", sale_price: "80" })).toBe(110);
+    expect(getCompareAtValue({ regular_price: "4.55", sale_price: "3" })).toBe(5.01);
+  });
+  it("is 0 when nothing is marked down", () => {
+    expect(getCompareAtValue({ regular_price: "100" })).toBe(0);
+    expect(getCompareAtValue({ regular_price: "100", sale_price: "120" })).toBe(0);
+    expect(getCompareAtValue({})).toBe(0);
+  });
+  it("does not read a markdown out of the wholesale plugin's `price`", () => {
+    // The Drop In Core Trainer (ABCTDR01) sits on the clearance page looking
+    // marked down - $63.64 regular against a `price` of $41.80 - and is not.
+    // Nobody set a sale price on it; `price` is the wholesale plugin talking.
+    // Striking $70.00 through here would be an invented discount on every
+    // full-price product in the shop, which is the whole reason getPricing
+    // refuses to read that field either.
+    expect(getCompareAtValue({ regular_price: "63.64", price: "41.8" })).toBe(0);
+  });
+});
+
+describe("a marked-down range keeps its markdown", () => {
+  // THE BUG: a range card prices off the ERP, and Unleashed has no sale concept
+  // - one DefaultSellPrice per code and no notion of "was". So five clearance
+  // ranges lost the strike-through and the SALE badge that the 29 clearance
+  // products priced straight off the snapshot kept, and sat on
+  // /equipment/clearance looking full price.
+  //
+  // The markdown these read is the real snapshot's, because that is what the
+  // code under test looks up: AMDBRH01 is $4.55 down to $3.00 on the store.
+  const hexDumbbells = (price: number) => ({
+    AMDBRH01: { price, stock: 3, name: "Rubber Hex Dumbbell - 1kg", brand: "NO BRAND", sellable: true },
+    AMDBRH02: { price: price * 2, stock: 1, name: "Rubber Hex Dumbbell - 2kg", brand: "NO BRAND", sellable: true },
+  });
+
+  it("strikes the store's RRP for the same size that sets the 'From' price", async () => {
+    const { enrichCard } = await import("@/lib/unleashed");
+    const card = await enrichCard(
+      { type: "variable", sku: "AMDBRH", stock_status: "instock" } as never,
+      hexDumbbells(2.5)
+    );
+    expect(card.priceLabel).toBe("From $2.50");
+    expect(card.compareAtLabel).toBe("$5.01"); // AMDBRH01's $4.55 + GST
+  });
+
+  it("suppresses an RRP that is not above what we are charging", async () => {
+    // Price comes from the ERP and the RRP from the store, and the two disagree
+    // by a per-range constant - the ERP charges 0.50x the store's sale price on
+    // the bumper plates and 1.45x on the urethane plates. So the pairing can
+    // produce an RRP under the price, which would render as a strike-through
+    // beneath a bigger number. Show nothing rather than nonsense.
+    const { enrichCard } = await import("@/lib/unleashed");
+    const card = await enrichCard(
+      { type: "variable", sku: "AMDBRH", stock_status: "instock" } as never,
+      hexDumbbells(60)
+    );
+    expect(card.priceLabel).toBe("From $60.00");
+    expect(card.compareAtLabel).toBeUndefined();
+  });
+
+  it("will not manufacture a markdown out of a bundle minimum", async () => {
+    // The Urethane Competition Kettlebells are on the clearance page with no
+    // markdown recorded anywhere: WooCommerce says on_sale false, its sizes were
+    // never sold as variations so they have no store price history, and the ERP
+    // has no sale concept. The bundle record's $80 minimum against the ERP's $44
+    // LOOKS like a discount and is not one - it is two pricing systems
+    // disagreeing. That page needs a sale price set in WordPress; it does not
+    // need this code inventing one.
+    const { enrichCard } = await import("@/lib/unleashed");
+    const card = await enrichCard(
+      {
+        type: "bundle",
+        sku: "AMKBUR-GROUP",
+        stock_status: "instock",
+        bundle_price: { regular_price: { min: { incl_tax: "80" } } },
+      } as never,
+      {
+        AMKBUR01: { price: 44, stock: 2, name: "Urethane Competition Kettlebell - 8kg", brand: "AIR LOCKER", sellable: true },
+        AMKBUR02: { price: 57.5, stock: 1, name: "Urethane Competition Kettlebell - 10kg", brand: "AIR LOCKER", sellable: true },
+      }
+    );
+    expect(card.priceLabel).toBe("From $44.00");
+    expect(card.compareAtLabel).toBeUndefined();
   });
 });

@@ -508,6 +508,25 @@ export function getBundleFromPrice(p: {
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 
+/**
+ * The RRP to strike through, GST-inclusive, or 0 when there is nothing honest to
+ * strike out. Split from getPricing because a range card prices off the ERP and
+ * so needs the compare-at as a NUMBER, to check it actually sits above what we
+ * are charging before it is shown.
+ *
+ * ONLY A RECORDED MARKDOWN COUNTS: `regular_price` above a real `sale_price`.
+ * NOT `price`, which the wholesale plugin distorts downwards (see getPricing) —
+ * reading that as an RRP would paint a discount onto full-price products. The
+ * Drop In Core Trainer is the worked example: regular $63.64, no sale_price at
+ * all, and a `price` of $41.80 that is the plugin talking, not a markdown.
+ */
+export function getCompareAtValue(p: Priceable): number {
+  const regular = parseFloat(p.regular_price || "0");
+  const sale = parseFloat(p.sale_price || "0");
+  if (!(sale > 0 && sale < regular)) return 0;
+  return Math.round(regular * GST * 100) / 100;
+}
+
 export function getPriceValue(p: Priceable): number {
   const regular = parseFloat(p.regular_price || p.price || "0");
   const sale = parseFloat(p.sale_price || "0");

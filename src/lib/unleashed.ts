@@ -239,14 +239,21 @@ export async function enrichCard(product: WcProduct, map: UnleashedMap): Promise
   // un-configured range to card-checkout. It also means one source for the
   // figure - the card used to read WooCommerce's bundle minimum ("From $110")
   // while the page read Unleashed ("From $90").
+  //
+  // AND THE MARKDOWN TRAVELS WITH IT. The size that sets the "From" figure also
+  // carries the store's RRP for that same size (RangeSize.compareAt), so the
+  // card reads "From $2.50" with "$5.00" struck through and earns its SALE
+  // badge. Both halves describe one size — the cheapest — rather than pairing a
+  // range-wide RRP with a single price.
   const range = getRange(product, map);
   if (range) {
     const priced = range.sizes.filter((s) => s.price > 0);
     if (priced.length > 0) {
-      const min = Math.min(...priced.map((s) => s.price));
+      const cheapest = priced.reduce((a, b) => (b.price < a.price ? b : a));
       return {
-        priceLabel: `From ${formatPrice(min)}`,
-        priceValue: min,
+        priceLabel: `From ${formatPrice(cheapest.price)}`,
+        priceValue: cheapest.price,
+        compareAtLabel: cheapest.compareAt ? formatPrice(cheapest.compareAt) : undefined,
         inStock: range.sizes.some((s) => s.stock > 0),
         source: "unleashed",
       };

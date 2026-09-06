@@ -1,0 +1,256 @@
+code,description,file,backdrop,backdrop_colour
+SAAACO01,Sweat Towel,SAAACO01.png,removed,#ffffff
+SAAAU01,Trucker Hat,SAAAU01.png,"in-scene, left as shot",#000000
+SAAAU02,Train Cap,SAAAU02.png,"in-scene, left as shot",#000000
+SAACU02M,Oversized Hoodie (Unisex) (M),SAACU02M.png,removed,#ffffff
+SAACU05L,Short Sleeve Tee (Male) (L),SAACU05L.png,"in-scene, left as shot",#000000
+SAACU05M,Short Sleeve Tee (Male) (M),SAACU05M.png,"in-scene, left as shot",#000000
+SAACU05S,Short Sleeve Tee (Male) (S),SAACU05S.png,"in-scene, left as shot",#000000
+SAACU05XL,Short Sleeve Tee (Male) (XL),SAACU05XL.png,"in-scene, left as shot",#000000
+SAACU09M,High Rise Leggings (Woman) (M),SAACU09M.png,removed,#ffffff
+SAACU12M,Sports Bra (Woman) (S),SAACU12M.png,removed,#ffffff
+SBASADJ01,Group Fitness Step (Adjustable),SBASADJ01.png,removed,#e6e6e6
+SBASADJ02,Group Fitness Step (4 Risers),SBASADJ02.png,removed,#e6e6e6
+SBASADJ03,Group Fitness Step (6 Risers),SBASADJ03.png,removed,#e7e7e7
+SBBSCU01,Balance Cushion,SBBSCU01.png,removed,#e6e6e6
+SBBSTR01,Fitness & Balance Trainer,SBBSTR01.png,removed,#e6e6e6
+SBCT6501,Fitness Ball - 65cm (Anti-Burst),SBCT6501.png,removed,#fefefe
+SBCTACC01,Utility Roller,SBCTACC01.png,removed,#e6e6e6
+SBCTDI01,Exercise Glider Discs (Pair),SBCTDI01.png,removed,#e6e6e6
+SBCTDR01,Drop In Core Trainer,SBCTDR01.png,removed,#e6e6e6
+SBCTFS02,Core Trainer (Landmine) With T Bar Handle,SBCTFS02.png,removed,#e6e6e6
+SBCTMA01,Abdominal Mat,SBCTMA01.png,removed,#e6e6e6
+SBCTWH01,Abdominal Wheel,SBCTWH01.png,removed,#e6e6e6
+SBEMMA01,EVA Exercise Mat,SBEMMA01.png,removed,#e6e6e6
+SBGYRI01,Gymnastic Rings (Wooden),SBGYRI01.png,removed,#e7e7e7
+SBGYSL01,Parallettes - 275mm (Pair),SBGYSL01.png,removed,#e6e6e6
+SBPB3I101,3-In-1 Foam Plyometric Box - 34kg,SBPB3I101.png,removed,#e6e6e6
+SBPB3I102,3-In-1 Wooden Plyometric Box,SBPB3I102.png,removed,#e6e6e6
+SBPBMS01,Plyometric Box (Set of 4),SBPBMS01.png,removed,#eaeceb
+SBPBSB02,"Foam Plyometric Box - 6""",SBPBSB02.png,removed,#e6e6e6
+SBPBSB04,"Foam Plyometric Box - 12""",SBPBSB04.png,removed,#e6e6e6
+SBPBSB06,"Foam Plyometric Box - 24""",SBPBSB06.png,removed,#e6e6e6
+SBRMRL01,Foam Roller - 45cm,SBRMRL01.png,removed,#e6e6e6
+SBRMRL02,Foam Roller - 90cm,SBRMRL02.png,removed,#e6e6e6
+SBRMRL03,Foam Roller - 33cm (TPT),SBRMRL03.png,removed,#e6e6e6
+SBRMRL09,Massage Rolling Machine,SBRMRL09.png,removed,#e9e4e1
+SBRPBA01,Knitted Resistance Bands (Set of 3),SBRPBA01.png,removed,#e6e6e6
+SBRPMI01,Mini Bands (Pack of 4),SBRPMI01.png,removed,#e6e6e6
+SBRPPO01,Power Bands (Pack of 4),SBRPPO01.png,removed,#e6e6e6
+SBRPPO02,Power Bands (Pack of 8),SBRPPO02.png,removed,#e6e6e6
+SBSADI01,Mini Disc Cones (Set of 50),SBSADI01.png,removed,#e6e6e6
+SBSADO01,Agility Dots (Set of 5),SBSADO01.png,removed,#e6e6e6
+SBSADO02,Station Markers (Set of 5),SBSADO02.png,removed,#e6e6e6
+SBSAHD01,Lateral Endurance Hurdles (Set of 4),SBSAHD01.png,removed,#e6e6e6
+SBSALD01,Rubber Rollout Speed Ladder - 5m,SBSALD01.png,removed,#f0f2f1
+SBSARO01,Speed Rope (Elite),SBSARO01.png,removed,#e6e6e6
+SBSUTR01,Suspension Trainer,SBSUTR01.png,removed,#e7e7e7
+SEFRACC01,"Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)",SEFRACC01.png,removed,#e6e6e6
+SEFRACC02,"Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (2m)",SEFRACC02.png,removed,#e6e6e6
+SEFRACC03,Modular Storage Rack Flat Shelf,SEFRACC03.png,removed,#e6e6e6
+SEFRACC04,Modular Storage Rack Shelf Dual Pipe,SEFRACC04.png,removed,#e6e6e6
+SEFRACC05,Modular Storage Rack Side (1582mm),SEFRACC05.png,removed,#e6e6e6
+SEFRACC06,"Modular Storage Rack - Complete (2/Dual Pipe, 2/Flat Shelf)",SEFRACC06.png,removed,#e6e6e6
+SEFRACC12,"Modular Storage Rack - Complete (1/Dual Pipe, 3/Flat Shelf)",SEFRACC12.png,removed,#f0f0f0
+SEFRBB01,Fixed Barbell Rack (5 Bar),SEFRBB01.png,removed,#e6e6e6
+SEFRBB02,Fixed Barbell Rack (10 Bar) 1.0,SEFRBB02.png,removed,#f0f0f0
+SEFRBB03,Fixed Barbell Rack (10 Bar) 2.0,SEFRBB03.png,removed,#e5e5e5
+SEFRBB04,Barbell Storage Box (9 Bar Holder),SEFRBB04.png,removed,#e6e6e6
+SEFRBB05,Barbell Storage Box (9 Bar Holder) - Versatile,SEFRBB05.png,removed,#e6e6e6
+SEFRBL01,Medicine Ball Rack - 10 Ball (Double Sided),SEFRBL01.png,removed,#e6e6e6
+SEFRBL02,Medicine Ball Rack - 10 Ball (Single Sided),SEFRBL02.png,removed,#e6e6e6
+SEFRBL03,Medicine Ball Rack - 5 Ball (Single Sided),SEFRBL03.png,removed,#e6e6e6
+SEFRDB01,Vertical Dumbbell Rack - 10 Pair (Single Sided) 1.0,SEFRDB01.png,removed,#e6e6e6
+SEFRDB02,Vertical Dumbbell Rack - 10 Pair (Single Sided) 2.0,SEFRDB02.png,removed,#e5e5e5
+SEFRDB03,Vertical Dumbbell Rack - 15 Pair (Single Sided),SEFRDB03.png,removed,#e5e5e5
+SEFRDB04,Vertical Dumbbell Rack - 10 Pair (Single Sided) 3.0,SEFRDB04.png,removed,#e5e5e5
+SEFRDB05,Vertical Dumbbell Rack - 10 Pair (Double Sided) 2.0,SEFRDB05.png,removed,#e5e5e5
+SEFRDB06,Vertical Dumbbell Rack - Portable (Four Sided),SEFRDB06.png,removed,#e6e6e6
+SEFRDB07,Horizontal Dumbbell Rack - 2 Tier (5 Pair) 1.0,SEFRDB07.png,removed,#e6e6e6
+SEFRDB08,Horizontal Dumbbell Rack - 2 Tier (10 Pair) 1.0,SEFRDB08.png,removed,#e5e5e5
+SEFRDB09,Horizontal Dumbbell Rack - 3 Tier (15 Pair),SEFRDB09.png,removed,#e5e5e5
+SEFRDB10,Horizontal Dumbbell Rack - 2 Tier (5 Pair) 2.0,SEFRDB10.png,removed,#e5e5e5
+SEFRDB11,Horizontal Dumbbell Rack - 2 Tier (10 Pair) 2.0,SEFRDB11.png,removed,#f0f0f0
+SEFRDB12,Vertical Dumbbell Rack - 10 Pair (Double Sided) 3.0,SEFRDB12.png,removed,#f0f0f0
+SEFRDB13,Horizontal Dumbbell Rack - 2 Tier (20 Pair),SEFRDB13.png,removed,#efefef
+SEFRKB01,Kettlebell Rack (2 Tier) 2.0,SEFRKB01.png,removed,#e6e6e6
+SEFRKB02,Kettlebell Rack (2 Tier) 3.0,SEFRKB02.png,removed,#e5e5e5
+SEFRKB03,Kettlebell Rack (2 Tier) 4.0,SEFRKB03.png,removed,#e6e6e6
+SEFROP01,Olympic Plate Toaster Rack Portable,SEFROP01.png,removed,#e6e6e6
+SEFROP02,"Olympic Weight Plate Tree Portable (6 Storage Pins, 2 Bar Storage)",SEFROP02.png,removed,#e6e6e6
+SEFROP03,Olympic Weight Plate Tree (8 Storage Pins),SEFROP03.png,removed,#e6e6e6
+SEFROP04,Olympic Weight Plate Tree Vertical (6 Storage Pins),SEFROP04.png,removed,#e6e6e6
+SEFRPS01,Group Fitness Barbell Set Rack,SEFRPS01.png,removed,#e6e6e6
+SERK153001,Retail Rack,SERK153001.png,removed,#ffffff
+SEWMACC01,Rope & Band Rack (Wall Mounted) (Small),SEWMACC01.png,removed,#e6e6e6
+SEWMACC02,Rope & Band Rack (Wall Mounted),SEWMACC02.png,removed,#e6e6e6
+SEWMACC03,Dip Bar Holder (Wall Mounted),SEWMACC03.png,removed,#e6e6e6
+SEWMBB01,Horizontal Barbell Storage Rack (6 Bar) (Wall Mounted),SEWMBB01.png,removed,#e6e6e6
+SEWMBB02,Vertical Barbell Storage Rack (6 Bar) (Wall Mounted),SEWMBB02.png,removed,#e7e7e7
+SEWMBER01,Bench & Rower Rack (Wall Mounted),SEWMBER01.png,removed,#e6e6e6
+SEWMBL01,Fitness Ball Storage Rack (Wall Mounted),SEWMBL01.png,removed,#e6e6e6
+SEWMMA01,Exercise Mat Hanging Rack (Wall Mounted),SEWMMA01.png,removed,#e6e6e6
+SEWMOP01,Vertical Bumper Plate Rack 3 Tier (Wall Mounted),SEWMOP01.png,removed,#e6e6e6
+SEWMRL01,Foam Roller Storage Rack (Wall Mounted),SEWMRL01.png,removed,#e6e6e6
+SEWMRO01,Battle Rope Storage (Wall Mounted),SEWMRO01.png,removed,#e7e7e7
+SEWMRO02,Rope & Band Rack (Wall Mounted),SEWMRO02.png,removed,#f0f0f0
+SFATSY01,Artificial Turf Red With White Line (2m x 10m),SFATSY01.png,removed,#ffffff
+SFATSY02,Artificial Turf Red With White Line (2m x 15m),SFATSY02.png,removed,#ffffff
+SMBRNC01,Battle Rope - 12m,SMBRNC01.png,removed,#e6e6e6
+SMBRNC02,Climbing Rope - 7m,SMBRNC02.png,removed,#e6e6e6
+SMBXPBG05,Aqua Punching Bag - 86kg (53cm D),SMBXPBG05.png,removed,#e6e6e6
+SMDBOH01,Olympic Dumbbell Handles (Pair),SMDBOH01.png,removed,#e8e8e8
+SMDBUR01,PU Dumbbells (Pair) - 10kg,SMDBUR01.png,removed,#ffffff
+SMDBUR02,PU Dumbbells (Pair) - 12.5kg,SMDBUR02.png,removed,#ffffff
+SMDBUR03,PU Dumbbells (Pair) - 15kg,SMDBUR03.png,removed,#ffffff
+SMDBUR04,PU Dumbbells (Pair) - 17.5kg,SMDBUR04.png,removed,#ffffff
+SMDBUR05,PU Dumbbells (Pair) - 20kg,SMDBUR05.png,removed,#ffffff
+SMDBUR06,PU Dumbbells (Pair) - 22.5kg,SMDBUR06.png,removed,#ffffff
+SMDBUR07,PU Dumbbells (Pair) - 25kg,SMDBUR07.png,removed,#ffffff
+SMDBUR08,PU Dumbbells (Pair) - 27.5kg,SMDBUR08.png,removed,#ffffff
+SMDBUR09,PU Dumbbells (Pair) - 30kg,SMDBUR09.png,removed,#ffffff
+SMDBUR10,PU Dumbbells (Pair) - 32.5kg,SMDBUR10.png,removed,#ffffff
+SMDBUR11,PU Dumbbells (Pair) - 35kg,SMDBUR11.png,removed,#ffffff
+SMDBUR12,PU Dumbbells (Pair) - 37.5kg,SMDBUR12.png,removed,#ffffff
+SMDBUR13,PU Dumbbells (Pair) - 40kg,SMDBUR13.png,removed,#ffffff
+SMDBUR14,PU Dumbbells (Pair) - 42.5kg,SMDBUR14.png,removed,#ffffff
+SMDBUR15,PU Dumbbells (Pair) - 45kg,SMDBUR15.png,removed,#ffffff
+SMDBUR16,PU Dumbbells (Pair) - 47.5kg,SMDBUR16.png,removed,#ffffff
+SMDBUR17,PU Dumbbells (Pair) - 50kg,SMDBUR17.png,removed,#ffffff
+SMDBUR18,PU Dumbbells (Pair) - 5kg,SMDBUR18.png,removed,#ffffff
+SMDBUR20,PU Dumbbells (Pair) - 1kg,SMDBUR20.png,removed,#ffffff
+SMDBUR21,PU Dumbbells (Pair) - 2kg,SMDBUR21.png,removed,#ffffff
+SMDBUR22,PU Dumbbells (Pair) - 3kg,SMDBUR22.png,removed,#ffffff
+SMDBUR23,PU Dumbbells (Pair) - 4kg,SMDBUR23.png,removed,#ffffff
+SMDBUR25,PU Dumbbells (Pair) - 6kg,SMDBUR25.png,removed,#ffffff
+SMDBUR26,PU Dumbbells (Pair) - 7kg,SMDBUR26.png,removed,#ffffff
+SMDBUR27,PU Dumbbells (Pair) - 8kg,SMDBUR27.png,removed,#ffffff
+SMDBUR28,PU Dumbbells (Pair) - 9kg,SMDBUR28.png,removed,#ffffff
+SMDEHG01,High Grip Dead Ball - 6kg,SMDEHG01.png,removed,#e6e6e6
+SMDEHG02,High Grip Dead Ball - 9kg,SMDEHG02.png,removed,#e6e6e6
+SMDEHG03,High Grip Dead Ball - 12kg,SMDEHG03.png,removed,#e6e6e6
+SMDEHG04,High Grip Dead Ball - 15kg,SMDEHG04.png,removed,#e6e6e6
+SMDEHG05,High Grip Dead Ball - 20kg,SMDEHG05.png,removed,#e6e6e6
+SMDEHG06,High Grip Dead Ball - 25kg,SMDEHG06.png,removed,#e6e6e6
+SMDEHG07,High Grip Dead Ball - 30kg,SMDEHG07.png,removed,#e6e6e6
+SMDEHG08,High Grip Dead Ball - 35kg,SMDEHG08.png,removed,#e6e6e6
+SMDEHG09,High Grip Dead Ball - 40kg,SMDEHG09.png,removed,#e6e6e6
+SMDEHG10,High Grip Dead Ball - 45kg,SMDEHG10.png,removed,#e6e6e6
+SMDEHG11,High Grip Dead Ball - 50kg,SMDEHG11.png,removed,#e6e6e6
+SMDEHG12,High Grip Dead Ball - 55kg,SMDEHG12.png,removed,#e6e6e6
+SMDEHG13,High Grip Dead Ball - 65kg,SMDEHG13.png,removed,#e6e6e6
+SMDEHG14,High Grip Dead Ball - 75kg,SMDEHG14.png,removed,#e6e6e6
+SMDESH01,Dead Ball - 3kg,SMDESH01.png,removed,#e6e6e6
+SMDESH03,Dead Ball - 6kg,SMDESH03.png,removed,#e6e6e6
+SMDESH04,Dead Ball - 9kg,SMDESH04.png,removed,#e6e6e6
+SMDESH06,Dead Ball - 12kg,SMDESH06.png,removed,#e6e6e6
+SMDESH07,Dead Ball - 15kg,SMDESH07.png,removed,#e6e6e6
+SMDESH08,Dead Ball - 20kg,SMDESH08.png,removed,#e6e6e6
+SMDESH09,Dead Ball - 25kg,SMDESH09.png,removed,#e6e6e6
+SMDESH10,Dead Ball - 30kg,SMDESH10.png,removed,#e6e6e6
+SMFWTL01,Farmers Walk Handles (Pair),SMFWTL01.png,removed,#e6e6e6
+SMGFACC01,Digital Interval Timer,SMGFACC01.png,removed,#e6e6e6
+SMGFPS01,Group Fitness Barbell Set - Collars (Pair),SMGFPS01.png,removed,#e6e6e6
+SMGFPS02,Group Fitness Barbell Set - 37.5kg,SMGFPS02.png,removed,#e6e6e6
+SMGFPS03,Group Fitness Barbell Set - 17.5kg,SMGFPS03.png,removed,#e6e6e6
+SMGFWTB01,Aerobic Weighted Exercise Bars - 4kg,SMGFWTB01.png,removed,#e6e6e6
+SMGFWTB02,Aerobic Weighted Exercise Bars - 6kg,SMGFWTB02.png,removed,#e6e6e6
+SMGFWTB03,Aerobic Weighted Exercise Bars - 8kg,SMGFWTB03.png,removed,#e6e6e6
+SMGFWTB04,Aerobic Weighted Exercise Bars- 10kg,SMGFWTB04.png,removed,#e6e6e6
+SMKBPGC01,Competition Kettlebell - 6kg (Aluminium),SMKBPGC01.png,removed,#e6e6e6
+SMKBPGC02,Competition Kettlebell - 8kg,SMKBPGC02.png,removed,#e6e6e6
+SMKBPGC03,Competition Kettlebell - 10kg,SMKBPGC03.png,removed,#e6e6e6
+SMKBPGC04,Competition Kettlebell - 12kg,SMKBPGC04.png,removed,#e6e6e6
+SMKBPGC05,Competition Kettlebell - 16kg,SMKBPGC05.png,removed,#e6e6e6
+SMKBPGC06,Competition Kettlebell - 18kg,SMKBPGC06.png,removed,#e6e6e6
+SMKBPGC07,Competition Kettlebell - 20kg,SMKBPGC07.png,removed,#e6e6e6
+SMKBPGC08,Competition Kettlebell - 24kg,SMKBPGC08.png,removed,#e6e6e6
+SMKBPGC09,Competition Kettlebell - 28kg,SMKBPGC09.png,removed,#e6e6e6
+SMKBPGC10,Competition Kettlebell - 32kg,SMKBPGC10.png,removed,#e6e6e6
+SMKBPGC11,Competition Kettlebell - 36kg,SMKBPGC11.png,removed,#e6e6e6
+SMKBPGC12,Competition Kettlebell - 40kg,SMKBPGC12.png,removed,#e6e6e6
+SMKBUR01,Urethane Competition Kettlebell - 8kg,SMKBUR01.png,removed,#e6e6e6
+SMKBUR02,Urethane Competition Kettlebell - 10kg,SMKBUR02.png,removed,#e6e6e6
+SMKBUR03,Urethane Competition Kettlebell - 12kg,SMKBUR03.png,removed,#e6e6e6
+SMKBUR04,Urethane Competition Kettlebell - 16kg,SMKBUR04.png,removed,#e6e6e6
+SMKBUR05,Urethane Competition Kettlebell - 20kg,SMKBUR05.png,removed,#e6e6e6
+SMKBUR06,Urethane Competition Kettlebell - 24kg,SMKBUR06.png,removed,#e6e6e6
+SMKBUR07,Urethane Competition Kettlebell - 28kg,SMKBUR07.png,removed,#e6e6e6
+SMKBUR08,Urethane Competition Kettlebell - 32kg,SMKBUR08.png,removed,#e7e7e7
+SMKBUR09,Urethane Competition Kettlebell - 36kg,SMKBUR09.png,removed,#e7e7e7
+SMKBUR10,Urethane Competition Kettlebell - 40kg,SMKBUR10.png,removed,#e6e6e6
+SMLBACC01,Slant Board,SMLBACC01.png,removed,#e6e6e6
+SMMBPR01,Medicine Ball - 2kg,SMMBPR01.png,removed,#e8e8e6
+SMMBPR02,Medicine Ball - 4kg,SMMBPR02.png,removed,#f0f2f1
+SMMBPR03,Medicine Ball - 6kg,SMMBPR03.png,removed,#f3f3f1
+SMMBPR04,Medicine Ball - 8kg,SMMBPR04.png,removed,#f5f5f5
+SMMBPR05,Medicine Ball - 10kg,SMMBPR05.png,removed,#f3f3f1
+SMPA4BG01,Power Bags (Set of 4) - 70kg,SMPA4BG01.png,removed,#e5e5e4
+SMPA5BL02,Medicine Balls (Set of 5) - 30kg,SMPA5BL02.png,removed,#e6e6e6
+SMPA6BG01,Power Bags (Set of 6) - 105kg,SMPA6BG01.png,removed,#f1f1f1
+SMPILFG01,Pilates Ring,SMPILFG01.png,removed,#ffffff
+SMPWPBG01,Power Bag - 10kg,SMPWPBG01.png,removed,#e6e6e6
+SMPWPBG02,Power Bag - 15kg,SMPWPBG02.png,removed,#e6e6e6
+SMPWPBG03,Power Bag - 20kg,SMPWPBG03.png,removed,#e6e6e6
+SMPWPBG04,Power Bag - 25kg,SMPWPBG04.png,removed,#e7e7e7
+SMPWPBG05,Aqua Bag - 35kg,SMPWPBG05.png,removed,#e6e6e6
+SMSLSD01,Push & Pull Sled,SMSLSD01.png,removed,#e6e6e6
+SMSLSL01,Push & Pull Sled,SMSLSL01.png,removed,#e6e6e6
+SMWAARM05,Wall Ball - 14lb,SMWAARM05.png,removed,#e6e6e6
+SMWAARM06,Wall Ball - 20lb,SMWAARM06.png,removed,#e6e6e6
+SMWAARM07,Wall Ball - 8lb,SMWAARM07.png,removed,#e6e6e6
+SRATTACC01,Storage Pin with Shoulder,SRATTACC01.png,removed,#f0f0f0
+SRCTATT01,Rig Core Trainer (Landmine),SRCTATT01.png,removed,#e6e6e6
+SRSPATT01,Rig Crossbeam Single Pipe - 1080mm,SRSPATT01.png,removed,#e6e6e6
+SRSPATT02,Rig Crossbeam Single Pipe - 1520mm,SRSPATT02.png,removed,#e6e6e6
+SRSPATT03,Rig Universal Upright,SRSPATT03.png,removed,#e6e6e6
+SRSPATT04,Rig Dip Bar Attachment,SRSPATT04.png,removed,#e6e6e6
+SRSPATT05,Rig Premium J-Hooks,SRSPATT05.png,removed,#e5e5e5
+SRSPATT06,Rig Wall Ball Target,SRSPATT06.png,removed,#e5e5e5
+SRWAATT01,Rig Spotter Arms (Pair),SRWAATT01.png,removed,#dedede
+SSWBFW02,Adjustable Utility Weight Bench Pro,SSWBFW02.png,removed,#e7e7e7
+SWBBFUR01,Fixed PU Straight Barbell - 10kg,SWBBFUR01.png,removed,#ffffff
+SWBBFUR02,Urethane Fixed Barbells - 12.5kg,SWBBFUR02.png,removed,#e5e5e5
+SWBBFUR03,Fixed PU Straight Barbell - 15kg,SWBBFUR03.png,removed,#ffffff
+SWBBFUR04,Urethane Fixed Barbells - 17.5kg,SWBBFUR04.png,removed,#e5e5e5
+SWBBFUR05,Fixed PU Straight Barbell - 20kg,SWBBFUR05.png,removed,#ffffff
+SWBBFUR06,Urethane Fixed Barbells - 22.5kg,SWBBFUR06.png,removed,#e5e5e5
+SWBBFUR07,Fixed PU Straight Barbell - 25kg,SWBBFUR07.png,removed,#ffffff
+SWBBFUR08,Fixed PU Straight Barbell - 30kg,SWBBFUR08.png,removed,#ffffff
+SWBBFUR09,Fixed PU Straight Barbell - 35kg,SWBBFUR09.png,removed,#ffffff
+SWBBFUR10,Fixed PU Straight Barbell - 40kg,SWBBFUR10.png,removed,#ffffff
+SWBBFUR11,Urethane Fixed Barbells - 5kg,SWBBFUR11.png,"in-scene, left as shot",#000000
+SWBBFUR20,Fixed PU Curl Barbell - 5kg,SWBBFUR20.png,"in-scene, left as shot",#000000
+SWBBFUR23,Fixed PU Curl Barbell - 12.5kg,SWBBFUR23.png,removed,#ffffff
+SWBBFUR25,Fixed PU Curl Barbell - 17.5kg,SWBBFUR25.png,removed,#ffffff
+SWBBFUR27,Fixed PU Curl Barbell - 22.5kg,SWBBFUR27.png,removed,#ffffff
+SWBBFUR29,Fixed PU Curl Barbell - 27.5kg,SWBBFUR29.png,removed,#ffffff
+SWBBFUR31,Fixed PU Curl Barbell - 32.5kg,SWBBFUR31.png,removed,#ffffff
+SWBBFUR33,Fixed PU Curl Barbell - 37.5kg,SWBBFUR33.png,removed,#ffffff
+SWBBOL01,Olympic Ez Curl Bar,SWBBOL01.png,removed,#e7e7e7
+SWBBOL02,Olympic Barbell - 7ft Chrome (1000Lb Capacity),SWBBOL02.png,removed,#e7e7e7
+SWBBOL03,Olympic Barbell - 15kg (1500Lb Capacity),SWBBOL03.png,removed,#e8e8e8
+SWBBOL04,Olympic Barbell - 20kg (2000Lb Capacity),SWBBOL04.png,removed,#e8e8e8
+SWBBOL05,Olympic Hex Deadlift Barbell (350mm Loadable Sleeves),SWBBOL05.png,removed,#e8e8e8
+SWBBOL06,Olympic Hex Deadlift Barbell (400mm Loadable Sleeves),SWBBOL06.png,removed,#e8e8e8
+SWBBOL07,Olympic Safety Squat Bar (1500Lb Capacity),SWBBOL07.png,removed,#e8e8e8
+SWBBOL08,Olympic Rickshaw Barbell (250mm Loadable Sleeves),SWBBOL08.png,removed,#e8e8e8
+SWBBOL09,Olympic Swiss Barbell - 20kg,SWBBOL09.png,removed,#e6e6e6
+SWWAACC01,Weightlifting Belt,SWWAACC01.png,removed,#e5e5e5
+SWWAACC02,Dip & Pull Up Belt,SWWAACC02.png,removed,#e5e5e5
+SWWLACC01,Barbell Squat Pad,SWWLACC01.png,removed,#e8e8e8
+SWWLACC02,Olympic Bar Easy Lock Collars (Pair),SWWLACC02.png,removed,#e8e8e8
+SWWLATT01,Ankle Strap Cable Attachment (Pair),SWWLATT01.png,removed,#e6e6e6
+SWWLCH01,Weightlifting Chalk Box,SWWLCH01.png,removed,#e6e6e6
+SWWLCH02,Chalk Bowl,SWWLCH02.png,removed,#e8e8e8
+SWWLMA01,Drop Pads (Pair),SWWLMA01.png,removed,#e9e9e9
+SWWLRR01,Squat Wedge Block,SWWLRR01.png,removed,#ffffff
+SWWPCNB01,Competition Bumper Plates - 5kg,SWWPCNB01.png,"in-scene, left as shot",#000000
+SWWPCNB06,Pro Bumper Plates - 5kg,SWWPCNB06.png,"in-scene, left as shot",#000000
+SWWPCNB07,Pro Bumper Plates - 10kg,SWWPCNB07.png,removed,#e5e5e5
+SWWPCNB08,Pro Bumper Plates - 15kg,SWWPCNB08.png,removed,#e5e5e5
+SWWPCNB09,Pro Bumper Plates - 20kg,SWWPCNB09.png,removed,#e5e5e5
+SWWPCNB10,Pro Bumper Plates - 25kg,SWWPCNB10.png,removed,#e5e5e5
+SWWPCP01,Change Plates - 1.25kg,SWWPCP01.png,"in-scene, left as shot",#000000
+SWWPCP02,Change Plates - 2.5kg,SWWPCP02.png,"in-scene, left as shot",#000000
+SWWPOU14,Olympic PU Weight Plates (4 Grip) - 5kg,SWWPOU14.png,removed,#ffffff

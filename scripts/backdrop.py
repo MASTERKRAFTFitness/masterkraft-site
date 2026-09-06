@@ -110,6 +110,40 @@ def normalize(im):
     return out
 
 
+def is_studio(c):
+    """Is this a flat, neutral, light studio backdrop — whatever shade it is?
+
+    Wider than `needs_normalizing`, which asks the shop's question: "does this
+    fail to match the tile?". A cutout asks a different one — "is there a
+    backdrop here at all?" — and #e6e6e6 answers yes. On the shop that shade is
+    invisible because the tile is painted to match it; on a white catalogue page
+    it is a grey box, the same defect the tile grey was invented to cure.
+    """
+    r, g, b = c
+    if max(abs(r - g), abs(g - b), abs(r - b)) > COLOR_SPREAD:
+        return False  # coloured backdrop (turf, a gym floor) - intentional
+    return (r + g + b) // 3 >= MIN_BG_VALUE
+
+
+def cutout(im):
+    """Knock the studio backdrop out to transparency, returning RGBA.
+
+    For assets that have to sit on a page whose colour we do not control. The
+    mask is the same one `normalize` fills, so what survives here is exactly
+    what survives there — lettering, chrome highlights and the product's own
+    shadow all stay, and the dilation that swallows the anti-aliased fringe is
+    what keeps a pale halo from being left behind on a dark page.
+    """
+    im = im.convert("RGB")
+    colour = backdrop_colour(im)
+    out = im.convert("RGBA")
+    if not is_studio(colour):
+        return out  # in-scene or coloured: there is no backdrop to remove
+    alpha = ImageChops.invert(backdrop_mask(im, colour).convert("L"))
+    out.putalpha(alpha)
+    return out
+
+
 def residual(im, colour):
     """Fraction of the image left at the old backdrop colour, for reporting.
 
