@@ -143,6 +143,59 @@ Historical, kept because it explains the shape of the code:
 
 ---
 
+## 1a. Orders are written into UNLEASHED ⚙️🔎
+
+**Switched on 2026-09-06.** `orderBackend()` returns `unleashed` and
+`createWooOrder` is never reached. WooCommerce is being decommissioned; it is no
+longer part of placing an order.
+
+| variable | state | notes |
+|---|---|---|
+| `UNLEASHED_WRITE_ENABLED` | ✅ `true` | the whole switch. Without it the backend silently falls back to WooCommerce, which no longer exists |
+| `UNLEASHED_WEB_CUSTOMER_CODE` | ✅ `WEB-MASTERKRAFT` | the shared web sales account. `resolveCustomer` **throws rather than guess** — a web order written into a real trade account lands in somebody's ledger |
+| `UNLEASHED_FREIGHT_CODE` | ✅ `MKFR` | "Freight - Local". **Unset by default, and any freight-bearing order throws without it.** This was on nobody's list until the first order was built |
+| `UNLEASHED_CUSTOMER_STRATEGY` | optional | defaults to `generic`. `per-order` and `match-email` are **deliberately unimplemented** — see the decision note in `lib/unleashed-orders.ts` |
+| `UNLEASHED_API_ID` / `UNLEASHED_API_KEY` | ✅ set | write scope proven 2026-09-06 |
+
+### ⚠️ Why this became urgent rather than planned
+
+Card checkout was opened while orders still pointed at WooCommerce, and
+`stripe.confirmPayment` runs **before** `/api/order`. With `WC_WRITE_ENABLED=false`
+and `WC_STORE_URL` pointing at `https://masterkraft.com` — this Next.js app, where
+`wp-json` returns 404 — every card payment would have been **captured and then
+refused** with a 503. Nobody hit it. Nothing prevented it either.
+
+**The lesson worth keeping: freight was verified end to end and the order path
+was not.** Both sit behind the same flag.
+
+### The dead WooCommerce variables
+
+`WC_WRITE_ENABLED` and `WC_STORE_URL` no longer affect order placement. Leave them
+until the snapshot build moves off Woo, but do not trust them: `WC_STORE_URL`
+points at a host with no WooCommerce behind it.
+
+### 🔎 One real card order is still owed
+
+`SO-00000851` proves the write path, including freight riding as an `MKFR` line —
+but it called `buildSalesOrderPayload` directly. **Stripe verification,
+`resolveOrderLines` repricing and the amount-match check are still unexercised
+against a real payment.** Production returns 402 "Payment not verified" to a bogus
+PaymentIntent rather than 503, which confirms the route is enabled and reaches the
+payment check, and nothing beyond that.
+
+Buy something cheap that carries carton data, so freight is exercised too.
+
+### 🧠 557 products are still quote-only, and this is the fix
+
+`canPay` requires `productId > 0` because `resolveOrderLines` cannot price a line
+with no WooCommerce product. That forces **557 of 1,345 sellable ERP products** to
+the quote flow — Apparel 97%, Strength 79% (`npm run report:erponly`, and read its
+caveat before quoting the number). Once repricing resolves an ERP-only line from
+the ERP, the rule can relax and those products become card-buyable. Same fix as
+decommissioning Woo.
+
+---
+
 ## 1b. Freight (two carriers, priced against each other) ⚙️🔎🧠
 
 **Australia Post and Easyship are now BOTH asked on every quote, in parallel, and
