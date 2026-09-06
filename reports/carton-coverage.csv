@@ -1,0 +1,1346 @@
+code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,measured,card_ready
+"ABCTDR01","Drop In Core Trainer","Body Weight",31.8182,3,43,8,8,true,true,true
+"ABCTFS02","Core Trainer (Landmine) With T Bar Handle","Body Weight",134.0909,17,42,17,59,true,true,true
+"ABEMMA01","EVA Exercise Mat","Body Weight",20.4545,3,140,62,1.6,true,true,true
+"ABPBSB04","Foam Plyometric Box - 12""","Body Weight",150,13,850,1000,305,true,true,true
+"ABRMRL03","Foam Roller - 45cm (Black)","Body Weight",22.7273,0,0,0,0,true,false,false
+"ABRPBA01","Knitted Resistance Bands (Set of 3)","Body Weight",13.6364,1,34,24,2,true,true,true
+"ABRPPO03","Power Bands - 13mm (Red)","Body Weight",4,0,0,0,0,true,false,false
+"ABRPPO04","Power Bands - 21mm (Green)","Body Weight",5.25,0,0,0,0,true,false,false
+"ABRPPO05","Power Bands - 32mm (Orange)","Body Weight",9,0,0,0,0,true,false,false
+"ABRPPO06","Power Bands - 45mm (Blue)","Body Weight",10.75,0,0,0,0,true,false,false
+"ABRPPO07","Power Bands - 64mm (Purple)","Body Weight",12.5,0,0,0,0,true,false,false
+"ABRPPO08","Power Bands - 83mm (Black)","Body Weight",16,0,0,0,0,true,false,false
+"ABSADI01","Mini Disc Cones (Set of 50)","Body Weight",15.9091,2,15,15,15,true,true,true
+"ABSADO01","Station Markers (Set of 96) - Numbers","Body Weight",88.6364,0,0,0,0,true,false,false
+"ABSADO02","Station Markers (Set of 15) - Boost","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSADO03","Station Markers (Set of 15) - Rep","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSADO04","Station Markers (Set of 15) - Neural","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSADO05","Station Markers (Set of 15) - Form","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSADO06","Station Markers (Set of 15) - Hero","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSADO07","Station Markers (Set of 15) - Functional","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSADO08","Station Markers (Set of 15) - Sherpa","Body Weight",15.9091,0,0,0,0,true,false,false
+"ABSUTR01","Suspension Trainer","Body Weight",34.0909,6,23,23,9,true,true,true
+"ACBIAR03","Air Plus Expert Bike (Including Smart Connect Console)","Cardio",999.545,0,0,0,0,false,false,false
+"ACBIAR05","Spin Bike (Including Smart Connect Console)","Cardio",908.636,0,0,0,0,false,false,false
+"ACTMSP02","Resistance Treadmill (Including Smart Connect Console)","Cardio",3449.5455,0,0,0,0,false,false,false
+"AEBXACC02","Storage Bin (Aqua Colour)","Equipment Storage",15.9091,0,0,0,0,false,false,false
+"AEFRACC02","Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)","Equipment Storage",579.5455,95,132,40.4,6,true,true,true
+"AEFRBB01","Barbell Storage Box (9 Bar Holder) - Versatile","Equipment Storage",127.2727,27,46,46,26,true,true,true
+"AEFRBL01","Medicine Ball Rack - 10 Ball (Double Sided)","Equipment Storage",90.4545,14,153,15,15,true,true,true
+"AEFRDB06","Vertical Dumbbell Rack - Portable (Four Sided)","Equipment Storage",213.6364,53,115,56,25,true,true,true
+"AEWMACC02","Rope & Band Rack (Wall Mounted)","Equipment Storage",31.8182,4,58,11,11,true,true,true
+"AMBXG01","Cotton Inners (Fingerless, 100 Pair)","Mixed Implements",90.9091,0,0,0,0,true,false,false
+"AMBXPBG03","Aqua Punching Bag - 86kg (53cm D)","Mixed Implements",175,7,67,36,22,true,true,true
+"AMBXSY01","Focus Pads","Mixed Implements",27.2727,0,0,0,0,true,false,false
+"AMDBRH01","Rubber Hex Dumbbell - 1kg","Mixed Implements",2.2727,2,0,0,0,true,false,false
+"AMDBRH02","Rubber Hex Dumbbell - 2kg","Mixed Implements",4.5455,3,0,0,0,true,false,false
+"AMDBRH04","Rubber Hex Dumbbell - 3kg","Mixed Implements",6.8182,4,0,0,0,true,false,false
+"AMDBRH05","Rubber Hex Dumbbell - 4kg","Mixed Implements",9.0909,5,0,0,0,true,false,false
+"AMDBRH06","Rubber Hex Dumbbell - 5kg","Mixed Implements",11.3636,6,0,0,0,true,false,false
+"AMDBRH07","Rubber Hex Dumbbell - 6kg","Mixed Implements",13.6364,7,0,0,0,true,false,false
+"AMDBRH08","Rubber Hex Dumbbell - 7kg","Mixed Implements",15.9091,8,0,0,0,true,false,false
+"AMDBRH10","Rubber Hex Dumbbell - 8kg","Mixed Implements",18.1818,9,0,0,0,true,false,false
+"AMDBRH11","Rubber Hex Dumbbell - 9kg","Mixed Implements",20.4545,10,0,0,0,true,false,false
+"AMDBRH12","Rubber Hex Dumbbell - 10kg","Mixed Implements",22.7273,11,0,0,0,true,false,false
+"AMDBRH13","Rubber Hex Dumbbell - 12.5kg","Mixed Implements",28.4091,14,0,0,0,true,false,false
+"AMDBRH14","Rubber Hex Dumbbell - 15kg","Mixed Implements",34.0909,16,0,0,0,true,false,false
+"AMDBRH15","Rubber Hex Dumbbell - 17.5kg","Mixed Implements",39.7727,19,0,0,0,true,false,false
+"AMDBRH16","Rubber Hex Dumbbell - 20kg","Mixed Implements",45.4545,21,0,0,0,true,false,false
+"AMDBRH18","Rubber Hex Dumbbell - 25kg","Mixed Implements",56.8182,26,0,0,0,true,false,false
+"AMDBRH20","Rubber Hex Dumbbell - 30kg","Mixed Implements",68.1818,31,0,0,0,true,false,false
+"AMDBRH22","Rubber Hex Dumbbell - 35kg","Mixed Implements",79.5455,36,0,0,0,true,false,false
+"AMDEHG01","High Grip Dead Ball - 3kg","Mixed Implements",12.5,13,29,29,29,true,true,true
+"AMDEHG02","High Grip Dead Ball - 6kg","Mixed Implements",18.1818,7,240,240,240,true,true,true
+"AMDEHG03","High Grip Dead Ball - 9kg","Mixed Implements",20.4545,10,240,240,240,true,true,true
+"AMDEHG04","High Grip Dead Ball - 12kg","Mixed Implements",25,13,290,290,290,true,true,true
+"AMDEHG05","High Grip Dead Ball - 15kg","Mixed Implements",31.8182,16,290,290,290,true,true,true
+"AMKBUR01","Urethane Competition Kettlebell - 8kg","Mixed Implements",40,9,220,220,290,false,true,false
+"AMKBUR02","Urethane Competition Kettlebell - 10kg","Mixed Implements",52.2727,11,220,220,290,false,true,false
+"AMKBUR03","Urethane Competition Kettlebell - 12kg","Mixed Implements",56.8182,13,220,220,290,false,true,false
+"AMKBUR04","Urethane Competition Kettlebell - 16kg","Mixed Implements",72.7273,17,220,220,290,false,true,false
+"AMKBUR05","Urethane Competition Kettlebell - 20kg","Mixed Implements",88.6364,21,220,220,290,false,true,false
+"AMKBUR06","Urethane Competition Kettlebell - 24kg","Mixed Implements",104.5455,25,220,220,290,false,true,false
+"AWBBOL01","Olympic Hex Deadlift Barbell (400mm Loadable Sleeves)","Weightlifting",179.5455,0,0,0,0,false,false,false
+"AWBBOL03","Olympic Barbell - 15kg (1500Lb Capacity)","Weightlifting",156.8182,16,205,8,8,true,true,true
+"AWBBOL04","Olympic Barbell - 20kg (2000Lb Capacity)","Weightlifting",179.5455,0,0,0,0,false,false,false
+"AWWLACC02","Olympic Bar Easy Lock Collars (Pair)","Weightlifting",11.3636,1,5.3,5.3,6.5,true,true,true
+"AWWPCB01","Competition Bumper Plates (Black) - 5kg","Weightlifting",13.75,6,46,46,3.6,true,true,true
+"AWWPCB02","Competition Bumper Plates (Black) - 10kg","Weightlifting",19.5,11,46,46,4.5,true,true,true
+"AWWPCB03","Competition Bumper Plates (Black) - 15kg","Weightlifting",28.75,16,46,46,5.8,true,true,true
+"AWWPCB04","Competition Bumper Plates (Black) - 20kg","Weightlifting",38.75,21,46,46,6.9,true,true,true
+"AWWPCP01","Change Plates - 2.5kg - RED","Weightlifting",20,3,22,22,13.5,true,true,true
+"AWWPCP02","Change Plates - 2.5kg - WHITE","Weightlifting",20,3,22,22,13.5,true,true,true
+"AWWPOU01","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",18.1818,6,26,26,4.7,true,true,true
+"AWWPOU02","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",36.3636,11,33.2,33.2,5,true,true,true
+"AWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",54.5455,16,36.5,36.5,5.4,true,true,true
+"C2BIKEERG","CONCEPT 2 - Bike Erg with PM5 Monitor","Cardio",1950,0,0,0,0,false,false,false
+"C2ROWERG","CONCEPT 2 - Row Erg with Standard Legs","Cardio",1550,0,0,0,0,false,false,false
+"C2SKIERG","CONCEPT 2 - Ski Erg with PM5","Cardio",1500,0,0,0,0,false,false,false
+"C2SKIERGFS","CONCEPT 2 - Ski Erg Floor Stand","Cardio",400,0,0,0,0,false,false,false
+"CUSTOM01","Custom - Olympic Urethane Weight Plates (4 Grip) - Mold (per size)","Other Costs",250,0,0,0,0,false,false,false
+"CUSTOM02","Custom - Olympic Urethane Weight Plates (3 Grip) - Laser (per size)","Other Costs",125,0,0,0,0,false,false,false
+"CUSTOM03","Custom - Olympic Premium Weight Plates (3 Grip) - Mold (per size)","Other Costs",1000,0,0,0,0,false,false,false
+"CUSTOM04","Custom - Pro Bumper Plates - Mold (per size)","Other Costs",1000,0,0,0,0,false,false,false
+"CUSTOM05","Custom - Competition Bumper Plates - Mold (per size)","Other Costs",1000,0,0,0,0,false,false,false
+"CUSTOM06","Custom - Competition Bumper Plates - Laser (per size)","Other Costs",125,0,0,0,0,false,false,false
+"CUSTOM07","Custom - Change Plates - Mold (per size)","Other Costs",1000,0,0,0,0,false,false,false
+"CUSTOM08","Custom - Change Plates - Laser (per size)","Other Costs",125,0,0,0,0,false,false,false
+"CUSTOM09","Custom - Urethane Fixed Dumbbells (Pair) - Mold (per size)","Other Costs",200,0,0,0,0,false,false,false
+"CUSTOM10","Custom - Urethane Fixed Dumbbells (Pair) - PVC (per size)","Other Costs",50,0,0,0,0,false,false,false
+"CUSTOM11","Custom - Rubber Fixed Barbells - Mold (per size)","Other Costs",200,0,0,0,0,false,false,false
+"CUSTOM12","Custom - Urethane Competition Kettlebell - PVC (per size)","Other Costs",50,0,0,0,0,false,false,false
+"CUSTOM13","Custom - Steel Competition Kettlebell - MOLD (per size)","Other Costs",340,0,0,0,0,false,false,false
+"CUSTOM14","Custom - Group Fitness Step - Mold (per size)","Other Costs",250,0,0,0,0,false,false,false
+"CUSTOM15","Custom - Medicine Ball - Print (per size)","Other Costs",50,0,0,0,0,false,false,false
+"CUSTOM16","Custom - Dead Ball - Print (per size)","Other Costs",50,0,0,0,0,false,false,false
+"CUSTOM17","Custom - High Grip Dead Ball - Print (per size)","Other Costs",50,0,0,0,0,false,false,false
+"CUSTOM18","Custom - Premium Rubber Hex Dumbbell - Mold (per size)","Other Costs",50,0,0,0,0,false,false,false
+"CUSTOM19","Custom - Olympic Barbells - Mold (per size)","Other Costs",1000,0,0,0,0,false,false,false
+"FBCTDI01","Exercise Glider Discs (Pair)","Body Weight",43.6364,1,20,22,10,false,true,false
+"FBPB3I101","3-In-1 Foam Plyometric Box - 34kg","Body Weight",300,35,77,52,62,false,true,false
+"FBRMRL09","Foam Roller Storage Rack (Wall Mounted)","Equipment Storage",268.1818,0,1,0.66,0.74,false,false,false
+"FBSADO03","Station Markers (Set of 20)","Body Weight",72.7273,1,10,10,2,false,true,false
+"FBSALD01","Rubber Rollout Speed Ladder - 5m","Body Weight",77.2727,9,43,19,19,false,true,false
+"FFATSY01","Artificial Turf Black (2m x 10m)(Custom Branding)","Flooring",1500,43,200,45,45,false,true,false
+"FMDBUR01","Urethane Fixed Dumbbells (Pair) - 10kg","Mixed Implements",160,11,25,16.3,16.3,false,true,false
+"FMDBUR02","Urethane Fixed Dumbbells (Pair) - 12.5kg","Mixed Implements",200,14,25,18.3,18.3,false,true,false
+"FMDBUR03","Urethane Fixed Dumbbells (Pair) - 15kg","Mixed Implements",236.3636,16,26.4,18.3,18.3,false,true,false
+"FMDBUR04","Urethane Fixed Dumbbells (Pair) - 17.5kg","Mixed Implements",290.9091,19,26.4,20.3,20.3,false,true,false
+"FMDBUR05","Urethane Fixed Dumbbells (Pair) - 20kg","Mixed Implements",322.7273,21,27.4,20.3,20.3,false,true,false
+"FMDBUR06","Urethane Fixed Dumbbells (Pair) - 22.5kg","Mixed Implements",363.6364,24,27.4,20.3,20.3,false,true,false
+"FMDBUR07","Urethane Fixed Dumbbells (Pair) - 25kg","Mixed Implements",400,26,30,20.3,20.3,false,true,false
+"FMDBUR08","Urethane Fixed Dumbbells (Pair) - 27.5kg","Mixed Implements",454.5455,29,30,20.3,20.3,false,true,false
+"FMDBUR09","Urethane Fixed Dumbbells (Pair) - 30kg","Mixed Implements",481.8182,31,32.2,20.3,20.3,false,true,false
+"FMDBUR18","Urethane Fixed Dumbbells (Pair) - 5kg","Mixed Implements",80,0,0,0,0,false,false,false
+"FMDBUR19","Urethane Fixed Dumbbells (Pair) - 7.5kg","Mixed Implements",120,0,0,0,0,false,false,false
+"FMDBUR20","Urethane Fixed Dumbbells (Pair) - 1kg","Mixed Implements",16,0,0,0,0,false,false,false
+"FMDBUR21","Urethane Fixed Dumbbells (Pair) - 2kg","Mixed Implements",32,0,0,0,0,false,false,false
+"FMDBUR22","Urethane Fixed Dumbbells (Pair) - 3kg","Mixed Implements",48,0,0,0,0,false,false,false
+"FMDBUR23","Urethane Fixed Dumbbells (Pair) - 4kg","Mixed Implements",64,0,0,0,0,false,false,false
+"FMDBUR25","Urethane Fixed Dumbbells (Pair) - 6kg","Mixed Implements",96,0,0,0,0,false,false,false
+"FMDBUR26","Urethane Fixed Dumbbells (Pair) - 7kg","Mixed Implements",112,0,0,0,0,false,false,false
+"FMDBUR27","Urethane Fixed Dumbbells (Pair) - 8kg","Mixed Implements",128,0,0,0,0,false,false,false
+"FMDBUR28","Urethane Fixed Dumbbells (Pair) - 9kg","Mixed Implements",144,0,0,0,0,false,false,false
+"FMKBPGC01","Competition Kettlebell - 6kg (Aluminium)","Mixed Implements",54.5455,7,23,23,31,false,true,false
+"FMKBPGC02","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,31,false,true,false
+"FMKBPGC03","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,31,false,true,false
+"FMKBPGC04","Competition Kettlebell - 12kg","Mixed Implements",81.8182,13,23,23,31,false,true,false
+"FMKBPGC05","Competition Kettlebell - 16kg","Mixed Implements",100,17,23,23,31,false,true,false
+"FMKBPGC06","Competition Kettlebell - 18kg","Mixed Implements",109.0909,19,23,23,31,false,true,false
+"FMKBPGC07","Competition Kettlebell - 20kg","Mixed Implements",118.1818,21,23,23,31,false,true,false
+"FMKBPGC08","Competition Kettlebell - 24kg","Mixed Implements",136.3636,25,23,23,31,false,true,false
+"FMKBPGC09","Competition Kettlebell - 28kg","Mixed Implements",154.5455,29,23,23,31,false,true,false
+"FSFTSFS02","Functional Training System 2.0 (Pink Accessories)","Rigs & Racks",3813.6364,0,0,0,0,false,false,false
+"FWBBFUR01","Urethane Fixed Barbells - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,false,true,false
+"FWBBFUR02","Urethane Fixed Barbells - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,false,true,false
+"FWBBFUR03","Urethane Fixed Barbells - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,false,true,false
+"FWBBFUR04","Urethane Fixed Barbells - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,false,true,false
+"FWBBFUR05","Urethane Fixed Barbells - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,false,true,false
+"FWBBFUR06","Urethane Fixed Barbells - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,false,true,false
+"FWBBFUR07","Urethane Fixed Barbells - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,false,true,false
+"FWBBFUR08","Urethane Fixed Barbells - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,false,true,false
+"FWBBFUR11","Urethane Fixed Barbells - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"FWBBFUR12","Urethane Fixed Barbells - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,false
+"FWBBFUR20","Fixed PU Curl Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"FWWPOU08","Olympic Urethane Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,2,170,170,32,false,true,false
+"FWWPOU09","Olympic Urethane Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,11,332,332,50,false,true,false
+"FWWPOU10","Olympic Urethane Weight Plates (4 Grip) - 15kg","Weightlifting",122.7273,16,365,365,54,false,true,false
+"FWWPOU11","Olympic Urethane Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,3,210,210,35,false,true,false
+"FWWPOU12","Olympic Urethane Weight Plates (4 Grip) - 20kg","Weightlifting",163.6364,21,410,410,59,false,true,false
+"FWWPOU13","Olympic Urethane Weight Plates (4 Grip) - 25kg","Weightlifting",204.5455,26,435,435,61,false,true,false
+"FWWPOU14","Olympic Urethane Weight Plates (4 Grip) - 5kg","Weightlifting",40.9091,6,260,260,47,false,true,false
+"GWBBFUR01","Fixed PU Straight Barbell - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,false,true,false
+"GWBBFUR02","Fixed PU Straight Barbell - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,false,true,false
+"GWBBFUR03","Fixed PU Straight Barbell - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,false,true,false
+"GWBBFUR04","Fixed PU Straight Barbell - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,false,true,false
+"GWBBFUR05","Fixed PU Straight Barbell - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,false,true,false
+"GWBBFUR06","Fixed PU Straight Barbell - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,false,true,false
+"GWBBFUR07","Fixed PU Straight Barbell - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,false,true,false
+"GWBBFUR08","Fixed PU Straight Barbell - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,false,true,false
+"GWBBFUR09","Fixed PU Straight Barbell - 35kg","Weightlifting",263.6364,36,10.54,1.63,1.63,false,true,false
+"GWBBFUR10","Fixed PU Straight Barbell - 40kg","Weightlifting",300,41,10.54,1.63,1.63,false,true,false
+"GWBBFUR11","Fixed PU Straight Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"GWBBFUR12","Fixed PU Straight Barbell - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,false
+"GWBBFUR13","Fixed PU Straight Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
+"GWBBFUR14","Fixed PU Straight Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
+"GWBBFUR15","Fixed PU Straight Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
+"GWBBFUR16","Fixed PU Straight Barbell - 42.5kg","Weightlifting",322.7227,0,0,0,0,false,false,false
+"GWBBFUR17","Fixed PU Straight Barbell - 45kg","Weightlifting",340.9091,0,0,0,0,false,false,false
+"GWBBFUR18","Fixed PU Straight Barbell - 47.5kg","Weightlifting",359.0864,0,0,0,0,false,false,false
+"GWBBFUR19","Fixed PU Straight Barbell - 50kg","Weightlifting",377.2727,0,0,0,0,false,false,false
+"GWBBFUR20","Fixed PU Curl Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"GWBBFUR21","Fixed PU Curl Barbell - 7.5kg","Weightlifting",61.3636,0,0,0,0,false,false,false
+"GWBBFUR22","Fixed PU Curl Barbell - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
+"GWBBFUR23","Fixed PU Curl Barbell - 12.5kg","Weightlifting",100,0,0,0,0,false,false,false
+"GWBBFUR24","Fixed PU Curl Barbell - 15kg","Weightlifting",118.1818,0,0,0,0,false,false,false
+"GWBBFUR25","Fixed PU Curl Barbell - 17.5kg","Weightlifting",136.3636,0,0,0,0,false,false,false
+"GWBBFUR26","Fixed PU Curl Barbell - 20kg","Weightlifting",154.5455,0,0,0,0,false,false,false
+"GWBBFUR27","Fixed PU Curl Barbell - 22.5kg","Weightlifting",172.7273,0,0,0,0,false,false,false
+"GWBBFUR28","Fixed PU Curl Barbell - 25kg","Weightlifting",190.9091,0,0,0,0,false,false,false
+"GWBBFUR29","Fixed PU Curl Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
+"GWBBFUR30","Fixed PU Curl Barbell - 30kg","Weightlifting",227.2727,0,0,0,0,false,false,false
+"GWBBFUR31","Fixed PU Curl Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
+"GWBBFUR32","Fixed PU Curl Barbell - 35kg","Weightlifting",263.6364,0,0,0,0,false,false,false
+"GWBBFUR33","Fixed PU Curl Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
+"GWBBFUR34","Fixed PU Curl Barbell - 40kg","Weightlifting",300,0,0,0,0,false,false,false
+"GWBBFUR35","Fixed PU Curl Barbell - 42.5kg","Weightlifting",322.7227,0,0,0,0,false,false,false
+"GWBBFUR36","Fixed PU Curl Barbell - 45kg","Weightlifting",340.9091,0,0,0,0,false,false,false
+"GWBBFUR37","Fixed PU Curl Barbell - 47.5kg","Weightlifting",359.0864,0,0,0,0,false,false,false
+"GWBBFUR38","Fixed PU Curl Barbell - 50kg","Weightlifting",377.2727,0,0,0,0,false,false,false
+"GWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,false,true,false
+"GWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,false,true,false
+"GWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,false,true,false
+"GWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,false,true,false
+"GWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,false,true,false
+"GWWPCNB06","Pro Bumper Plates - 5kg","Weightlifting",58.1818,0,0,0,0,false,false,false
+"GWWPCNB07","Pro Bumper Plates - 10kg","Weightlifting",78.1818,0,0,0,0,false,false,false
+"GWWPCNB08","Pro Bumper Plates - 15kg","Weightlifting",89.0909,0,0,0,0,false,false,false
+"GWWPCNB09","Pro Bumper Plates - 20kg","Weightlifting",109.0909,0,0,0,0,false,false,false
+"GWWPCNB10","Pro Bumper Plates - 25kg","Weightlifting",130.9091,0,0,0,0,false,false,false
+"GWWPOU08","Olympic PU Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,0,0,0,0,false,false,false
+"GWWPOU09","Olympic PU Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
+"GWWPOU10","Olympic PU Weight Plates (4 Grip) - 15kg","Weightlifting",122.7273,0,0,0,0,false,false,false
+"GWWPOU11","Olympic PU Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,0,0,0,0,false,false,false
+"GWWPOU12","Olympic PU Weight Plates (4 Grip) - 20kg","Weightlifting",163.6364,0,0,0,0,false,false,false
+"GWWPOU13","Olympic PU Weight Plates (4 Grip) - 25kg","Weightlifting",204.5455,0,0,0,0,false,false,false
+"GWWPOU14","Olympic PU Weight Plates (4 Grip) - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"HMDBRH06","Rubber Hex Dumbbell - 5kg","Mixed Implements",22.73,0,0,0,0,false,false,false
+"HMDBRH13","Rubber Hex Dumbbell - 12.5kg","Mixed Implements",56.82,0,0,0,0,false,false,false
+"HSBTFW01","Seated Preacher Curl Bench","Strength",535.45,0,0,0,0,false,false,false
+"HSCMSE01","Functional Trainer","Strength",4090,0,0,0,0,false,false,false
+"HSLBPL01","Seated Calf Raise Machine","Strength",908.18,0,0,0,0,false,false,false
+"HWWPOR06","Olympic Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",90.91,0,0,0,0,false,false,false
+"MAAACO01","Sweat Towel","Apparel",7.2727,0,0.04,0,0.08,false,false,false
+"MAAAU01","Trucker Hat","Apparel",36.3636,0,0,0,0,false,false,false
+"MAAAU02","Train Cap","Apparel",36.3636,0,0,0,0,false,false,false
+"MAAAU03","Socks","Apparel",36.3636,0,0,0,0,false,false,false
+"MAACU01L","Sweatshirt (Unisex) (L)","Apparel",80.9091,0,0,0,0,false,false,false
+"MAACU01M","Sweatshirt (Unisex) (M)","Apparel",80.9091,0,0,0,0,false,false,false
+"MAACU01S","Sweatshirt (Unisex) (S)","Apparel",80.9091,0,0,0,0,false,false,false
+"MAACU01XL","Sweatshirt (Unisex) (XL)","Apparel",80.9091,0,0,0,0,false,false,false
+"MAACU02L","Oversized Hoodie (Unisex) (L)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU02M","Oversized Hoodie (Unisex) (M)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU02S","Oversized Hoodie (Unisex) (S)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU02XL","Oversized Hoodie (Unisex) (XL)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU03L","Oversized Tee (Unisex) (L)","Apparel",50,0,0,0,0,false,false,false
+"MAACU03M","Oversized Tee (Unisex) (M)","Apparel",50,0,0,0,0,false,false,false
+"MAACU03S","Oversized Tee (Unisex) (S)","Apparel",50,0,0,0,0,false,false,false
+"MAACU03XL","Oversized Tee (Unisex) (XL)","Apparel",50,0,0,0,0,false,false,false
+"MAACU04L","Long Sleeve Tee (Unisex) (L)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU04M","Long Sleeve Tee (Unisex) (M)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU04S","Long Sleeve Tee (Unisex) (S)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU04XL","Long Sleeve Tee (Unisex) (XL)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU05L","Short Sleeve Tee (Male) (L)","Apparel",50,0,0,0,0,false,false,false
+"MAACU05M","Short Sleeve Tee (Male) (M)","Apparel",50,0,0,0,0,false,false,false
+"MAACU05S","Short Sleeve Tee (Male) (S)","Apparel",50,0,0,0,0,false,false,false
+"MAACU05XL","Short Sleeve Tee (Male) (XL)","Apparel",50,0,0,0,0,false,false,false
+"MAACU06L","Training Shorts - 7"" (Male) (L)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU06M","Training Shorts - 7"" (Male) (M)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU06S","Training Shorts - 7"" (Male) (S)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU06XL","Training Shorts - 7"" (Male) (XL)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU07L","Short Sleeve Polo (Male) (L)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU07M","Short Sleeve Polo (Male) (M)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU07S","Short Sleeve Polo (Male) (S)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU07XL","Short Sleeve Polo (Male) (XL)","Apparel",81.8182,0,0,0,0,false,false,false
+"MAACU08L","Tank (Male) (L)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU08M","Tank (Male) (M)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU08S","Tank (Male) (S)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU08XL","Tank (Male) (XL)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU09L","High Rise Leggings (Woman) (L)","Apparel",113.6364,0,0,0,0,false,false,false
+"MAACU09M","High Rise Leggings (Woman) (M)","Apparel",113.6364,0,0,0,0,false,false,false
+"MAACU09S","High Rise Leggings (Woman) (S)","Apparel",113.6364,0,0,0,0,false,false,false
+"MAACU09XL","High Rise Leggings (Woman) (XL)","Apparel",113.6364,0,0,0,0,false,false,false
+"MAACU10L","Relaxed Short Sleeve Tee (Woman) (L)","Apparel",72.7273,0,0,0,0,false,false,false
+"MAACU10M","Relaxed Short Sleeve Tee (Woman) (M)","Apparel",72.7273,0,0,0,0,false,false,false
+"MAACU10S","Relaxed Short Sleeve Tee (Woman) (S)","Apparel",72.7273,0,0,0,0,false,false,false
+"MAACU10XL","Relaxed Short Sleeve Tee (Woman) (XL)","Apparel",72.7273,0,0,0,0,false,false,false
+"MAACU11L","Tank (Woman) (L)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU11M","Tank (Woman) (M)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU11S","Tank (Woman) (S)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU11XL","Tank (Woman) (XL)","Apparel",68.1818,0,0,0,0,false,false,false
+"MAACU12L","Sports Bra (Woman) (L)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU12M","Sports Bra (Woman) (S)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU12S","Sports Bra (Woman) (S)","Apparel",59.0909,0,0,0,0,false,false,false
+"MAACU12XL","Sports Bra (Woman) (XL)","Apparel",59.0909,0,0,0,0,false,false,false
+"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements",250,13,120,31,20,true,true,true
+"MBASADJ02","Group Fitness Step (4 Risers)","Mixed Implements",222.7273,18,44.5,44.5,37,true,true,true
+"MBASADJ03","Group Fitness Step (6 Risers)","Mixed Implements",259.0909,19,44.5,44.5,37,true,true,true
+"MBBSCU01","Balance Cushion","Body Weight",31.8182,3,33,33,6,true,true,true
+"MBBSTR01","Fitness & Balance Trainer","Body Weight",163.6364,8,6.6,6.6,0.9,true,true,true
+"MBCT5501","Fitness Ball - 55cm (Anti-Burst)","Body Weight",27.2727,0,0,0,0,false,false,false
+"MBCT6501","Fitness Ball - 65cm (Anti-Burst)","Body Weight",31.8182,0,0,0,0,false,false,false
+"MBCT7501","Fitness Ball - 75cm (Anti-Burst)","Body Weight",36.3636,0,0,0,0,false,false,false
+"MBCTACC01","Utility Roller","Body Weight",122.7273,10,68,34.5,8.5,true,true,true
+"MBCTDI01","Exercise Glider Discs (Pair)","Body Weight",43.6364,1,20,22,10,true,true,true
+"MBCTDR01","Drop In Core Trainer","Body Weight",77.2727,3,43,8,8,true,true,true
+"MBCTDR02","Core Trainer (Landmine) With T Bar Handle","Body Weight",268.1818,0,0,0,0,false,false,false
+"MBCTFS02","Core Trainer (Landmine) With T Bar Handle","Body Weight",295.4545,17,42,17,59,true,true,true
+"MBCTMA01","Abdominal Mat","Body Weight",22.7273,1,38,30,6,true,true,true
+"MBCTWH01","Abdominal Wheel","Body Weight",20,3,26,20,9.5,true,true,true
+"MBEMMA01","EVA Exercise Mat","Body Weight",45.4545,3,140,62,1.6,true,true,true
+"MBGFSTP01","Group Fitness Step (Adjustable)","Mixed Implements",271.82,0,0,0,0,false,false,false
+"MBGFSTP03","Group Fitness Step (6 Risers)","Mixed Implements",268.18,0,0,0,0,false,false,false
+"MBGYRI01","Gymnastic Rings (Wooden)","Body Weight",68.1818,2,26,26,7,true,true,true
+"MBGYSL01","Parallettes - 275mm (Pair)","Body Weight",181.8182,11,50,28.5,35.5,true,true,true
+"MBPAMA01","EVA Exercise Mat (Set of 10)","Body Weight",1818.1818,0,0,0,0,false,false,false
+"MBPB3I101","3-In-1 Foam Plyometric Box - 34kg","Body Weight",300,35,77,52,62,true,true,true
+"MBPB3I102","3-In-1 Wooden Plyometric Box","Body Weight",150,11,77,61,15,true,true,true
+"MBPB3I103","3-In-1 Foam Plyometric Box - 21kg","Body Weight",250,0,0,0,0,false,false,false
+"MBPBMS01","Plyometric Box (Set of 4)","Body Weight",359.0909,38,76,43,43,true,true,true
+"MBPBSB02","Foam Plyometric Box - 6""","Body Weight",200,9,85,100,15.3,true,true,true
+"MBPBSB04","Foam Plyometric Box - 12""","Body Weight",345.4545,13,85,100,30.5,true,true,true
+"MBPBSB06","Foam Plyometric Box - 24""","Body Weight",600,21,85,100,61,true,true,true
+"MBRMRL01","Foam Roller - 45cm","Body Weight",30,4,46,16,16,true,true,true
+"MBRMRL02","Foam Roller - 90cm","Body Weight",45.4545,8,91,16,16,true,true,true
+"MBRMRL03","Foam Roller - 33cm (TPT)","Body Weight",31.8182,1,33,14,14,true,true,true
+"MBRMRL04","Foam Roller - 32cm (Trigger Point)","Body Weight",36.36,0,0,0,0,false,false,false
+"MBRMRL09","Massage Rolling Machine","Body Weight",8453.636,0,0,0,0,false,false,false
+"MBRPBA01","Knitted Resistance Bands (Set of 3)","Body Weight",27.2727,1,34,24,2,true,true,true
+"MBRPBA02","Power Bands (Pack of 4)","Body Weight",109.09,0,0,0,0,false,false,false
+"MBRPBA03","Power Bands (Pack of 8)","Body Weight",177.27,0,0,0,0,false,false,false
+"MBRPMI01","Mini Bands (Pack of 4)","Body Weight",18.1818,1,7.3,3.2,3.6,true,true,true
+"MBRPPO01","Power Bands (Pack of 4)","Body Weight",109.0909,2,15,36,15,true,true,true
+"MBRPPO02","Power Bands (Pack of 8)","Body Weight",177.2727,4,40,36,30,true,true,true
+"MBRPPO03","Micro Bands - Heavy","Body Weight",5.4545,0,0,0,0,false,false,false
+"MBRPPO04","Micro Bands - X Heavy","Body Weight",7.2727,0,0,0,0,false,false,false
+"MBRPPO05","Micro Bands - XX Heavy","Body Weight",9.0909,0,0,0,0,false,false,false
+"MBRPPO06","Power Bands - 13mm (Red)","Body Weight",10.9091,0,0,0,0,false,false,false
+"MBRPPO07","Power Bands - 21mm (Grey)","Body Weight",18.1818,0,0,0,0,false,false,false
+"MBRPPO08","Power Bands - 32mm (Black)","Body Weight",27.2727,0,0,0,0,false,false,false
+"MBSADI01","Mini Disc Cones (Set of 50)","Body Weight",31.8182,2,15,15,15,true,true,true
+"MBSADO01","Agility Dots (Set of 5)","Body Weight",18.1818,0,0,0,0,false,false,false
+"MBSADO02","Station Markers (Set of 5)","Body Weight",18.18,1,10,10,2,true,true,true
+"MBSADO03","Station Markets (Set of 20)","Body Weight",72.7273,0,0,0,0,false,false,false
+"MBSAHD01","Lateral Endurance Hurdles (Set of 4)","Body Weight",209.0909,21,63,53,35,true,true,true
+"MBSALD01","Rubber Rollout Speed Ladder - 5m","Body Weight",77.2727,9,43,19,19,true,true,true
+"MBSARO01","Speed Rope (Elite)","Body Weight",22.7273,2,10,10,3,true,true,true
+"MBSAROL01","Speed Rope (Elite)","Body Weight",27.27,0,0,0,0,false,false,false
+"MBSUTR01","Suspension Trainer","Body Weight",86.3636,6,23,23,9,true,true,true
+"MCBIAR01","Air Bike Classic","Cardio",1180.91,52,127,28,89,true,true,true
+"MCBIAR02","Air Bike Pro","Cardio",1362.7273,54,145,39,96,true,true,true
+"MCBIAR03","Air Bike Elite","Cardio",1999.0909,89,127,46,89,true,true,true
+"MCBIAR04","Air Cycle Pro","Cardio",1590,66,137,42,110,true,true,true
+"MCBIAR05","Air Cycle Elite","Cardio",1817.2727,66,137,42,110,true,true,true
+"MCBIMG01","Performance Indoor Cycle","Cardio",2635.4545,0,0,0,0,false,false,false
+"MCRFAL01","Performance Reformer","Cardio",3227.2727,0,0,0,0,false,false,false
+"MCRFWO01","Studio Reformer","Cardio",2681.8182,0,0,0,0,false,false,false
+"MCRWAR01","Air Rower Pro","Cardio",1271.8182,51,146,66,38,true,true,true
+"MCRWAR03","Air Rower Elite","Cardio",1590,51,146,66,38,true,true,true
+"MCSTACC01","Ski Trainer Floor Stand","Cardio",244.5455,0,0,0,0,true,false,false
+"MCSTACC02","Ski Trainer Wall Mount Bracket","Cardio",35.4545,2,25,12.5,5,true,true,true
+"MCSTAR01","Ski Trainer Pro","Cardio",1607.2727,49,118,61,47,true,true,true
+"MCSTAR02","Ski Trainer Elite","Cardio",1880,53,118,61,47,true,true,true
+"MCTMSP01","Curved Treadmill Pro","Cardio",5708.1818,180,185,91,56,true,true,true
+"MCTMSP02","Curved Treadmill Elite","Cardio",6899.0909,601,185,91,56,true,true,true
+"MEFRACC01","Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)","Equipment Storage",813.6364,95,132,40.4,6,true,true,true
+"MEFRACC02","Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (2m)","Equipment Storage",1177.2727,95,212,40.4,6,true,true,true
+"MEFRACC03","Modular Storage Rack Flat Shelf","Equipment Storage",204.5455,19,160,63,6.5,true,true,true
+"MEFRACC04","Modular Storage Rack Shelf Dual Pipe","Equipment Storage",113.6364,11,151,29.5,6.5,true,true,true
+"MEFRACC05","Modular Storage Rack Side (1582mm)","Equipment Storage",177.2727,20,161,63,6.5,true,true,true
+"MEFRACC06","Modular Storage Rack - Complete (2/Dual Pipe, 2/Flat Shelf)","Equipment Storage",1345.4545,110,159.2,62,11,true,true,true
+"MEFRBB01","Fixed Barbell Rack (5 Bar)","Equipment Storage",540.9091,40,134,93,26,true,true,true
+"MEFRBB02","Fixed Barbell Rack (10 Bar) 1.0","Equipment Storage",677.2727,54,139,96,30,true,true,true
+"MEFRBB03","Fixed Barbell Rack (10 Bar) 2.0","Equipment Storage",722.7273,54,139,95,30,true,true,true
+"MEFRBB04","Barbell Storage Box (9 Bar Holder)","Equipment Storage",254.5455,26,46,46,26,true,true,true
+"MEFRBB05","Barbell Storage Box (9 Bar Holder) - Versatile","Equipment Storage",254.5455,27,46,46,26,true,true,true
+"MEFRBB06","Barbell Storage Box (12 Bar Holder)","Equipment Storage",313.6364,0,0,0,0,false,false,false
+"MEFRBL01","Medicine Ball Rack - 10 Ball (Double Sided)","Equipment Storage",186.3636,14,153,15,15,true,true,true
+"MEFRBL02","Medicine Ball Rack - 10 Ball (Single Sided)","Equipment Storage",313.6364,18,166,55,53,true,true,true
+"MEFRBL03","Medicine Ball Rack - 5 Ball (Single Sided)","Equipment Storage",281.8182,16,162,84,51.5,true,true,true
+"MEFRDB01","Vertical Dumbbell Rack - 10 Pair (Single Sided) 1.0","Equipment Storage",427.2727,43,175,46.5,16,true,true,true
+"MEFRDB02","Vertical Dumbbell Rack - 10 Pair (Single Sided) 2.0","Equipment Storage",559.0909,43,175,46.5,16,true,true,true
+"MEFRDB03","Vertical Dumbbell Rack - 15 Pair (Single Sided)","Equipment Storage",795.4545,43,175,46.5,16,true,true,true
+"MEFRDB04","Vertical Dumbbell Rack - 10 Pair (Single Sided) 3.0","Equipment Storage",613.6364,43,175,46.5,16,true,true,true
+"MEFRDB05","Vertical Dumbbell Rack - 10 Pair (Double Sided) 2.0","Equipment Storage",631.8182,64,165,43,43,true,true,true
+"MEFRDB06","Vertical Dumbbell Rack - Portable (Four Sided)","Equipment Storage",495.4545,53,115,56,25,true,true,true
+"MEFRDB07","Horizontal Dumbbell Rack - 2 Tier (5 Pair) 1.0","Equipment Storage",950,54,95,72,35,true,true,true
+"MEFRDB08","Horizontal Dumbbell Rack - 2 Tier (10 Pair) 1.0","Equipment Storage",1086.3636,66,222,27,14,true,true,true
+"MEFRDB09","Horizontal Dumbbell Rack - 3 Tier (15 Pair)","Equipment Storage",1813.6364,136,250,50,30,true,true,true
+"MEFRDB10","Horizontal Dumbbell Rack - 2 Tier (5 Pair) 2.0","Equipment Storage",904.5455,68,148,84,30,true,true,true
+"MEFRDB11","Horizontal Dumbbell Rack - 2 Tier (10 Pair) 2.0","Equipment Storage",1309.0909,112,268,84,30,true,true,true
+"MEFRDB14","Horizontal Dumbbell Rack - 3 Tier (10 Pair) 3.0","Equipment Storage",1609.0909,62,1.4,1.07,0.55,false,true,false
+"MEFRDB15","Horizontal Dumbbell Rack - 2 Tier (7 Pair) 3.0","Equipment Storage",1181.8182,9,0.213,0.533,0.711,false,true,false
+"MEFRKB01","Kettlebell Rack (2 Tier) 2.0","Equipment Storage",522.7273,33,90,80,14,true,true,true
+"MEFRKB02","Kettlebell Rack (2 Tier) 3.0","Equipment Storage",904.5455,53,90,80,14,true,true,true
+"MEFRKB03","Kettlebell Rack (2 Tier) 4.0","Equipment Storage",995.4545,53,90,80,14,true,true,true
+"MEFROP01","Olympic Plate Toaster Rack Portable","Equipment Storage",404.5455,22,155,40,27,true,true,true
+"MEFROP02","Olympic Weight Plate Tree Portable (6 Storage Pins, 2 Bar Storage)","Equipment Storage",568.1818,16,140,65,20,true,true,true
+"MEFROP03","Olympic Weight Plate Tree (8 Storage Pins)","Equipment Storage",477.2727,28,138,65,20,true,true,true
+"MEFROP04","Olympic Weight Plate Tree Vertical (6 Storage Pins)","Equipment Storage",677.2727,48,72,43,125,true,true,true
+"MEFRPS01","Group Fitness Barbell Set Rack","Equipment Storage",359.0909,34,146,71,18.5,true,true,true
+"MEFRST01","Power Bag Storage Rack - 5 Bag","Storage",331.8182,0,0,0,0,false,false,false
+"MEFSACC01","Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier","Equipment Storage",1159.09,0,0,0,0,false,false,false
+"MEFSBB04","Barbell Storage Box","Equipment Storage",254.55,0,0,0,0,false,false,false
+"MEFSBL01","Medicine Ball Rack - 10 Ball (Double Sided)","Equipment Storage",180.91,0,0,0,0,false,false,false
+"MEFSBL03","Medicine Ball Rack - 5 Ball (Single Sided)","Equipment Storage",222.73,0,0,0,0,false,false,false
+"MEFSDB01","Vertical Dumbbell Rack - 10 Pair (Single Sided) 1.0","Equipment Storage",427.27,0,0,0,0,false,false,false
+"MEFSDB06","Vertical Dumbbell Rack - Portable (Four Sided)","Equipment Storage",427.27,0,0,0,0,false,false,false
+"MEFSKB01","Kettlebell Rack (2 Tier) 2.0","Equipment Storage",522.73,0,0,0,0,false,false,false
+"MEFSOP01","Olympic Plate Toaster Rack Portable","Equipment Storage",386.36,0,0,0,0,false,false,false
+"MEFSPS01","Group Fitness Barbell Set Rack","Equipment Storage",362.73,0,0,0,0,false,false,false
+"MERK153001","Retail Rack","Equipment Storage",350,0,0,0,0,false,false,false
+"MEWMACC01","Rope & Band Rack (Wall Mounted) (Small)","Equipment Storage",54.5455,4,43,11,11,true,true,true
+"MEWMACC02","Rope & Band Rack (Wall Mounted)","Equipment Storage",63.6364,4,58,11,11,true,true,true
+"MEWMACC03","Dip Bar Holder (Wall Mounted)","Equipment Storage",204.5455,19,14,26.5,171,true,true,true
+"MEWMBB01","Horizontal Barbell Storage Rack (6 Bar) (Wall Mounted)","Equipment Storage",213.6364,14,96,13,13,true,true,true
+"MEWMBB02","Vertical Barbell Storage Rack (6 Bar) (Wall Mounted)","Equipment Storage",122.7273,5,56,11.5,8.5,true,true,true
+"MEWMBER01","Bench & Rower Rack (Wall Mounted)","Equipment Storage",68.1818,7,60.5,7,16.5,true,true,true
+"MEWMBL01","Fitness Ball Storage Rack (Wall Mounted)","Equipment Storage",222.7273,12,200,28,10,true,true,true
+"MEWMMA 01","Wall Mounted-Exercise Mat Hanging Rack","Equipment Storage",45.4545,0,0,0,0,false,false,false
+"MEWMMA01","Exercise Mat Hanging Rack (Wall Mounted)","Equipment Storage",50,5,58,11,11,true,true,true
+"MEWMOP01","Vertical Bumper Plate Rack 3 Tier (Wall Mounted)","Equipment Storage",204.5455,13,120,38,17,true,true,true
+"MEWMRL01","Foam Roller Storage Rack (Wall Mounted)","Equipment Storage",268.1818,16,132.5,17.5,21,true,true,true
+"MEWMRO 01","Wall Mounted-Battle Rope Storage","Equipment Storage",40.9091,0,0,0,0,false,false,false
+"MEWMRO 02","Wall Mounted-Rope & Band Rack","Equipment Storage",63.6364,0,0,0,0,false,false,false
+"MEWMRO01","Battle Rope Storage (Wall Mounted)","Equipment Storage",45.4545,4,32.5,6.5,25,true,true,true
+"MEWMRO02","Rope & Band Rack (Wall Mounted)","Equipment Storage",45.4545,0,0,0,0,false,false,false
+"MFATSY04","Artificial Turf Black (2m x 20m)","Flooring",2250,0,0,0,0,false,false,false
+"MFATSY05","Artificial Turf Green (2m X 15m)","Flooring",1215,90,200,45,45,false,true,false
+"MFRFRR01","Impact-Lock Rubber Tiles - 20mm","Flooring",53.6364,0,0,0,0,false,false,false
+"MFRFRR03","Impact-Lock Rubber Tiles - 30mm","Flooring",71.8182,0,0,0,0,false,false,false
+"MFRFRR06","Commercial Rubber Tiles - 15mm","Flooring",227.27,9,100,100,1.2,true,true,true
+"MMBRNC01","Battle Rope - 12m","Mixed Implements",195.4545,12,70,25,15,true,true,true
+"MMBRNC02","Climbing Rope - 7m","Mixed Implements",100,0,0,0,0,false,false,false
+"MMBXG01","Cotton Inners","Mixed Implements",0.909,0,0,0,0,false,false,false
+"MMBXPBG05","Aqua Punching Bag - 86kg (53cm D)","Mixed Implements",350,7,67,36,22,true,true,true
+"MMDBCE01","Chrome  Dumbbell Set (1kg-10kg Pairs)","Mixed Implements",750,0,0,0,0,false,false,false
+"MMDBOH01","Olympic Dumbbell Handles (Pair)","Mixed Implements",99.09,0,0,0,0,false,false,false
+"MMDBPRH01","Premium Rubber Hex Dumbbell - 1kg","Mixed Implements",4.5455,2,0,1.4,1.25,true,false,false
+"MMDBPRH02","Premium Rubber Hex Dumbbell - 2kg","Mixed Implements",9.0909,3,0,1.4,1.25,true,false,false
+"MMDBPRH04","Premium Rubber Hex Dumbbell - 3kg","Mixed Implements",13.6364,4,0,1.4,1.25,true,false,false
+"MMDBPRH05","Premium Rubber Hex Dumbbell - 4kg","Mixed Implements",18.1818,5,0,1.4,1.25,true,false,false
+"MMDBPRH06","Premium Rubber Hex Dumbbell - 5kg","Mixed Implements",22.7273,6,0,10.9,9.5,true,false,false
+"MMDBPRH07","Premium Rubber Hex Dumbbell - 6kg","Mixed Implements",27.2727,7,0,1.4,1.25,true,false,false
+"MMDBPRH08","Premium Rubber Hex Dumbbell - 7kg","Mixed Implements",31.8182,8,0,1.4,1.25,true,false,false
+"MMDBPRH10","Premium Rubber Hex Dumbbell - 8kg","Mixed Implements",36.3636,9,0,1.4,1.25,true,false,false
+"MMDBPRH11","Premium Rubber Hex Dumbbell - 9kg","Mixed Implements",40.9091,10,0,1.4,1.25,true,false,false
+"MMDBPRH12","Premium Rubber Hex Dumbbell - 10kg","Mixed Implements",45.4545,11,0,14,12.5,true,false,false
+"MMDBPRH13","Premium Rubber Hex Dumbbell - 12.5kg","Mixed Implements",56.8182,14,0,13.8,13,true,false,false
+"MMDBPRH14","Premium Rubber Hex Dumbbell - 15kg","Mixed Implements",68.1818,16,0,15.4,13.4,true,false,false
+"MMDBPRH15","Premium Rubber Hex Dumbbell - 17.5kg","Mixed Implements",79.5455,19,0,16.4,14.4,true,false,false
+"MMDBPRH16","Premium Rubber Hex Dumbbell - 20kg","Mixed Implements",90.9091,21,0,16.7,14.6,true,false,false
+"MMDBPRH17","Premium Rubber Hex Dumbbell - 22.5kg","Mixed Implements",102.2727,24,0,17.6,15.5,true,false,false
+"MMDBPRH18","Premium Rubber Hex Dumbbell - 25kg","Mixed Implements",113.6364,26,0,18,15.9,true,false,false
+"MMDBPRH19","Premium Rubber Hex Dumbbell - 27.5kg","Mixed Implements",125,29,0,19,16.3,true,false,false
+"MMDBPRH20","Premium Rubber Hex Dumbbell - 30kg","Mixed Implements",136.3636,31,0,19.1,16.8,true,false,false
+"MMDBPRH21","Premium Rubber Hex Dumbbell - 32.5kg","Mixed Implements",145.4545,34,0,19.8,17.3,true,false,false
+"MMDBPRH22","Premium Rubber Hex Dumbbell - 35kg","Mixed Implements",159.0909,36,0,20.5,17.7,true,false,false
+"MMDBPRH23","Premium Rubber Hex Dumbbell - 37.5kg","Mixed Implements",170.4545,39,0,20.9,18,true,false,false
+"MMDBPRH24","Premium Rubber Hex Dumbbell - 40kg","Mixed Implements",181.8182,41,0,21.3,18.7,true,false,false
+"MMDBPRH25","Premium Rubber Hex Dumbbell - 42.5kg","Mixed Implements",193.1818,0,0,0,0,false,false,false
+"MMDBPRH26","Premium Rubber Hex Dumbbell - 45kg","Mixed Implements",204.5455,0,0,0,0,false,false,false
+"MMDBRH01","Rubber Hex Dumbbell - 1kg","Mixed Implements",4.5455,2,0,0,0,true,false,false
+"MMDBRH02","Rubber Hex Dumbbell - 2kg","Mixed Implements",9.0909,3,0,0,0,true,false,false
+"MMDBRH03","Rubber Hex Dumbbell - 2.5kg","Mixed Implements",11.3636,4,0,0,0,true,false,false
+"MMDBRH04","Rubber Hex Dumbbell - 3kg","Mixed Implements",13.6364,4,0,0,0,true,false,false
+"MMDBRH05","Rubber Hex Dumbbell - 4kg","Mixed Implements",18.1818,5,0,0,0,true,false,false
+"MMDBRH06","Rubber Hex Dumbbell - 5kg","Mixed Implements",22.7273,6,0,0,0,true,false,false
+"MMDBRH07","Rubber Hex Dumbbell - 6kg","Mixed Implements",27.2727,7,0,0,0,true,false,false
+"MMDBRH08","Rubber Hex Dumbbell - 7kg","Mixed Implements",31.8182,8,0,0,0,true,false,false
+"MMDBRH09","Rubber Hex Dumbbell - 7.5kg","Mixed Implements",34.0909,9,0,0,0,true,false,false
+"MMDBRH10","Rubber Hex Dumbbell - 8kg","Mixed Implements",36.3636,9,0,0,0,true,false,false
+"MMDBRH11","Rubber Hex Dumbbell - 9kg","Mixed Implements",40.9091,10,0,0,0,true,false,false
+"MMDBRH12","Rubber Hex Dumbbell - 10kg","Mixed Implements",45.4545,11,0,0,0,true,false,false
+"MMDBRH13","Rubber Hex Dumbbell - 12.5kg","Mixed Implements",56.8182,14,0,0,0,true,false,false
+"MMDBRH14","Rubber Hex Dumbbell - 15kg","Mixed Implements",68.1818,16,0,0,0,true,false,false
+"MMDBRH15","Rubber Hex Dumbbell - 17.5kg","Mixed Implements",79.5455,19,0,0,0,true,false,false
+"MMDBRH16","Rubber Hex Dumbbell - 20kg","Mixed Implements",90.9091,21,0,0,0,true,false,false
+"MMDBRH17","Rubber Hex Dumbbell - 22.5kg","Mixed Implements",102.2727,24,0,0,0,true,false,false
+"MMDBRH18","Rubber Hex Dumbbell - 25kg","Mixed Implements",113.6364,26,0,0,0,true,false,false
+"MMDBRH19","Rubber Hex Dumbbell - 27.5kg","Mixed Implements",125,29,0,0,0,true,false,false
+"MMDBRH20","Rubber Hex Dumbbell - 30kg","Mixed Implements",136.3636,31,0,0,0,true,false,false
+"MMDBRH21","Rubber Hex Dumbbell - 32.5kg","Mixed Implements",147.7273,34,0,0,0,true,false,false
+"MMDBRH22","Rubber Hex Dumbbell - 35kg","Mixed Implements",159.0909,36,0,0,0,true,false,false
+"MMDBRH23","Rubber Hex Dumbbell - 37.5kg","Mixed Implements",170.4545,39,0,0,0,true,false,false
+"MMDBRH24","Rubber Hex Dumbbell - 40kg","Mixed Implements",181.8182,41,0,0,0,true,false,false
+"MMDBRH25","Rubber Hex Dumbbell - 42.5kg","Mixed Implements",193.1818,44,0,0,0,true,false,false
+"MMDBRH26","Rubber Hex Dumbbell - 45kg","Mixed Implements",204.5455,46,0,0,0,true,false,false
+"MMDBUR01","PU Dumbbells (Pair) - 10kg","Mixed Implements",160,11,25,16.3,16.3,true,true,true
+"MMDBUR02","PU Dumbbells (Pair) - 12.5kg","Mixed Implements",200,14,25,18.3,18.3,true,true,true
+"MMDBUR03","PU Dumbbells (Pair) - 15kg","Mixed Implements",236.3636,16,26.4,18.3,18.3,true,true,true
+"MMDBUR04","PU Dumbbells (Pair) - 17.5kg","Mixed Implements",290.9091,19,26.4,20.3,20.3,true,true,true
+"MMDBUR05","PU Dumbbells (Pair) - 20kg","Mixed Implements",322.7273,21,27.4,20.3,20.3,true,true,true
+"MMDBUR06","PU Dumbbells (Pair) - 22.5kg","Mixed Implements",363.6364,24,27.4,20.3,20.3,true,true,true
+"MMDBUR07","PU Dumbbells (Pair) - 25kg","Mixed Implements",400,26,30,20.3,20.3,true,true,true
+"MMDBUR08","PU Dumbbells (Pair) - 27.5kg","Mixed Implements",454.5455,29,30,20.3,20.3,true,true,true
+"MMDBUR09","PU Dumbbells (Pair) - 30kg","Mixed Implements",481.8182,31,32.2,20.3,20.3,true,true,true
+"MMDBUR10","PU Dumbbells (Pair) - 32.5kg","Mixed Implements",509.0909,34,32.2,20.3,20.3,true,true,true
+"MMDBUR11","PU Dumbbells (Pair) - 35kg","Mixed Implements",536.3636,36,32.2,20.3,20.3,true,true,true
+"MMDBUR12","PU Dumbbells (Pair) - 37.5kg","Mixed Implements",563.6364,39,32.2,20.3,20.3,true,true,true
+"MMDBUR13","PU Dumbbells (Pair) - 40kg","Mixed Implements",590.9091,41,32.2,20.3,20.3,true,true,true
+"MMDBUR14","PU Dumbbells (Pair) - 42.5kg","Mixed Implements",627.2727,44,32.2,20.3,20.3,true,true,true
+"MMDBUR15","PU Dumbbells (Pair) - 45kg","Mixed Implements",654.5455,46,32.2,20.3,20.3,true,true,true
+"MMDBUR16","PU Dumbbells (Pair) - 47.5kg","Mixed Implements",690.9091,49,32.2,20.3,20.3,true,true,true
+"MMDBUR17","PU Dumbbells (Pair) - 50kg","Mixed Implements",727.2727,51,32.2,20.3,20.3,true,true,true
+"MMDBUR18","PU Dumbbells (Pair) - 5kg","Mixed Implements",80,0,0,0,0,false,false,false
+"MMDBUR19","Urethane Fixed Dumbbells (Pair) - 7.5kg","Mixed Implements",120,0,0,0,0,false,false,false
+"MMDBUR20","PU Dumbbells (Pair) - 1kg","Mixed Implements",16,0,0,0,0,false,false,false
+"MMDBUR21","PU Dumbbells (Pair) - 2kg","Mixed Implements",32,0,0,0,0,false,false,false
+"MMDBUR22","PU Dumbbells (Pair) - 3kg","Mixed Implements",48,0,0,0,0,false,false,false
+"MMDBUR23","PU Dumbbells (Pair) - 4kg","Mixed Implements",64,0,0,0,0,false,false,false
+"MMDBUR25","PU Dumbbells (Pair) - 6kg","Mixed Implements",96,0,0,0,0,false,false,false
+"MMDBUR26","PU Dumbbells (Pair) - 7kg","Mixed Implements",112,0,0,0,0,false,false,false
+"MMDBUR27","PU Dumbbells (Pair) - 8kg","Mixed Implements",128,0,0,0,0,false,false,false
+"MMDBUR28","PU Dumbbells (Pair) - 9kg","Mixed Implements",144,0,0,0,0,false,false,false
+"MMDBUR29","PU Dumbbells (Pair) - 55kg","Mixed Implements",800,0,0,0,0,false,false,false
+"MMDBUR30","PU Dumbbells (Pair) - 60kg","Mixed Implements",872.7273,0,0,0,0,false,false,false
+"MMDBVR02","Virgin Rubber Fixed Dumbbells (Pair) - 10kg","Mixed Implements",118.1818,11,25,16.3,16.3,true,true,true
+"MMDBVR03","Virgin Rubber Fixed Dumbbells (Pair) - 12.5kg","Mixed Implements",147.7273,14,25,18.3,18.3,true,true,true
+"MMDBVR04","Virgin Rubber Fixed Dumbbells (Pair) - 15kg","Mixed Implements",177.2727,16,26.4,18.3,18.3,true,true,true
+"MMDBVR05","Virgin Rubber Fixed Dumbbells (Pair) - 17.5kg","Mixed Implements",206.8182,19,26.4,20.3,20.3,true,true,true
+"MMDBVR06","Virgin Rubber Fixed Dumbbells (Pair) - 20kg","Mixed Implements",236.3636,21,27.4,20.3,20.3,true,true,true
+"MMDBVR07","Virgin Rubber Fixed Dumbbells (Pair) - 22.5kg","Mixed Implements",265.9091,24,27.4,20.3,20.3,true,true,true
+"MMDBVR08","Virgin Rubber Fixed Dumbbells (Pair) - 25kg","Mixed Implements",295.4545,26,30,20.3,20.3,true,true,true
+"MMDBVR09","Virgin Rubber Fixed Dumbbells (Pair) - 27.5kg","Mixed Implements",325,29,30,20.3,20.3,true,true,true
+"MMDBVR10","Virgin Rubber Fixed Dumbbells (Pair) - 30kg","Mixed Implements",354.5455,31,32.2,20.3,20.3,true,true,true
+"MMDBVR11","Virgin Rubber Fixed Dumbbells (Pair) - 32.5kg","Mixed Implements",384.0909,34,32.2,20.3,20.3,true,true,true
+"MMDBVR12","Virgin Rubber Fixed Dumbbells (Pair) - 35kg","Mixed Implements",413.6364,36,32.2,20.3,20.3,true,true,true
+"MMDBVR13","Virgin Rubber Fixed Dumbbells (Pair) - 37.5kg","Mixed Implements",443.1818,39,32.2,20.3,20.3,true,true,true
+"MMDBVR14","Virgin Rubber Fixed Dumbbells (Pair) - 40kg","Mixed Implements",472.7273,41,32.2,20.3,20.3,true,true,true
+"MMDBVR15","Virgin Rubber Fixed Dumbbells (Pair) - 42.5kg","Mixed Implements",502.2727,44,32.2,20.3,20.3,true,true,true
+"MMDBVR16","Virgin Rubber Fixed Dumbbells (Pair) - 45kg","Mixed Implements",531.8182,46,32.2,20.3,20.3,true,true,true
+"MMDBVR17","Virgin Rubber Fixed Dumbbells (Pair) - 47.5kg","Mixed Implements",561.3636,49,32.2,20.3,20.3,true,true,true
+"MMDBVR18","Virgin Rubber Fixed Dumbbells (Pair) - 50kg","Mixed Implements",590.9091,51,32.2,20.3,20.3,true,true,true
+"MMDBVR19","Virgin Rubber Fixed Dumbbells (Pair) - 52.5kg","Mixed Implements",620.45,51,32.2,20.3,20.3,false,true,false
+"MMDBVR20","Virgin Rubber Fixed Dumbbells (Pair) - 55kg","Mixed Implements",650,51,32.2,20.3,20.3,false,true,false
+"MMDBVR21","Virgin Rubber Fixed Dumbbells (Pair) - 57.5kg","Mixed Implements",679.55,51,32.2,20.3,20.3,false,true,false
+"MMDBVR22","Virgin Rubber Fixed Dumbbells (Pair) - 60kg","Mixed Implements",709.09,51,32.2,20.3,20.3,false,true,false
+"MMDEHG01","High Grip Dead Ball - 6kg","Mixed Implements",36.3636,7,24,24,24,true,true,true
+"MMDEHG02","High Grip Dead Ball - 9kg","Mixed Implements",40.9091,10,24,24,24,true,true,true
+"MMDEHG03","High Grip Dead Ball - 12kg","Mixed Implements",50,13,29,29,29,true,true,true
+"MMDEHG04","High Grip Dead Ball - 15kg","Mixed Implements",63.6364,16,29,29,29,true,true,true
+"MMDEHG05","High Grip Dead Ball - 20kg","Mixed Implements",90.9091,21,29,29,29,true,true,true
+"MMDEHG06","High Grip Dead Ball - 25kg","Mixed Implements",100,26,29,29,29,true,true,true
+"MMDEHG07","High Grip Dead Ball - 30kg","Mixed Implements",118.1818,31,29,29,29,true,true,true
+"MMDEHG08","High Grip Dead Ball - 35kg","Mixed Implements",140.9091,36,31.5,31.5,31.5,true,true,true
+"MMDEHG09","High Grip Dead Ball - 40kg","Mixed Implements",154.5455,0,0,0,0,false,false,false
+"MMDEHG10","High Grip Dead Ball - 45kg","Mixed Implements",172.7273,46,34,34,34,true,true,true
+"MMDEHG11","High Grip Dead Ball - 50kg","Mixed Implements",181.8223,0,0,0,0,false,false,false
+"MMDEHG12","High Grip Dead Ball - 55kg","Mixed Implements",200,56,36.5,36.5,36.5,true,true,true
+"MMDEHG13","High Grip Dead Ball - 65kg","Mixed Implements",236.3636,66,36.5,36.5,36.5,true,true,true
+"MMDEHG14","High Grip Dead Ball - 75kg","Mixed Implements",272.7273,76,39,39,39,true,true,true
+"MMDEHG16","High Grip Dead Ball - 60kg","Mixed Implements",218.1777,0,0,0,0,false,false,false
+"MMDEHG17","High Grip Dead Ball - 70kg","Mixed Implements",254.5455,0,0,0,0,false,false,false
+"MMDESH01","Dead Ball - 3kg","Mixed Implements",22.7273,4,26,26,26,true,true,true
+"MMDESH03","Dead Ball - 6kg","Mixed Implements",31.8182,7,26,26,26,true,true,true
+"MMDESH04","Dead Ball - 9kg","Mixed Implements",29.0909,10,26,26,26,true,true,true
+"MMDESH06","Dead Ball - 12kg","Mixed Implements",36.3636,13,26,26,26,true,true,true
+"MMDESH07","Dead Ball - 15kg","Mixed Implements",47.2727,16,29,29,29,true,true,true
+"MMDESH08","Dead Ball - 20kg","Mixed Implements",69.0909,21,29,29,29,true,true,true
+"MMDESH09","Dead Ball - 25kg","Mixed Implements",80,26,29,29,29,true,true,true
+"MMDESH10","Dead Ball - 30kg","Mixed Implements",118.1818,31,29,29,29,true,true,true
+"MMFWTL01","Farmers Walk Handles (Pair)","Mixed Implements",213.6364,26,182,13,23,true,true,true
+"MMGFACC01","Digital Interval Timer","Mixed Implements",313.6364,4,87,17,6,true,true,true
+"MMGFPS01","Group Fitness Barbell Set - Collars (Pair)","Mixed Implements",7.2727,1,4,4,2.5,true,true,true
+"MMGFPS02","Group Fitness Barbell Set - 37.5kg","Mixed Implements",268.1818,39,52,26,15.5,true,true,true
+"MMGFPS03","Group Fitness Barbell Set - 17.5kg","Mixed Implements",209.0909,19,52,26,15.5,true,true,true
+"MMGFWTB01","Aerobic Weighted Exercise Bars - 4kg","Mixed Implements",30.91,5,120.5,4.3,4.3,true,true,true
+"MMGFWTB02","Aerobic Weighted Exercise Bars - 6kg","Mixed Implements",38.18,7,120.5,4.3,4.3,true,true,true
+"MMGFWTB03","Aerobic Weighted Exercise Bars - 8kg","Mixed Implements",45.45,9,120.5,4.3,4.3,true,true,true
+"MMGFWTB04","Aerobic Weighted Exercise Bars- 10kg","Mixed Implements",52.73,11,120.5,4.3,4.3,true,true,true
+"MMKBPGC01","Competition Kettlebell - 6kg (Aluminium)","Mixed Implements",54.5455,7,23,23,31,true,true,true
+"MMKBPGC02","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,31,true,true,true
+"MMKBPGC03","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,31,true,true,true
+"MMKBPGC04","Competition Kettlebell - 12kg","Mixed Implements",81.8182,13,23,23,31,true,true,true
+"MMKBPGC05","Competition Kettlebell - 16kg","Mixed Implements",100,17,23,23,31,true,true,true
+"MMKBPGC06","Competition Kettlebell - 18kg","Mixed Implements",109.0909,19,23,23,31,true,true,true
+"MMKBPGC07","Competition Kettlebell - 20kg","Mixed Implements",118.1818,21,23,23,31,true,true,true
+"MMKBPGC08","Competition Kettlebell - 24kg","Mixed Implements",136.3636,25,23,23,31,true,true,true
+"MMKBPGC09","Competition Kettlebell - 28kg","Mixed Implements",154.5455,29,23,23,31,true,true,true
+"MMKBPGC10","Competition Kettlebell - 32kg","Mixed Implements",181.8182,33,23,23,31,true,true,true
+"MMKBPGC11","Competition Kettlebell - 36kg","Mixed Implements",209.0909,37,23,23,31,true,true,true
+"MMKBPGC12","Competition Kettlebell - 40kg","Mixed Implements",236.3636,41,23,23,31,true,true,true
+"MMKBUR01","Urethane Competition Kettlebell - 8kg","Mixed Implements",72.73,9,22,22,29,true,true,true
+"MMKBUR02","Urethane Competition Kettlebell - 10kg","Mixed Implements",104.5455,11,22,22,29,true,true,true
+"MMKBUR03","Urethane Competition Kettlebell - 12kg","Mixed Implements",113.6364,13,22,22,29,true,true,true
+"MMKBUR04","Urethane Competition Kettlebell - 16kg","Mixed Implements",145.4545,17,22,22,29,true,true,true
+"MMKBUR05","Urethane Competition Kettlebell - 20kg","Mixed Implements",177.2727,21,22,22,29,true,true,true
+"MMKBUR06","Urethane Competition Kettlebell - 24kg","Mixed Implements",209.0909,25,22,22,29,true,true,true
+"MMKBUR07","Urethane Competition Kettlebell - 28kg","Mixed Implements",240.9091,0,0,0,0,false,false,false
+"MMKBUR08","Urethane Competition Kettlebell - 32kg","Mixed Implements",281.8182,0,0,0,0,false,false,false
+"MMKBUR09","Urethane Competition Kettlebell - 36kg","Mixed Implements",309.0909,0,0,0,0,false,false,false
+"MMKBUR10","Urethane Competition Kettlebell - 40kg","Mixed Implements",331.8182,0,0,0,0,false,false,false
+"MMLBACC01","Slant Board","Weightlifting",90,7,60,36,16,true,true,true
+"MMMBPR 03","Medicine Ball - 6kg","Mixed Implements",58.1818,0,0,0,0,false,false,false
+"MMMBPR01","Medicine Ball - 2kg","Mixed Implements",40,3,21.5,21.5,21.5,true,true,true
+"MMMBPR02","Medicine Ball - 4kg","Mixed Implements",47.2727,5,24,24,24,true,true,true
+"MMMBPR03","Medicine Ball - 6kg","Mixed Implements",58.1818,7,26.5,26.5,26.5,true,true,true
+"MMMBPR04","Medicine Ball - 8kg","Mixed Implements",68.1818,9,29,29,29,true,true,true
+"MMMBPR05","Medicine Ball - 10kg","Mixed Implements",81.8182,11,31.5,31.5,31.5,true,true,true
+"MMPA25001","Competition Kettlebells (Set of 12) - 250kg & Rack","Mixed Implements",1836.3636,300,63,42,56,true,true,true
+"MMPA3601","Competition Kettlebells (Set of 3) - 36kg","Mixed Implements",245.4545,38,69,23,31,true,true,true
+"MMPA4BG01","Power Bags (Set of 4) - 70kg","Packages",345.4545,74,65,24,24,true,true,true
+"MMPA5BL01","Dead Balls (Set of 5) - 81kg","Mixed Implements",293.72,86,130,29,29,true,true,true
+"MMPA5BL02","Medicine Balls (Set of 5) - 30kg","Mixed Implements",290.9091,35,130,32,32,true,true,true
+"MMPA6BG01","Power Bags (Set of 6) - 105kg","Packages",518.1818,0,0,0,0,false,false,false
+"MMPA7201","Competition Kettlebells (Set of 3) - 72kg","Mixed Implements",418.1818,74,69,23,31,true,true,true
+"MMPA8001","Competition Kettlebells (Set of 5) - 80kg","Mixed Implements",554.5455,87,138,23,31,true,true,true
+"MMPACE101","Chrome 110 Dumbbells (1kg-10kg Pairs)","Mixed Implements",904.5455,120,100,100,50,true,true,true
+"MMPACE102","Chrome 110 Dumbbells (1kg-10kg Pairs) & Rack","Mixed Implements",1109.0909,158,175,46.5,16,true,true,true
+"MMPACE103","Chrome 110 Dumbbells (1kg-7kg Pairs)","Mixed Implements",392,0,0,0,0,false,false,false
+"MMPAPS01","Group Fitness Barbell Sets - 175kg & Rack","Mixed Implements",2453.6364,206,52,26,15.5,true,true,true
+"MMPAPS02","Group Fitness Barbell Sets - 375kg & Rack","Mixed Implements",3044.5455,408,52,26,15.5,true,true,true
+"MMPILFG01","Pilates Ring","Mixed Implements",27.2727,0,0,0,0,false,false,false
+"MMPWPBG01","Power Bag - 10kg","Mixed Implements",63.6364,11,54,22.5,22.5,true,true,true
+"MMPWPBG02","Power Bag - 15kg","Mixed Implements",72.7273,16,65,24,24,true,true,true
+"MMPWPBG03","Power Bag - 20kg","Mixed Implements",81.8182,21,65,24,24,true,true,true
+"MMPWPBG04","Power Bag - 25kg","Mixed Implements",90.9091,26,65,24,24,true,true,true
+"MMPWPBG05","Aqua Bag - 35kg","Mixed Implements",122.7273,5,20,20,20,true,true,true
+"MMPWPBG06","Power Bag - 5kg","Mixed Implements",54.5455,0,0,0,0,false,false,false
+"MMPWPBG07","Power Bag - 30kg","Mixed Implements",100,0,0,0,0,false,false,false
+"MMSLSD01","Push & Pull Sled","Mixed Implements",450,37,94.5,67,19,true,true,true
+"MMSLSL01","Push & Pull Sled","Mixed Implements",440.91,0,0,0,0,false,false,false
+"MMWAARM01","Wall Ball (Armatex) - 4kg","Mixed Implements",118.18,4,36.6,36.6,36.6,true,true,true
+"MMWAARM02","Wall Ball (Armatex) - 6kg","Mixed Implements",122.73,6,36.6,36.6,36.6,true,true,true
+"MMWAARM03","Wall Ball (Armatex) - 8kg","Mixed Implements",127.27,8,36.6,36.6,36.6,true,true,true
+"MMWAARM04","Wall Ball (Armatex) - 10kg","Mixed Implements",131.82,10,36.6,36.6,36.6,true,true,true
+"MMWAARM05","Wall Ball - 14lb","Mixed Implements",118.1818,7,36.6,36.6,36.6,true,true,true
+"MMWAARM06","Wall Ball - 20lb","Mixed Implements",136.3636,10,36.6,36.6,36.6,true,true,true
+"MMWAARM07","Wall Ball - 8lb","Mixed Implements",100,4,36.6,36.6,36.6,true,true,true
+"MRATTACC01","Storage Pin with Shoulder","Rigs & Racks",68.1818,0,0,0,0,false,false,false
+"MRCTATT01","Rig Core Trainer (Landmine)","Rigs & Racks",95.4545,4,55,12,12,true,true,true
+"MRSPATT01","Rig Crossbeam Single Pipe - 1080mm","Equipment Storage",90.9091,6,109,7.5,7.5,true,true,true
+"MRSPATT02","Rig Crossbeam Single Pipe - 1520mm","Equipment Storage",104.5455,3.44,153,7.5,7.5,true,true,true
+"MRSPATT03","Rig Universal Upright","Equipment Storage",222.7273,19,241,7.5,7.5,true,true,true
+"MRSPATT04","Rig Dip Bar Attachment","Rigs & Racks",204.5455,11,71,59,24,true,true,true
+"MRSPATT05","Rig Premium J-Hooks","Rigs & Racks",159.0909,8,16,11,22,true,true,true
+"MRSPATT06","Rig Wall Ball Target","Rigs & Racks",295.4545,19,42.5,41.8,115.1,true,true,true
+"MRSPATT07","Rig Universal Upright - 240cm","Rigs & Racks",213.6364,0,0,0,0,false,false,false
+"MRSPFW01","Olympic Power Rack 1.0","Rigs & Racks",1453.6364,130,230,52,19,true,true,true
+"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks",2026.3636,210,230,52,19,true,true,true
+"MRSPFW03","Olympic Power Rack 2.0 Weight Plate Storage Rack Only","Rigs & Racks",708.1818,58,0,0,0,true,false,false
+"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks",1699.0909,196,148,75,23,true,true,true
+"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks",2053.6364,224,115,42,29,true,true,true
+"MRSPFW06","2-Cell Rack with Storage","Rigs & Racks",2053.6364,224,115,42,29,false,true,false
+"MRSPFW07","Smith Machine","Rigs & Racks",1453.6364,130,230,52,19,false,true,false
+"MRSPFW10","Olympic Half Rack 2.0","Rigs & Racks",2718.1825,0,0,0,0,false,false,false
+"MRSPFW11","Olympic Half Rack (Wall Mounted)","Rigs & Racks",2918.1779,0,0,0,0,false,false,false
+"MRSPFW12","Olympic Half Rack with Dead Lift","Rigs & Racks",2877.2736,0,0,0,0,false,false,false
+"MRSPFW13","Olympic Half Rack with Dual Pulley","Rigs & Racks",4968.1851,0,0,0,0,false,false,false
+"MRSPFW14","Olympic Half Rack with Dual Pulley (Wall Mounted)","Rigs & Racks",5180.9097,0,0,0,0,false,false,false
+"MRSPFW15","Olympic Power Rack 5.0","Rigs & Racks",3413.6388,0,0,0,0,false,false,false
+"MRSPFW16","Olympic Power Rack with Dual Pulley","Rigs & Racks",5895.4509,0,0,0,0,false,false,false
+"MRSPSE01","All-In-One Trainer","Rigs & Racks",7726.3636,450,240,85,55,true,true,true
+"MRWAATT01","Rig Spotter Arms (Pair)","Rigs & Racks",268.1818,19,82.5,19,21.8,true,true,true
+"MSAMPL03","Universal Abdominal Crunch","Strength",2672.7273,0,0,0,0,false,false,false
+"MSAMPL04","Pullover","Strength",3500,0,0,0,0,false,false,false
+"MSAMSE02","Abdominal Crunch","Strength",4422.7273,0,0,0,0,false,false,false
+"MSBMPL02","Low Row","Strength",2827.2727,0,0,0,0,false,false,false
+"MSBMPL04","Seated Row","Strength",2718.1818,0,0,0,0,false,false,false
+"MSBMSE04","Assisted Chin Up & Dip","Strength",4600,363,181.5,75.5,40.5,true,true,true
+"MSBMSE06","Lat Pulldown & Seated Row","Strength",4377.2727,0,0,0,0,false,false,false
+"MSBTPL06","Biceps Curl","Strength",2290.9091,0,0,0,0,false,false,false
+"MSBTSE04","Arm Curl","Strength",3250,0,0,0,0,false,false,false
+"MSBTSE05","Triceps Press","Strength",3931.8182,0,0,0,0,false,false,false
+"MSCMATT01","Power Grip Cable Attachment Set (5)","Strength",168.1818,0,0,0,0,false,false,false
+"MSCMATT02","Cable Pulley System","Strength",86.3636,0,0,0,0,false,false,false
+"MSCMDU01","Functional Trainer Pro","Strength",4271.8182,432,241.5,122.5,30.5,true,true,true
+"MSCMS02","Functional Trainer","Strength",4362.73,0,0,0,0,false,false,false
+"MSCSPL07","Chest Press","Strength",2881.8182,0,0,0,0,false,false,false
+"MSCSPL08","Incline Chest Press","Strength",2968.1818,0,0,0,0,false,false,false
+"MSCSPL09","Shoulder press","Strength",2513.6364,0,0,0,0,false,false,false
+"MSCSPL10","Decline Chest Press","Strength",2845.4545,0,0,0,0,false,false,false
+"MSCSPL11","Front Pulldown","Strength",2772.7273,0,0,0,0,false,false,false
+"MSCSPL12","High Row","Strength",3045.4545,0,0,0,0,false,false,false
+"MSCSPL13","Lat Pulldown Circular","Strength",3200,0,0,0,0,false,false,false
+"MSCSPL14","Universal Pulldown","Strength",3027.2727,0,0,0,0,false,false,false
+"MSCSSE01","Shoulder Press Machine Elite","Strength",3453.6364,365,161.5,75.5,36,true,true,true
+"MSCSSE04","Iso-Lateral Chest Press","Strength",4018.1818,360,160,73,35,true,true,true
+"MSCSSE06","Pec Fly & Rear Delt","Strength",3831.8182,0,0,0,0,false,false,false
+"MSCSSE07","Iso-Lateral Shoulder Press","Strength",4181.8182,296,139.5,114.5,36,false,true,false
+"MSCSSE08","Multi Press","Strength",4290.9091,0,0,0,0,false,false,false
+"MSFTSFS01","Functional Training System 1.0","Rigs & Racks",1590.9091,0,0,0,0,false,false,false
+"MSFTSFS02","Functional Training System 2.0","Rigs & Racks",3813.6364,0,0,0,0,false,false,false
+"MSFTSFS03","Functional Training System 3.0","Rigs & Racks",4750,0,0,0,0,false,false,false
+"MSFTSFS04","Functional Training System 4.0","Rigs & Racks",7159.0909,0,0,0,0,false,false,false
+"MSFTSFS05","Functional Training System 5.0","Rigs & Racks",7977.2727,0,0,0,0,false,false,false
+"MSLBPL01","V Squat","Strength",3445.4545,0,0,0,0,false,false,false
+"MSLBPL02","Belt Squat","Strength",1754.5455,0,0,0,0,false,false,false
+"MSLBPL03","Hip Thrustor","Strength",2663.6364,0,0,0,0,false,false,false
+"MSLBPL04","Standing Hip Thurst","Strength",1918.1818,0,0,0,0,false,false,false
+"MSLBPL05","Standing Abductor","Strength",2336.3636,0,0,0,0,false,false,false
+"MSLBPL06","Reverse Hyper","Strength",1722.7273,0,0,0,0,false,false,false
+"MSLBPL07","Multi Hip Extension","Strength",2472.7273,0,0,0,0,false,false,false
+"MSLBPL08","Multi Dead Lift","Strength",2418.1818,0,0,0,0,false,false,false
+"MSLBPL18","Alternate Leg Curl","Strength",2618.1818,0,0,0,0,false,false,false
+"MSLBPL19","Seated Calf Raise","Strength",1086.3636,0,0,0,0,false,false,false
+"MSLBPL20","Linear Leg Press 45 Degrees","Strength",4150,0,0,0,0,false,false,false
+"MSLBPL21","Multi Deadlift","Strength",2772.7273,0,0,0,0,false,false,false
+"MSLBPL22","Hip Thrust","Strength",2222.7273,0,0,0,0,false,false,false
+"MSLBPL23","Pendulum Squat","Strength",3645.4545,0,0,0,0,false,false,false
+"MSLBPL31","Squat","Strength",3027.2727,0,0,0,0,false,false,false
+"MSLBPL32","Hack Squat","Strength",4281.8182,0,0,0,0,false,false,false
+"MSLBSE01","Prone Leg Curl","Strength",3536.3636,329,161.5,75.5,36,true,true,true
+"MSLBSE03","Seated Leg Press","Strength",5650,175,161.5,75.5,36,true,true,true
+"MSLBSE04","Hip Abductor & Adductor","Strength",4554.5455,220,161.5,75.5,35.5,true,true,true
+"MSLBSE05","Rear Kick","Strength",3872.7273,382,181.5,75.5,40.5,true,true,true
+"MSLBSE07","Standing Hip Thrust","Strength",3427.2727,0,0,0,0,false,false,false
+"MSSPFW02","Olympic Power Rack 2.0","Rigs & Racks",2026.36,0,0,0,0,false,false,false
+"MSSPFW04","Olympic Power Rack 3.0","Rigs & Racks",1699.09,0,0,0,0,false,false,false
+"MSSPFW05","Olympic Power Rack 4.0","Rigs & Racks",2053.64,0,0,0,0,false,false,false
+"MSWBB03","Adjustable Utility Bench","Strength",886.3636,0,0,0,0,false,false,false
+"MSWBB04","Flat Bench","Strength",1981.8163,0,0,0,0,false,false,false
+"MSWBB06","Olympic Incline Bench","Strength",2527.2713,0,0,0,0,false,false,false
+"MSWBB07","Olympic Decline Bench","Strength",2563.6351,0,0,0,0,false,false,false
+"MSWBFW01","Flat Utility Weight Bench (Angled Legs)","Strength",386.3636,26,118,52.5,46.2,true,true,true
+"MSWBFW02","Adjustable Utility Weight Bench Pro","Strength",681.8182,39,138,25,47,true,true,true
+"MWBBFR07A","Rubber EZ Fixed Barbells - 27.5kg","Weightlifting",150,26,110.8,20.3,20.3,false,true,false
+"MWBBFRU01","Rubber Fixed Barbells - 10kg","Weightlifting",59.0909,11,105.4,16.3,16.3,true,true,true
+"MWBBFRU02","Rubber Fixed Barbells - 12.5kg","Weightlifting",77.2727,14,10.54,1.63,1.63,true,true,true
+"MWBBFRU03","Rubber Fixed Barbells - 15kg","Weightlifting",90.9091,16,11.6,18.3,18.3,true,true,true
+"MWBBFRU04","Rubber Fixed Barbells - 17.5kg","Weightlifting",104.5455,19,10.54,1.63,1.63,true,true,true
+"MWBBFRU05","Rubber Fixed Barbells - 20kg","Weightlifting",118.1818,21,11.7,20.3,20.3,true,true,true
+"MWBBFRU06","Rubber Fixed Barbells - 22.5kg","Weightlifting",136.3636,24,10.54,1.63,1.63,true,true,true
+"MWBBFRU07","Rubber Fixed Barbells - 25kg","Weightlifting",150,26,110.8,20.3,20.3,true,true,true
+"MWBBFRU08","Rubber Fixed Barbells - 30kg","Weightlifting",177.2727,31,113,20.3,20.3,true,true,true
+"MWBBFRU09","Rubber Fixed Barbells - 35kg","Weightlifting",209.0909,36,10.54,1.63,1.63,true,true,true
+"MWBBFRU10","Rubber Fixed Barbells - 40kg","Weightlifting",236.3636,41,10.54,1.63,1.63,true,true,true
+"MWBBFRZ01","Rubber EZ Fixed Barbells - 10kg","Weightlifting",59.0909,11,105.4,16.3,16.3,true,true,true
+"MWBBFRZ01A","Rubber EZ Fixed Barbells - 7.5kg","Weightlifting",59.0909,11,105.4,16.3,16.3,false,true,false
+"MWBBFRZ02","Rubber EZ Fixed Barbells - 12.5kg","Weightlifting",77.2727,14,10.54,1.63,1.63,true,true,true
+"MWBBFRZ03","Rubber EZ Fixed Barbells - 15kg","Weightlifting",90.9091,16,11.6,18.3,18.3,true,true,true
+"MWBBFRZ04","Rubber EZ Fixed Barbells - 17.5kg","Weightlifting",104.5455,19,10.54,1.63,1.63,true,true,true
+"MWBBFRZ05","Rubber EZ Fixed Barbells - 20kg","Weightlifting",118.1818,21,11.7,20.3,20.3,true,true,true
+"MWBBFRZ06","Rubber EZ Fixed Barbells - 22.5kg","Weightlifting",136.3636,24,10.54,1.63,1.63,true,true,true
+"MWBBFRZ07","Rubber EZ Fixed Barbells - 25kg","Weightlifting",150,26,110.8,20.3,20.3,true,true,true
+"MWBBFRZ08","Rubber EZ Fixed Barbells - 30kg","Weightlifting",177.2727,31,113,20.3,20.3,true,true,true
+"MWBBFRZ08A","Rubber EZ Fixed Barbells - 32.5kg","Weightlifting",177.2727,31,113,20.3,20.3,false,true,false
+"MWBBFRZ09","Rubber EZ Fixed Barbells - 35kg","Weightlifting",209.0909,36,10.54,1.63,1.63,true,true,true
+"MWBBFRZ10","Rubber EZ Fixed Barbells - 40kg","Weightlifting",236.3636,41,10.54,1.63,1.63,true,true,true
+"MWBBFUR01","Fixed PU Straight Barbell - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,true,true,true
+"MWBBFUR02","Urethane Fixed Barbells - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,true,true,true
+"MWBBFUR03","Fixed PU Straight Barbell - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,true,true,true
+"MWBBFUR04","Urethane Fixed Barbells - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,true,true,true
+"MWBBFUR05","Fixed PU Straight Barbell - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,true,true,true
+"MWBBFUR06","Urethane Fixed Barbells - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,true,true,true
+"MWBBFUR07","Fixed PU Straight Barbell - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,true,true,true
+"MWBBFUR08","Fixed PU Straight Barbell - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,true,true,true
+"MWBBFUR09","Fixed PU Straight Barbell - 35kg","Weightlifting",263.6364,36,10.54,1.63,1.63,true,true,true
+"MWBBFUR10","Fixed PU Straight Barbell - 40kg","Weightlifting",300,41,10.54,1.63,1.63,true,true,true
+"MWBBFUR11","Urethane Fixed Barbells - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"MWBBFUR12","Urethane Fixed Barbells - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,false
+"MWBBFUR13","Fixed PU Straight Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
+"MWBBFUR14","Fixed PU Straight Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
+"MWBBFUR15","Fixed PU Straight Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
+"MWBBFUR16","Fixed PU Straight Barbell - 42.5kg","Weightlifting",322.7227,0,0,0,0,false,false,false
+"MWBBFUR17","Fixed PU Straight Barbell - 45kg","Weightlifting",340.9091,0,0,0,0,false,false,false
+"MWBBFUR18","Fixed PU Straight Barbell - 47.5kg","Weightlifting",359.0864,0,0,0,0,false,false,false
+"MWBBFUR19","Fixed PU Straight Barbell - 50kg","Weightlifting",377.2727,0,0,0,0,false,false,false
+"MWBBFUR20","Fixed PU Curl Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"MWBBFUR21","Fixed PU Curl Barbell - 7.5kg","Weightlifting",61.3636,0,0,0,0,false,false,false
+"MWBBFUR22","Fixed PU Curl Barbell - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
+"MWBBFUR23","Fixed PU Curl Barbell - 12.5kg","Weightlifting",100,0,0,0,0,false,false,false
+"MWBBFUR24","Fixed PU Curl Barbell - 15kg","Weightlifting",118.1818,0,0,0,0,false,false,false
+"MWBBFUR25","Fixed PU Curl Barbell - 17.5kg","Weightlifting",136.3636,0,0,0,0,false,false,false
+"MWBBFUR26","Fixed PU Curl Barbell - 20kg","Weightlifting",154.5455,0,0,0,0,false,false,false
+"MWBBFUR27","Fixed PU Curl Barbell - 22.5kg","Weightlifting",172.7273,0,0,0,0,false,false,false
+"MWBBFUR28","Fixed PU Curl Barbell - 25kg","Weightlifting",190.9091,0,0,0,0,false,false,false
+"MWBBFUR29","Fixed PU Curl Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
+"MWBBFUR30","Fixed PU Curl Barbell - 30kg","Weightlifting",227.2727,0,0,0,0,false,false,false
+"MWBBFUR31","Fixed PU Curl Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
+"MWBBFUR32","Fixed PU Curl Barbell - 35kg","Weightlifting",263.6364,0,0,0,0,false,false,false
+"MWBBFUR33","Fixed PU Curl Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
+"MWBBFUR34","Fixed PU Curl Barbell - 40kg","Weightlifting",300,0,0,0,0,false,false,false
+"MWBBFUR35","Fixed PU Curl Barbell - 42.5kg","Weightlifting",322.7227,0,0,0,0,false,false,false
+"MWBBFUR36","Fixed PU Curl Barbell - 45kg","Weightlifting",340.9091,0,0,0,0,false,false,false
+"MWBBFUR37","Fixed PU Curl Barbell - 47.5kg","Weightlifting",359.0864,0,0,0,0,false,false,false
+"MWBBFUR38","Fixed PU Curl Barbell - 50kg","Weightlifting",377.2727,0,0,0,0,false,false,false
+"MWBBOL01","Olympic Ez Curl Bar","Weightlifting",95.4545,10,122,8.5,8.5,true,true,true
+"MWBBOL02","Olympic Barbell - 7ft Chrome (1000Lb Capacity)","Weightlifting",159.0909,21,220.5,10,10,true,true,true
+"MWBBOL03","Olympic Barbell - 15kg (1500Lb Capacity)","Weightlifting",313.6364,16,205,8,8,true,true,true
+"MWBBOL04","Olympic Barbell - 20kg (2000Lb Capacity)","Weightlifting",350,21,224,8,8,true,true,true
+"MWBBOL05","Olympic Hex Deadlift Barbell (350mm Loadable Sleeves)","Weightlifting",340.9091,23,163.5,57,16,true,true,true
+"MWBBOL06","Olympic Hex Deadlift Barbell (400mm Loadable Sleeves)","Weightlifting",395.4545,23,163.5,57,16,true,true,true
+"MWBBOL07","Olympic Safety Squat Bar (1500Lb Capacity)","Weightlifting",295.4545,30,230,42,6.5,true,true,true
+"MWBBOL08","Olympic Rickshaw Barbell (250mm Loadable Sleeves)","Weightlifting",268.1818,23,143.5,58,16,true,true,true
+"MWBBOL09","Olympic Swiss Barbell - 20kg","Weightlifting",177.2727,27,214,8.5,8.5,true,true,true
+"MWBBOS01","Olympic Barbell - 15kg (1500Lb Capacity) - Stainless Steel","Weightlifting",609.0909,0,0,0,0,false,false,false
+"MWBBOS02","Olympic Barbell - 20kg (2000Lb Capacity) - Stainless Steel","Weightlifting",663.6364,0,0,0,0,false,false,false
+"MWLPFS01","Lifting Plus Integrated Platform","Weightlifting",2954.5455,0,0,0,0,false,false,false
+"MWPA10001","Coloured Bumper Plates (Set of 8) - 100kg","Weightlifting",545.4545,0,0,0,0,true,false,false
+"MWPA10002","Competition Bumper Plates (Set of 8) - 100kg","Weightlifting",1090.9091,0,0,0,0,true,false,false
+"MWPA10003","Olympic Premium Rubber Weight Plates (3 Grip) (Set of 8) - 100kg","Weightlifting",509.0909,0,0,0,0,true,false,false
+"MWPA14001","Coloured Bumper Plates (Set of 8) & 2.5kg Change Plates - 145kg","Weightlifting",780,0,0,0,0,true,false,false
+"MWPA14002","Competition Bumper Plates (Set of 8) - 140kg","Weightlifting",1527.2727,0,0,0,0,true,false,false
+"MWPA15001","Coloured Bumper Plates (Set of 10) - 150kg","Weightlifting",781.8182,0,0,0,0,true,false,false
+"MWPA15002","Competition Bumper Plates (Set of 10) - 150kg","Weightlifting",1636.3636,0,0,0,0,true,false,false
+"MWPA15003","Olympic Premium Rubber Weight Plates (3 Grip) (Set of 10) - 150kg","Weightlifting",763.6364,0,0,0,0,true,false,false
+"MWPA9001","Coloured Bumper Plates (Set of 6) - 90kg","Weightlifting",463.6364,0,0,0,0,true,false,false
+"MWPAFRU01","Rubber Fixed Barbells (Set of 10 Bars) & Rack","Weightlifting",1990.9091,0,0,0,0,true,false,false
+"MWPAFRU02","Rubber Fixed Barbells (Set of 5 Bars) & Rack","Weightlifting",1063.6364,0,0,0,0,true,false,false
+"MWWAACC01","Weightlifting Belt","Weightlifting",31.8182,0,0,0,0,true,false,false
+"MWWAACC02","Dip & Pull Up Belt","Weightlifting",59.0909,1,84,19.5,6.5,true,true,true
+"MWWLACC01","Barbell Squat Pad","Weightlifting",18.1818,1,4.5,1.1,1.1,true,true,true
+"MWWLACC02","Olympic Bar Easy Lock Collars (Pair)","Weightlifting",22.7273,1,5.3,5.3,6.5,true,true,true
+"MWWLATT01","Ankle Strap Cable Attachment (Pair)","Weightlifting",22.7273,2,25,1,8.5,true,true,true
+"MWWLCH01","Weightlifting Chalk Box","Weightlifting",22.7273,1,19,19,9,true,true,true
+"MWWLCH02","Chalk Bowl","Weightlifting",195.4545,8,55,46,32,true,true,true
+"MWWLMA01","Drop Pads (Pair)","Weightlifting",159.0909,24,76,61,16,true,true,true
+"MWWLPVC01","Technique/Training Pipe","Weightlifting",22.7273,0,0,0,0,false,false,false
+"MWWLRR01","Squat Wedge Block","Weightlifting",77.2727,0,0,0,0,false,false,false
+"MWWPCB01","Coloured Bumper Plates - 5kg","Weightlifting",40.9091,6,46,46,3.6,true,true,true
+"MWWPCB02","Coloured Bumper Plates - 10g","Weightlifting",59.0909,11,46,46,4.5,true,true,true
+"MWWPCB03","Coloured Bumper Plates - 15kg","Weightlifting",77.2727,16,46,46,5.8,true,true,true
+"MWWPCB04","Coloured Bumper Plates - 20kg","Weightlifting",95.4545,21,46,46,6.9,true,true,true
+"MWWPCB05","Coloured Bumper Plates - 25kg","Weightlifting",118.1818,26,46,46,7.9,true,true,true
+"MWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,true,true,true
+"MWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,true,true,true
+"MWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,true,true,true
+"MWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,true,true,true
+"MWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,true,true,true
+"MWWPCNB06","Pro Bumper Plates - 5kg","Weightlifting",58.1818,0,0,0,0,false,false,false
+"MWWPCNB07","Pro Bumper Plates - 10kg","Weightlifting",78.1818,0,0,0,0,false,false,false
+"MWWPCNB08","Pro Bumper Plates - 15kg","Weightlifting",89.0909,0,0,0,0,false,false,false
+"MWWPCNB09","Pro Bumper Plates - 20kg","Weightlifting",109.0909,0,0,0,0,false,false,false
+"MWWPCNB10","Pro Bumper Plates - 25kg","Weightlifting",130.9091,0,0,0,0,false,false,false
+"MWWPCP01","Change Plates - 1.25kg","Weightlifting",23.6364,2,17.5,17.5,13,true,true,true
+"MWWPCP02","Change Plates - 2.5kg","Weightlifting",41.8182,3,22,22,13.5,true,true,true
+"MWWPCP03","Change Plates - 0.5kg","Weightlifting",40,0,0,0,0,false,false,false
+"MWWPCP04","Change Plates - 1kg","Weightlifting",40,0,0,0,0,false,false,false
+"MWWPCP05","Change Plates - 1.5kg","Weightlifting",40,0,0,0,0,false,false,false
+"MWWPCP06","Change Plates - 2kg","Weightlifting",40,0,0,0,0,false,false,false
+"MWWPOPR01","Olympic Premium Rubber Weight Plates (3 Grip) - 1.25kg","Weightlifting",6.3636,2,170,170,32,true,true,true
+"MWWPOPR02","Olympic Premium Rubber Weight Plates (3 Grip) - 2.5kg","Weightlifting",12.7273,3,210,210,35,true,true,true
+"MWWPOPR03","Olympic Premium Rubber Weight Plates (3 Grip) - 5kg","Weightlifting",25.4545,6,260,260,47,true,true,true
+"MWWPOPR04","Olympic Premium Rubber Weight Plates (3 Grip) - 10kg","Weightlifting",50.9091,11,332,332,50,true,true,true
+"MWWPOPR05","Olympic Premium Rubber Weight Plates (3 Grip) - 15kg","Weightlifting",76.3636,16,365,365,54,true,true,true
+"MWWPOPR06","Olympic Premium Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",101.8182,21,410,410,59,true,true,true
+"MWWPOPR07","Olympic Premium Rubber Weight Plates (3 Grip) - 25kg","Weightlifting",127.2727,26,435,435,61,true,true,true
+"MWWPOU01","Olympic Urethane Weight Plates (3 Grip) - 1.5kg","Weightlifting",9.0909,2,170,170,32,true,true,true
+"MWWPOU02","Olympic Urethane Weight Plates (3 Grip) - 2.5kg","Weightlifting",18.1818,3,210,210,35,true,true,true
+"MWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",36.3636,6,260,260,47,true,true,true
+"MWWPOU04","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",72.7273,11,332,332,50,true,true,true
+"MWWPOU05","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",109.0909,16,365,365,54,true,true,true
+"MWWPOU06","Olympic Urethane Weight Plates (3 Grip) - 20kg","Weightlifting",145.4545,21,410,410,59,true,true,true
+"MWWPOU07","Olympic Urethane Weight Plates (3 Grip) - 25kg","Weightlifting",181.8182,26,435,435,61,true,true,true
+"MWWPOU08","Olympic PU Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,0,0,0,0,false,false,false
+"MWWPOU09","Olympic PU Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
+"MWWPOU10","Olympic Urethane Weight Plates (4 Grip) - 15kg","Weightlifting",122.7273,0,0,0,0,false,false,false
+"MWWPOU11","Olympic PU Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,0,0,0,0,false,false,false
+"MWWPOU12","Olympic PU Weight Plates (4 Grip) - 20kg","Weightlifting",163.6364,0,0,0,0,false,false,false
+"MWWPOU13","Olympic Urethane Weight Plates (4 Grip) - 25kg","Weightlifting",204.5455,0,0,0,0,false,false,false
+"MWWPOU14","Olympic PU Weight Plates (4 Grip) - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"NBFAFRR01","Acoustic Underlay (1m x 10m) - 5mm","Flooring",27.7236,0,0,0,0,false,false,false
+"NBFAFRR02","Acoustic Underlay (1m x 10m) - 10mm","Flooring",40.4545,0,0,0,0,false,false,false
+"NBFAFRR03","Acoustic Underlay (1m x 10m) - 15mm","Flooring",44.5455,0,0,0,0,false,false,false
+"NBFAFRR04","Acoustic Underlay (1m x 10m) - 20mm","Flooring",58.1773,0,0,0,0,false,false,false
+"NBFATSY01","Artificial Turf Black (2m x 10m)","Flooring",1500,0,0,0,0,false,false,false
+"NBFATSY02","Artificial Turf Black (2m x 15m)","Flooring",2363.6364,0,0,0,0,false,false,false
+"NBFATSY03","Artificial Turf Black (2m x 20m)","Flooring",3000,0,0,0,0,false,false,false
+"NBFRFRR01","Impact-Lock Rubber Tiles - 20mm","Flooring",59.0909,0,0,0,0,false,false,false
+"NBFRFRR02","Impact-Lock Rubber Tiles - 30mm","Flooring",77.8155,0,0,0,0,false,false,false
+"NBFRFRR03","Impact-Lock Rubber Tiles - 40mm (500 x 500mm) (4 Tiles)","Flooring",99.5455,0,0,0,0,false,false,false
+"NBFRFRR04","Impact-Lock Rubber Tiles - 50mm (500 x 500mm) (4 Tiles)","Flooring",123.6373,0,0,0,0,false,false,false
+"NBLLE2501","Linear LED Lighting System - 2.4m","Lighting",404.5455,0,0,0,0,false,false,false
+"NBLLE2502","LED Dimmer","Lighting",40.9091,0,0,0,0,false,false,false
+"NBMDBPRH01","Premium Rubber Hex Dumbbell - 1kg","Mixed Implements",4.5455,0,0,0,0,false,false,false
+"NBMDBPRH02","Premium Rubber Hex Dumbbell - 2kg","Mixed Implements",9.0909,0,0,0,0,false,false,false
+"NBMDBPRH02H","Premium Rubber Hex Dumbbell - 2.5kg","Mixed Implements",11.3636,0,0,0,0,false,false,false
+"NBMDBPRH03","Premium Rubber Hex Dumbbell - 3kg","Mixed Implements",13.6364,0,0,0,0,false,false,false
+"NBMDBPRH04","Premium Rubber Hex Dumbbell - 4kg","Mixed Implements",18.1818,0,0,0,0,false,false,false
+"NBMDBPRH05","Premium Rubber Hex Dumbbell - 5kg","Mixed Implements",22.7273,0,0,0,0,false,false,false
+"NBMDBPRH06","Premium Rubber Hex Dumbbell - 6kg","Mixed Implements",27.2727,0,0,0,0,false,false,false
+"NBMDBPRH07","Premium Rubber Hex Dumbbell - 7kg","Mixed Implements",31.8182,0,0,0,0,false,false,false
+"NBMDBPRH07H","Premium Rubber Hex Dumbbell - 7.5kg","Mixed Implements",34.0909,0,0,0,0,false,false,false
+"NBMDBPRH08","Premium Rubber Hex Dumbbell - 8kg","Mixed Implements",36.3636,0,0,0,0,false,false,false
+"NBMDBPRH09","Premium Rubber Hex Dumbbell - 9kg","Mixed Implements",40.9091,0,0,0,0,false,false,false
+"NBMDBPRH10","Premium Rubber Hex Dumbbell - 10kg","Mixed Implements",45.4545,0,0,0,0,false,false,false
+"NBMDBPRH12H","Premium Rubber Hex Dumbbell - 12.5kg","Mixed Implements",56.8182,0,0,0,0,false,false,false
+"NBMDBPRH15","Premium Rubber Hex Dumbbell - 15kg","Mixed Implements",68.1818,0,0,0,0,false,false,false
+"NBMDBPRH17H","Premium Rubber Hex Dumbbell - 17.5kg","Mixed Implements",79.5455,0,0,0,0,false,false,false
+"NBMDBPRH20","Premium Rubber Hex Dumbbell - 20kg","Mixed Implements",90.9091,0,0,0,0,false,false,false
+"NBMDBPRH22H","Premium Rubber Hex Dumbbell - 22.5kg","Mixed Implements",102.2727,0,0,0,0,false,false,false
+"NBMDBPRH25","Premium Rubber Hex Dumbbell - 25kg","Mixed Implements",113.6364,0,0,0,0,false,false,false
+"NBMDBPRH27H","Premium Rubber Hex Dumbbell - 27.5kg","Mixed Implements",125,0,0,0,0,false,false,false
+"NBMDBPRH30","Premium Rubber Hex Dumbbell - 30kg","Mixed Implements",136.3636,0,0,0,0,false,false,false
+"NBMDBPRH32H","Premium Rubber Hex Dumbbell - 32.5kg","Mixed Implements",147.7273,0,0,0,0,false,false,false
+"NBMDBPRH35","Premium Rubber Hex Dumbbell - 35kg","Mixed Implements",159.0909,0,0,0,0,false,false,false
+"NBMDBPRH37H","Premium Rubber Hex Dumbbell - 37.5kg","Mixed Implements",170.4545,0,0,0,0,false,false,false
+"NBMDBPRH40","Premium Rubber Hex Dumbbell - 40kg","Mixed Implements",181.8182,0,0,0,0,false,false,false
+"NBMDBPRH42H","Premium Rubber Hex Dumbbell - 42.5kg","Mixed Implements",193.1818,0,0,0,0,false,false,false
+"NBMDBPRH45","Premium Rubber Hex Dumbbell - 45kg","Mixed Implements",204.5455,0,0,0,0,false,false,false
+"NBMDBPRH47H","Premium Rubber Hex Dumbbell - 47.5kg","Mixed Implements",215.9091,0,0,0,0,false,false,false
+"NBMDBPRH50","Premium Rubber Hex Dumbbell - 50kg","Mixed Implements",227.2727,0,0,0,0,false,false,false
+"NBMDBRH01","Rubber Hex Dumbbell - 1kg","Mixed Implements",4.0909,0,0,0,0,false,false,false
+"NBMDBRH02","Rubber Hex Dumbbell - 2kg","Mixed Implements",8.1818,0,0,0,0,false,false,false
+"NBMDBRH02H","Rubber Hex Dumbbell - 2.5kg","Mixed Implements",10.2273,0,0,0,0,false,false,false
+"NBMDBRH03","Rubber Hex Dumbbell - 3kg","Mixed Implements",12.2727,0,0,0,0,false,false,false
+"NBMDBRH04","Rubber Hex Dumbbell - 4kg","Mixed Implements",16.3636,0,0,0,0,false,false,false
+"NBMDBRH05","Rubber Hex Dumbbell - 5kg","Mixed Implements",20.4545,0,0,0,0,false,false,false
+"NBMDBRH06","Rubber Hex Dumbbell - 6kg","Mixed Implements",24.5455,0,0,0,0,false,false,false
+"NBMDBRH07","Rubber Hex Dumbbell - 7kg","Mixed Implements",28.6364,0,0,0,0,false,false,false
+"NBMDBRH07H","Rubber Hex Dumbbell - 7.5kg","Mixed Implements",30.6818,0,0,0,0,false,false,false
+"NBMDBRH08","Rubber Hex Dumbbell - 8kg","Mixed Implements",32.7273,0,0,0,0,false,false,false
+"NBMDBRH09","Rubber Hex Dumbbell - 9kg","Mixed Implements",36.8182,0,0,0,0,false,false,false
+"NBMDBRH10","Rubber Hex Dumbbell - 10kg","Mixed Implements",40.9091,0,0,0,0,false,false,false
+"NBMDBRH12H","Rubber Hex Dumbbell - 12.5kg","Mixed Implements",51.1364,0,0,0,0,false,false,false
+"NBMDBRH15","Rubber Hex Dumbbell - 15kg","Mixed Implements",61.3636,0,0,0,0,false,false,false
+"NBMDBRH17H","Rubber Hex Dumbbell - 17.5kg","Mixed Implements",71.5909,0,0,0,0,false,false,false
+"NBMDBRH20","Rubber Hex Dumbbell - 20kg","Mixed Implements",81.8182,0,0,0,0,false,false,false
+"NBMDBRH22H","Rubber Hex Dumbbell - 22.5kg","Mixed Implements",92.0455,0,0,0,0,false,false,false
+"NBMDBRH25","Rubber Hex Dumbbell - 25kg","Mixed Implements",102.2727,0,0,0,0,false,false,false
+"NBMDBRH27H","Rubber Hex Dumbbell - 27.5kg","Mixed Implements",112.5,0,0,0,0,false,false,false
+"NBMDBRH30","Rubber Hex Dumbbell - 30kg","Mixed Implements",122.7273,0,0,0,0,false,false,false
+"NBMDBRH32H","Rubber Hex Dumbbell - 32.5kg","Mixed Implements",132.9545,0,0,0,0,false,false,false
+"NBMDBRH35","Rubber Hex Dumbbell - 35kg","Mixed Implements",143.1818,0,0,0,0,false,false,false
+"NBMDBRH37H","Rubber Hex Dumbbell - 37.5kg","Mixed Implements",153.4091,0,0,0,0,false,false,false
+"NBMDBRH40","Rubber Hex Dumbbell - 40kg","Mixed Implements",163.6364,0,0,0,0,false,false,false
+"NBMDBRH42H","Rubber Hex Dumbbell - 42.5kg","Mixed Implements",173.8636,0,0,0,0,false,false,false
+"NBMDBRH45","Rubber Hex Dumbbell - 45kg","Mixed Implements",184.0909,0,0,0,0,false,false,false
+"NBMDBRH52H","Premium Rubber Hex Dumbbell - 52.5kg","Mixed Implements",238.6364,0,0,0,0,false,false,false
+"NBMDBRH55","Premium Rubber Hex Dumbbell - 55kg","Mixed Implements",250,0,0,0,0,false,false,false
+"NBMDBRH60","Premium Rubber Hex Dumbbell - 60kg","Mixed Implements",272.7273,0,0,0,0,false,false,false
+"OBSR03","Skipping Ropes- Wire, Adjustable","Body Weight",10.9091,0,0,0,0,false,false,false
+"OCBIMG03","Vortect Commercial Spin Bike","Cardio",2271.818,0,0,0,0,false,false,false
+"RAACU02M","Oversized Hoodie (Unisex) (M)","Apparel",81.8182,0,0,0,0,false,false,false
+"RAACU05M","Short Sleeve Tee (Male) (M)","Apparel",50,0,0,0,0,false,false,false
+"RBCTACC01","Utility Roller","Body Weight",136.3636,10,68,34.5,8.5,true,true,true
+"RBCTFS01","Rig Core Trainer (Landmine)","Rigs & Racks",127.2727,4,55,12,12,true,true,true
+"RBCTMA01","Abdominal Mat","Body Weight",29.0909,1,38,30,0,true,false,false
+"RBGYRI01","Gymnastic Rings (Wooden)","Body Weight",86.3636,2,26,26,0,true,false,false
+"RBPB3I101","3-In-1 Foam Plyometric Box - 34kg","Body Weight",300,35,77,52,62,true,true,true
+"RBRMRL02","Foam Roller - 33cm (TPT)","Body Weight",31.8182,1,33,14,14,true,true,true
+"RBRPPO01","Micro Bands - Heavy (Black)","Body Weight",7.2727,0,0,0,0,true,false,false
+"RBRPPO02","Micro Bands - X Heavy (Red)","Body Weight",7.2727,0,0,0,0,true,false,false
+"RBRPPO03","Micro Bands - XX Heavy (Black)","Body Weight",7.2727,0,0,0,0,false,false,false
+"RBRPPO04","Power Bands - 13mm (Red)","Body Weight",10.9091,0,0,0,0,true,false,false
+"RBRPPO05","Power Bands - 21mm (Grey)","Body Weight",18.1818,0,0,0,0,true,false,false
+"RBRPPO06","Power Bands - 32mm (Black)","Body Weight",27.2727,0,0,0,0,true,false,false
+"REFRACC01","Modular Storage Rack Flat Shelf","Equipment Storage",222.7273,19,160,63,0,true,false,false
+"REFRACC02","Modular Storage Rack Shelf Dual Pipe","Equipment Storage",95.4545,11,151,29.5,0,true,false,false
+"REFRACC03","Modular Storage Rack Side (1582mm)","Equipment Storage",195.4545,20,161,63,0,true,false,false
+"REFRBB02","Barbell Storage Box (12 Bar Holder)","Equipment Storage",318.1818,0,3.5,0,0,true,false,false
+"REFROP01","Olympic Weight Plate Tree (8 Storage Pins)","Equipment Storage",477.2727,28,138,65,0,true,false,false
+"RERK153001","Retail Rack","Equipment Storage",350,16,152,31,31,true,true,true
+"REWMACC01","Dip Bar Holder (Wall Mounted)","Equipment Storage",195.4545,19,14,26.5,0,true,false,false
+"REWMBER01","Bench & Rower Rack (Wall Mounted)","Equipment Storage",68.1818,7,60.5,7,0,true,false,false
+"RFATSY01","Artificial Turf Black (2m x 10m)","Flooring",1409.0909,43,200,45,45,true,true,true
+"RFATSY02","Artificial Turf Black (2m x 10m) (Custom Branding)","Flooring",1500,43,200,45,45,true,true,true
+"RFATSY03","Artificial Turf Black (2m x 15m)","Flooring",2159.0909,77,15,2,0.05,false,true,false
+"RFATSY04","Artificial Turf Black (2m x 15m) (Custom Branding)","Flooring",2250,0,0,0,0,false,false,false
+"RFATSY05","Artificial Turf Black (2m x 20m)","Astro Turf/Sled Tracks",2050,77,15,2,0.05,false,true,false
+"RFATSY06","Artificial Turf Black (1.4m x 18m) (Custom Branding)","Flooring",2500,43,200,45,45,false,true,false
+"RFATSY07","Artificial Turf Black (2m x 20m) (Custom Branding)","Flooring",2250,0,0,0,0,false,false,false
+"RFDAAS","REVL Freight & Delivery Allowance (AUS)","Other Costs",10500,0,0,0,0,true,false,false
+"RFDASG","REVL Freight & Delivery Allowance (SG)","Other Costs",10500,0,0,0,0,true,false,false
+"RFDAUS","REVL Freight & Delivery Allowance (USA)","Other Costs",10500,0,0,0,0,true,false,false
+"RFRFRR01","Impact-Lock Rubber Tiles - 20mm","Flooring",53.6364,19,105,105,0,true,false,false
+"RFRFRR05","Impact-Lock Rubber Tiles - 20mm (Custom Branding)","Flooring",80.9091,19,105,105,0,false,false,false
+"RFRFRR06B","Acoustic Underlay - 5mm","Flooring",26.3636,0,0,0,3.2,false,false,false
+"RLLE2501","Linear LED Lighting System - 2.4m","Lighting",409.0909,6,243,18.5,4.2,true,true,true
+"RLLE2502","LED Dimmer","Lighting",40.9091,0.5,0.3,0.3,0.001,true,true,true
+"RMDBRH01","Premium Rubber Hex Dumbbell - 4kg","Mixed Implements",18.1818,5,0,14,0,true,false,false
+"RMDBRH02","Premium Rubber Hex Dumbbell - 6kg","Mixed Implements",27.2727,7,0,14,0,true,false,false
+"RMDBRH03","Premium Rubber Hex Dumbbell - 8kg","Mixed Implements",36.3636,9,0,14,0,true,false,false
+"RMDBRH04","Premium Rubber Hex Dumbbell - 10kg","Mixed Implements",45.4545,11,0,14,0,true,false,false
+"RMDBRH05","Premium Rubber Hex Dumbbell - 12.5kg","Mixed Implements",56.8182,14,0,13.8,0,true,false,false
+"RMDBRH06","Premium Rubber Hex Dumbbell - 15kg","Mixed Implements",68.1818,16,0,15.4,0,true,false,false
+"RMDBRH07","Premium Rubber Hex Dumbbell - 17.5kg","Mixed Implements",79.5455,19,0,16.4,0,true,false,false
+"RMDBRH08","Premium Rubber Hex Dumbbell - 20kg","Mixed Implements",90.9091,21,0,16.7,0,true,false,false
+"RMDBRH09","Premium Rubber Hex Dumbbell - 25kg","Mixed Implements",113.6364,26,0,18,0,true,false,false
+"RMDBRH10","Premium Rubber Hex Dumbbell - 27.5kg","Mixed Implements",125,29,0,19,0,true,false,false
+"RMDBRH11","Premium Rubber Hex Dumbbell - 30kg","Mixed Implements",136.3636,31,0,19.1,0,true,false,false
+"RMDBRH12","Premium Rubber Hex Dumbbell - 35kg","Mixed Implements",159.0909,36,0,20.5,0,true,false,false
+"RMDBRH13","Premium Rubber Hex Dumbbell - 40kg","Mixed Implements",181.8182,41,0,21.3,0,true,false,false
+"RMDBRH14","Premium Rubber Hex Dumbbell - 22.5kg","Mixed Implements",102.2727,46,0,14,0,true,false,false
+"RMDBRH15","Premium Rubber Hex Dumbbell - 45kg","Mixed Implements",204.5455,51,0,14,0,true,false,false
+"RMDBRH16","Premium Rubber Hex Dumbbell - 50kg","Mixed Implements",227.2727,61,0,14,0,true,false,false
+"RMDBRH17","Premium Rubber Hex Dumbbell - 60kg","Mixed Implements",272.7273,0,0,0,0,false,false,false
+"RMDEHG01","High Grip Dead Ball - 12kg","Mixed Implements",50,13,29,29,0,true,false,false
+"RMDEHG02","High Grip Dead Ball - 15kg","Mixed Implements",63.6364,16,29,29,0,true,false,false
+"RMDEHG03","High Grip Dead Ball - 20kg","Mixed Implements",90.9091,21,29,29,0,true,false,false
+"RMDEHG04","High Grip Dead Ball - 25kg","Mixed Implements",100,26,29,29,0,true,false,false
+"RMDEHG05","High Grip Dead Ball - 30kg","Mixed Implements",118.1818,31,29,29,0,true,false,false
+"RMDEHG06","High Grip Dead Ball - 35kg","Mixed Implements",122.7273,36,31.5,31.5,0,true,false,false
+"RMDEHG07","High Grip Dead Ball - 45kg","Mixed Implements",186.3636,46,34,34,0,true,false,false
+"RMDEHG08","High Grip Dead Ball - 55kg","Mixed Implements",195.4545,56,36.5,36.5,0,true,false,false
+"RMDEHG09","High Grip Dead Ball - 65kg","Mixed Implements",209.0909,66,36.5,36.5,0,true,false,false
+"RMDEHG10","High Grip Dead Ball - 75kg","Mixed Implements",227.2727,76,39,39,0,true,false,false
+"RMGFACC01","Digital Interval Timer","Mixed Implements",313.6364,4,87,17,0,true,false,false
+"RMKBPGC01","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,0,true,false,false
+"RMKBPGC02","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,0,true,false,false
+"RMKBPGC03","Competition Kettlebell - 12kg","Mixed Implements",81.8182,13,23,23,0,true,false,false
+"RMKBPGC04","Competition Kettlebell - 16kg","Mixed Implements",100,17,23,23,0,true,false,false
+"RMKBPGC05","Competition Kettlebell - 20kg","Mixed Implements",118.1818,21,23,23,0,true,false,false
+"RMKBPGC06","Competition Kettlebell - 24kg","Mixed Implements",140.9091,25,23,23,0,true,false,false
+"RMKBPGC07","Competition Kettlebell - 28kg","Mixed Implements",159.0909,29,23,23,0,true,false,false
+"RMKBPGC08","Competition Kettlebell - 32kg","Mixed Implements",186.3636,33,23,23,0,true,false,false
+"RMKBPGC09","Competition Kettlebell - 36kg","Mixed Implements",213.6364,37,23,23,0,true,false,false
+"RMKBPGC10","Competition Kettlebell - 40kg","Mixed Implements",240.9091,41,23,23,0,true,false,false
+"RMKBPGC11","Urethane Kettlebell - 8kg","Mixed Implements",77.2727,0,0,0,0,false,false,false
+"RMKBPGC12","Urethane Kettlebell - 10kg","Mixed Implements",100,0,0,0,0,false,false,false
+"RMKBPGC13","Urethane Kettlebell - 12kg","Mixed Implements",109.0909,0,0,0,0,false,false,false
+"RMKBPGC14","Urethane Kettlebell - 16kg","Mixed Implements",150,0,0,0,0,false,false,false
+"RMKBPGC15","Urethane Kettlebell - 20kg","Mixed Implements",181.8182,0,0,0,0,false,false,false
+"RMKBPGC16","Urethane Kettlebell - 24kg","Mixed Implements",213.6364,0,0,0,0,false,false,false
+"RMKBPGC17","Urethane Kettlebell - 28kg","Mixed Implements",245.4545,0,0,0,0,false,false,false
+"RMKBPGC18","Urethane Kettlebell - 32kg","Mixed Implements",286.3636,0,0,0,0,false,false,false
+"RMKBPGC19","Urethane Kettlebell - 36kg","Mixed Implements",313.6364,0,0,0,0,false,false,false
+"RMKBPGC20","Urethane Kettlebell - 40kg","Mixed Implements",336.3636,0,0,0,0,false,false,false
+"RMWAARM01","Wall Ball - 8lb","Mixed Implements",88.1818,4,36.6,36.6,0,true,false,false
+"RMWAARM02","Wall Ball - 14lb","Mixed Implements",90.9091,7,36.6,36.6,0,true,false,false
+"RMWAARM03","Wall Ball - 20lb","Mixed Implements",95.4545,10,36.6,36.6,0,true,false,false
+"RRSPATT01","Rig Crossbeam Single Pipe - 1080mm","Rigs & Racks",90,6,109,7.5,0,true,false,false
+"RRSPATT02","Rig Crossbeam Single Pipe - 1520mm","Rigs & Racks",109.0909,7,153,7.5,0,true,false,false
+"RRSPATT03","Rig Universal Upright","Rigs & Racks",200,19,241,7.5,0,true,false,false
+"RRSPATT04","Rig Dip Bar Attachment","Rigs & Racks",190.9091,11,71,59,0,true,false,false
+"RRSPATT05","Rig Premium J-Hooks","Rigs & Racks",168.1818,8,16,11,0,true,false,false
+"RRSPATT06","Rig Wall Ball Target","Rigs & Racks",222.7273,19,42.5,41.8,0,true,false,false
+"RRSPATT07","Rig Crossbeam Single Pipe - 1800mm","Rigs & Racks",154.5455,0,0,0,0,false,false,false
+"RRWAATT01","Rig Spotter Arms (Pair)","Rigs & Racks",236.3636,19,82.5,19,21.8,true,true,true
+"RSCMATT01","Cable Pulley System","Strength",123.4091,10,68,34.5,8.5,true,true,true
+"RSWBFW01","Flat Utility Weight Bench Pro (Angled Legs)","Strength",431.8182,26,118,52.5,46.2,true,true,true
+"RSWBFW02","Adjustable Utility Weight Bench","Strength",708.1818,39,138,25,0,true,false,false
+"RSWBFW03","Flat Utility Weight Bench (Angled Legs) - 410mm","Strength",431.8182,0,0,0,0,false,false,false
+"RSWBFW04","Flat Utility Weight Bench Pro (Angled Legs) - Seat Only","Strength",150,26,118,52.5,0,false,false,false
+"RWBBOL01","Olympic Barbell - 15kg (1500Lb Capacity)","Weightlifting",313.6364,16,205,8,0,true,false,false
+"RWBBOL02","Olympic Barbell - 20kg (2000Lb Capacity)","Weightlifting",359.0909,21,224,8,0,true,false,false
+"RWWAACC01","Weightlifting Belt","Weightlifting",31.8182,0,0,0,0,true,false,false
+"RWWAACC02","Dip & Pull Up Belt","Weightlifting",63.6364,1,84,19.5,0,true,false,false
+"RWWKCH02","Weightlifting Chalk Box","Weightlifting",27.2727,0,0,0,0,false,false,false
+"RWWLACC01","Barbell Squat Pad","Weightlifting",20,1,44.5,11,0,true,false,false
+"RWWLACC02","Olympic Bar Easy Lock Collars (Pair)","Weightlifting",22.7273,1,5.3,5.3,0,true,false,false
+"RWWLCH01","Chalk Bowl","Weightlifting",195.4545,8,55,46,15,true,true,true
+"RWWLPVC01","Technique/Training Bar","Body Weight",22.7273,10,68,34.5,8.5,true,true,true
+"RWWLRR01","Squat Wedge Block","Body Weight",72.7273,0,0,0,0,true,false,false
+"RWWPCNB01","Pro Bumper Plates - 5kg","Weightlifting",57.5,5.5,46,46,3.6,true,true,true
+"RWWPCNB02","Pro Bumper Plates - 10kg","Weightlifting",80,10.5,46,46,4.5,true,true,true
+"RWWPCNB03","Pro Bumper Plates - 15kg","Weightlifting",90,15.5,46,46,5.8,true,true,true
+"RWWPCNB04","Pro Bumper Plates - 20kg","Weightlifting",112.5,20.5,46,46,6.9,true,true,true
+"RWWPCNB05","Pro Bumper Plates - 25kg","Weightlifting",135,25.5,46,46,7.9,true,true,true
+"RWWPCNB06","Pro Bumper Plates - 5kg","Weightlifting",58.1818,0,0,0,0,false,false,false
+"RWWPCP01","Change Plates - 1.25kg","Weightlifting",27.2727,1.5,17.5,17.5,1.8,true,true,true
+"RWWPCP02","Change Plates - 2.5kg","Weightlifting",47.2727,3,20.5,20.5,2,true,true,true
+"RWWPCP03","Change Plates - 0.5kg","Weightlifting",817.7273,0,0,0,0,false,false,false
+"SAAACO01","Sweat Towel","Apparel",7.2727,0,0.04,0,0.08,false,false,false
+"SAAAU01","Trucker Hat","Apparel",36.3636,0,0,0,0,true,false,false
+"SAAAU02","Train Cap","Apparel",36.3636,0,0,0,0,true,false,false
+"SAACU02M","Oversized Hoodie (Unisex) (M)","Apparel",81.8182,0,0,0,0,false,false,false
+"SAACU05L","Short Sleeve Tee (Male) (L)","Apparel",50,0,0,0,0,false,false,false
+"SAACU05M","Short Sleeve Tee (Male) (M)","Apparel",50,0,0,0,0,false,false,false
+"SAACU05S","Short Sleeve Tee (Male) (S)","Apparel",50,0,0,0,0,false,false,false
+"SAACU05XL","Short Sleeve Tee (Male) (XL)","Apparel",50,0,0,0,0,false,false,false
+"SAACU09M","High Rise Leggings (Woman) (M)","Apparel",113.6364,0,0,0,0,false,false,false
+"SAACU12M","Sports Bra (Woman) (S)","Apparel",59.0909,0,0,0,0,false,false,false
+"SBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements",250,13,120,31,20,true,true,true
+"SBASADJ02","Group Fitness Step (4 Risers)","Mixed Implements",222.7273,18,44.5,44.5,37,true,true,true
+"SBASADJ03","Group Fitness Step (6 Risers)","Mixed Implements",259.0909,19,44.5,44.5,37,true,true,true
+"SBBSCU01","Balance Cushion","Body Weight",31.8182,3,33,33,6,true,true,true
+"SBBSTR01","Fitness & Balance Trainer","Body Weight",163.6364,8,6.6,6.6,0.9,true,true,true
+"SBCT6501","Fitness Ball - 65cm (Anti-Burst)","Body Weight",31.8182,0,0,0,0,false,false,false
+"SBCTACC01","Utility Roller","Body Weight",122.7273,10,68,34.5,8.5,true,true,true
+"SBCTDI01","Exercise Glider Discs (Pair)","Body Weight",43.6364,1,20,22,10,true,true,true
+"SBCTDR01","Drop In Core Trainer","Body Weight",77.2727,3,43,8,8,true,true,true
+"SBCTFS02","Core Trainer (Landmine) With T Bar Handle","Body Weight",295.4545,17,42,17,59,true,true,true
+"SBCTMA01","Abdominal Mat","Body Weight",22.7273,1,38,30,6,true,true,true
+"SBCTWH01","Abdominal Wheel","Body Weight",20,3,26,20,9.5,true,true,true
+"SBEMMA01","EVA Exercise Mat","Body Weight",45.4545,3,140,62,1.6,true,true,true
+"SBGYRI01","Gymnastic Rings (Wooden)","Body Weight",68.1818,2,26,26,7,true,true,true
+"SBGYSL01","Parallettes - 275mm (Pair)","Body Weight",181.8182,11,50,28.5,35.5,true,true,true
+"SBPB3I101","3-In-1 Foam Plyometric Box - 34kg","Body Weight",300,35,77,52,62,true,true,true
+"SBPB3I102","3-In-1 Wooden Plyometric Box","Body Weight",150,11,77,61,15,true,true,true
+"SBPBMS01","Plyometric Box (Set of 4)","Body Weight",359.0909,38,76,43,43,true,true,true
+"SBPBSB02","Foam Plyometric Box - 6""","Body Weight",200,9,85,100,15.3,true,true,true
+"SBPBSB04","Foam Plyometric Box - 12""","Body Weight",345.4545,13,85,100,30.5,true,true,true
+"SBPBSB06","Foam Plyometric Box - 24""","Body Weight",600,21,85,100,61,true,true,true
+"SBRMRL01","Foam Roller - 45cm","Body Weight",30,4,46,16,16,true,true,true
+"SBRMRL02","Foam Roller - 90cm","Body Weight",45.4545,8,91,16,16,true,true,true
+"SBRMRL03","Foam Roller - 33cm (TPT)","Body Weight",31.8182,1,33,14,14,true,true,true
+"SBRMRL09","Massage Rolling Machine","Body Weight",8453.636,0,0,0,0,false,false,false
+"SBRPBA01","Knitted Resistance Bands (Set of 3)","Body Weight",27.2727,1,34,24,2,true,true,true
+"SBRPMI01","Mini Bands (Pack of 4)","Body Weight",18.1818,1,7.3,3.2,3.6,true,true,true
+"SBRPPO01","Power Bands (Pack of 4)","Body Weight",109.0909,2,15,36,15,true,true,true
+"SBRPPO02","Power Bands (Pack of 8)","Body Weight",177.2727,4,40,36,30,true,true,true
+"SBSADI01","Mini Disc Cones (Set of 50)","Body Weight",31.8182,2,15,15,15,true,true,true
+"SBSADO01","Agility Dots (Set of 5)","Body Weight",18.1818,0,0,0,0,false,false,false
+"SBSADO02","Station Markers (Set of 5)","Body Weight",18.18,1,10,10,2,true,true,true
+"SBSAHD01","Lateral Endurance Hurdles (Set of 4)","Body Weight",209.0909,21,63,53,35,true,true,true
+"SBSALD01","Rubber Rollout Speed Ladder - 5m","Body Weight",77.2727,9,43,19,19,true,true,true
+"SBSARO01","Speed Rope (Elite)","Body Weight",22.7273,2,10,10,3,true,true,true
+"SBSUTR01","Suspension Trainer","Body Weight",86.3636,6,23,23,9,true,true,true
+"SEFRACC01","Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (1.2m)","Equipment Storage",813.6364,95,132,40.4,6,true,true,true
+"SEFRACC02","Modular Storage Rack (Kettlebells, Dumbbells) - HD 2 Tier (2m)","Equipment Storage",1177.2727,95,212,40.4,6,true,true,true
+"SEFRACC03","Modular Storage Rack Flat Shelf","Equipment Storage",204.5455,19,160,63,6.5,true,true,true
+"SEFRACC04","Modular Storage Rack Shelf Dual Pipe","Equipment Storage",113.6364,11,151,29.5,6.5,true,true,true
+"SEFRACC05","Modular Storage Rack Side (1582mm)","Equipment Storage",177.2727,20,161,63,6.5,true,true,true
+"SEFRACC06","Modular Storage Rack - Complete (2/Dual Pipe, 2/Flat Shelf)","Equipment Storage",1345.4545,110,159.2,62,11,true,true,true
+"SEFRACC12","Modular Storage Rack - Complete (1/Dual Pipe, 3/Flat Shelf)","Equipment Storage",679.27,110,159.2,62,11,true,true,true
+"SEFRBB01","Fixed Barbell Rack (5 Bar)","Equipment Storage",540.9091,40,134,93,26,true,true,true
+"SEFRBB02","Fixed Barbell Rack (10 Bar) 1.0","Equipment Storage",677.2727,54,139,96,30,true,true,true
+"SEFRBB03","Fixed Barbell Rack (10 Bar) 2.0","Equipment Storage",722.7273,54,139,95,30,true,true,true
+"SEFRBB04","Barbell Storage Box (9 Bar Holder)","Equipment Storage",254.5455,26,46,46,26,true,true,true
+"SEFRBB05","Barbell Storage Box (9 Bar Holder) - Versatile","Equipment Storage",254.5455,27,46,46,26,true,true,true
+"SEFRBL01","Medicine Ball Rack - 10 Ball (Double Sided)","Equipment Storage",186.3636,14,153,15,15,true,true,true
+"SEFRBL02","Medicine Ball Rack - 10 Ball (Single Sided)","Equipment Storage",313.6364,18,166,55,53,true,true,true
+"SEFRBL03","Medicine Ball Rack - 5 Ball (Single Sided)","Equipment Storage",281.8182,16,162,84,51.5,true,true,true
+"SEFRDB01","Vertical Dumbbell Rack - 10 Pair (Single Sided) 1.0","Equipment Storage",427.2727,43,175,46.5,16,true,true,true
+"SEFRDB02","Vertical Dumbbell Rack - 10 Pair (Single Sided) 2.0","Equipment Storage",559.0909,43,175,46.5,16,true,true,true
+"SEFRDB03","Vertical Dumbbell Rack - 15 Pair (Single Sided)","Equipment Storage",795.4545,43,175,46.5,16,true,true,true
+"SEFRDB04","Vertical Dumbbell Rack - 10 Pair (Single Sided) 3.0","Equipment Storage",613.6364,43,175,46.5,16,true,true,true
+"SEFRDB05","Vertical Dumbbell Rack - 10 Pair (Double Sided) 2.0","Equipment Storage",631.8182,64,165,43,43,true,true,true
+"SEFRDB06","Vertical Dumbbell Rack - Portable (Four Sided)","Equipment Storage",495.4545,53,115,56,25,true,true,true
+"SEFRDB07","Horizontal Dumbbell Rack - 2 Tier (5 Pair) 1.0","Equipment Storage",950,54,95,72,35,true,true,true
+"SEFRDB08","Horizontal Dumbbell Rack - 2 Tier (10 Pair) 1.0","Equipment Storage",1086.3636,66,222,27,14,true,true,true
+"SEFRDB09","Horizontal Dumbbell Rack - 3 Tier (15 Pair)","Equipment Storage",1813.6364,136,250,50,30,true,true,true
+"SEFRDB10","Horizontal Dumbbell Rack - 2 Tier (5 Pair) 2.0","Equipment Storage",904.5455,68,148,84,30,true,true,true
+"SEFRDB11","Horizontal Dumbbell Rack - 2 Tier (10 Pair) 2.0","Equipment Storage",1309.0909,112,268,84,30,true,true,true
+"SEFRDB12","Vertical Dumbbell Rack - 10 Pair (Double Sided) 3.0","Equipment Storage",487.27,64,165,43,43,true,true,true
+"SEFRDB13","Horizontal Dumbbell Rack - 2 Tier (20 Pair)","Equipment Storage",883.64,112,268,84,30,true,true,true
+"SEFRKB01","Kettlebell Rack (2 Tier) 2.0","Equipment Storage",522.7273,33,90,80,14,true,true,true
+"SEFRKB02","Kettlebell Rack (2 Tier) 3.0","Equipment Storage",904.5455,53,90,80,14,true,true,true
+"SEFRKB03","Kettlebell Rack (2 Tier) 4.0","Equipment Storage",995.4545,53,90,80,14,true,true,true
+"SEFROP01","Olympic Plate Toaster Rack Portable","Equipment Storage",404.5455,22,155,40,27,true,true,true
+"SEFROP02","Olympic Weight Plate Tree Portable (6 Storage Pins, 2 Bar Storage)","Equipment Storage",568.1818,16,140,65,20,true,true,true
+"SEFROP03","Olympic Weight Plate Tree (8 Storage Pins)","Equipment Storage",477.2727,28,138,65,20,true,true,true
+"SEFROP04","Olympic Weight Plate Tree Vertical (6 Storage Pins)","Equipment Storage",677.2727,48,72,43,125,true,true,true
+"SEFRPS01","Group Fitness Barbell Set Rack","Equipment Storage",359.0909,34,146,71,18.5,true,true,true
+"SERK153001","Retail Rack","Equipment Storage",350,16,152,31,31,true,true,true
+"SEWMACC01","Rope & Band Rack (Wall Mounted) (Small)","Equipment Storage",54.5455,4,43,11,11,true,true,true
+"SEWMACC02","Rope & Band Rack (Wall Mounted)","Equipment Storage",63.6364,4,58,11,11,true,true,true
+"SEWMACC03","Dip Bar Holder (Wall Mounted)","Equipment Storage",204.5455,19,14,26.5,171,true,true,true
+"SEWMBB01","Horizontal Barbell Storage Rack (6 Bar) (Wall Mounted)","Equipment Storage",213.6364,14,96,13,13,true,true,true
+"SEWMBB02","Vertical Barbell Storage Rack (6 Bar) (Wall Mounted)","Equipment Storage",122.7273,5,56,11.5,8.5,true,true,true
+"SEWMBER01","Bench & Rower Rack (Wall Mounted)","Equipment Storage",68.1818,7,60.5,7,16.5,true,true,true
+"SEWMBL01","Fitness Ball Storage Rack (Wall Mounted)","Equipment Storage",222.7273,12,200,28,10,true,true,true
+"SEWMMA01","Exercise Mat Hanging Rack (Wall Mounted)","Equipment Storage",50,5,58,11,11,true,true,true
+"SEWMOP01","Vertical Bumper Plate Rack 3 Tier (Wall Mounted)","Equipment Storage",204.5455,13,120,38,17,true,true,true
+"SEWMRL01","Foam Roller Storage Rack (Wall Mounted)","Equipment Storage",268.1818,16,132.5,17.5,21,true,true,true
+"SEWMRO01","Battle Rope Storage (Wall Mounted)","Equipment Storage",45.4545,4,32.5,6.5,25,true,true,true
+"SEWMRO02","Rope & Band Rack (Wall Mounted)","Equipment Storage",45.4545,4,32.5,6.5,25,true,true,true
+"SFATSY02","Artificial Turf Red With White Line (2m x 15m)","Flooring",2363.6364,68,150,45,45,true,true,true
+"SFRFRR01-1","Impact Lock Rubber Tiles - 20mm","Flooring",53.64,19,105,105,2.2,true,true,true
+"SFRFRR03-1","Impact Lock Rubber Tiles - 30mm","Flooring",71.82,28,105,105,3.2,true,true,true
+"SFRFRR04-1","Impact Lock Rubber Tiles - 40mm (500 x 500mm) (4 Tiles)","Flooring",90,38,105,105,4.2,true,true,true
+"SFRFRR05-1","Impact Lock Rubber Tiles - 50mm (500 x 500mm) (4 Tiles)","Flooring",108.18,47,105,105,5.2,true,true,true
+"SFRFRR06","Commercial Rubber Tiles - 15mm","Flooring",227.27,9,100,100,1.2,true,true,true
+"SFRFRR07","Acoustic Underlay - 15mm","Flooring",400,14,100,100,1.7,true,true,true
+"SFRFRR08","Acoustic Underlay - 20mm","Flooring",527.27,18,100,100,2.2,true,true,true
+"SLLE2501","Linear LED Lighting System - 2.4m","Lighting",367.28,6,243,18.5,4.2,true,true,true
+"SLLE2502","LED Dimmers","Lighting",35.6,0.5,0.3,0.3,0.001,true,true,true
+"SMBRNC01","Battle Rope - 12m","Mixed Implements",195.4545,12,70,25,15,true,true,true
+"SMBRNC02","Climbing Rope - 7m","Mixed Implements",100,0,0,0,0,false,false,false
+"SMBXPBG05","Aqua Punching Bag - 86kg (53cm D)","Mixed Implements",350,7,67,36,22,true,true,true
+"SMDBOH01","Olympic Dumbbell Handles (Pair)","Mixed Implements",99.09,0,0,0,0,false,false,false
+"SMDBUR01","PU Dumbbells (Pair) - 10kg","Mixed Implements",160,11,25,16.3,16.3,true,true,true
+"SMDBUR02","PU Dumbbells (Pair) - 12.5kg","Mixed Implements",200,14,25,18.3,18.3,true,true,true
+"SMDBUR03","PU Dumbbells (Pair) - 15kg","Mixed Implements",236.3636,16,26.4,18.3,18.3,true,true,true
+"SMDBUR04","PU Dumbbells (Pair) - 17.5kg","Mixed Implements",290.9091,19,26.4,20.3,20.3,true,true,true
+"SMDBUR05","PU Dumbbells (Pair) - 20kg","Mixed Implements",322.7273,21,27.4,20.3,20.3,true,true,true
+"SMDBUR06","PU Dumbbells (Pair) - 22.5kg","Mixed Implements",363.6364,24,27.4,20.3,20.3,true,true,true
+"SMDBUR07","PU Dumbbells (Pair) - 25kg","Mixed Implements",400,26,30,20.3,20.3,true,true,true
+"SMDBUR08","PU Dumbbells (Pair) - 27.5kg","Mixed Implements",454.5455,29,30,20.3,20.3,true,true,true
+"SMDBUR09","PU Dumbbells (Pair) - 30kg","Mixed Implements",481.8182,31,32.2,20.3,20.3,true,true,true
+"SMDBUR10","PU Dumbbells (Pair) - 32.5kg","Mixed Implements",509.0909,34,32.2,20.3,20.3,true,true,true
+"SMDBUR11","PU Dumbbells (Pair) - 35kg","Mixed Implements",536.3636,36,32.2,20.3,20.3,true,true,true
+"SMDBUR12","PU Dumbbells (Pair) - 37.5kg","Mixed Implements",563.6364,39,32.2,20.3,20.3,true,true,true
+"SMDBUR13","PU Dumbbells (Pair) - 40kg","Mixed Implements",590.9091,41,32.2,20.3,20.3,true,true,true
+"SMDBUR14","PU Dumbbells (Pair) - 42.5kg","Mixed Implements",627.2727,44,32.2,20.3,20.3,true,true,true
+"SMDBUR15","PU Dumbbells (Pair) - 45kg","Mixed Implements",654.5455,46,32.2,20.3,20.3,true,true,true
+"SMDBUR16","PU Dumbbells (Pair) - 47.5kg","Mixed Implements",690.9091,49,32.2,20.3,20.3,true,true,true
+"SMDBUR17","PU Dumbbells (Pair) - 50kg","Mixed Implements",727.2727,51,32.2,20.3,20.3,true,true,true
+"SMDBUR18","PU Dumbbells (Pair) - 5kg","Mixed Implements",80,0,0,0,0,false,false,false
+"SMDBUR20","PU Dumbbells (Pair) - 1kg","Mixed Implements",16,0,0,0,0,false,false,false
+"SMDBUR21","PU Dumbbells (Pair) - 2kg","Mixed Implements",32,0,0,0,0,false,false,false
+"SMDBUR22","PU Dumbbells (Pair) - 3kg","Mixed Implements",48,0,0,0,0,false,false,false
+"SMDBUR23","PU Dumbbells (Pair) - 4kg","Mixed Implements",64,0,0,0,0,false,false,false
+"SMDBUR25","PU Dumbbells (Pair) - 6kg","Mixed Implements",96,0,0,0,0,false,false,false
+"SMDBUR26","PU Dumbbells (Pair) - 7kg","Mixed Implements",112,0,0,0,0,false,false,false
+"SMDBUR27","PU Dumbbells (Pair) - 8kg","Mixed Implements",128,0,0,0,0,false,false,false
+"SMDBUR28","PU Dumbbells (Pair) - 9kg","Mixed Implements",144,0,0,0,0,false,false,false
+"SMDEHG01","High Grip Dead Ball - 6kg","Mixed Implements",36.3636,7,24,24,24,true,true,true
+"SMDEHG02","High Grip Dead Ball - 9kg","Mixed Implements",40.9091,10,24,24,24,true,true,true
+"SMDEHG03","High Grip Dead Ball - 12kg","Mixed Implements",50,13,29,29,29,true,true,true
+"SMDEHG04","High Grip Dead Ball - 15kg","Mixed Implements",63.6364,16,29,29,29,true,true,true
+"SMDEHG05","High Grip Dead Ball - 20kg","Mixed Implements",90.9091,21,29,29,29,true,true,true
+"SMDEHG06","High Grip Dead Ball - 25kg","Mixed Implements",100,26,29,29,29,true,true,true
+"SMDEHG07","High Grip Dead Ball - 30kg","Mixed Implements",118.1818,31,29,29,29,true,true,true
+"SMDEHG08","High Grip Dead Ball - 35kg","Mixed Implements",140.9091,36,31.5,31.5,31.5,true,true,true
+"SMDEHG09","High Grip Dead Ball - 40kg","Mixed Implements",154.5455,0,0,0,0,false,false,false
+"SMDEHG10","High Grip Dead Ball - 45kg","Mixed Implements",172.7273,46,34,34,34,true,true,true
+"SMDEHG11","High Grip Dead Ball - 50kg","Mixed Implements",181.8223,0,0,0,0,false,false,false
+"SMDEHG12","High Grip Dead Ball - 55kg","Mixed Implements",200,56,36.5,36.5,36.5,true,true,true
+"SMDEHG13","High Grip Dead Ball - 65kg","Mixed Implements",236.3636,66,36.5,36.5,36.5,true,true,true
+"SMDEHG14","High Grip Dead Ball - 75kg","Mixed Implements",272.7273,76,39,39,39,true,true,true
+"SMDESH01","Dead Ball - 3kg","Mixed Implements",22.7273,4,26,26,26,true,true,true
+"SMDESH03","Dead Ball - 6kg","Mixed Implements",31.8182,7,26,26,26,true,true,true
+"SMDESH04","Dead Ball - 9kg","Mixed Implements",29.0909,10,26,26,26,true,true,true
+"SMDESH06","Dead Ball - 12kg","Mixed Implements",36.3636,13,26,26,26,true,true,true
+"SMDESH07","Dead Ball - 15kg","Mixed Implements",47.2727,16,29,29,29,true,true,true
+"SMDESH08","Dead Ball - 20kg","Mixed Implements",69.0909,21,29,29,29,true,true,true
+"SMDESH09","Dead Ball - 25kg","Mixed Implements",80,26,29,29,29,true,true,true
+"SMDESH10","Dead Ball - 30kg","Mixed Implements",118.1818,31,29,29,29,true,true,true
+"SMFWTL01","Farmers Walk Handles (Pair)","Mixed Implements",213.6364,26,182,13,23,true,true,true
+"SMGFACC01","Digital Interval Timer","Mixed Implements",313.6364,4,87,17,6,true,true,true
+"SMGFPS01","Group Fitness Barbell Set - Collars (Pair)","Mixed Implements",7.2727,1,4,4,2.5,true,true,true
+"SMGFPS02","Group Fitness Barbell Set - 37.5kg","Mixed Implements",268.1818,39,52,26,15.5,true,true,true
+"SMGFPS03","Group Fitness Barbell Set - 17.5kg","Mixed Implements",209.0909,19,52,26,15.5,true,true,true
+"SMGFWTB01","Aerobic Weighted Exercise Bars - 4kg","Mixed Implements",30.91,5,120.5,4.3,4.3,true,true,true
+"SMGFWTB01-1","Aerobic Weighted Exercise Bars - 4kg","Mixed Implements",30.91,5,1205,43,43,true,true,true
+"SMGFWTB02","Aerobic Weighted Exercise Bars - 6kg","Mixed Implements",38.18,7,120.5,4.3,4.3,true,true,true
+"SMGFWTB02-1","Aerobic Weighted Exercise Bars - 6kg","Mixed Implements",38.18,7,1205,43,43,true,true,true
+"SMGFWTB03","Aerobic Weighted Exercise Bars - 8kg","Mixed Implements",45.45,9,120.5,4.3,4.3,true,true,true
+"SMGFWTB03-1","Aerobic Weighted Exercise Bars - 8kg","Mixed Implements",45.45,9,1205,43,43,true,true,true
+"SMGFWTB04","Aerobic Weighted Exercise Bars- 10kg","Mixed Implements",52.73,11,120.5,4.3,4.3,true,true,true
+"SMGFWTB04-1","Aerobic Weighted Exercise Bars - 10kg","Mixed Implements",52.73,11,1205,43,43,true,true,true
+"SMKBPGC01","Competition Kettlebell - 6kg (Aluminium)","Mixed Implements",54.5455,7,23,23,31,true,true,true
+"SMKBPGC02","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,31,true,true,true
+"SMKBPGC03","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,31,true,true,true
+"SMKBPGC04","Competition Kettlebell - 12kg","Mixed Implements",81.8182,13,23,23,31,true,true,true
+"SMKBPGC05","Competition Kettlebell - 16kg","Mixed Implements",100,17,23,23,31,true,true,true
+"SMKBPGC06","Competition Kettlebell - 18kg","Mixed Implements",109.0909,19,23,23,31,true,true,true
+"SMKBPGC07","Competition Kettlebell - 20kg","Mixed Implements",118.1818,21,23,23,31,true,true,true
+"SMKBPGC08","Competition Kettlebell - 24kg","Mixed Implements",136.3636,25,23,23,31,true,true,true
+"SMKBPGC09","Competition Kettlebell - 28kg","Mixed Implements",154.5455,29,23,23,31,true,true,true
+"SMKBPGC10","Competition Kettlebell - 32kg","Mixed Implements",181.8182,33,23,23,31,true,true,true
+"SMKBPGC11","Competition Kettlebell - 36kg","Mixed Implements",209.0909,37,23,23,31,true,true,true
+"SMKBPGC12","Competition Kettlebell - 40kg","Mixed Implements",236.3636,41,23,23,31,true,true,true
+"SMKBUR01","Urethane Competition Kettlebell - 8kg","Mixed Implements",72.73,9,22,22,29,true,true,true
+"SMKBUR02","Urethane Competition Kettlebell - 10kg","Mixed Implements",104.5455,11,22,22,29,true,true,true
+"SMKBUR03","Urethane Competition Kettlebell - 12kg","Mixed Implements",113.6364,13,22,22,29,true,true,true
+"SMKBUR04","Urethane Competition Kettlebell - 16kg","Mixed Implements",145.4545,17,22,22,29,true,true,true
+"SMKBUR05","Urethane Competition Kettlebell - 20kg","Mixed Implements",177.2727,21,22,22,29,true,true,true
+"SMKBUR06","Urethane Competition Kettlebell - 24kg","Mixed Implements",209.0909,25,22,22,29,true,true,true
+"SMKBUR07","Urethane Competition Kettlebell - 28kg","Mixed Implements",240.9091,0,0,0,0,false,false,false
+"SMKBUR08","Urethane Competition Kettlebell - 32kg","Mixed Implements",281.8182,0,0,0,0,false,false,false
+"SMKBUR09","Urethane Competition Kettlebell - 36kg","Mixed Implements",309.0909,0,0,0,0,false,false,false
+"SMKBUR10","Urethane Competition Kettlebell - 40kg","Mixed Implements",331.8182,0,0,0,0,false,false,false
+"SMLBACC01","Slant Board","Weightlifting",90,7,60,36,16,true,true,true
+"SMMBPR01","Medicine Ball - 2kg","Mixed Implements",40,3,21.5,21.5,21.5,true,true,true
+"SMMBPR02","Medicine Ball - 4kg","Mixed Implements",47.2727,5,24,24,24,true,true,true
+"SMMBPR03","Medicine Ball - 6kg","Mixed Implements",58.1818,7,26.5,26.5,26.5,true,true,true
+"SMMBPR04","Medicine Ball - 8kg","Mixed Implements",68.1818,9,29,29,29,true,true,true
+"SMMBPR05","Medicine Ball - 10kg","Mixed Implements",81.8182,11,31.5,31.5,31.5,true,true,true
+"SMPA4BG01","Power Bags (Set of 4) - 70kg","Packages",345.4545,0,0,0,0,false,false,false
+"SMPA5BL02","Medicine Balls (Set of 5) - 30kg","Mixed Implements",290.9091,35,130,32,32,true,true,true
+"SMPA6BG01","Power Bags (Set of 6) - 105kg","Packages",518.1818,0,0,0,0,true,false,false
+"SMPILFG01","Pilates Ring","Mixed Implements",27.2727,0,0,0,0,false,false,false
+"SMPWPBG01","Power Bag - 10kg","Mixed Implements",63.6364,11,54,22.5,22.5,true,true,true
+"SMPWPBG02","Power Bag - 15kg","Mixed Implements",72.7273,16,65,24,24,true,true,true
+"SMPWPBG03","Power Bag - 20kg","Mixed Implements",81.8182,21,65,24,24,true,true,true
+"SMPWPBG04","Power Bag - 25kg","Mixed Implements",90.9091,26,65,24,24,true,true,true
+"SMPWPBG05","Aqua Bag - 35kg","Mixed Implements",122.7273,5,20,20,20,true,true,true
+"SMSLSD01","Push & Pull Sled","Mixed Implements",450,37,94.5,67,19,true,true,true
+"SMSLSL01","Push & Pull Sled","Mixed Implements",440.91,0,0,0,0,false,false,false
+"SMWAARM01","Wall Ball (Armatex) - 4kg","Mixed Implements",118.18,4,36.6,36.6,36.6,true,true,true
+"SMWAARM02","Wall Ball (Armatex) - 6kg","Mixed Implements",122.73,6,36.6,36.6,36.6,true,true,true
+"SMWAARM03","Wall Ball (Armatex) - 8kg","Mixed Implements",127.27,8,36.6,36.6,36.6,true,true,true
+"SMWAARM04","Wall Ball (Armatex) - 10kg","Mixed Implements",131.82,10,36.6,36.6,36.6,true,true,true
+"SMWAARM05","Wall Ball - 14lb","Mixed Implements",118.1818,7,36.6,36.6,36.6,true,true,true
+"SMWAARM06","Wall Ball - 20lb","Mixed Implements",136.3636,10,36.6,36.6,36.6,true,true,true
+"SMWAARM07","Wall Ball - 8lb","Mixed Implements",100,4,36.6,36.6,36.6,true,true,true
+"SRATTACC01","Storage Pin with Shoulder","Rigs & Racks",68.1818,0,0,0,0,true,false,false
+"SRCTATT01","Rig Core Trainer (Landmine)","Rigs & Racks",95.4545,4,55,12,12,true,true,true
+"SRSPATT01","Rig Crossbeam Single Pipe - 1080mm","Equipment Storage",90.9091,6,109,7.5,7.5,true,true,true
+"SRSPATT02","Rig Crossbeam Single Pipe - 1520mm","Equipment Storage",104.5455,3.44,153,7.5,7.5,true,true,true
+"SRSPATT03","Rig Universal Upright","Equipment Storage",222.7273,19,241,7.5,7.5,true,true,true
+"SRSPATT04","Rig Dip Bar Attachment","Rigs & Racks",204.5455,11,71,59,24,true,true,true
+"SRSPATT05","Rig Premium J-Hooks","Rigs & Racks",159.0909,8,16,11,22,true,true,true
+"SRSPATT06","Rig Wall Ball Target","Rigs & Racks",295.4545,19,42.5,41.8,115.1,true,true,true
+"SRSPFW01","Olympic Power Rack 1.0","Rigs & Racks",1453.64,130,230,52,19,true,true,true
+"SRSPFW03","Olympic Power Rack 2.0 Weight Plate Storage Rack Only","Rigs & Racks",708.18,58,0,0,0,true,false,false
+"SRSPFW04","Olympic Power Rack 3.0","Rigs & Racks",1699.09,196,148,75,23,true,true,true
+"SRSPSE01","All-In-One Trainer","Rigs & Racks",7726.36,450,240,85,55,true,true,true
+"SRWAATT01","Rig Spotter Arms (Pair)","Rigs & Racks",268.1818,19,82.5,19,21.8,true,true,true
+"SSLBPL01","V Squat","Strength",3445.4545,0,0,0,0,false,false,false
+"SSLBPL02","Belt Squat","Strength",1754.5455,0,0,0,0,false,false,false
+"SSLBPL03","Hip Thrustor","Strength",2663.6364,0,0,0,0,false,false,false
+"SSLBPL04","Standing Hip Thurst","Strength",1918.1818,0,0,0,0,false,false,false
+"SSLBPL05","Standing Abductor","Strength",2336.3636,0,0,0,0,false,false,false
+"SSLBPL06","Reverse Hyper","Strength",1722.7273,0,0,0,0,false,false,false
+"SSLBPL07","Multi Hip Extension","Strength",2472.7273,0,0,0,0,false,false,false
+"SSLBPL08","Multi Dead Lift","Strength",2418.1818,0,0,0,0,false,false,false
+"SSWBB03","Adjustable Utility Bench","Strength",886.3636,0,0,0,0,false,false,false
+"SSWBFW01","Flat Utility Weight Bench (Angled Legs)","Strength",386.3636,26,118,52.5,46.2,true,true,true
+"SSWBFW02","Adjustable Utility Weight Bench Pro","Strength",681.8182,39,138,25,47,true,true,true
+"SWBBFRU01","Rubber Fixed Barbells - 10kg","Weightlifting",59.0909,11,105.4,16.3,16.3,true,true,true
+"SWBBFRU02","Rubber Fixed Barbells - 12.5kg","Weightlifting",77.2727,14,10.54,1.63,1.63,true,true,true
+"SWBBFRU03","Rubber Fixed Barbells - 15kg","Weightlifting",90.9091,16,11.6,18.3,18.3,true,true,true
+"SWBBFRU04","Rubber Fixed Barbells - 17.5kg","Weightlifting",104.5455,19,10.54,1.63,1.63,true,true,true
+"SWBBFRU05","Rubber Fixed Barbells - 20kg","Weightlifting",118.1818,21,11.7,20.3,20.3,true,true,true
+"SWBBFRU06","Rubber Fixed Barbells - 22.5kg","Weightlifting",136.3636,24,10.54,1.63,1.63,true,true,true
+"SWBBFRU07","Rubber Fixed Barbells - 25kg","Weightlifting",150,26,110.8,20.3,20.3,true,true,true
+"SWBBFRU08","Rubber Fixed Barbells - 30kg","Weightlifting",177.2727,31,113,20.3,20.3,true,true,true
+"SWBBFRU09","Rubber Fixed Barbells - 35kg","Weightlifting",209.0909,36,10.54,1.63,1.63,true,true,true
+"SWBBFRU10","Rubber Fixed Barbells - 40kg","Weightlifting",236.3636,41,10.54,1.63,1.63,true,true,true
+"SWBBFRZ01","Rubber EZ Fixed Barbells - 10kg","Weightlifting",59.0909,11,105.4,16.3,16.3,true,true,true
+"SWBBFRZ02","Rubber EZ Fixed Barbells - 12.5kg","Weightlifting",77.2727,14,10.54,1.63,1.63,true,true,true
+"SWBBFRZ03","Rubber EZ Fixed Barbells - 15kg","Weightlifting",90.9091,16,11.6,18.3,18.3,true,true,true
+"SWBBFRZ04","Rubber EZ Fixed Barbells - 17.5kg","Weightlifting",104.5455,19,10.54,1.63,1.63,true,true,true
+"SWBBFRZ05","Rubber EZ Fixed Barbells - 20kg","Weightlifting",118.1818,21,11.7,20.3,20.3,true,true,true
+"SWBBFRZ06","Rubber EZ Fixed Barbells - 22.5kg","Weightlifting",136.3636,24,10.54,1.63,1.63,true,true,true
+"SWBBFRZ07","Rubber EZ Fixed Barbells - 25kg","Weightlifting",150,26,110.8,20.3,20.3,true,true,true
+"SWBBFRZ08","Rubber EZ Fixed Barbells - 30kg","Weightlifting",177.2727,31,113,20.3,20.3,true,true,true
+"SWBBFRZ09","Rubber EZ Fixed Barbells - 35kg","Weightlifting",209.0909,36,10.54,1.63,1.63,true,true,true
+"SWBBFRZ10","Rubber EZ Fixed Barbells - 40kg","Weightlifting",236.3636,41,10.54,1.63,1.63,true,true,true
+"SWBBFUR01","Fixed PU Straight Barbell - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,true,true,true
+"SWBBFUR02","Urethane Fixed Barbells - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,true,true,true
+"SWBBFUR03","Fixed PU Straight Barbell - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,true,true,true
+"SWBBFUR04","Urethane Fixed Barbells - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,true,true,true
+"SWBBFUR05","Fixed PU Straight Barbell - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,true,true,true
+"SWBBFUR06","Urethane Fixed Barbells - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,true,true,true
+"SWBBFUR07","Fixed PU Straight Barbell - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,true,true,true
+"SWBBFUR08","Fixed PU Straight Barbell - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,true,true,true
+"SWBBFUR09","Fixed PU Straight Barbell - 35kg","Weightlifting",263.6364,36,10.54,1.63,1.63,true,true,true
+"SWBBFUR10","Fixed PU Straight Barbell - 40kg","Weightlifting",300,41,10.54,1.63,1.63,true,true,true
+"SWBBFUR11","Urethane Fixed Barbells - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"SWBBFUR20","Fixed PU Curl Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
+"SWBBFUR23","Fixed PU Curl Barbell - 12.5kg","Weightlifting",100,0,0,0,0,false,false,false
+"SWBBFUR25","Fixed PU Curl Barbell - 17.5kg","Weightlifting",136.3636,0,0,0,0,false,false,false
+"SWBBFUR27","Fixed PU Curl Barbell - 22.5kg","Weightlifting",172.7273,0,0,0,0,false,false,false
+"SWBBFUR29","Fixed PU Curl Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
+"SWBBFUR31","Fixed PU Curl Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
+"SWBBFUR33","Fixed PU Curl Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
+"SWBBOL01","Olympic Ez Curl Bar","Weightlifting",95.4545,10,122,8.5,8.5,true,true,true
+"SWBBOL02","Olympic Barbell - 7ft Chrome (1000Lb Capacity)","Weightlifting",159.0909,21,220.5,10,10,true,true,true
+"SWBBOL03","Olympic Barbell - 15kg (1500Lb Capacity)","Weightlifting",313.6364,16,205,8,8,true,true,true
+"SWBBOL04","Olympic Barbell - 20kg (2000Lb Capacity)","Weightlifting",350,21,224,8,8,true,true,true
+"SWBBOL06","Olympic Hex Deadlift Barbell (400mm Loadable Sleeves)","Weightlifting",395.4545,23,163.5,57,16,true,true,true
+"SWBBOL07","Olympic Safety Squat Bar (1500Lb Capacity)","Weightlifting",295.4545,30,230,42,6.5,true,true,true
+"SWBBOL08","Olympic Rickshaw Barbell (250mm Loadable Sleeves)","Weightlifting",268.1818,23,143.5,58,16,true,true,true
+"SWBBOL09","Olympic Swiss Barbell - 20kg","Weightlifting",177.2727,27,214,8.5,8.5,true,true,true
+"SWWAACC01","Weightlifting Belt","Weightlifting",31.8182,0,0,0,0,true,false,false
+"SWWAACC02","Dip & Pull Up Belt","Weightlifting",59.0909,1,84,19.5,6.5,true,true,true
+"SWWLACC01","Barbell Squat Pad","Weightlifting",18.1818,1,4.5,1.1,1.1,true,true,true
+"SWWLACC02","Olympic Bar Easy Lock Collars (Pair)","Weightlifting",22.7273,1,5.3,5.3,6.5,true,true,true
+"SWWLATT01","Ankle Strap Cable Attachment (Pair)","Weightlifting",22.7273,2,25,1,8.5,true,true,true
+"SWWLCH01","Weightlifting Chalk Box","Weightlifting",22.7273,1,19,19,9,true,true,true
+"SWWLCH02","Chalk Bowl","Weightlifting",195.4545,8,55,46,32,true,true,true
+"SWWLMA01","Drop Pads (Pair)","Weightlifting",159.0909,24,76,61,16,true,true,true
+"SWWLRR01","Squat Wedge Block","Weightlifting",77.2727,0,0,0,0,false,false,false
+"SWWPCB01","Coloured Bumper Plates - 5kg","Weightlifting",40.9091,6,46,46,3.6,true,true,true
+"SWWPCB02","Coloured Bumper Plates - 10g","Weightlifting",59.0909,11,46,46,4.5,true,true,true
+"SWWPCB03","Coloured Bumper Plates - 15kg","Weightlifting",77.2727,16,46,46,5.8,true,true,true
+"SWWPCB04","Coloured Bumper Plates - 20kg","Weightlifting",95.4545,21,46,46,6.9,true,true,true
+"SWWPCB05","Coloured Bumper Plates - 25kg","Weightlifting",118.1818,26,46,46,7.9,true,true,true
+"SWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,false,true,false
+"SWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,false,true,false
+"SWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,false,true,false
+"SWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,false,true,false
+"SWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,false,true,false
+"SWWPCNB06","Pro Bumper Plates - 5kg","Weightlifting",58.1818,6,46,46,3.6,true,true,true
+"SWWPCNB07","Pro Bumper Plates - 10kg","Weightlifting",78.1818,11,46,46,4.5,true,true,true
+"SWWPCNB08","Pro Bumper Plates - 15kg","Weightlifting",89.0909,16,46,46,5.8,true,true,true
+"SWWPCNB09","Pro Bumper Plates - 20kg","Weightlifting",109.0909,21,46,46,6.9,true,true,true
+"SWWPCNB10","Pro Bumper Plates - 25kg","Weightlifting",130.9091,26,46,46,7.9,true,true,true
+"SWWPCP01","Change Plates - 1.25kg","Weightlifting",23.6364,2,17.5,17.5,13,true,true,true
+"SWWPCP02","Change Plates - 2.5kg","Weightlifting",41.8182,3,22,22,13.5,true,true,true
+"SWWPOPR01","Olympic Premium Rubber Weight Plates (3 Grip) - 1.25kg","Weightlifting",6.3636,2,170,170,32,true,true,true
+"SWWPOPR02","Olympic Premium Rubber Weight Plates (3 Grip) - 2.5kg","Weightlifting",12.7273,3,210,210,35,true,true,true
+"SWWPOPR03","Olympic Premium Rubber Weight Plates (3 Grip) - 5kg","Weightlifting",25.4545,6,260,260,47,true,true,true
+"SWWPOPR04","Olympic Premium Rubber Weight Plates (3 Grip) - 10kg","Weightlifting",50.9091,11,332,332,50,true,true,true
+"SWWPOPR05","Olympic Premium Rubber Weight Plates (3 Grip) - 15kg","Weightlifting",76.3636,16,365,365,54,true,true,true
+"SWWPOPR06","Olympic Premium Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",101.8182,21,410,410,59,true,true,true
+"SWWPOPR07","Olympic Premium Rubber Weight Plates (3 Grip) - 25kg","Weightlifting",127.2727,26,435,435,61,true,true,true
+"SWWPOU01","Olympic Urethane Weight Plates (3 Grip) - 1.5kg","Weightlifting",9.0909,2,170,170,32,true,true,true
+"SWWPOU02","Olympic Urethane Weight Plates (3 Grip) - 2.5kg","Weightlifting",18.1818,3,210,210,35,true,true,true
+"SWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",36.3636,6,260,260,47,true,true,true
+"SWWPOU04","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",72.7273,11,332,332,50,true,true,true
+"SWWPOU05","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",109.0909,16,365,365,54,true,true,true
+"SWWPOU06","Olympic Urethane Weight Plates (3 Grip) - 20kg","Weightlifting",145.4545,21,410,410,59,true,true,true
+"SWWPOU07","Olympic Urethane Weight Plates (3 Grip) - 25kg","Weightlifting",181.8182,26,435,435,61,true,true,true
+"SWWPOU08","Olympic PU Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,0,0,0,0,false,false,false
+"SWWPOU09","Olympic PU Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
+"SWWPOU11","Olympic PU Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,0,0,0,0,false,false,false
+"SWWPOU12","Olympic PU Weight Plates (4 Grip) - 20kg","Weightlifting",163.6364,0,0,0,0,false,false,false
+"SWWPOU14","Olympic PU Weight Plates (4 Grip) - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
