@@ -8,7 +8,7 @@ const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" 
 const money = (n: number) => (n > 0 ? aud.format(n) : "Contact for pricing");
 
 export default function CartPage() {
-  const { items, subtotal, setQty, remove, ready } = useCart();
+  const { items, subtotal, setQty, remove, ready, removed, dismissRemoved } = useCart();
 
   return (
     <>
@@ -20,6 +20,22 @@ export default function CartPage() {
       </div>
 
       <section className="container-mk py-16">
+        {removed.length > 0 && (
+          <div className="mb-8 border border-accent bg-accent/5 p-5">
+            <p className="text-sm text-ink">
+              {removed.length === 1 ? "One item is" : `${removed.length} items are`} no longer
+              available and {removed.length === 1 ? "has" : "have"} been removed from your cart:{" "}
+              <strong>{removed.join(", ")}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={dismissRemoved}
+              className="mt-3 font-mono text-[11px] uppercase tracking-wide text-ash hover:text-accent"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {!ready ? null : items.length === 0 ? (
           <div className="text-center max-w-md mx-auto py-10">
             <p className="text-ash text-lg">Your cart is empty.</p>

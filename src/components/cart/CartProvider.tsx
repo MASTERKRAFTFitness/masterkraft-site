@@ -23,6 +23,13 @@ type CartContextType = {
   remove: (id: number) => void;
   clear: () => void;
   ready: boolean;
+  /**
+   * Lines dropped on load because they are no longer sold. Shown once, then
+   * dismissed - the customer needs to know their basket changed under them, not
+   * to be reminded of it on every page.
+   */
+  removed: string[];
+  dismissRemoved: () => void;
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
@@ -42,15 +49,47 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [locked, setLocked] = useState(false);
 
+  const [removed, setRemoved] = useState<string[]>([]);
+
   // Hydrate from localStorage
   useEffect(() => {
+    let restored: CartItem[] = [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw));
+      if (raw) restored = JSON.parse(raw);
     } catch {
       /* ignore */
     }
+    if (restored.length > 0) setItems(restored);
     setReady(true);
+
+    // THE CART OUTLIVES THE CATALOGUE. It is stored in this browser, so a
+    // product added last week survives the product being retired, moved to a
+    // portal brand, or hidden for want of a measured carton. Left alone, the
+    // customer reaches a checkout they cannot complete for a line they can no
+    // longer open to remove, and has to empty the whole basket to escape.
+    const skus = restored.map((i) => i.sku).filter((s): s is string => !!s);
+    if (skus.length === 0) return;
+
+    let live = true;
+    fetch("/api/cart/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skus }),
+    })
+      .then((r) => r.json())
+      .then((d: { unavailable?: string[] }) => {
+        const gone = new Set((d.unavailable ?? []).map((s) => s.toUpperCase()));
+        if (!live || gone.size === 0) return;
+        // Name them before dropping them, so the notice can say WHICH.
+        setRemoved(restored.filter((i) => i.sku && gone.has(i.sku.toUpperCase())).map((i) => i.name));
+        setItems((prev) => prev.filter((i) => !i.sku || !gone.has(i.sku.toUpperCase())));
+      })
+      // Fails open: a basket must not be emptied by a network error.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
   }, []);
 
   // Persist
@@ -101,6 +140,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       remove,
       clear,
       ready,
+      removed,
+      dismissRemoved: () => setRemoved([]),
       drawerOpen,
       openDrawer: () => setDrawerOpen(true),
       closeDrawer: () => setDrawerOpen(false),
@@ -108,7 +149,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       lock: () => setLocked(true),
       unlock: () => setLocked(false),
     };
-  }, [items, ready, drawerOpen, locked]);
+  }, [items, ready, removed, drawerOpen, locked]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

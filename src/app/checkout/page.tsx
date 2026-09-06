@@ -15,7 +15,7 @@ const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
 export default function CheckoutPage() {
-  const { items, subtotal, clear, ready } = useCart();
+  const { items, subtotal, clear, ready, removed, dismissRemoved } = useCart();
   // Card checkout when Stripe is configured AND every item has a real price.
   // Carts containing "Contact for pricing" items fall back to the quote flow.
   // Every line must be re-pricable server-side before a card is charged. That
@@ -95,6 +95,23 @@ export default function CheckoutPage() {
       </div>
 
       <section className="container-mk py-16">
+        {removed.length > 0 && (
+          <div className="mb-8 border border-accent bg-accent/5 p-5">
+            <p className="text-sm text-ink">
+              {removed.length === 1 ? "One item is" : `${removed.length} items are`} no longer
+              available and {removed.length === 1 ? "has" : "have"} been removed from your cart:{" "}
+              <strong>{removed.join(", ")}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={dismissRemoved}
+              className="mt-3 font-mono text-[11px] uppercase tracking-wide text-ash hover:text-accent"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {paidOrder ? (
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
             <p className="font-display uppercase tracking-wide text-2xl">Order confirmed</p>
