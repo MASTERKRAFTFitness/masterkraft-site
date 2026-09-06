@@ -14,10 +14,10 @@ export function variantLine(
 ): Omit<CartItem, "qty"> {
   return {
     id: v.id,
-    // Only a size the old store also sold can be re-priced against WooCommerce
-    // at card checkout. 0 marks the rest as quote-only, which the checkout gate
-    // reads — they still sell, and the ERP code below is what the team fulfils
-    // from either way.
+    // 0 for a size the old store never listed. It no longer decides whether the
+    // line can be paid for by card - the ERP code below does, since repricing
+    // and order writing both go through the ERP now (lib/cart-eligibility). It
+    // is kept because the snapshot is still the router for slugs and copy.
     productId: v.wooProductId ?? 0,
     variationId: v.wooVariationId,
     sku: v.code,
