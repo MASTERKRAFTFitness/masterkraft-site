@@ -579,19 +579,14 @@ the path is passed in by callers that already know it: a catch-all route at the
 lowest routing precedence, plus the five existing `notFound()` call sites, which
 have their slug in params.
 
-> **NOT LIVE, AND NOT BECAUSE ANYONE FORGOT.** There is no database behind it
-> yet. `recordNotFound` calls `adminDb()`, which returns null unless
-> `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set - and **neither exists
-> in Vercel, in any environment** (checked 3 September: zero matches for
-> `SUPABASE` across the whole project). So it no-ops, exactly as designed.
+> ~~**NOT LIVE.**~~ **The table exists as of 2026-09-06** - see §13c for the
+> database it now lives in. `not_found_hits` and `record_not_found` are both
+> applied.
 >
-> It is the SAME blocker as §13b, not a second one. The MasterKraft Supabase
-> project `pmydkwszkgjnolrcnenh` sits in an org that neither the 25 August nor
-> the 3 September session could reach - the API answers "you do not have
-> permission" for that ref, and the only project this account can see is an
-> unrelated one. So **two migrations are now queued behind one credential**:
-> `20260825_admin_identity_and_audit.sql` and
-> `20260903_not_found_hits.sql`, in that order.
+> **It still no-ops in production**, because `recordNotFound` calls `adminDb()`,
+> which returns null unless `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are
+> set, and **neither is in Vercel yet**. Local runs work; production does not
+> record a thing until those two variables are added.
 >
 > Nothing is broken meanwhile - the site is built to run without a database and
 > does. What it costs is that the log collects nothing, so the evidence the next
@@ -1380,17 +1375,18 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
      console's identity and audit tables (§13b).
   2. `supabase/migrations/20260903_not_found_hits.sql` - the 404 log (§0f).
 
-  **Why neither has run:** project `pmydkwszkgjnolrcnenh` lives in an org that
-  no session so far has been able to reach - the Supabase API returns "you do
-  not have permission" for that ref, and the only project visible to this
-  account is an unrelated one. Separately, **`SUPABASE_URL` and
-  `SUPABASE_SERVICE_ROLE_KEY` are not set in Vercel in any environment**
-  (verified 3 September). `.env.local` has both names present and empty.
+  ~~**Why neither has run:**~~ **BOTH HAVE RUN, 2026-09-06.** See §13c.
 
-  So it is NOT "run a migration". It is: reach the project, run both in order,
-  then set both env vars in Vercel Production plus `ADMIN_BOOTSTRAP_EMAILS`.
-  The service role key bypasses RLS - it must be a Production secret and must
-  never take a `NEXT_PUBLIC_` prefix.
+  The diagnosis above was half right and half wrong, and the wrong half cost
+  three sessions. `pmydkwszkgjnolrcnenh` was never the website's database: it is
+  the **Catalogues** project, it holds `catalogue_quotes` and
+  `catalogue_quote_staff` for `masterkraft-portals-franchisee`, and it sits in
+  ap-northeast-2 (Seoul). Every session that tried to reach it was trying to put
+  the site's tables in another app's database, in the wrong hemisphere.
+
+  Still true: **`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not in Vercel
+  in any environment.** The service role key bypasses RLS - it must be a
+  Production secret and must never take a `NEXT_PUBLIC_` prefix.
 
   **What it costs while it waits.** Nothing breaks: `adminDb()` returns null and
   both features degrade by design. But `/admin` has been running without its
@@ -1820,10 +1816,10 @@ Postgres apart from the RLS block, so it runs anywhere. Every table has RLS on
 with **no policies**, which denies anon and authenticated outright; only the
 service role key reaches them, and only from server code.
 
-> **NOT YET APPLIED.** The MasterKraft Supabase project (`pmydkwszkgjnolrcnenh`)
-> lives in its own org, which this session's Supabase connection could not reach.
-> Paste the migration into that project's SQL editor, then set `SUPABASE_URL`,
-> `SUPABASE_SERVICE_ROLE_KEY` and `ADMIN_BOOTSTRAP_EMAILS`.
+> ~~**NOT YET APPLIED.**~~ **APPLIED 2026-09-06** to `masterkraft-site`
+> (`vnemkpduafnjxhkasqif`), NOT to `pmydkwszkgjnolrcnenh` - see §13c for why that
+> ref was the wrong project all along. `ADMIN_BOOTSTRAP_EMAILS` and the two
+> `SUPABASE_*` variables are still unset in Vercel.
 >
 > The SQL was validated against a real Postgres inside a transaction that was
 > rolled back: tables, foreign keys, the insert/approve flow and RLS all checked
@@ -1872,6 +1868,86 @@ shake out prompt-level behaviour on the first real use.
   reshuffling is not.
 - The spec conflicts in §10 now matter more, not less. The agent will read a
   wrong weight out to a staff member and freight will price on it.
+
+---
+
+## 13c. The site's Supabase project (2026-09-06)
+
+**`masterkraft-site`, ref `vnemkpduafnjxhkasqif`, region `ap-southeast-2` (Sydney),
+in the MASTERKRAFT org.** All four migrations are applied and 404 products plus
+11 categories of copy are loaded.
+
+### The mistake this section exists to stop repeating
+
+Three sessions - 25 August, 3 September, and the first half of 6 September - were
+told by this document that the site's database was `pmydkwszkgjnolrcnenh`, could
+not reach it, and recorded the blocker as an access problem. **It was never the
+site's database.** It is the **Catalogues** project: it holds `catalogue_quotes`
+and `catalogue_quote_staff` for `masterkraft-portals-franchisee`, and it lives in
+`ap-northeast-2` (Seoul).
+
+So the blocker was never a permission to chase. Every attempt was trying to put
+the site's tables into another app's database, in the wrong hemisphere.
+
+**Three projects exist in the MASTERKRAFT org**, and it is worth knowing which is
+which before touching any of them:
+
+| project | ref | region | whose |
+|---|---|---|---|
+| `masterkraft-site` | `vnemkpduafnjxhkasqif` | Sydney | **this repo** |
+| Catalogues | `pmydkwszkgjnolrcnenh` | Seoul | franchisee portal |
+| masterkraft-admin | - | Sydney | the admin app |
+| snap-portal | - | Sydney | paused |
+
+### Why a separate project rather than sharing
+
+The `service_role` key bypasses RLS entirely. Putting the site's tables in the
+franchisee portal's database would mean the portal's key could read the site's
+admin identity table and its audit trail, and the site's key could read every
+franchisee's quotes. Those are different trust boundaries and one leaked key
+would cross both. `masterkraft-admin` already has its own project, so one project
+per app was the established pattern, not a new idea.
+
+It was also the cheapest possible moment: the site owned zero tables anywhere, so
+nothing had to be migrated.
+
+### What is in it
+
+Eight tables, **every one with RLS enabled and no policies**, which denies `anon`
+and `authenticated` outright and leaves the service role key - server code only -
+as the only way in.
+
+| table | migration | rows |
+|---|---|---|
+| `product_content` | `20260905_product_content.sql` | **404** |
+| `category_content` | `20260905_category_content.sql` | **11** |
+| `not_found_hits` | `20260903_not_found_hits.sql` | 0 |
+| `admin_users`, `admin_login_codes`, `agent_conversations`, `agent_messages`, `agent_actions` | `20260825_admin_identity_and_audit.sql` | 0 |
+
+### The content load changed nothing on the site
+
+Deliberately. It is a COPY, not a move: **no application code reads
+`product_content` or `category_content`**, and the site still serves every word
+from the committed snapshot in `src/data`. Verified after loading - the home page,
+the listing and a product page all still render their snapshot copy.
+
+Three things stand between here and the site reading from the database, and none
+of them has been done:
+
+1. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Vercel Production.
+2. Code that prefers a database row and **falls back to the snapshot** when there
+   is none - 404 of ~512 snapshot products have rows, and the rest are products
+   the ERP does not know, so a missing row must degrade to today rather than to
+   an empty page.
+3. A way to edit it. Otherwise one frozen store has been swapped for another, and
+   the point of the move was that somebody other than an engineer can change the
+   words.
+
+`npm run load:content` reports what it would write and writes nothing;
+`load:content:write` applies it. It is idempotent, and it tracks whether a row is
+**loader-owned** or **edited by a human** - after the first load all 404 are
+loader-owned and safe to refresh, and any row a person edits afterwards is skipped
+rather than overwritten by the frozen original.
 
 ---
 
