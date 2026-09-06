@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
@@ -25,9 +26,9 @@ export default function ResourcesPage() {
 
         <p className="mt-12 text-ash text-sm max-w-3xl">
           Can&apos;t find a manual for your product?{" "}
-          <a href="/contact" className="underline decoration-accent-600 underline-offset-2">
+          <Link href="/contact" className="underline decoration-accent-600 underline-offset-2">
             Contact us
-          </a>{" "}
+          </Link>{" "}
           and we&apos;ll send it through.
         </p>
       </section>

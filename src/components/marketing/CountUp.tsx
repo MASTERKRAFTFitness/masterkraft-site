@@ -14,21 +14,23 @@ export default function CountUp({ value, className }: { value: string; className
   const [display, setDisplay] = useState<string>(target === null ? value : `0${suffix}`);
 
   useEffect(() => {
-    if (target === null) {
-      setDisplay(value);
-      return;
-    }
+    // Nothing to animate. The render below shows `value` directly in this case,
+    // so there is no state to set here.
+    if (target === null) return;
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-      setDisplay(`${target}${suffix}`);
-      return;
-    }
     const io = new IntersectionObserver(
       (entries) => {
         if (!entries[0].isIntersecting || started.current) return;
         started.current = true;
         io.disconnect();
+        // Reduced motion still shows the number, it just arrives at once. Decided
+        // here rather than up front so the stat appears when it scrolls into
+        // view either way.
+        if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+          setDisplay(`${target}${suffix}`);
+          return;
+        }
         const duration = 1300;
         const t0 = performance.now();
         const tick = (now: number) => {
@@ -47,7 +49,7 @@ export default function CountUp({ value, className }: { value: string; className
 
   return (
     <span ref={ref} className={className}>
-      {display}
+      {target === null ? value : display}
     </span>
   );
 }

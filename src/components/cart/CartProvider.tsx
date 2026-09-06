@@ -51,7 +51,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const [removed, setRemoved] = useState<string[]>([]);
 
-  // Hydrate from localStorage
+  // Hydrate from localStorage.
+  //
+  // react-hooks/set-state-in-effect is disabled below, and it is a false
+  // positive here rather than a shortcut. The cart lives in localStorage, which
+  // the server cannot read, so the first render MUST be the empty cart or
+  // hydration mismatches. Reading it in an effect and setting state is the only
+  // correct order, and it is why `ready` exists at all.
   useEffect(() => {
     let restored: CartItem[] = [];
     try {
@@ -60,6 +66,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (restored.length > 0) setItems(restored);
     setReady(true);
 

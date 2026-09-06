@@ -21,8 +21,12 @@ export default function NavProgress() {
     document.documentElement.classList.remove("nav-busy");
   };
 
-  // Route settled -> stop.
+  // Route settled -> stop. Clearing the overlay IS the effect: the new pathname
+  // arriving is the only signal that the navigation finished, and stop() also
+  // clears two timers and a class on <html>. Nothing about it is derivable
+  // during render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     stop();
   }, [pathname]);
 

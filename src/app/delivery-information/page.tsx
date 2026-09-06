@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
@@ -55,9 +56,9 @@ export default function DeliveryInformationPage() {
               +61 3 9044 9575
             </a>{" "}
             or{" "}
-            <a href="/contact" className="underline decoration-accent-600 underline-offset-2">
+            <Link href="/contact" className="underline decoration-accent-600 underline-offset-2">
               get in touch
-            </a>{" "}
+            </Link>{" "}
             and our team will help.
           </p>
         </div>

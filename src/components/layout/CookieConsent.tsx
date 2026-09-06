@@ -13,8 +13,13 @@ export default function CookieConsent() {
   const [choice, setChoice] = useState<"accepted" | "declined" | null>(null);
   const [ready, setReady] = useState(false);
 
+  // The stored choice is in localStorage, which the server cannot read, so the
+  // first render has to be "undecided" and the real answer has to arrive in an
+  // effect. Rendering the banner from a server-unknowable value any other way
+  // is a hydration mismatch. Hence the disable.
   useEffect(() => {
     const stored = localStorage.getItem(KEY) as "accepted" | "declined" | null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoice(stored);
     setReady(true);
   }, []);

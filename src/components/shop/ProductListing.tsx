@@ -29,8 +29,12 @@ function ListIcon() {
 
 export default function ProductListing({ items, total }: { items: Item[]; total: number }) {
   const [view, setView] = useState<"grid" | "list">("grid");
+  // Same reason as CookieConsent: the saved preference is in localStorage, the
+  // server renders without it, so the first paint is the grid and the stored
+  // choice can only be applied after mount.
   useEffect(() => {
     const v = localStorage.getItem(KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (v === "list" || v === "grid") setView(v);
   }, []);
   const choose = (v: "grid" | "list") => {

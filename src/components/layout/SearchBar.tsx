@@ -15,24 +15,28 @@ export default function SearchBar({ solid }: { solid: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const term = query.trim();
+
+  // Closing clears the box. Done here rather than in an effect on `open` so the
+  // reset happens with the event that caused it, not a render after it.
+  const close = () => {
+    setOpen(false);
+    setQuery("");
+    setSuggestions([]);
+  };
+
   useEffect(() => {
     if (open) inputRef.current?.focus();
-    else {
-      setQuery("");
-      setSuggestions([]);
-    }
   }, [open]);
 
-  // Debounced typeahead
+  // Debounced typeahead. Below the minimum length nothing is fetched and nothing
+  // is cleared - `visible` below simply does not show what was last fetched.
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
-    if (query.trim().length < 2) {
-      setSuggestions([]);
-      return;
-    }
+    if (term.length < 2) return;
     timer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search-suggest?q=${encodeURIComponent(query.trim())}`);
+        const res = await fetch(`/api/search-suggest?q=${encodeURIComponent(term)}`);
         const data = await res.json();
         setSuggestions(data.results ?? []);
       } catch {
@@ -42,28 +46,29 @@ export default function SearchBar({ solid }: { solid: boolean }) {
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [query]);
+  }, [term]);
+
+  const visible = term.length >= 2 ? suggestions : [];
 
   function goToResults(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const q = query.trim();
-    if (q) {
-      track("search", { search_term: q });
-      router.push(`/search?q=${encodeURIComponent(q)}`);
-      setOpen(false);
+    if (term) {
+      track("search", { search_term: term });
+      router.push(`/search?q=${encodeURIComponent(term)}`);
+      close();
     }
   }
 
   function pick(slug: string) {
     router.push(`/product/${slug}`);
-    setOpen(false);
+    close();
   }
 
   return (
     <>
       <button
         aria-label="Search"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => (open ? close() : setOpen(true))}
         className={`transition-colors ${solid ? "text-ash hover:text-ink" : "text-white/80 hover:text-white"}`}
       >
         <SearchIcon />
@@ -81,19 +86,19 @@ export default function SearchBar({ solid }: { solid: boolean }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="flex-1 py-2 text-base focus:outline-none placeholder:text-ash/70"
-              onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+              onKeyDown={(e) => { if (e.key === "Escape") close(); }}
             />
             <button type="submit" className="btn btn-accent">
               Search
             </button>
-            <button type="button" aria-label="Close search" onClick={() => setOpen(false)} className="text-ash hover:text-ink px-2">
+            <button type="button" aria-label="Close search" onClick={close} className="text-ash hover:text-ink px-2">
               ✕
             </button>
           </form>
 
-          {suggestions.length > 0 && (
+          {visible.length > 0 && (
             <ul className="container-mk pb-4 -mt-1 divide-y divide-line/70">
-              {suggestions.map((s) => (
+              {visible.map((s) => (
                 <li key={s.slug}>
                   <button
                     onClick={() => pick(s.slug)}
@@ -109,13 +114,13 @@ export default function SearchBar({ solid }: { solid: boolean }) {
               <li>
                 <button
                   onClick={() => {
-                    track("search", { search_term: query.trim() });
-                    router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-                    setOpen(false);
+                    track("search", { search_term: term });
+                    router.push(`/search?q=${encodeURIComponent(term)}`);
+                    close();
                   }}
                   className="w-full py-3 text-left font-mono text-xs uppercase tracking-widest text-accent-600 hover:text-accent"
                 >
-                  See all results for “{query.trim()}” →
+                  See all results for “{term}” →
                 </button>
               </li>
             </ul>

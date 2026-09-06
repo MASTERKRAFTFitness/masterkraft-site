@@ -13,8 +13,10 @@ export default function PriceRangeFilter({ min, max }: { min?: string; max?: str
   function apply(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const p = new URLSearchParams(params.toString());
-    lo ? p.set("min", lo) : p.delete("min");
-    hi ? p.set("max", hi) : p.delete("max");
+    if (lo) p.set("min", lo);
+    else p.delete("min");
+    if (hi) p.set("max", hi);
+    else p.delete("max");
     p.delete("page");
     router.push(`${pathname}?${p.toString()}`);
   }
