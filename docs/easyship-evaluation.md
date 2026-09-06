@@ -100,11 +100,32 @@ The barbell has never had an online price. It does now.
    now joins both, because a rate call that fails while Australia Post succeeds
    is otherwise completely invisible - which is how the missing `category` went
    unnoticed until a cart had no second carrier to fall back on.
-3. **Easyship takes roughly 4 seconds per call**, against Australia Post's
-   fraction of a second. It is asked concurrently so it does not add to the other,
-   but it does set the floor for how long a checkout waits.
+3. ~~**Easyship takes roughly 4 seconds per call.**~~ **Wrong — measured while
+   calls were failing.** Re-measured 2026-09-06 against a working allowance:
+   **693ms and 1136ms**. Fine for a checkout, and it is asked concurrently with
+   Australia Post anyway, so it does not add to the other.
 
-## ⚠️ The trial's Rates allowance is exhausted
+## ✅ Rates are STABLE across two identical calls (2026-09-06)
+
+**Settled, and it was the risk that could break orders.** Two identical requests
+for the 224cm barbell to Sydney, back to back:
+
+```
+call 1 (1136ms): TNT Road Express $162.81 | UPS Express Saver $163.69 | TNT Overnight $268.62 | ...
+call 2  (693ms): TNT Road Express $162.81 | UPS Express Saver $163.69 | TNT Overnight $268.62 | ...
+```
+
+All six services, identical. So the display-then-charge pair does not drift, and
+the 409-after-the-card-is-captured failure this was feared to cause does not
+happen for these inputs. `src/lib/freight-cache.ts` remains the belt to that
+braces - it removes the question entirely on a cache hit - but the underlying
+carrier behaves.
+
+**Two calls is not a guarantee**, only evidence. Nothing was measured across a
+day boundary, a fuel-surcharge revision or a rate-card change, and `order/route.ts`
+reading freight from PaymentIntent metadata is still the last line of defence.
+
+## ⚠️ The trial's Rates allowance was exhausted, and has since reset
 
 **Every Easyship call now returns `403 usage_limit`**, "API usage limit exceeded.
 Please upgrade your plan or wait for your usage period to reset."
@@ -127,12 +148,18 @@ Consequences, in order of importance:
   cached answer rather than two calls - but it is not the same as knowing.
 - **The crossover weight is still unmeasured** for the same reason.
 
-Re-run `npm run report:carriers` once the period resets or the plan is upgraded.
+**The allowance came back on 2026-09-06** and Easyship is quoting normally again.
+The crossover weight - where Australia Post stops being the cheaper carrier - is
+STILL unmeasured, because the full `npm run report:carriers` costs ~44 calls and
+exhausting the allowance a second time would be a poor trade for a number that
+changes no behaviour: the router picks the cheaper of the two on every request
+regardless of where the crossover sits.
 
 ## Open questions this evaluation did NOT settle
 
-1. **Rate stability across our two calls.** ~~Unmitigated.~~ **Largely handled by
-   the cache**, which serves display and charge from one carrier answer, so they
+1. ~~**Rate stability across our two calls.**~~ **ANSWERED 2026-09-06: stable.**
+   See the section above. Also handled by
+   the cache, which serves display and charge from one carrier answer, so they
    agree by construction. Still worth measuring, because a cache miss on a cold
    lambda falls back to two live calls. `report:carriers` makes two identical
    calls and compares them; it could not complete on 2026-09-05 because the quota

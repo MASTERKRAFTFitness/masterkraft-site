@@ -902,7 +902,12 @@ it: rate stability and the AusPost/Easyship crossover weight.
 `category` slug (we send `sport_leisure`, HS 9506910000) or every call 422s, and
 the useful half of an Easyship error lives in `error.details`, not `error.message`.
 
-**Four things the evaluation did NOT settle**, all in
+**Rate stability is ANSWERED (2026-09-06): stable.** Two identical calls returned
+identical prices across all six services, so the display-then-charge pair does not
+drift. Latency re-measured at 693-1136ms, not the ~4s recorded while calls were
+failing. The allowance has also reset and Easyship is quoting normally again.
+
+**Three things the evaluation did NOT settle**, all in
 `docs/easyship-evaluation.md`: rate stability across our two quotes, whether the
 invoice matches the quote, tailgate and two-person delivery (still nobody's job),
 and the fact that TNT returned the only rate on every bulky quote. The account is
