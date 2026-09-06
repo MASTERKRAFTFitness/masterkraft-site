@@ -231,6 +231,27 @@ than it buys.
 Alerting is fire-and-forget and swallows its own errors: it can never slow down
 or break a checkout.
 
+### ⚙️ `FREIGHT_MAX_AUTO_QUOTE` — the ceiling that makes going live safe
+
+**The one setting that lets card checkout open without betting the bulky half of
+the catalogue on unvalidated rates.** Any cart whose cheapest freight exceeds it
+goes to the quote flow with the same "ships as freight" message an over-limit
+carton already gets. Options above it are never offered at all, so an expensive
+express service cannot sneak in as the "faster" second line.
+
+- **Unset by default, meaning no cap.** A new build must never start refusing
+  quotes because someone forgot to configure something. Set it deliberately.
+- Verified live 2026-09-06 at 250: the 43kg turf roll at $513.57 goes to the
+  quote flow, a 21kg parcel at $57 still sells by card.
+- It is part of the quote cache key, so raising it takes effect immediately
+  rather than serving the refusal the old value produced.
+
+**Suggested rollout.** Open card checkout with the cap set low, so the parcel
+range and the bulky items that price sensibly sell themselves, and everything
+expensive still reaches a human. Raise it as real invoices confirm what bulky
+freight actually costs. That is the alternative to the all-or-nothing choice of
+switching 107 unvalidated products on at once.
+
 ### 🧠 Bulky freight is priced on VOLUME, and it is expensive
 
 Measured on a real consignment 2026-09-06 (`docs/easyship-evaluation.md`): a 43kg

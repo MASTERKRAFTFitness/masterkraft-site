@@ -5,6 +5,7 @@ import {
   isOversize,
   itemsToParcels,
   marginPercent,
+  maxAutoQuote,
   oversizeSkus,
   pricesIncludeGst,
   quoteFreight,
@@ -670,5 +671,111 @@ describe("caching the carrier answer", () => {
     process.env.AUSPOST_API_KEY = "test-key";
     drifting();
     expect((await quoteFreight([item()], delivery)).ok).toBe(true);
+  });
+});
+
+// Bulky freight is priced on volume, and this catalogue is large, light and
+// mostly air: 38 of 107 bulky products bill on volume at a mean 1.41x, and a
+// 16kg medicine ball rack bills as 175kg. The ceiling lets the ones that price
+// sensibly sell by card and sends the rest to a human.
+describe("the ceiling on what we will quote online", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    delete process.env.EASYSHIP_API_TOKEN;
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    clearFreightCache();
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+    clearFreightCache();
+  });
+
+  const priced = (...services: { code: string; name: string; price: string }[]) => {
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ services: { service: services } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })) as unknown as typeof fetch;
+  };
+
+  // Unset must mean "no cap". A new build must never start refusing quotes
+  // because someone forgot to configure something.
+  it("is off unless configured", () => {
+    delete process.env.FREIGHT_MAX_AUTO_QUOTE;
+    expect(maxAutoQuote()).toBe(0);
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    expect(maxAutoQuote()).toBe(250);
+  });
+
+  it("ignores a nonsense value rather than capping at zero", () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "not-a-number";
+    expect(maxAutoQuote()).toBe(0);
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "-50";
+    expect(maxAutoQuote()).toBe(0);
+  });
+
+  it("sells a delivery that comes in under the cap", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "120.00" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) expect(q.options[0].price).toBe(120);
+  });
+
+  it("sends a delivery over the cap to the quote flow", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "446.58" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "too_expensive" });
+    if (!q.ok) expect(q.detail).toContain("446.58");
+  });
+
+  // The cap filters BEFORE selectOptions, so an over-ceiling express service is
+  // never offered as the "faster" second line either.
+  it("never offers a service that is over the cap", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    priced(
+      { code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "120.00" },
+      { code: "AUS_PARCEL_EXPRESS", name: "Express Post", price: "900.00" }
+    );
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) {
+      expect(q.options.map((o) => o.price)).toEqual([120]);
+      expect(q.options.every((o) => o.price <= 250)).toBe(true);
+    }
+  });
+
+  it("charges what it can carry when nothing is capped", async () => {
+    delete process.env.FREIGHT_MAX_AUTO_QUOTE;
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "446.58" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+  });
+
+  // The cap is part of the cache key. Without that, raising it would keep
+  // serving the refusal that the old value produced.
+  it("does not serve a refusal across a change to the cap", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "100";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "300.00" });
+    expect(await quoteFreight([item()], delivery)).toMatchObject({ reason: "too_expensive" });
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "500";
+    expect((await quoteFreight([item()], delivery)).ok).toBe(true);
+  });
+
+  // Still never "Free". Too expensive to sell online is not too cheap to charge.
+  it("is a refusal, not a zero", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "10";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "446.58" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(false);
+    if (!q.ok) expect(q.reason).not.toBe("no_services");
   });
 });

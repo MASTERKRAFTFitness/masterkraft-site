@@ -121,6 +121,11 @@ function freightMessage(reason?: string): string {
   switch (reason) {
     case "oversize":
     case "too_many_parcels":
+    // Deliberately the SAME sentence as oversize. From the customer's side both
+    // mean "this is freight, not a parcel, and a person will price it" - and the
+    // alternative is telling them their delivery is too expensive to sell them,
+    // which is true, useless, and reads as a rebuke.
+    case "too_expensive":
       return "This order ships as freight rather than parcel post, so we price delivery per order. Request a quote and our team will confirm the cost with you.";
     case "incomplete_dimensions":
       return "We don't have shipping dimensions on file for one or more items in this order. Request a quote and our team will confirm delivery with you.";

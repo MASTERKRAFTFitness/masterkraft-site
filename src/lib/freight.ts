@@ -129,6 +129,7 @@ export type FreightQuote =
         | "incomplete_dimensions"
         | "oversize"
         | "too_many_parcels"
+        | "too_expensive"
         | "no_services"
         | "error";
       detail?: string;
@@ -172,6 +173,31 @@ export function pricesIncludeGst(): boolean {
 // every freight-bearing order by 10%.
 export function easyshipPricesIncludeGst(): boolean {
   return (process.env.EASYSHIP_PRICES_INCLUDE_GST ?? "true").toLowerCase() !== "false";
+}
+
+/**
+ * The most we will quote online without a human looking at it, or 0 for no cap.
+ *
+ * WHY THIS EXISTS. Bulky freight is priced on VOLUME, not weight, and this
+ * catalogue is full of things that are large, light and mostly air. Measured
+ * 2026-09-06 against a live quote: the volumetric divisor is 250kg per m3, so a
+ * 16kg medicine ball rack bills as 175kg and 38 of the 107 bulky products are
+ * charged on volume at a mean 1.41x their real weight. One real consignment came
+ * back at $446.58 against the $145 this business charged on the same lane three
+ * months earlier.
+ *
+ * A ceiling lets the bulky items that price sensibly sell by card while the
+ * volumetric disasters go to the quote flow, where a human was going to price
+ * them anyway. It is the difference between opening 107 products all at once at
+ * rates nobody has validated, and opening them as the evidence arrives.
+ *
+ * OFF BY DEFAULT. Unset means no cap and the behaviour is exactly as before -
+ * this must never start silently refusing quotes because someone deployed a new
+ * build. Set it deliberately.
+ */
+export function maxAutoQuote(): number {
+  const v = parseFloat(process.env.FREIGHT_MAX_AUTO_QUOTE ?? "");
+  return Number.isFinite(v) && v > 0 ? v : 0;
 }
 
 export function collectionAddress(): FreightAddress | null {
@@ -588,7 +614,7 @@ function cacheKey(parcels: Parcel[], collection: FreightAddress, delivery: Freig
   const to = [delivery.postcode, delivery.city, delivery.state ?? "", delivery.country]
     .map((v) => v.trim().toLowerCase())
     .join("|");
-  const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}`;
+  const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}`;
   return `${collection.postcode}>${to}>${boxes}>${config}`;
 }
 
@@ -692,8 +718,23 @@ export async function quoteFreight(
     return { ok: false, reason: "no_services" };
   };
 
+  // Applied BEFORE selectOptions, so an over-ceiling express service is never
+  // offered as the "faster" second option either. The cheapest is what decides
+  // whether this cart can be sold online at all.
+  const cap = maxAutoQuote();
+  const affordable = cap > 0 ? options.filter((o) => o.price <= cap) : options;
+  const cheapest = Math.min(...options.map((o) => o.price));
+
   const quote: FreightQuote =
-    options.length > 0 ? { ok: true, options: selectOptions(options) } : failure();
+    affordable.length > 0
+      ? { ok: true, options: selectOptions(affordable) }
+      : options.length > 0
+        ? {
+            ok: false,
+            reason: "too_expensive",
+            detail: `cheapest $${cheapest.toFixed(2)} over the $${cap.toFixed(2)} cap`,
+          }
+        : failure();
 
   setCached(key, quote, cacheableFor(quote));
   return quote;
