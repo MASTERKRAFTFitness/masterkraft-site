@@ -297,6 +297,35 @@ export function itemsToParcels(items: FreightItem[]): {
   return { parcels, missing };
 }
 
+// A carton has to be physically possible before it is worth asking whether a
+// carrier will take it. These bounds are not carrier limits - they are the line
+// between a measurement and a data-entry error.
+export const MAX_PLAUSIBLE_SIDE_CM = 300;
+export const MAX_PLAUSIBLE_VOLUME_M3 = 3;
+export const MIN_PLAUSIBLE_SIDE_CM = 0.5;
+
+/**
+ * True when a carton could exist.
+ *
+ * WHY THIS IS NOT PARANOIA. Measured 2026-09-06: 40 sellable products carry
+ * cartons recorded in MILLIMETRES in a centimetre field, and every one becomes
+ * an ordinary box when divided by ten. `ABPBSB04`, a 12-inch foam plyo box,
+ * reads 850 x 1000 x 305 - which is 259 cubic metres, and at Easyship's 250kg/m3
+ * divisor prices as a four-tonne consignment.
+ *
+ * A side under half a centimetre is the same fault the other way: `SLLE2502`
+ * records a height of 0.001cm, a decimal point in the wrong place.
+ *
+ * The point is not to hide bad data - `docs/freight-brief-bulky.md` and
+ * `npm run report:coverage` both name it. It is that a quote must never be built
+ * from a number nobody believes.
+ */
+export function isPlausibleCarton(p: Parcel): boolean {
+  const sides = [p.length, p.width, p.height];
+  if (sides.some((s) => !(s >= MIN_PLAUSIBLE_SIDE_CM) || s > MAX_PLAUSIBLE_SIDE_CM)) return false;
+  return (p.length * p.width * p.height) / 1e6 <= MAX_PLAUSIBLE_VOLUME_M3;
+}
+
 /** True when a carton is outside what Australia Post will carry as a parcel. */
 export function isOversize(p: Parcel): boolean {
   const volumeM3 = (p.length * p.width * p.height) / 1e6;

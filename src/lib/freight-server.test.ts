@@ -13,6 +13,16 @@ const snapshot = [
     dimensions: { length: "77", width: "52", height: "62" },
   },
   { id: 202, name: "Dimensionless Thing", sku: "MNODIMS1", weight: "", dimensions: {} },
+  // The real fault, in the real shape: the snapshot AND the ERP both hold this
+  // carton, the snapshot's is in millimetres, and the snapshot is asked first.
+  // ABPBSB04, a 12-inch foam plyo box, records 850 x 1000 x 305.
+  {
+    id: 303,
+    name: "Foam Plyometric Box 12in",
+    sku: "ABPBSB04",
+    weight: "13",
+    dimensions: { length: "850", width: "1000", height: "305" },
+  },
 ];
 
 const variations = {
@@ -30,6 +40,11 @@ const erp: UnleashedMap = {
     widthCm: 77, heightCm: 62, depthCm: 52, weightKg: 35,
   },
   MNOCARTON: { price: 50, stock: 1, name: "No Carton" },
+  // The corrected carton, as the unit-fix import writes it into Unleashed.
+  ABPBSB04: {
+    price: 200, stock: 1, name: "Foam Plyometric Box 12in",
+    widthCm: 85, heightCm: 30.5, depthCm: 100, weightKg: 13,
+  },
 };
 
 vi.mock("@/lib/catalogue", () => ({
@@ -115,5 +130,38 @@ describe("an unresolvable line is unquotable, never dropped", () => {
     const [item] = await refsToFreightItems([{ productId: 0, sku: "MNOCARTON", quantity: 1 }]);
     expect(item.weightKg).toBe(0);
     expect(item.lengthCm).toBe(0);
+  });
+});
+
+// The snapshot is consulted before the ERP, so a bad snapshot value used to win
+// simply by being non-zero. 25 of the 36 millimetre errors corrected in Unleashed
+// are also in the frozen snapshot - without this, importing the fix would have
+// corrected the ERP, the warehouse and the catalogues while the site went on
+// quoting 259 cubic metres for a foam box.
+describe("a carton that could not be real is not used", () => {
+  it("falls through to the ERP when the snapshot holds millimetres", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 303, sku: "ABPBSB04", quantity: 1 }]);
+    // 85 x 100 x 30.5 from the ERP, in the site's axis order, NOT 850 x 1000 x 305.
+    expect(item.lengthCm).toBe(85);
+    expect(item.widthCm).toBe(100);
+    expect(item.heightCm).toBe(30.5);
+    expect(item.weightKg).toBe(13);
+  });
+
+  // Weight is not part of the carton test and was never wrong, so it still
+  // resolves from the snapshot first.
+  it("keeps taking the snapshot when its carton is fine", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 101, sku: "MBPB3I101", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([77, 52, 62]);
+  });
+
+  // With no plausible carton anywhere the line is unquotable, which fails the
+  // whole cart loudly rather than shipping an under-declared consignment.
+  it("reports nothing rather than a number nobody believes", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 202, sku: "MNODIMS1", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([0, 0, 0]);
   });
 });

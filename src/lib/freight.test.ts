@@ -4,6 +4,7 @@ import {
   collectionAddress,
   enabledCarriers,
   isOversize,
+  isPlausibleCarton,
   itemsToParcels,
   marginPercent,
   maxAutoQuote,
@@ -881,5 +882,37 @@ describe("choosing which carriers to ask", () => {
     process.env.FREIGHT_CARRIERS = "easyship";
     const b = await quoteFreight([item()], delivery);
     if (a.ok && b.ok) expect(b.options[0].price).not.toBe(a.options[0].price);
+  });
+});
+
+// Forty sellable products carry cartons recorded in millimetres in a centimetre
+// field. A quote must never be built from a number nobody believes.
+describe("cartons that could not be real", () => {
+  it("accepts an ordinary box", () => {
+    expect(isPlausibleCarton({ weight: 18, length: 45, width: 45, height: 37 })).toBe(true);
+  });
+
+  // The real record: a 12-inch foam plyo box, 850 x 1000 x 305, which is 259
+  // cubic metres and prices as a four-tonne consignment.
+  it("rejects millimetres typed into a centimetre field", () => {
+    expect(isPlausibleCarton({ weight: 13, length: 850, width: 1000, height: 305 })).toBe(false);
+    // An 8kg kettlebell recorded 220 x 220 x 290.
+    expect(isPlausibleCarton({ weight: 9, length: 220, width: 220, height: 290 })).toBe(false);
+  });
+
+  it("rejects a decimal point in the wrong place", () => {
+    // SLLE2502 records a height of 0.001cm.
+    expect(isPlausibleCarton({ weight: 1, length: 30, width: 30, height: 0.001 })).toBe(false);
+  });
+
+  // A 224cm barbell is long, not impossible. The line is data entry, not the
+  // carrier's limits - isOversize decides what a carrier will take.
+  it("accepts a genuinely long item", () => {
+    expect(isPlausibleCarton({ weight: 21, length: 224, width: 8, height: 8 })).toBe(true);
+    expect(isPlausibleCarton({ weight: 43, length: 200, width: 45, height: 45 })).toBe(true);
+  });
+
+  it("rejects something bigger than a pallet of pallets", () => {
+    expect(isPlausibleCarton({ weight: 50, length: 400, width: 100, height: 100 })).toBe(false);
   });
 });

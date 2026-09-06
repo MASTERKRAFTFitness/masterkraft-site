@@ -6,7 +6,13 @@
 
 import { productById, variationsFor } from "@/lib/catalogue";
 import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
-import { quoteFreight, freightConfigured, type FreightItem, type FreightOption } from "@/lib/freight";
+import {
+  quoteFreight,
+  freightConfigured,
+  isPlausibleCarton,
+  type FreightItem,
+  type FreightOption,
+} from "@/lib/freight";
 
 export type DeliveryInput = {
   city?: string;
@@ -65,12 +71,36 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
 
     const weightKg =
       num(variation?.weight) || num(product?.weight) || num(unit?.weightKg);
-    const lengthCm =
-      num(variation?.dimensions?.length) || num(product?.dimensions?.length) || num(unit?.widthCm);
-    const widthCm =
-      num(variation?.dimensions?.width) || num(product?.dimensions?.width) || num(unit?.depthCm);
-    const heightCm =
-      num(variation?.dimensions?.height) || num(product?.dimensions?.height) || num(unit?.heightCm);
+
+    // WHOLE CARTONS, IN ORDER, AND ONLY IF THEY COULD BE REAL.
+    //
+    // This used to resolve each axis independently with a `||` chain, which had
+    // two faults. It could take length from one source and width from another
+    // and ship a box that exists in neither - dangerous precisely because the
+    // ERP orders its axes Width/Depth/Height against the snapshot's
+    // length/width/height. And a source offering an impossible carton still won,
+    // because a wrong number is still non-zero.
+    //
+    // That second fault had teeth. 25 of the 36 millimetre errors being
+    // corrected in Unleashed are ALSO in the frozen snapshot, and the snapshot
+    // is consulted first - so importing the fix would have corrected the ERP,
+    // the warehouse and the catalogues while the site kept quoting 259 cubic
+    // metres for a foam box. Rejecting the implausible carton rather than
+    // reordering the sources fixes it whichever way round they are asked, and
+    // keeps working if bad data ever appears in the other system instead.
+    const candidates: { l: number; w: number; h: number }[] = [
+      { l: num(variation?.dimensions?.length), w: num(variation?.dimensions?.width), h: num(variation?.dimensions?.height) },
+      { l: num(product?.dimensions?.length), w: num(product?.dimensions?.width), h: num(product?.dimensions?.height) },
+      // The ERP's own axis order, mapped once, here.
+      { l: num(unit?.widthCm), w: num(unit?.depthCm), h: num(unit?.heightCm) },
+    ];
+    const carton =
+      candidates.find(
+        (c) => c.l > 0 && c.w > 0 && c.h > 0 && isPlausibleCarton({ weight: weightKg, length: c.l, width: c.w, height: c.h })
+      ) ?? { l: 0, w: 0, h: 0 };
+    const lengthCm = carton.l;
+    const widthCm = carton.w;
+    const heightCm = carton.h;
 
     // An unresolvable line counts as UNQUOTABLE rather than being dropped.
     // Dropping it would under-declare the consignment and under-charge the
