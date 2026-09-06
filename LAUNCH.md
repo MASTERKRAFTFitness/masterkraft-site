@@ -231,6 +231,23 @@ than it buys.
 Alerting is fire-and-forget and swallows its own errors: it can never slow down
 or break a checkout.
 
+### 🧠 Bulky freight is priced on VOLUME, and it is expensive
+
+Measured on a real consignment 2026-09-06 (`docs/easyship-evaluation.md`): a 43kg
+turf roll to Adelaide quoted **A$446.58**, of which **A$248.50 was an oversize
+surcharge** — 61% of the pre-tax cost. It was billed as **101.25kg** because the
+carton is 0.405m3 and the volumetric divisor is 250kg/m3.
+
+Across the bulky range, **38 of 107 products (36%) are billed on volume rather
+than weight**, at a mean 1.41x their actual. The tail is far worse: a 16kg
+medicine ball rack bills as 175kg. Racks and rigs are large, light and mostly
+air, so any volume-priced carrier does this.
+
+**Decide this before removing `NEXT_PUBLIC_CHECKOUT_MODE`**, because that is the
+moment those products become card-buyable at these rates. TNT also notes on the
+quote that "additional handling fees may occur for the oversize & DG shipment",
+and the customer having already been charged means we absorb the difference.
+
 ### ⚠️ The Easyship trial allowance is already exhausted
 
 **Every Easyship call currently returns `403 usage_limit`.** It took ~90 calls on

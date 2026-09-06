@@ -155,6 +155,85 @@ exhausting the allowance a second time would be a poor trade for a number that
 changes no behaviour: the router picks the cheaper of the two on every request
 regardless of where the crossover sits.
 
+## The first real consignment, priced (2026-09-06)
+
+Set up in the dashboard against a genuine open order and **saved without buying**:
+SO-00000823, REVL Mile End — one carton, `RFATSY02` Artificial Turf Black
+(2m x 10m), 43kg, 200 x 45 x 45cm, Thomastown to 17 Montana Drive, Novar Gardens
+SA 5040. Chosen off `npm run report:openorders` as the only open order that is
+bulky, addressed, fully measured and a single line, so an invoice discrepancy
+would have exactly one possible cause.
+
+**The breakdown is the finding:**
+
+| | |
+|---|---|
+| Shipping cost | A$157.48 |
+| **Oversized surcharge** | **A$248.50** |
+| Total excl. tax | A$405.98 |
+| GST | A$40.60 |
+| **Total** | **A$446.58** |
+| **Chargeable weight** | **101.25kg**, method **Volumetric** |
+
+Three things follow, in increasing order of how much they matter.
+
+**1. Our integration is verified end to end.** `quoteFreight()` returned $513.57,
+which is $446.58 x 1.15 to the cent. The router reproduces Easyship's own UI
+exactly, through a completely independent path.
+
+**2. The surcharge is 61% of the pre-tax cost, and the price is driven by SIZE,
+not weight.** The item is 43kg and is billed as 101.25kg, because 200 x 45 x 45
+is 0.405m3 and the volumetric divisor is **250kg per m3**. That is the same thing
+`docs/freight-brief-bulky.md` found from the other direction: length drives this
+catalogue more than weight, with 25% of the range oversize on length alone.
+
+**3. TNT states on the quote that it may not be final:**
+
+> "Additional handling fees may occur for the oversize & DG shipment"
+
+That is the repricing risk, in the carrier's own words, before a dollar was
+spent. Since the customer is charged at checkout, every such adjustment is
+absorbed by us.
+
+### What volumetric pricing costs across the whole bulky range
+
+Measured against the committed snapshot using the 250kg/m3 divisor observed
+above:
+
+| | |
+|---|---|
+| Bulky products with usable cartons | 107 |
+| **Billed on VOLUME rather than actual weight** | **38 (36%)** |
+| Mean chargeable-to-actual ratio | **1.41x** |
+| Median actual weight | 43kg |
+
+The tail is worse than the mean:
+
+| sku | actual | billed | ratio | carton |
+|---|---|---|---|---|
+| `MEFRBL03` Medicine Ball Rack, 5 ball | 16kg | **175kg** | **11.0x** | 162 x 84 x 51.5 |
+| `MEFRBL02` Medicine Ball Rack, 10 ball | 18kg | 121kg | 6.7x | 166 x 55 x 53 |
+| `ABPBSB-06` Plyometric Foam Stacker Box 24" | 13kg | 65kg | 5.0x | 85 x 100 x 30.5 |
+| `MEFROP02` Olympic Weight Plate Tree | 16kg | 46kg | 2.8x | 140 x 65 x 20 |
+| `MSWBFW01` Flat Utility Weight Bench Pro | 26kg | 72kg | 2.8x | 118 x 52.5 x 46.2 |
+
+**A 16kg rack billed as 175kg is not an edge case, it is the shape of this
+catalogue**: racks and rigs are large, light and mostly air. Any carrier pricing
+on volume will do this. The number to negotiate with a bulky specialist is
+therefore the DIVISOR, not the rate.
+
+### Before that consignment is bought
+
+- **A$446 is ~30% of the order value** ($1,500 ex GST). Worth one comparison call
+  to Northline or Mainfreight on this exact consignment before accepting that
+  bulky freight costs this much.
+- **Residential Address was set to No**, because REVL Mile End is a business, but
+  "17 Montana Drive" reads residential and a wrong call there is another
+  surcharge. Confirm before booking.
+- The account still needs a payment method; the balance is A$0.00.
+- **When the invoice arrives, compare it against A$446.58.** That comparison is
+  the entire point of the exercise and is still outstanding.
+
 ## Open questions this evaluation did NOT settle
 
 1. ~~**Rate stability across our two calls.**~~ **ANSWERED 2026-09-06: stable.**
@@ -170,13 +249,17 @@ regardless of where the crossover sits.
    checkout, so any adjustment lands on us. $1/kg for 601kg Melbourne to Sydney is
    cheap for road freight and cheap rates on parcel-shaped contracts sometimes
    reprice on receipt.
-3. **Tailgate and two-person delivery.** `docs/freight-brief-bulky.md` lists this
+3. **Whether Easyship is actually cheap for bulky.** Newly opened by the numbers
+   above, and it now outranks the others. A 61% oversize surcharge and a 250kg/m3
+   volumetric divisor may simply be a bad deal against the incumbents already in
+   Unleashed. One comparison quote answers it.
+4. **Tailgate and two-person delivery.** `docs/freight-brief-bulky.md` lists this
    as one of four things Australia Post cannot do. Easyship closes the other
    three — it carries bulky, it returns transit times, and it books and tracks —
    but its quote screen offers only a Residential toggle. A 601kg rig to a
    suburban gym with no dock is a real order and the rate above does not include
    anyone to unload it.
-4. **Single-carrier concentration.** TNT returned the only rate on every bulky
+5. **Single-carrier concentration.** TNT returned the only rate on every bulky
    quote; Allied, Toll and CouriersPlease returned nothing at those sizes. "Easyship
    carries bulky" currently means "TNT carries bulky".
 
