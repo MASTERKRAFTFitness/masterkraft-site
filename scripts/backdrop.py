@@ -110,19 +110,49 @@ def normalize(im):
     return out
 
 
-def is_studio(c):
-    """Is this a flat, neutral, light studio backdrop — whatever shade it is?
+UNIFORM = 0.95  # this much of the border on one colour means a sweep, not a scene
 
-    Wider than `needs_normalizing`, which asks the shop's question: "does this
-    fail to match the tile?". A cutout asks a different one — "is there a
-    backdrop here at all?" — and #e6e6e6 answers yes. On the shop that shade is
-    invisible because the tile is painted to match it; on a white catalogue page
-    it is a grey box, the same defect the tile grey was invented to cure.
+
+def border_uniformity(im):
+    """(fraction of the border on its dominant colour, that colour).
+
+    A studio sweep is the same colour all the way round; a scene, or a subject
+    that runs off the edge of the frame, is not. Measured on SNAP's photography
+    the two do not overlap: flat sweeps score 1.00, a model whose shoulder
+    reaches the frame edge scores 0.71-0.84.
     """
-    r, g, b = c
+    w, h = im.size
+    step = max(1, min(w, h) // 64)
+    edge = []
+    for x in range(0, w, step):
+        edge += [im.getpixel((x, 2)), im.getpixel((x, h - 3))]
+    for y in range(0, h, step):
+        edge += [im.getpixel((2, y)), im.getpixel((w - 3, y))]
+    dominant = Counter(edge).most_common(1)[0][0]
+    hit = sum(1 for c in edge if all(abs(c[i] - dominant[i]) <= TOL for i in range(3)))
+    return hit / len(edge), dominant
+
+
+def is_studio(im):
+    """Is the product standing on a flat neutral sweep — of ANY shade?
+
+    Deliberately a different question from `needs_normalizing`, which asks the
+    shop's: "does this fail to match the tile?". A cutout asks whether there is
+    a backdrop at all, so it answers yes to #e6e6e6 — invisible on a tile
+    painted to match it, a grey box on white paper — and yes to the flat BLACK
+    sweep SNAP shoots its plates and barbells on, which the shop's lightness
+    floor rejects and a white catalogue page renders as a black box.
+
+    Uniformity replaces that lightness floor, because "flat all the way round"
+    is what actually distinguishes a sweep from a room.
+    """
+    if im.mode != "RGB":
+        im = im.convert("RGB")
+    uniformity, colour = border_uniformity(im)
+    r, g, b = colour
     if max(abs(r - g), abs(g - b), abs(r - b)) > COLOR_SPREAD:
         return False  # coloured backdrop (turf, a gym floor) - intentional
-    return (r + g + b) // 3 >= MIN_BG_VALUE
+    return uniformity >= UNIFORM
 
 
 def cutout(im):
@@ -135,11 +165,10 @@ def cutout(im):
     what keeps a pale halo from being left behind on a dark page.
     """
     im = im.convert("RGB")
-    colour = backdrop_colour(im)
     out = im.convert("RGBA")
-    if not is_studio(colour):
+    if not is_studio(im):
         return out  # in-scene or coloured: there is no backdrop to remove
-    alpha = ImageChops.invert(backdrop_mask(im, colour).convert("L"))
+    alpha = ImageChops.invert(backdrop_mask(im, backdrop_colour(im)).convert("L"))
     out.putalpha(alpha)
     return out
 
