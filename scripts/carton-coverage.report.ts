@@ -44,6 +44,7 @@ const { isRetiredSku } = await import("@/lib/obsolete");
 
 const MD = "reports/carton-coverage.md";
 const CSV = "reports/carton-coverage.csv";
+const FIX_CSV = "reports/carton-unit-fix-import.csv";
 const out = (s: string) => process.stdout.write(`${s}\n`);
 
 const num = (v: unknown) => {
@@ -51,6 +52,16 @@ const num = (v: unknown) => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 const q = (s: unknown) => `"${String(s ?? "").replace(/"/g, '""')}"`;
+
+// Unleashed's import matches header cells LITERALLY, so the header must not be
+// quoted - a quoted `"*Product Code"` fails with "Column is missing from the
+// template". Quote only cells that need it. Learned in bc12593; do not undo it.
+const cell = (v: string | number) => {
+  const s2 = String(v);
+  return /[",\n]/.test(s2) ? `"${s2.replace(/"/g, '""')}"` : s2;
+};
+const csvOf = (rows: (string | number)[][]) =>
+  rows.map((r) => r.map(cell).join(",")).join("\n") + "\n";
 
 const sign = (s: string) =>
   createHmac("sha256", process.env.UNLEASHED_API_KEY ?? "").update(s).digest("base64");
@@ -144,8 +155,25 @@ it("measures card-checkout coverage across the whole catalogue", async () => {
     });
   }
 
-  const measured = (r: Row) => r.kg > 0 && r.l > 0 && r.w > 0 && r.h > 0;
-  const sellableOnline = (r: Row) => r.hasWoo && measured(r);
+  // A side over 3m, or over 3 cubic metres, is not a carton — it is a unit
+  // error, almost always millimetres typed into a centimetre field. Counting
+  // those as "measured" is how the first run of this report overstated the
+  // answer: an 8kg kettlebell recorded 220 x 220 x 290 is 18.5 m3 read as cm,
+  // which at Easyship's 250kg/m3 divisor is a chargeable weight over four
+  // tonnes. The freight cap catches it, but it is not sellable.
+  const implausible = (r: Row) => Math.max(r.l, r.w, r.h) > 300 || (r.l * r.w * r.h) / 1e6 > 3;
+  // Divide by ten and it becomes an ordinary carton — so the real value is
+  // already recorded, in the wrong unit. This is a keyboard fix, not a tape
+  // measure, and it is the cheapest carton data available anywhere.
+  const looksLikeMm = (r: Row) =>
+    implausible(r) && Math.max(r.l, r.w, r.h) / 10 <= 300 && (r.l * r.w * r.h) / 1e9 <= 3;
+  const measured = (r: Row) => r.kg > 0 && r.l > 0 && r.w > 0 && r.h > 0 && !implausible(r);
+  // NO LONGER REQUIRES A WOOCOMMERCE PRODUCT. canPay gated on productId > 0
+  // until 2026-09-06, because resolveOrderLines repriced against WooCommerce.
+  // It reprices from the ERP now and orders are written into Unleashed, so the
+  // ERP code is the handle and carton data is the only thing left that decides
+  // whether a product can be sold and shipped. See lib/cart-eligibility.
+  const sellableOnline = (r: Row) => measured(r);
 
   const total = rows.length;
   const ok = rows.filter(sellableOnline);
@@ -158,6 +186,24 @@ it("measures card-checkout coverage across the whole catalogue", async () => {
   const weightOnly = noCarton.filter((r) => r.kg > 0 && !(r.l && r.w && r.h));
   const dimsOnly = noCarton.filter((r) => !r.kg && r.l && r.w && r.h);
   const nothing = noCarton.filter((r) => !r.kg && !(r.l && r.w && r.h));
+  const unitError = rows.filter((r) => r.l && r.w && r.h && implausible(r));
+  // Does the frozen WooCommerce snapshot still hold carton data the ERP lacks?
+  // If it does, it is worth extracting before Woo is decommissioned. If it does
+  // not, there is nothing there to rescue.
+  const erpByCode = new Map(
+    erp.map((p) => [(p.ProductCode ?? "").trim().toUpperCase(), p])
+  );
+  const wooOnlyDims = rows.filter((r) => {
+    const e = erpByCode.get(r.code.toUpperCase());
+    const s2 = snap.get(r.code.toUpperCase());
+    return Boolean(s2?.l && s2?.w && s2?.h) && !(e?.Width && e?.Depth && e?.Height);
+  });
+  const wooOnlyWeight = rows.filter((r) => {
+    const e = erpByCode.get(r.code.toUpperCase());
+    const s2 = snap.get(r.code.toUpperCase());
+    return Boolean(s2?.kg) && !e?.Weight;
+  });
+  const mmFix = unitError.filter(looksLikeMm);
 
   const byGroup = new Map<string, { n: number; ok: number; noCarton: number; noWoo: number }>();
   for (const r of rows) {
@@ -214,6 +260,36 @@ in the catalogue; it is a tripwire under every basket it can join.
 (it is a brand allowlist). Treat these as the ceiling on the problem, not its
 size.
 
+## The cheapest carton data available: fix the unit, not the tape
+
+${unitError.length} products carry dimensions that cannot be real — over 3m on a side or
+over 3 cubic metres. **${mmFix.length} of them become an ordinary carton when divided by
+ten**, which means the measurement was taken and typed into the wrong unit. No
+tape measure required.
+
+| code | recorded as | almost certainly | product |
+|---|---|---|---|
+${mmFix
+  .slice(0, 15)
+  .map(
+    (r) =>
+      `| \`${r.code}\` | ${r.l} x ${r.w} x ${r.h} | ${(r.l / 10).toFixed(1)} x ${(r.w / 10).toFixed(1)} x ${(r.h / 10).toFixed(1)} | ${r.name.slice(0, 40)} |`
+  )
+  .join("\n") || "| _none_ | | | |"}
+
+## Is there carton data left in WooCommerce worth rescuing?
+
+Short answer for the decommissioning question: **almost none.**
+
+| | |
+|---|---|
+| Dimensions the snapshot has and the ERP does not | **${wooOnlyDims.length}** |
+| Weights the snapshot has and the ERP does not | **${wooOnlyWeight.length}** |
+
+The unmeasured products are unmeasured in BOTH systems. Nobody has ever measured
+them, so switching WooCommerce off loses nothing here — and no extraction job
+will conjure the numbers.
+
 ## The carton gap, split by what is actually missing
 
 | pile | products | the job |
@@ -239,6 +315,39 @@ ${groups
   .map(([g, s]) => `| ${g} | ${s.n} | ${s.ok} (${((s.ok / s.n) * 100).toFixed(0)}%) | ${s.noCarton} | ${s.noWoo} |`)
   .join("\n")}
 `;
+
+  // The unit fix, shaped for Unleashed's own product import.
+  //
+  // Computed from the ERP's OWN Width/Depth/Height rather than from the merged
+  // row above, because the merge takes the snapshot first and the snapshot has
+  // its own bad values. This file must only ever correct a number the ERP
+  // actually holds.
+  //
+  // AXIS ORDER IS THE ERP'S, NOT THE SITE'S: the template is Width, Height,
+  // Depth. Getting that wrong writes a box of the right size in the wrong shape,
+  // which is worse than leaving it broken because nothing would flag it.
+  const erpMm = rows
+    .map((r) => ({ r, e: erpByCode.get(r.code.toUpperCase()) }))
+    .filter(({ e }) => {
+      if (!e?.Width || !e?.Depth || !e?.Height) return false;
+      const big = Math.max(e.Width, e.Depth, e.Height) > 300 || (e.Width * e.Depth * e.Height) / 1e6 > 3;
+      const fixed = Math.max(e.Width, e.Depth, e.Height) / 10 <= 300 && (e.Width * e.Depth * e.Height) / 1e9 <= 3;
+      return big && fixed;
+    });
+
+  writeFileSync(
+    FIX_CSV,
+    csvOf([
+      ["*Product Code", "Width", "Height", "Depth", "Weight"],
+      ...erpMm.map(({ r, e }) => [
+        r.code,
+        +(e!.Width! / 10).toFixed(2),
+        +(e!.Height! / 10).toFixed(2),
+        +(e!.Depth! / 10).toFixed(2),
+        e!.Weight ?? "",
+      ]),
+    ])
+  );
 
   writeFileSync(MD, md);
   writeFileSync(
@@ -268,6 +377,9 @@ ${groups
   out(`missing carton data:      ${noCarton.length} (${pct(noCarton.length)}%)`);
   out(`missing a Woo product:    ${noWoo.length} (${pct(noWoo.length)}%)`);
   out(`\ncarton gap splits into:  weight-no-dims ${weightOnly.length}, dims-no-weight ${dimsOnly.length}, neither ${nothing.length}`);
+  out(`unit errors (impossible cartons): ${unitError.length}, of which ${mmFix.length} look like millimetres`);
+  out(`carton data only WooCommerce has: ${wooOnlyDims.length} dimensions, ${wooOnlyWeight.length} weights`);
+  out(`\nunit-fix import written for ${erpMm.length} products -> ${FIX_CSV}`);
   out(`\nbiggest unmeasured families:`);
   for (const [f, n] of families.slice(0, 8)) out(`  ${String(n).padStart(4)}  ${f.slice(0, 56)}`);
   out(`\nwritten to ${MD}\n`);

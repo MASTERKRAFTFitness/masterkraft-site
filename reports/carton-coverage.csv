@@ -2,7 +2,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "ABCTDR01","Drop In Core Trainer","Body Weight",31.8182,3,43,8,8,true,true,true
 "ABCTFS02","Core Trainer (Landmine) With T Bar Handle","Body Weight",134.0909,17,42,17,59,true,true,true
 "ABEMMA01","EVA Exercise Mat","Body Weight",20.4545,3,140,62,1.6,true,true,true
-"ABPBSB04","Foam Plyometric Box - 12""","Body Weight",150,13,850,1000,305,true,true,true
+"ABPBSB04","Foam Plyometric Box - 12""","Body Weight",150,13,850,1000,305,true,false,false
 "ABRMRL03","Foam Roller - 45cm (Black)","Body Weight",22.7273,0,0,0,0,true,false,false
 "ABRPBA01","Knitted Resistance Bands (Set of 3)","Body Weight",13.6364,1,34,24,2,true,true,true
 "ABRPPO03","Power Bands - 13mm (Red)","Body Weight",4,0,0,0,0,true,false,false
@@ -51,16 +51,16 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "AMDBRH20","Rubber Hex Dumbbell - 30kg","Mixed Implements",68.1818,31,0,0,0,true,false,false
 "AMDBRH22","Rubber Hex Dumbbell - 35kg","Mixed Implements",79.5455,36,0,0,0,true,false,false
 "AMDEHG01","High Grip Dead Ball - 3kg","Mixed Implements",12.5,13,29,29,29,true,true,true
-"AMDEHG02","High Grip Dead Ball - 6kg","Mixed Implements",18.1818,7,240,240,240,true,true,true
-"AMDEHG03","High Grip Dead Ball - 9kg","Mixed Implements",20.4545,10,240,240,240,true,true,true
-"AMDEHG04","High Grip Dead Ball - 12kg","Mixed Implements",25,13,290,290,290,true,true,true
-"AMDEHG05","High Grip Dead Ball - 15kg","Mixed Implements",31.8182,16,290,290,290,true,true,true
-"AMKBUR01","Urethane Competition Kettlebell - 8kg","Mixed Implements",40,9,220,220,290,false,true,false
-"AMKBUR02","Urethane Competition Kettlebell - 10kg","Mixed Implements",52.2727,11,220,220,290,false,true,false
-"AMKBUR03","Urethane Competition Kettlebell - 12kg","Mixed Implements",56.8182,13,220,220,290,false,true,false
-"AMKBUR04","Urethane Competition Kettlebell - 16kg","Mixed Implements",72.7273,17,220,220,290,false,true,false
-"AMKBUR05","Urethane Competition Kettlebell - 20kg","Mixed Implements",88.6364,21,220,220,290,false,true,false
-"AMKBUR06","Urethane Competition Kettlebell - 24kg","Mixed Implements",104.5455,25,220,220,290,false,true,false
+"AMDEHG02","High Grip Dead Ball - 6kg","Mixed Implements",18.1818,7,240,240,240,true,false,false
+"AMDEHG03","High Grip Dead Ball - 9kg","Mixed Implements",20.4545,10,240,240,240,true,false,false
+"AMDEHG04","High Grip Dead Ball - 12kg","Mixed Implements",25,13,290,290,290,true,false,false
+"AMDEHG05","High Grip Dead Ball - 15kg","Mixed Implements",31.8182,16,290,290,290,true,false,false
+"AMKBUR01","Urethane Competition Kettlebell - 8kg","Mixed Implements",40,9,220,220,290,false,false,false
+"AMKBUR02","Urethane Competition Kettlebell - 10kg","Mixed Implements",52.2727,11,220,220,290,false,false,false
+"AMKBUR03","Urethane Competition Kettlebell - 12kg","Mixed Implements",56.8182,13,220,220,290,false,false,false
+"AMKBUR04","Urethane Competition Kettlebell - 16kg","Mixed Implements",72.7273,17,220,220,290,false,false,false
+"AMKBUR05","Urethane Competition Kettlebell - 20kg","Mixed Implements",88.6364,21,220,220,290,false,false,false
+"AMKBUR06","Urethane Competition Kettlebell - 24kg","Mixed Implements",104.5455,25,220,220,290,false,false,false
 "AWBBOL01","Olympic Hex Deadlift Barbell (400mm Loadable Sleeves)","Weightlifting",179.5455,0,0,0,0,false,false,false
 "AWBBOL03","Olympic Barbell - 15kg (1500Lb Capacity)","Weightlifting",156.8182,16,205,8,8,true,true,true
 "AWBBOL04","Olympic Barbell - 20kg (2000Lb Capacity)","Weightlifting",179.5455,0,0,0,0,false,false,false
@@ -97,21 +97,21 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "CUSTOM17","Custom - High Grip Dead Ball - Print (per size)","Other Costs",50,0,0,0,0,false,false,false
 "CUSTOM18","Custom - Premium Rubber Hex Dumbbell - Mold (per size)","Other Costs",50,0,0,0,0,false,false,false
 "CUSTOM19","Custom - Olympic Barbells - Mold (per size)","Other Costs",1000,0,0,0,0,false,false,false
-"FBCTDI01","Exercise Glider Discs (Pair)","Body Weight",43.6364,1,20,22,10,false,true,false
-"FBPB3I101","3-In-1 Foam Plyometric Box - 34kg","Body Weight",300,35,77,52,62,false,true,false
+"FBCTDI01","Exercise Glider Discs (Pair)","Body Weight",43.6364,1,20,22,10,false,true,true
+"FBPB3I101","3-In-1 Foam Plyometric Box - 34kg","Body Weight",300,35,77,52,62,false,true,true
 "FBRMRL09","Foam Roller Storage Rack (Wall Mounted)","Equipment Storage",268.1818,0,1,0.66,0.74,false,false,false
-"FBSADO03","Station Markers (Set of 20)","Body Weight",72.7273,1,10,10,2,false,true,false
-"FBSALD01","Rubber Rollout Speed Ladder - 5m","Body Weight",77.2727,9,43,19,19,false,true,false
-"FFATSY01","Artificial Turf Black (2m x 10m)(Custom Branding)","Flooring",1500,43,200,45,45,false,true,false
-"FMDBUR01","Urethane Fixed Dumbbells (Pair) - 10kg","Mixed Implements",160,11,25,16.3,16.3,false,true,false
-"FMDBUR02","Urethane Fixed Dumbbells (Pair) - 12.5kg","Mixed Implements",200,14,25,18.3,18.3,false,true,false
-"FMDBUR03","Urethane Fixed Dumbbells (Pair) - 15kg","Mixed Implements",236.3636,16,26.4,18.3,18.3,false,true,false
-"FMDBUR04","Urethane Fixed Dumbbells (Pair) - 17.5kg","Mixed Implements",290.9091,19,26.4,20.3,20.3,false,true,false
-"FMDBUR05","Urethane Fixed Dumbbells (Pair) - 20kg","Mixed Implements",322.7273,21,27.4,20.3,20.3,false,true,false
-"FMDBUR06","Urethane Fixed Dumbbells (Pair) - 22.5kg","Mixed Implements",363.6364,24,27.4,20.3,20.3,false,true,false
-"FMDBUR07","Urethane Fixed Dumbbells (Pair) - 25kg","Mixed Implements",400,26,30,20.3,20.3,false,true,false
-"FMDBUR08","Urethane Fixed Dumbbells (Pair) - 27.5kg","Mixed Implements",454.5455,29,30,20.3,20.3,false,true,false
-"FMDBUR09","Urethane Fixed Dumbbells (Pair) - 30kg","Mixed Implements",481.8182,31,32.2,20.3,20.3,false,true,false
+"FBSADO03","Station Markers (Set of 20)","Body Weight",72.7273,1,10,10,2,false,true,true
+"FBSALD01","Rubber Rollout Speed Ladder - 5m","Body Weight",77.2727,9,43,19,19,false,true,true
+"FFATSY01","Artificial Turf Black (2m x 10m)(Custom Branding)","Flooring",1500,43,200,45,45,false,true,true
+"FMDBUR01","Urethane Fixed Dumbbells (Pair) - 10kg","Mixed Implements",160,11,25,16.3,16.3,false,true,true
+"FMDBUR02","Urethane Fixed Dumbbells (Pair) - 12.5kg","Mixed Implements",200,14,25,18.3,18.3,false,true,true
+"FMDBUR03","Urethane Fixed Dumbbells (Pair) - 15kg","Mixed Implements",236.3636,16,26.4,18.3,18.3,false,true,true
+"FMDBUR04","Urethane Fixed Dumbbells (Pair) - 17.5kg","Mixed Implements",290.9091,19,26.4,20.3,20.3,false,true,true
+"FMDBUR05","Urethane Fixed Dumbbells (Pair) - 20kg","Mixed Implements",322.7273,21,27.4,20.3,20.3,false,true,true
+"FMDBUR06","Urethane Fixed Dumbbells (Pair) - 22.5kg","Mixed Implements",363.6364,24,27.4,20.3,20.3,false,true,true
+"FMDBUR07","Urethane Fixed Dumbbells (Pair) - 25kg","Mixed Implements",400,26,30,20.3,20.3,false,true,true
+"FMDBUR08","Urethane Fixed Dumbbells (Pair) - 27.5kg","Mixed Implements",454.5455,29,30,20.3,20.3,false,true,true
+"FMDBUR09","Urethane Fixed Dumbbells (Pair) - 30kg","Mixed Implements",481.8182,31,32.2,20.3,20.3,false,true,true
 "FMDBUR18","Urethane Fixed Dumbbells (Pair) - 5kg","Mixed Implements",80,0,0,0,0,false,false,false
 "FMDBUR19","Urethane Fixed Dumbbells (Pair) - 7.5kg","Mixed Implements",120,0,0,0,0,false,false,false
 "FMDBUR20","Urethane Fixed Dumbbells (Pair) - 1kg","Mixed Implements",16,0,0,0,0,false,false,false
@@ -122,46 +122,46 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "FMDBUR26","Urethane Fixed Dumbbells (Pair) - 7kg","Mixed Implements",112,0,0,0,0,false,false,false
 "FMDBUR27","Urethane Fixed Dumbbells (Pair) - 8kg","Mixed Implements",128,0,0,0,0,false,false,false
 "FMDBUR28","Urethane Fixed Dumbbells (Pair) - 9kg","Mixed Implements",144,0,0,0,0,false,false,false
-"FMKBPGC01","Competition Kettlebell - 6kg (Aluminium)","Mixed Implements",54.5455,7,23,23,31,false,true,false
-"FMKBPGC02","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,31,false,true,false
-"FMKBPGC03","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,31,false,true,false
-"FMKBPGC04","Competition Kettlebell - 12kg","Mixed Implements",81.8182,13,23,23,31,false,true,false
-"FMKBPGC05","Competition Kettlebell - 16kg","Mixed Implements",100,17,23,23,31,false,true,false
-"FMKBPGC06","Competition Kettlebell - 18kg","Mixed Implements",109.0909,19,23,23,31,false,true,false
-"FMKBPGC07","Competition Kettlebell - 20kg","Mixed Implements",118.1818,21,23,23,31,false,true,false
-"FMKBPGC08","Competition Kettlebell - 24kg","Mixed Implements",136.3636,25,23,23,31,false,true,false
-"FMKBPGC09","Competition Kettlebell - 28kg","Mixed Implements",154.5455,29,23,23,31,false,true,false
+"FMKBPGC01","Competition Kettlebell - 6kg (Aluminium)","Mixed Implements",54.5455,7,23,23,31,false,true,true
+"FMKBPGC02","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,31,false,true,true
+"FMKBPGC03","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,31,false,true,true
+"FMKBPGC04","Competition Kettlebell - 12kg","Mixed Implements",81.8182,13,23,23,31,false,true,true
+"FMKBPGC05","Competition Kettlebell - 16kg","Mixed Implements",100,17,23,23,31,false,true,true
+"FMKBPGC06","Competition Kettlebell - 18kg","Mixed Implements",109.0909,19,23,23,31,false,true,true
+"FMKBPGC07","Competition Kettlebell - 20kg","Mixed Implements",118.1818,21,23,23,31,false,true,true
+"FMKBPGC08","Competition Kettlebell - 24kg","Mixed Implements",136.3636,25,23,23,31,false,true,true
+"FMKBPGC09","Competition Kettlebell - 28kg","Mixed Implements",154.5455,29,23,23,31,false,true,true
 "FSFTSFS02","Functional Training System 2.0 (Pink Accessories)","Rigs & Racks",3813.6364,0,0,0,0,false,false,false
-"FWBBFUR01","Urethane Fixed Barbells - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,false,true,false
-"FWBBFUR02","Urethane Fixed Barbells - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,false,true,false
-"FWBBFUR03","Urethane Fixed Barbells - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,false,true,false
-"FWBBFUR04","Urethane Fixed Barbells - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,false,true,false
-"FWBBFUR05","Urethane Fixed Barbells - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,false,true,false
-"FWBBFUR06","Urethane Fixed Barbells - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,false,true,false
-"FWBBFUR07","Urethane Fixed Barbells - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,false,true,false
-"FWBBFUR08","Urethane Fixed Barbells - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,false,true,false
+"FWBBFUR01","Urethane Fixed Barbells - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,false,true,true
+"FWBBFUR02","Urethane Fixed Barbells - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,false,true,true
+"FWBBFUR03","Urethane Fixed Barbells - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,false,true,true
+"FWBBFUR04","Urethane Fixed Barbells - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,false,true,true
+"FWBBFUR05","Urethane Fixed Barbells - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,false,true,true
+"FWBBFUR06","Urethane Fixed Barbells - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,false,true,true
+"FWBBFUR07","Urethane Fixed Barbells - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,false,true,true
+"FWBBFUR08","Urethane Fixed Barbells - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,false,true,true
 "FWBBFUR11","Urethane Fixed Barbells - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
-"FWBBFUR12","Urethane Fixed Barbells - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,false
+"FWBBFUR12","Urethane Fixed Barbells - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,true
 "FWBBFUR20","Fixed PU Curl Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
-"FWWPOU08","Olympic Urethane Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,2,170,170,32,false,true,false
-"FWWPOU09","Olympic Urethane Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,11,332,332,50,false,true,false
-"FWWPOU10","Olympic Urethane Weight Plates (4 Grip) - 15kg","Weightlifting",122.7273,16,365,365,54,false,true,false
-"FWWPOU11","Olympic Urethane Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,3,210,210,35,false,true,false
-"FWWPOU12","Olympic Urethane Weight Plates (4 Grip) - 20kg","Weightlifting",163.6364,21,410,410,59,false,true,false
-"FWWPOU13","Olympic Urethane Weight Plates (4 Grip) - 25kg","Weightlifting",204.5455,26,435,435,61,false,true,false
-"FWWPOU14","Olympic Urethane Weight Plates (4 Grip) - 5kg","Weightlifting",40.9091,6,260,260,47,false,true,false
-"GWBBFUR01","Fixed PU Straight Barbell - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,false,true,false
-"GWBBFUR02","Fixed PU Straight Barbell - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,false,true,false
-"GWBBFUR03","Fixed PU Straight Barbell - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,false,true,false
-"GWBBFUR04","Fixed PU Straight Barbell - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,false,true,false
-"GWBBFUR05","Fixed PU Straight Barbell - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,false,true,false
-"GWBBFUR06","Fixed PU Straight Barbell - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,false,true,false
-"GWBBFUR07","Fixed PU Straight Barbell - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,false,true,false
-"GWBBFUR08","Fixed PU Straight Barbell - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,false,true,false
-"GWBBFUR09","Fixed PU Straight Barbell - 35kg","Weightlifting",263.6364,36,10.54,1.63,1.63,false,true,false
-"GWBBFUR10","Fixed PU Straight Barbell - 40kg","Weightlifting",300,41,10.54,1.63,1.63,false,true,false
+"FWWPOU08","Olympic Urethane Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,2,170,170,32,false,true,true
+"FWWPOU09","Olympic Urethane Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,11,332,332,50,false,false,false
+"FWWPOU10","Olympic Urethane Weight Plates (4 Grip) - 15kg","Weightlifting",122.7273,16,365,365,54,false,false,false
+"FWWPOU11","Olympic Urethane Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,3,210,210,35,false,true,true
+"FWWPOU12","Olympic Urethane Weight Plates (4 Grip) - 20kg","Weightlifting",163.6364,21,410,410,59,false,false,false
+"FWWPOU13","Olympic Urethane Weight Plates (4 Grip) - 25kg","Weightlifting",204.5455,26,435,435,61,false,false,false
+"FWWPOU14","Olympic Urethane Weight Plates (4 Grip) - 5kg","Weightlifting",40.9091,6,260,260,47,false,false,false
+"GWBBFUR01","Fixed PU Straight Barbell - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,false,true,true
+"GWBBFUR02","Fixed PU Straight Barbell - 12.5kg","Weightlifting",100,14,10.54,1.63,1.63,false,true,true
+"GWBBFUR03","Fixed PU Straight Barbell - 15kg","Weightlifting",118.1818,16,11.6,18.3,18.3,false,true,true
+"GWBBFUR04","Fixed PU Straight Barbell - 17.5kg","Weightlifting",136.3636,19,10.54,1.63,1.63,false,true,true
+"GWBBFUR05","Fixed PU Straight Barbell - 20kg","Weightlifting",154.5455,21,11.7,20.3,20.3,false,true,true
+"GWBBFUR06","Fixed PU Straight Barbell - 22.5kg","Weightlifting",172.7273,24,10.54,1.63,1.63,false,true,true
+"GWBBFUR07","Fixed PU Straight Barbell - 25kg","Weightlifting",190.9091,26,110.8,20.3,20.3,false,true,true
+"GWBBFUR08","Fixed PU Straight Barbell - 30kg","Weightlifting",227.2727,31,113,20.3,20.3,false,true,true
+"GWBBFUR09","Fixed PU Straight Barbell - 35kg","Weightlifting",263.6364,36,10.54,1.63,1.63,false,true,true
+"GWBBFUR10","Fixed PU Straight Barbell - 40kg","Weightlifting",300,41,10.54,1.63,1.63,false,true,true
 "GWBBFUR11","Fixed PU Straight Barbell - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
-"GWBBFUR12","Fixed PU Straight Barbell - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,false
+"GWBBFUR12","Fixed PU Straight Barbell - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,true
 "GWBBFUR13","Fixed PU Straight Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
 "GWBBFUR14","Fixed PU Straight Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
 "GWBBFUR15","Fixed PU Straight Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
@@ -188,11 +188,11 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "GWBBFUR36","Fixed PU Curl Barbell - 45kg","Weightlifting",340.9091,0,0,0,0,false,false,false
 "GWBBFUR37","Fixed PU Curl Barbell - 47.5kg","Weightlifting",359.0864,0,0,0,0,false,false,false
 "GWBBFUR38","Fixed PU Curl Barbell - 50kg","Weightlifting",377.2727,0,0,0,0,false,false,false
-"GWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,false,true,false
-"GWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,false,true,false
-"GWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,false,true,false
-"GWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,false,true,false
-"GWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,false,true,false
+"GWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,false,true,true
+"GWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,false,true,true
+"GWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,false,true,true
+"GWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,false,true,true
+"GWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,false,true,true
 "GWWPCNB06","Pro Bumper Plates - 5kg","Weightlifting",58.1818,0,0,0,0,false,false,false
 "GWWPCNB07","Pro Bumper Plates - 10kg","Weightlifting",78.1818,0,0,0,0,false,false,false
 "GWWPCNB08","Pro Bumper Plates - 15kg","Weightlifting",89.0909,0,0,0,0,false,false,false
@@ -359,8 +359,8 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MEFRDB09","Horizontal Dumbbell Rack - 3 Tier (15 Pair)","Equipment Storage",1813.6364,136,250,50,30,true,true,true
 "MEFRDB10","Horizontal Dumbbell Rack - 2 Tier (5 Pair) 2.0","Equipment Storage",904.5455,68,148,84,30,true,true,true
 "MEFRDB11","Horizontal Dumbbell Rack - 2 Tier (10 Pair) 2.0","Equipment Storage",1309.0909,112,268,84,30,true,true,true
-"MEFRDB14","Horizontal Dumbbell Rack - 3 Tier (10 Pair) 3.0","Equipment Storage",1609.0909,62,1.4,1.07,0.55,false,true,false
-"MEFRDB15","Horizontal Dumbbell Rack - 2 Tier (7 Pair) 3.0","Equipment Storage",1181.8182,9,0.213,0.533,0.711,false,true,false
+"MEFRDB14","Horizontal Dumbbell Rack - 3 Tier (10 Pair) 3.0","Equipment Storage",1609.0909,62,1.4,1.07,0.55,false,true,true
+"MEFRDB15","Horizontal Dumbbell Rack - 2 Tier (7 Pair) 3.0","Equipment Storage",1181.8182,9,0.213,0.533,0.711,false,true,true
 "MEFRKB01","Kettlebell Rack (2 Tier) 2.0","Equipment Storage",522.7273,33,90,80,14,true,true,true
 "MEFRKB02","Kettlebell Rack (2 Tier) 3.0","Equipment Storage",904.5455,53,90,80,14,true,true,true
 "MEFRKB03","Kettlebell Rack (2 Tier) 4.0","Equipment Storage",995.4545,53,90,80,14,true,true,true
@@ -396,7 +396,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MEWMRO01","Battle Rope Storage (Wall Mounted)","Equipment Storage",45.4545,4,32.5,6.5,25,true,true,true
 "MEWMRO02","Rope & Band Rack (Wall Mounted)","Equipment Storage",45.4545,0,0,0,0,false,false,false
 "MFATSY04","Artificial Turf Black (2m x 20m)","Flooring",2250,0,0,0,0,false,false,false
-"MFATSY05","Artificial Turf Green (2m X 15m)","Flooring",1215,90,200,45,45,false,true,false
+"MFATSY05","Artificial Turf Green (2m X 15m)","Flooring",1215,90,200,45,45,false,true,true
 "MFRFRR01","Impact-Lock Rubber Tiles - 20mm","Flooring",53.6364,0,0,0,0,false,false,false
 "MFRFRR03","Impact-Lock Rubber Tiles - 30mm","Flooring",71.8182,0,0,0,0,false,false,false
 "MFRFRR06","Commercial Rubber Tiles - 15mm","Flooring",227.27,9,100,100,1.2,true,true,true
@@ -502,10 +502,10 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MMDBVR16","Virgin Rubber Fixed Dumbbells (Pair) - 45kg","Mixed Implements",531.8182,46,32.2,20.3,20.3,true,true,true
 "MMDBVR17","Virgin Rubber Fixed Dumbbells (Pair) - 47.5kg","Mixed Implements",561.3636,49,32.2,20.3,20.3,true,true,true
 "MMDBVR18","Virgin Rubber Fixed Dumbbells (Pair) - 50kg","Mixed Implements",590.9091,51,32.2,20.3,20.3,true,true,true
-"MMDBVR19","Virgin Rubber Fixed Dumbbells (Pair) - 52.5kg","Mixed Implements",620.45,51,32.2,20.3,20.3,false,true,false
-"MMDBVR20","Virgin Rubber Fixed Dumbbells (Pair) - 55kg","Mixed Implements",650,51,32.2,20.3,20.3,false,true,false
-"MMDBVR21","Virgin Rubber Fixed Dumbbells (Pair) - 57.5kg","Mixed Implements",679.55,51,32.2,20.3,20.3,false,true,false
-"MMDBVR22","Virgin Rubber Fixed Dumbbells (Pair) - 60kg","Mixed Implements",709.09,51,32.2,20.3,20.3,false,true,false
+"MMDBVR19","Virgin Rubber Fixed Dumbbells (Pair) - 52.5kg","Mixed Implements",620.45,51,32.2,20.3,20.3,false,true,true
+"MMDBVR20","Virgin Rubber Fixed Dumbbells (Pair) - 55kg","Mixed Implements",650,51,32.2,20.3,20.3,false,true,true
+"MMDBVR21","Virgin Rubber Fixed Dumbbells (Pair) - 57.5kg","Mixed Implements",679.55,51,32.2,20.3,20.3,false,true,true
+"MMDBVR22","Virgin Rubber Fixed Dumbbells (Pair) - 60kg","Mixed Implements",709.09,51,32.2,20.3,20.3,false,true,true
 "MMDEHG01","High Grip Dead Ball - 6kg","Mixed Implements",36.3636,7,24,24,24,true,true,true
 "MMDEHG02","High Grip Dead Ball - 9kg","Mixed Implements",40.9091,10,24,24,24,true,true,true
 "MMDEHG03","High Grip Dead Ball - 12kg","Mixed Implements",50,13,29,29,29,true,true,true
@@ -612,8 +612,8 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MRSPFW03","Olympic Power Rack 2.0 Weight Plate Storage Rack Only","Rigs & Racks",708.1818,58,0,0,0,true,false,false
 "MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks",1699.0909,196,148,75,23,true,true,true
 "MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks",2053.6364,224,115,42,29,true,true,true
-"MRSPFW06","2-Cell Rack with Storage","Rigs & Racks",2053.6364,224,115,42,29,false,true,false
-"MRSPFW07","Smith Machine","Rigs & Racks",1453.6364,130,230,52,19,false,true,false
+"MRSPFW06","2-Cell Rack with Storage","Rigs & Racks",2053.6364,224,115,42,29,false,true,true
+"MRSPFW07","Smith Machine","Rigs & Racks",1453.6364,130,230,52,19,false,true,true
 "MRSPFW10","Olympic Half Rack 2.0","Rigs & Racks",2718.1825,0,0,0,0,false,false,false
 "MRSPFW11","Olympic Half Rack (Wall Mounted)","Rigs & Racks",2918.1779,0,0,0,0,false,false,false
 "MRSPFW12","Olympic Half Rack with Dead Lift","Rigs & Racks",2877.2736,0,0,0,0,false,false,false
@@ -648,7 +648,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MSCSSE01","Shoulder Press Machine Elite","Strength",3453.6364,365,161.5,75.5,36,true,true,true
 "MSCSSE04","Iso-Lateral Chest Press","Strength",4018.1818,360,160,73,35,true,true,true
 "MSCSSE06","Pec Fly & Rear Delt","Strength",3831.8182,0,0,0,0,false,false,false
-"MSCSSE07","Iso-Lateral Shoulder Press","Strength",4181.8182,296,139.5,114.5,36,false,true,false
+"MSCSSE07","Iso-Lateral Shoulder Press","Strength",4181.8182,296,139.5,114.5,36,false,true,true
 "MSCSSE08","Multi Press","Strength",4290.9091,0,0,0,0,false,false,false
 "MSFTSFS01","Functional Training System 1.0","Rigs & Racks",1590.9091,0,0,0,0,false,false,false
 "MSFTSFS02","Functional Training System 2.0","Rigs & Racks",3813.6364,0,0,0,0,false,false,false
@@ -685,7 +685,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MSWBB07","Olympic Decline Bench","Strength",2563.6351,0,0,0,0,false,false,false
 "MSWBFW01","Flat Utility Weight Bench (Angled Legs)","Strength",386.3636,26,118,52.5,46.2,true,true,true
 "MSWBFW02","Adjustable Utility Weight Bench Pro","Strength",681.8182,39,138,25,47,true,true,true
-"MWBBFR07A","Rubber EZ Fixed Barbells - 27.5kg","Weightlifting",150,26,110.8,20.3,20.3,false,true,false
+"MWBBFR07A","Rubber EZ Fixed Barbells - 27.5kg","Weightlifting",150,26,110.8,20.3,20.3,false,true,true
 "MWBBFRU01","Rubber Fixed Barbells - 10kg","Weightlifting",59.0909,11,105.4,16.3,16.3,true,true,true
 "MWBBFRU02","Rubber Fixed Barbells - 12.5kg","Weightlifting",77.2727,14,10.54,1.63,1.63,true,true,true
 "MWBBFRU03","Rubber Fixed Barbells - 15kg","Weightlifting",90.9091,16,11.6,18.3,18.3,true,true,true
@@ -697,7 +697,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MWBBFRU09","Rubber Fixed Barbells - 35kg","Weightlifting",209.0909,36,10.54,1.63,1.63,true,true,true
 "MWBBFRU10","Rubber Fixed Barbells - 40kg","Weightlifting",236.3636,41,10.54,1.63,1.63,true,true,true
 "MWBBFRZ01","Rubber EZ Fixed Barbells - 10kg","Weightlifting",59.0909,11,105.4,16.3,16.3,true,true,true
-"MWBBFRZ01A","Rubber EZ Fixed Barbells - 7.5kg","Weightlifting",59.0909,11,105.4,16.3,16.3,false,true,false
+"MWBBFRZ01A","Rubber EZ Fixed Barbells - 7.5kg","Weightlifting",59.0909,11,105.4,16.3,16.3,false,true,true
 "MWBBFRZ02","Rubber EZ Fixed Barbells - 12.5kg","Weightlifting",77.2727,14,10.54,1.63,1.63,true,true,true
 "MWBBFRZ03","Rubber EZ Fixed Barbells - 15kg","Weightlifting",90.9091,16,11.6,18.3,18.3,true,true,true
 "MWBBFRZ04","Rubber EZ Fixed Barbells - 17.5kg","Weightlifting",104.5455,19,10.54,1.63,1.63,true,true,true
@@ -705,7 +705,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MWBBFRZ06","Rubber EZ Fixed Barbells - 22.5kg","Weightlifting",136.3636,24,10.54,1.63,1.63,true,true,true
 "MWBBFRZ07","Rubber EZ Fixed Barbells - 25kg","Weightlifting",150,26,110.8,20.3,20.3,true,true,true
 "MWBBFRZ08","Rubber EZ Fixed Barbells - 30kg","Weightlifting",177.2727,31,113,20.3,20.3,true,true,true
-"MWBBFRZ08A","Rubber EZ Fixed Barbells - 32.5kg","Weightlifting",177.2727,31,113,20.3,20.3,false,true,false
+"MWBBFRZ08A","Rubber EZ Fixed Barbells - 32.5kg","Weightlifting",177.2727,31,113,20.3,20.3,false,true,true
 "MWBBFRZ09","Rubber EZ Fixed Barbells - 35kg","Weightlifting",209.0909,36,10.54,1.63,1.63,true,true,true
 "MWBBFRZ10","Rubber EZ Fixed Barbells - 40kg","Weightlifting",236.3636,41,10.54,1.63,1.63,true,true,true
 "MWBBFUR01","Fixed PU Straight Barbell - 10kg","Weightlifting",81.8182,11,105.4,16.3,16.3,true,true,true
@@ -719,7 +719,7 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MWBBFUR09","Fixed PU Straight Barbell - 35kg","Weightlifting",263.6364,36,10.54,1.63,1.63,true,true,true
 "MWBBFUR10","Fixed PU Straight Barbell - 40kg","Weightlifting",300,41,10.54,1.63,1.63,true,true,true
 "MWBBFUR11","Urethane Fixed Barbells - 5kg","Weightlifting",40.9091,0,0,0,0,false,false,false
-"MWBBFUR12","Urethane Fixed Barbells - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,false
+"MWBBFUR12","Urethane Fixed Barbells - 7.5kg","Weightlifting",61.3636,26,110.8,20.3,20.3,false,true,true
 "MWBBFUR13","Fixed PU Straight Barbell - 27.5kg","Weightlifting",213.6364,0,0,0,0,false,false,false
 "MWBBFUR14","Fixed PU Straight Barbell - 32.5kg","Weightlifting",250.003,0,0,0,0,false,false,false
 "MWBBFUR15","Fixed PU Straight Barbell - 37.5kg","Weightlifting",286.3675,0,0,0,0,false,false,false
@@ -802,18 +802,18 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "MWWPCP06","Change Plates - 2kg","Weightlifting",40,0,0,0,0,false,false,false
 "MWWPOPR01","Olympic Premium Rubber Weight Plates (3 Grip) - 1.25kg","Weightlifting",6.3636,2,170,170,32,true,true,true
 "MWWPOPR02","Olympic Premium Rubber Weight Plates (3 Grip) - 2.5kg","Weightlifting",12.7273,3,210,210,35,true,true,true
-"MWWPOPR03","Olympic Premium Rubber Weight Plates (3 Grip) - 5kg","Weightlifting",25.4545,6,260,260,47,true,true,true
-"MWWPOPR04","Olympic Premium Rubber Weight Plates (3 Grip) - 10kg","Weightlifting",50.9091,11,332,332,50,true,true,true
-"MWWPOPR05","Olympic Premium Rubber Weight Plates (3 Grip) - 15kg","Weightlifting",76.3636,16,365,365,54,true,true,true
-"MWWPOPR06","Olympic Premium Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",101.8182,21,410,410,59,true,true,true
-"MWWPOPR07","Olympic Premium Rubber Weight Plates (3 Grip) - 25kg","Weightlifting",127.2727,26,435,435,61,true,true,true
+"MWWPOPR03","Olympic Premium Rubber Weight Plates (3 Grip) - 5kg","Weightlifting",25.4545,6,260,260,47,true,false,false
+"MWWPOPR04","Olympic Premium Rubber Weight Plates (3 Grip) - 10kg","Weightlifting",50.9091,11,332,332,50,true,false,false
+"MWWPOPR05","Olympic Premium Rubber Weight Plates (3 Grip) - 15kg","Weightlifting",76.3636,16,365,365,54,true,false,false
+"MWWPOPR06","Olympic Premium Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",101.8182,21,410,410,59,true,false,false
+"MWWPOPR07","Olympic Premium Rubber Weight Plates (3 Grip) - 25kg","Weightlifting",127.2727,26,435,435,61,true,false,false
 "MWWPOU01","Olympic Urethane Weight Plates (3 Grip) - 1.5kg","Weightlifting",9.0909,2,170,170,32,true,true,true
 "MWWPOU02","Olympic Urethane Weight Plates (3 Grip) - 2.5kg","Weightlifting",18.1818,3,210,210,35,true,true,true
-"MWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",36.3636,6,260,260,47,true,true,true
-"MWWPOU04","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",72.7273,11,332,332,50,true,true,true
-"MWWPOU05","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",109.0909,16,365,365,54,true,true,true
-"MWWPOU06","Olympic Urethane Weight Plates (3 Grip) - 20kg","Weightlifting",145.4545,21,410,410,59,true,true,true
-"MWWPOU07","Olympic Urethane Weight Plates (3 Grip) - 25kg","Weightlifting",181.8182,26,435,435,61,true,true,true
+"MWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",36.3636,6,260,260,47,true,false,false
+"MWWPOU04","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",72.7273,11,332,332,50,true,false,false
+"MWWPOU05","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",109.0909,16,365,365,54,true,false,false
+"MWWPOU06","Olympic Urethane Weight Plates (3 Grip) - 20kg","Weightlifting",145.4545,21,410,410,59,true,false,false
+"MWWPOU07","Olympic Urethane Weight Plates (3 Grip) - 25kg","Weightlifting",181.8182,26,435,435,61,true,false,false
 "MWWPOU08","Olympic PU Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,0,0,0,0,false,false,false
 "MWWPOU09","Olympic PU Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
 "MWWPOU10","Olympic Urethane Weight Plates (4 Grip) - 15kg","Weightlifting",122.7273,0,0,0,0,false,false,false
@@ -917,10 +917,10 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "REWMBER01","Bench & Rower Rack (Wall Mounted)","Equipment Storage",68.1818,7,60.5,7,0,true,false,false
 "RFATSY01","Artificial Turf Black (2m x 10m)","Flooring",1409.0909,43,200,45,45,true,true,true
 "RFATSY02","Artificial Turf Black (2m x 10m) (Custom Branding)","Flooring",1500,43,200,45,45,true,true,true
-"RFATSY03","Artificial Turf Black (2m x 15m)","Flooring",2159.0909,77,15,2,0.05,false,true,false
+"RFATSY03","Artificial Turf Black (2m x 15m)","Flooring",2159.0909,77,15,2,0.05,false,true,true
 "RFATSY04","Artificial Turf Black (2m x 15m) (Custom Branding)","Flooring",2250,0,0,0,0,false,false,false
-"RFATSY05","Artificial Turf Black (2m x 20m)","Astro Turf/Sled Tracks",2050,77,15,2,0.05,false,true,false
-"RFATSY06","Artificial Turf Black (1.4m x 18m) (Custom Branding)","Flooring",2500,43,200,45,45,false,true,false
+"RFATSY05","Artificial Turf Black (2m x 20m)","Astro Turf/Sled Tracks",2050,77,15,2,0.05,false,true,true
+"RFATSY06","Artificial Turf Black (1.4m x 18m) (Custom Branding)","Flooring",2500,43,200,45,45,false,true,true
 "RFATSY07","Artificial Turf Black (2m x 20m) (Custom Branding)","Flooring",2250,0,0,0,0,false,false,false
 "RFDAAS","REVL Freight & Delivery Allowance (AUS)","Other Costs",10500,0,0,0,0,true,false,false
 "RFDASG","REVL Freight & Delivery Allowance (SG)","Other Costs",10500,0,0,0,0,true,false,false
@@ -1176,13 +1176,13 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "SMGFPS02","Group Fitness Barbell Set - 37.5kg","Mixed Implements",268.1818,39,52,26,15.5,true,true,true
 "SMGFPS03","Group Fitness Barbell Set - 17.5kg","Mixed Implements",209.0909,19,52,26,15.5,true,true,true
 "SMGFWTB01","Aerobic Weighted Exercise Bars - 4kg","Mixed Implements",30.91,5,120.5,4.3,4.3,true,true,true
-"SMGFWTB01-1","Aerobic Weighted Exercise Bars - 4kg","Mixed Implements",30.91,5,1205,43,43,true,true,true
+"SMGFWTB01-1","Aerobic Weighted Exercise Bars - 4kg","Mixed Implements",30.91,5,1205,43,43,true,false,false
 "SMGFWTB02","Aerobic Weighted Exercise Bars - 6kg","Mixed Implements",38.18,7,120.5,4.3,4.3,true,true,true
-"SMGFWTB02-1","Aerobic Weighted Exercise Bars - 6kg","Mixed Implements",38.18,7,1205,43,43,true,true,true
+"SMGFWTB02-1","Aerobic Weighted Exercise Bars - 6kg","Mixed Implements",38.18,7,1205,43,43,true,false,false
 "SMGFWTB03","Aerobic Weighted Exercise Bars - 8kg","Mixed Implements",45.45,9,120.5,4.3,4.3,true,true,true
-"SMGFWTB03-1","Aerobic Weighted Exercise Bars - 8kg","Mixed Implements",45.45,9,1205,43,43,true,true,true
+"SMGFWTB03-1","Aerobic Weighted Exercise Bars - 8kg","Mixed Implements",45.45,9,1205,43,43,true,false,false
 "SMGFWTB04","Aerobic Weighted Exercise Bars- 10kg","Mixed Implements",52.73,11,120.5,4.3,4.3,true,true,true
-"SMGFWTB04-1","Aerobic Weighted Exercise Bars - 10kg","Mixed Implements",52.73,11,1205,43,43,true,true,true
+"SMGFWTB04-1","Aerobic Weighted Exercise Bars - 10kg","Mixed Implements",52.73,11,1205,43,43,true,false,false
 "SMKBPGC01","Competition Kettlebell - 6kg (Aluminium)","Mixed Implements",54.5455,7,23,23,31,true,true,true
 "SMKBPGC02","Competition Kettlebell - 8kg","Mixed Implements",63.6364,9,23,23,31,true,true,true
 "SMKBPGC03","Competition Kettlebell - 10kg","Mixed Implements",72.7273,11,23,23,31,true,true,true
@@ -1313,11 +1313,11 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "SWWPCB03","Coloured Bumper Plates - 15kg","Weightlifting",77.2727,16,46,46,5.8,true,true,true
 "SWWPCB04","Coloured Bumper Plates - 20kg","Weightlifting",95.4545,21,46,46,6.9,true,true,true
 "SWWPCB05","Coloured Bumper Plates - 25kg","Weightlifting",118.1818,26,46,46,7.9,true,true,true
-"SWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,false,true,false
-"SWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,false,true,false
-"SWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,false,true,false
-"SWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,false,true,false
-"SWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,false,true,false
+"SWWPCNB01","Competition Bumper Plates - 5kg","Weightlifting",100,6,46,46,3.6,false,true,true
+"SWWPCNB02","Competition Bumper Plates - 10kg","Weightlifting",131.8182,11,46,46,4.5,false,true,true
+"SWWPCNB03","Competition Bumper Plates - 15kg","Weightlifting",168.1818,16,46,46,5.8,false,true,true
+"SWWPCNB04","Competition Bumper Plates - 20kg","Weightlifting",204.5455,21,46,46,6.9,false,true,true
+"SWWPCNB05","Competition Bumper Plates - 25kg","Weightlifting",240.9091,26,46,46,7.9,false,true,true
 "SWWPCNB06","Pro Bumper Plates - 5kg","Weightlifting",58.1818,6,46,46,3.6,true,true,true
 "SWWPCNB07","Pro Bumper Plates - 10kg","Weightlifting",78.1818,11,46,46,4.5,true,true,true
 "SWWPCNB08","Pro Bumper Plates - 15kg","Weightlifting",89.0909,16,46,46,5.8,true,true,true
@@ -1327,18 +1327,18 @@ code,name,group,price,weight_kg,length_cm,width_cm,height_cm,has_woo_product,mea
 "SWWPCP02","Change Plates - 2.5kg","Weightlifting",41.8182,3,22,22,13.5,true,true,true
 "SWWPOPR01","Olympic Premium Rubber Weight Plates (3 Grip) - 1.25kg","Weightlifting",6.3636,2,170,170,32,true,true,true
 "SWWPOPR02","Olympic Premium Rubber Weight Plates (3 Grip) - 2.5kg","Weightlifting",12.7273,3,210,210,35,true,true,true
-"SWWPOPR03","Olympic Premium Rubber Weight Plates (3 Grip) - 5kg","Weightlifting",25.4545,6,260,260,47,true,true,true
-"SWWPOPR04","Olympic Premium Rubber Weight Plates (3 Grip) - 10kg","Weightlifting",50.9091,11,332,332,50,true,true,true
-"SWWPOPR05","Olympic Premium Rubber Weight Plates (3 Grip) - 15kg","Weightlifting",76.3636,16,365,365,54,true,true,true
-"SWWPOPR06","Olympic Premium Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",101.8182,21,410,410,59,true,true,true
-"SWWPOPR07","Olympic Premium Rubber Weight Plates (3 Grip) - 25kg","Weightlifting",127.2727,26,435,435,61,true,true,true
+"SWWPOPR03","Olympic Premium Rubber Weight Plates (3 Grip) - 5kg","Weightlifting",25.4545,6,260,260,47,true,false,false
+"SWWPOPR04","Olympic Premium Rubber Weight Plates (3 Grip) - 10kg","Weightlifting",50.9091,11,332,332,50,true,false,false
+"SWWPOPR05","Olympic Premium Rubber Weight Plates (3 Grip) - 15kg","Weightlifting",76.3636,16,365,365,54,true,false,false
+"SWWPOPR06","Olympic Premium Rubber Weight Plates (3 Grip) - 20kg","Weightlifting",101.8182,21,410,410,59,true,false,false
+"SWWPOPR07","Olympic Premium Rubber Weight Plates (3 Grip) - 25kg","Weightlifting",127.2727,26,435,435,61,true,false,false
 "SWWPOU01","Olympic Urethane Weight Plates (3 Grip) - 1.5kg","Weightlifting",9.0909,2,170,170,32,true,true,true
 "SWWPOU02","Olympic Urethane Weight Plates (3 Grip) - 2.5kg","Weightlifting",18.1818,3,210,210,35,true,true,true
-"SWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",36.3636,6,260,260,47,true,true,true
-"SWWPOU04","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",72.7273,11,332,332,50,true,true,true
-"SWWPOU05","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",109.0909,16,365,365,54,true,true,true
-"SWWPOU06","Olympic Urethane Weight Plates (3 Grip) - 20kg","Weightlifting",145.4545,21,410,410,59,true,true,true
-"SWWPOU07","Olympic Urethane Weight Plates (3 Grip) - 25kg","Weightlifting",181.8182,26,435,435,61,true,true,true
+"SWWPOU03","Olympic Urethane Weight Plates (3 Grip) - 5kg","Weightlifting",36.3636,6,260,260,47,true,false,false
+"SWWPOU04","Olympic Urethane Weight Plates (3 Grip) - 10kg","Weightlifting",72.7273,11,332,332,50,true,false,false
+"SWWPOU05","Olympic Urethane Weight Plates (3 Grip) - 15kg","Weightlifting",109.0909,16,365,365,54,true,false,false
+"SWWPOU06","Olympic Urethane Weight Plates (3 Grip) - 20kg","Weightlifting",145.4545,21,410,410,59,true,false,false
+"SWWPOU07","Olympic Urethane Weight Plates (3 Grip) - 25kg","Weightlifting",181.8182,26,435,435,61,true,false,false
 "SWWPOU08","Olympic PU Weight Plates (4 Grip) - 1.25kg","Weightlifting",10.2273,0,0,0,0,false,false,false
 "SWWPOU09","Olympic PU Weight Plates (4 Grip) - 10kg","Weightlifting",81.8182,0,0,0,0,false,false,false
 "SWWPOU11","Olympic PU Weight Plates (4 Grip) - 2.5kg","Weightlifting",20.4545,0,0,0,0,false,false,false

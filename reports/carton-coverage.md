@@ -21,15 +21,53 @@ in the catalogue; it is a tripwire under every basket it can join.
 | | | |
 |---|---|---|
 | Sellable products | 1345 | |
-| **Can complete a card checkout** | **614** | 46% |
-| Missing carton data | 648 | 48% |
+| **Can complete a card checkout** | **657** | 49% |
+| Missing carton data | 688 | 51% |
 | Missing a WooCommerce product | 557 | 41% |
-| Missing both | 474 | 35% |
-| Has a product but no carton | 174 | 13% |
+| Missing both | 485 | 36% |
+| Has a product but no carton | 203 | 15% |
 
 ⚠️ Counts every sellable ERP code, including brands the public site does not list
 (it is a brand allowlist). Treat these as the ceiling on the problem, not its
 size.
+
+## The cheapest carton data available: fix the unit, not the tape
+
+40 products carry dimensions that cannot be real — over 3m on a side or
+over 3 cubic metres. **40 of them become an ordinary carton when divided by
+ten**, which means the measurement was taken and typed into the wrong unit. No
+tape measure required.
+
+| code | recorded as | almost certainly | product |
+|---|---|---|---|
+| `ABPBSB04` | 850 x 1000 x 305 | 85.0 x 100.0 x 30.5 | Foam Plyometric Box - 12" |
+| `AMDEHG02` | 240 x 240 x 240 | 24.0 x 24.0 x 24.0 | High Grip Dead Ball - 6kg |
+| `AMDEHG03` | 240 x 240 x 240 | 24.0 x 24.0 x 24.0 | High Grip Dead Ball - 9kg |
+| `AMDEHG04` | 290 x 290 x 290 | 29.0 x 29.0 x 29.0 | High Grip Dead Ball - 12kg |
+| `AMDEHG05` | 290 x 290 x 290 | 29.0 x 29.0 x 29.0 | High Grip Dead Ball - 15kg |
+| `AMKBUR01` | 220 x 220 x 290 | 22.0 x 22.0 x 29.0 | Urethane Competition Kettlebell - 8kg |
+| `AMKBUR02` | 220 x 220 x 290 | 22.0 x 22.0 x 29.0 | Urethane Competition Kettlebell - 10kg |
+| `AMKBUR03` | 220 x 220 x 290 | 22.0 x 22.0 x 29.0 | Urethane Competition Kettlebell - 12kg |
+| `AMKBUR04` | 220 x 220 x 290 | 22.0 x 22.0 x 29.0 | Urethane Competition Kettlebell - 16kg |
+| `AMKBUR05` | 220 x 220 x 290 | 22.0 x 22.0 x 29.0 | Urethane Competition Kettlebell - 20kg |
+| `AMKBUR06` | 220 x 220 x 290 | 22.0 x 22.0 x 29.0 | Urethane Competition Kettlebell - 24kg |
+| `FWWPOU09` | 332 x 332 x 50 | 33.2 x 33.2 x 5.0 | Olympic Urethane Weight Plates (4 Grip)  |
+| `FWWPOU10` | 365 x 365 x 54 | 36.5 x 36.5 x 5.4 | Olympic Urethane Weight Plates (4 Grip)  |
+| `FWWPOU12` | 410 x 410 x 59 | 41.0 x 41.0 x 5.9 | Olympic Urethane Weight Plates (4 Grip)  |
+| `FWWPOU13` | 435 x 435 x 61 | 43.5 x 43.5 x 6.1 | Olympic Urethane Weight Plates (4 Grip)  |
+
+## Is there carton data left in WooCommerce worth rescuing?
+
+Short answer for the decommissioning question: **almost none.**
+
+| | |
+|---|---|
+| Dimensions the snapshot has and the ERP does not | **18** |
+| Weights the snapshot has and the ERP does not | **19** |
+
+The unmeasured products are unmeasured in BOTH systems. Nobody has ever measured
+them, so switching WooCommerce off loses nothing here — and no extraction job
+will conjure the numbers.
 
 ## The carton gap, split by what is actually missing
 
@@ -49,36 +87,36 @@ measuring job rather than 72.
 | Premium Rubber Hex Dumbbell | 72 |
 | Rubber Hex Dumbbell | 71 |
 | Fixed PU Curl Barbell | 46 |
+| High Grip Dead Ball | 20 |
 | PU Dumbbells (Pair) | 20 |
 | Custom | 19 |
 | Olympic PU Weight Plates (4 Grip) | 17 |
-| High Grip Dead Ball | 16 |
 | Fixed PU Straight Barbell | 15 |
+| Urethane Competition Kettlebell | 14 |
 | Power Bands | 12 |
 | Urethane Fixed Dumbbells (Pair) | 11 |
 | Pro Bumper Plates | 11 |
+| Olympic Premium Rubber Weight Plates (3 Grip) | 10 |
+| Olympic Urethane Weight Plates (3 Grip) | 10 |
 | Competition Kettlebell | 10 |
 | Urethane Kettlebell | 10 |
 | Impact-Lock Rubber Tiles | 8 |
-| Urethane Competition Kettlebell | 8 |
 | Station Markers (Set of 15) | 7 |
+| Olympic Urethane Weight Plates (4 Grip) | 7 |
 | Micro Bands | 6 |
-| Olympic Barbell | 5 |
-| Change Plates | 5 |
-| CONCEPT 2 | 4 |
 
 ## By product group
 
 | group | sellable | card-ready | no carton | no Woo product |
 |---|---|---|---|---|
-| Mixed Implements | 480 | 212 (44%) | 240 | 161 |
-| Weightlifting | 333 | 164 (49%) | 128 | 150 |
-| Equipment Storage | 131 | 105 (80%) | 24 | 19 |
-| Body Weight | 122 | 71 (58%) | 47 | 28 |
-| Strength | 73 | 14 (19%) | 58 | 58 |
+| Mixed Implements | 480 | 226 (47%) | 254 | 161 |
+| Weightlifting | 333 | 180 (54%) | 153 | 150 |
+| Equipment Storage | 131 | 107 (82%) | 24 | 19 |
+| Body Weight | 122 | 74 (61%) | 48 | 28 |
+| Strength | 73 | 15 (21%) | 58 | 58 |
 | Apparel | 64 | 0 (0%) | 64 | 62 |
-| Rigs & Racks | 50 | 20 (40%) | 28 | 21 |
-| Flooring | 34 | 11 (32%) | 19 | 22 |
+| Rigs & Racks | 50 | 22 (44%) | 28 | 21 |
+| Flooring | 34 | 15 (44%) | 19 | 22 |
 | Cardio | 24 | 12 (50%) | 12 | 11 |
 | Other Costs | 22 | 0 (0%) | 22 | 19 |
 | Lighting | 6 | 4 (67%) | 2 | 2 |

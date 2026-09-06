@@ -40,6 +40,16 @@ const nextConfig: NextConfig = {
       { source: "/equipment", destination: "/all-equipment", permanent: true },
       { source: "/home", destination: "/", permanent: true },
 
+      // FOUND BY THE 404 LOG, 2026-09-06 — the first thing it caught within
+      // minutes of going live. Both are WordPress-era URLs that the outside
+      // world still asks for: `/about` is the page every site is assumed to
+      // have, and `/sample-page` is WordPress's own default, which means it was
+      // published and indexed at some point. Neither was linked from here, so
+      // neither was visible from inside the site — exactly the blind spot
+      // src/lib/not-found-log.ts exists to cover.
+      { source: "/about", destination: "/our-story", permanent: true },
+      { source: "/sample-page", destination: "/", permanent: true },
+
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been
       // answering 404 ever since: 69 `/product-category/<slug>` archives (the
