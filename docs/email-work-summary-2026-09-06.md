@@ -1,6 +1,7 @@
 # Work summary email — 6 September 2026
 
 **Draft. Not sent.** No recipient set. Attach `reports/unshippable-products.xlsx`.
+Figures refreshed against live Unleashed on 2026-09-06 at 19:40.
 
 ---
 
@@ -77,31 +78,50 @@ bad quote, it removed a working sales path from the most valuable things we sell
 - **Apparel stays**, measured or not. It ships in a satchel, and a satchel has
   known dimensions, so it quotes without anyone touching Unleashed.
 
-Where that leaves us today: **284 product pages are live, and 353 of 493 sellable
-items — 72% — can be bought and delivered online right now.**
+Where that leaves us today, counted across everything Unleashed lists as
+sellable and priced (1,347 products):
 
-**The attached spreadsheet is the measurement backlog: 33 products missing a
-weight or a dimension.** Some are hidden by the rule above; the expensive ones are
-still on the site for enquiry. Either way they cannot be bought online until
-somebody enters the numbers.
+| | |
+|---|---|
+| **fully measured** - freight quotes automatically at checkout | **694 (52%)** |
+| over $500 and unmeasured - on the site, priced by us on enquiry | 122 |
+| under $500 and unmeasured - hidden for now | 531 |
 
-The good news is that it is a smaller job than 33 sounds:
+**284 product pages are live on the site.** One page usually covers a range, so
+that is fewer pages than products.
 
-- **3 need only a height** — including the C2 Rower and C2 Ski Erg
+**I want to be straight that this is a bigger job than it first looked.** My
+earlier note said 33 products were affected. That was the count of what a
+customer could see and not buy; the real measurement backlog across the ERP is
+**653 products**, and it is concentrated in Mixed Implements (244),
+Weightlifting (128), Apparel (64) and Strength (58).
+
+**The attached spreadsheet is the 33 that matter most** - the ones already on the
+site that a customer can reach. They are the place to start, and the good news is
+that most need very little:
+
+- **3 need only a height** - including the C2 Rower and C2 Ski Erg
 - **2 need only their dimensions**, 1 needs only a length
 - 27 need a weight and all three dimensions
 
 The rows needing one or two measurements are shaded green in the sheet. Entering
-the values in Unleashed — Weight, and Width/Depth/Height — puts the product back
-on the site automatically.
+the values in Unleashed - Weight, and Width/Depth/Height - makes the product
+quote automatically, usually within the hour.
 
 Worth knowing what is on that list: the **C2 Rower ($1,250)** and **C2 Ski Erg
 ($1,200)** are both there, and both need a single measurement.
 
-We also found a batch of products whose dimensions had been entered in
-**millimetres in a centimetre field** — a 12-inch foam box recorded as 850 x 1000
-x 305, which the system read as 259 cubic metres. Those are corrected and an
-import file is ready for Unleashed. No measuring required, just the unit.
+## Two batches already fixed, with no measuring required
+
+**36 products had their carton entered in millimetres in a centimetre field** - a
+12-inch foam box recorded as 850 x 1000 x 305, which the system read as 259 cubic
+metres and which made any basket containing it impossible to price. Those are
+corrected in Unleashed.
+
+**A further 13 cartons and 19 weights were recovered from the old WooCommerce
+data**, where a measurement existed that Unleashed had never been given - the
+All-In-One Trainer, two Olympic Power Racks, the rubber tile range, the acoustic
+underlay. Nobody had to go and measure anything; the numbers were already there.
 
 ## Under the hood
 
@@ -126,8 +146,10 @@ Michael
 ## Before sending
 
 - [ ] Set the recipients. Steve and Gaetana, based on `docs/email-steve-gaetana-update.md`?
-- [ ] Attach `reports/unshippable-products.xlsx` (regenerate if the catalogue has
-      changed — the list is derived, not typed).
+- [ ] Attach `reports/unshippable-products.xlsx`. It is the 33 site-visible
+      products, NOT the 653-product ERP backlog, and the email now says so.
+      Regenerate it if the catalogue has moved — the list is derived, not typed,
+      and 36 millimetre fixes plus 13 recovered cartons have landed since.
 - [x] The visibility rule is live in production (`HIDE_UNSHIPPABLE=true`, with the
       $500 enquiry threshold). The section above describes what actually shipped.
 - [ ] The Easyship-versus-$145 comparison is honest but it is also our walk-away
