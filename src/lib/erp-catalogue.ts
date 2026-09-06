@@ -148,6 +148,33 @@ function codeIsShippable(code: string, entry: UnleashedEntry): boolean {
 
 const hideUnshippable = () => process.env.HIDE_UNSHIPPABLE === "true";
 
+// AN UNMEASURED PRODUCT IS NOT ALWAYS WORTH HIDING (Michael, 2026-09-06).
+//
+// Hiding everything unmeasured also hid the flagship equipment - a $9,299
+// massage rolling machine, an $8,775 functional training system, $6,485 power
+// racks. Those were never going to quote online anyway: they are pallet freight,
+// and they sold through the quote flow, where a person prices delivery. Hiding
+// them did not protect anyone from a bad quote, it removed a working sales path
+// from the most valuable things in the catalogue.
+//
+// So the rule is about VALUE, not about measurement alone. Above the threshold a
+// customer enquires and a human answers, which is the right handling for a
+// nine-thousand-dollar machine whether or not anyone has measured its carton.
+// Below it, an unmeasured accessory is just a tripwire: it cannot be bought, and
+// nobody is going to send an enquiry about a $20 strap.
+//
+// A PRODUCT WITH NO PRICE IS ALWAYS KEPT. Price 0 means "contact for pricing" -
+// it could never reach card checkout, so it was already enquiry-only, and hiding
+// it removed the only path it ever had.
+const DEFAULT_ENQUIRE_ABOVE = 500;
+const enquireAbove = (): number => {
+  const v = parseFloat(process.env.HIDE_UNSHIPPABLE_BELOW ?? "");
+  return Number.isFinite(v) && v >= 0 ? v : DEFAULT_ENQUIRE_ABOVE;
+};
+
+/** Worth keeping on the site for an enquiry even though freight cannot be quoted. */
+const worthAnEnquiry = (price: number) => price <= 0 || price >= enquireAbove();
+
 const SEP = " - ";
 
 // Garment sizes. Apparel is named "Sweatshirt (Unisex) (L)" rather than
@@ -240,7 +267,7 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
     if (EXCLUDED_GROUPS.has(entry.group)) continue;
     // Drop the individual SIZE, not the whole range: a rack that is measured in
     // three sizes and not in a fourth should still sell the three.
-    if (hideUnshippable() && !codeIsShippable(code, entry)) continue;
+    if (hideUnshippable() && !codeIsShippable(code, entry) && !worthAnEnquiry(entry.price)) continue;
     const { name, size } = splitUnitName(entry.name, entry.brand);
     if (!name) continue;
     // NUL-joined, not space-joined: "Mixed Implements" and "Rubber Hex

@@ -81,3 +81,42 @@ describe("hiding unshippable products from the ERP catalogue", () => {
     expect([...erpUnits(m).values()].some((u) => u.name === "Broken Carton")).toBe(false);
   });
 });
+
+// Hiding everything unmeasured also hid a $9,299 machine that was only ever
+// going to sell through an enquiry. The rule is about value, not measurement.
+describe("what is worth an enquiry", () => {
+  const saved = { ...process.env };
+  afterEach(() => {
+    process.env = { ...saved };
+  });
+
+  const one = (price: number) =>
+    ({ MBIG: entry("Massage Rolling Machine", { ...unmeasured, price }) }) as unknown as UnleashedMap;
+
+  it("keeps an expensive unmeasured product for enquiry", async () => {
+    process.env.HIDE_UNSHIPPABLE = "true";
+    const { erpUnits } = await import("@/lib/erp-catalogue");
+    expect(erpUnits(one(9299)).size).toBe(1);
+  });
+
+  it("hides a cheap unmeasured product", async () => {
+    process.env.HIDE_UNSHIPPABLE = "true";
+    const { erpUnits } = await import("@/lib/erp-catalogue");
+    expect(erpUnits(one(20)).size).toBe(0);
+  });
+
+  // Price 0 is "contact for pricing" — it could never reach card checkout, so
+  // hiding it removed the only path it ever had.
+  it("always keeps a product with no price", async () => {
+    process.env.HIDE_UNSHIPPABLE = "true";
+    const { erpUnits } = await import("@/lib/erp-catalogue");
+    expect(erpUnits(one(0)).size).toBe(1);
+  });
+
+  it("lets the threshold be moved without a code change", async () => {
+    process.env.HIDE_UNSHIPPABLE = "true";
+    process.env.HIDE_UNSHIPPABLE_BELOW = "10";
+    const { erpUnits } = await import("@/lib/erp-catalogue");
+    expect(erpUnits(one(20)).size).toBe(1);
+  });
+});
