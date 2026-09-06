@@ -14,9 +14,20 @@ import {
 } from "@/lib/woocommerce";
 import { skuAliases } from "@/lib/unleashed-aliases";
 import { getRange } from "@/lib/ranges";
+import erpImageOverrides from "@/lib/erp-image-overrides.json";
 
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
+
+// 214 ERP photos were shot on white (or an off-shade grey) rather than on the
+// #e6e6e6 the shop's product tiles are painted, so `object-contain` rendered
+// them as a white box floating inside a grey tile. scripts/normalize-erp-bg.py
+// repaints those backdrops into /public/erp-bg/ and records the local path
+// here; the rest keep their Unleashed CDN URL. Keyed by UPPERCASE ProductCode,
+// which is how `map` is keyed, so the swap happens as the map is built and
+// every consumer of `entry.image` — the grid, ranges.ts, the variant picker —
+// gets the corrected file without knowing this exists.
+const IMAGE_OVERRIDES = erpImageOverrides as Record<string, string>;
 
 // The ERP record the site actually uses. Price and stock were the whole of it
 // until 2026-09-02, when ranges started being built from Unleashed rather than
@@ -136,9 +147,13 @@ async function buildMap(): Promise<UnleashedMap> {
     (p) => {
       if (!p.ProductCode) return;
       const price = parseFloat(String(p.DefaultSellPrice ?? "0"));
+      const code = p.ProductCode.toUpperCase();
       const image =
-        p.Images?.find((i) => i.IsDefault)?.Url ?? p.Images?.[0]?.Url ?? p.ImageUrl;
-      map[p.ProductCode.toUpperCase()] = {
+        IMAGE_OVERRIDES[code] ??
+        p.Images?.find((i) => i.IsDefault)?.Url ??
+        p.Images?.[0]?.Url ??
+        p.ImageUrl;
+      map[code] = {
         price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
         stock: 0,
         name: p.ProductDescription?.trim() || undefined,
@@ -186,8 +201,12 @@ async function buildMap(): Promise<UnleashedMap> {
 // show. Lower it again if stock accuracy starts mattering more than the wait.
 // KEY IS VERSIONED. The entry shape changed when name/image/brand were added;
 // a warm cache under the old key would return entries with no `name`, and every
-// range would silently come back empty. Bump the suffix whenever the shape does.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v6"], {
+// range would silently come back empty. Bump the suffix whenever the shape does
+// — or whenever a FIELD'S VALUE is rewritten at build time, as v7 did when the
+// repainted /erp-bg images started overriding `image`: the entries are shaped
+// the same, so nothing breaks, but a warm v6 cache keeps serving the white
+// backdrops for the full hour and the fix looks like it did not deploy.
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v7"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });

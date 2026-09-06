@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { erpUnits } from "@/lib/erp-catalogue";
+import { servedCodes } from "@/lib/erp-catalogue";
 import { getUnleashedMap } from "@/lib/unleashed";
 
 // Which lines in a cart are no longer sold.
@@ -13,10 +13,16 @@ import { getUnleashedMap } from "@/lib/unleashed";
 //
 // That is exactly what happened with `MMBXG01` Cotton Inners on 2026-09-06.
 //
-// SERVABILITY IS THE ERP'S ANSWER NOW. A code is sold if it appears in some unit
-// erpUnits() builds, which is the same function the listings, the product pages
-// and the sitemap use - so this cannot disagree with what the customer can
-// actually open.
+// SERVABILITY IS THE ERP'S ANSWER NOW. A code is sold if servedCodes() holds
+// it, which is built from the same two sources the listings are - the ERP units
+// behind /equipment, and the snapshot pages behind Clearance - so this cannot
+// disagree with what the customer can actually open.
+//
+// IT WAS erpUnits() ALONE UNTIL 2026-09-06, AND THAT EMPTIED LIVE BASKETS.
+// erpUnits is brand-filtered and Clearance deliberately is not, so every
+// clearance line was reported unavailable and dropped on the next page load -
+// AMKBUR01, AWWPCP01 and ABCTDR01 among them, all three sellable and on sale.
+// See servedCodes.
 //
 // FAILS OPEN, DELIBERATELY. If the ERP cannot be reached this returns nothing
 // unavailable rather than guessing, because emptying somebody's basket over a
@@ -45,10 +51,7 @@ export async function POST(request: Request) {
     // An empty map means the ERP did not answer. Fail open.
     if (Object.keys(map).length === 0) return NextResponse.json({ unavailable: [] });
 
-    const served = new Set<string>();
-    for (const unit of erpUnits(map).values()) {
-      for (const code of unit.codes) served.add(code.toUpperCase());
-    }
+    const served = servedCodes(map);
 
     const unavailable = skus.filter((s) => !served.has(s.trim().toUpperCase()));
     return NextResponse.json({ unavailable });

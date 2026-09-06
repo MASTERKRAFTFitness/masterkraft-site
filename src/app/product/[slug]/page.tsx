@@ -20,7 +20,7 @@ import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
-import { sizesFromCodes } from "@/lib/ranges";
+import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
@@ -132,9 +132,21 @@ export default async function ProductPage({
   // THE SIZES COME FROM UNLEASHED, and from the SAME unit the category card was
   // built from, so a card and the page it opens can never disagree about what is
   // in the range. sizesFromCodes is the one place a size row is made.
-  const sizes = unit ? sizesFromCodes(unit.codes, unleashed) : [];
+  //
+  // A RANGE THE ERP CATALOGUE DOES NOT OWN IS STILL A RANGE. Clearance is
+  // ex-display third-party stock, served from the snapshot with the brand filter
+  // off (lib/categories.ts), so its pages get no ErpUnit — and six of them
+  // rendered with no picker at all: the Air Locker kettlebells offered one
+  // "From $80.00" button for what the ERP holds as six separately priced sizes,
+  // and the hex dumbbells did it for twenty-one.
+  //
+  // getRange is the fallback because it is what the CARD for these pages has
+  // always used (see enrichCard) — which is also why the card said "From $44.00"
+  // while the page it opened said "From $80.00", the bundle plugin's figure.
+  const range = unit ? null : getRange(product, unleashed);
+  const sizes = unit ? sizesFromCodes(unit.codes, unleashed) : (range?.sizes ?? []);
 
-  const variants: Variant[] = (unit?.isRange ? sizes : []).map((s) => ({
+  const variants: Variant[] = ((unit ? unit.isRange : !!range) ? sizes : []).map((s) => ({
     id: s.wooVariationId ?? -hashCode(s.code),
     code: s.code,
     label: s.label,
@@ -308,7 +320,7 @@ export default async function ProductPage({
           <div className="mt-7">
             {usesVariants ? (
               <VariantSelector
-                productName={unit?.name ?? product.name}
+                productName={unit?.name ?? range?.name ?? product.name}
                 productSlug={product.slug}
                 variants={variants}
               />
@@ -418,7 +430,7 @@ export default async function ProductPage({
             the picker rather than shoving them below 26 rows. */}
         {usesVariants && (
           <SizeTable
-            productName={unit?.name ?? product.name}
+            productName={unit?.name ?? range?.name ?? product.name}
             productSlug={product.slug}
             variants={variants}
           />

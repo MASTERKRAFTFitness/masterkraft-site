@@ -22,6 +22,7 @@
     "mirror:remaining": "node scripts/mirror-remaining-images.mjs",
     "dedupe:images": "node scripts/dedupe-product-images.mjs",
     "compress:assets": "python3 scripts/compress-assets.py",
+    "normalize:erp-bg": "python3 scripts/normalize-erp-bg.py",
     "report:specs": "vitest run --config vitest.reports.config.mts scripts/spec-gaps.report.ts",
     "report:freight": "vitest run --config vitest.reports.config.mts scripts/interparcel-samples.report.ts",
     "report:all": "vitest run --config vitest.reports.config.mts",

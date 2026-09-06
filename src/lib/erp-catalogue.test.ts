@@ -6,12 +6,15 @@ import {
   ERP_GROUPS,
   erpSubgroups,
   erpUnits,
+  pageCodes,
   searchErpUnits,
+  servedCodes,
   slugify,
   unitCard,
   unitDescription,
 } from "@/lib/erp-catalogue";
 import type { UnleashedMap } from "@/lib/unleashed";
+import { allProducts } from "@/lib/catalogue";
 
 type Row = [code: string, name: string, price: number, group: string, brand?: string, sub?: string];
 
@@ -305,5 +308,65 @@ describe("a unit describes itself when the snapshot has no words for it", () => 
       erp([["MBCTMA03", "Multi Adjustable Bench With A Deliberately Very Long Product Name Indeed That Runs On", 900, "Strength"]])
     );
     expect(unitDescription([...units.values()][0]).length).toBeLessThanOrEqual(155);
+  });
+});
+
+// CLEARANCE IS SOLD AND IS IN NO UNIT. These lock the gap that emptied live
+// baskets on 2026-09-06: erpUnits is brand-filtered, Clearance is deliberately
+// not, and everything that asked erpUnits alone called live stock retired.
+describe("what the site still sells", () => {
+  const clearance = (): UnleashedMap =>
+    erp([
+      ["AMKBUR01", "Urethane Competition Kettlebell - 8kg", 44, "Mixed Implements", "AIR LOCKER"],
+      ["AMKBUR02", "Urethane Competition Kettlebell - 10kg", 57.5, "Mixed Implements", "AIR LOCKER"],
+      ["AMKBUR06", "Urethane Competition Kettlebell - 24kg", 115, "Mixed Implements", "AIR LOCKER"],
+      ["ABPBMS01", "Plyometric Box - 30cm (Steel)", 250, "Body Weight", "AIR LOCKER"],
+      ["ABPBMS02", "Plyometric Box - 45cm (Steel)", 280, "Body Weight", "AIR LOCKER"],
+      ["MMDBRH01", "Rubber Hex Dumbbell - 1kg", 5, "Mixed Implements"],
+      ["MMDBRH02", "Rubber Hex Dumbbell - 2kg", 9, "Mixed Implements"],
+    ]);
+
+  it("keeps clearance stock its own brand rule excludes from every unit", () => {
+    const map = clearance();
+    const units = erpUnits(map);
+    // Air Locker is not one of ours, so it earns no card - that part is correct.
+    expect([...units.values()].some((u) => u.brand === "AIR LOCKER")).toBe(false);
+    // It is still on sale at /equipment/clearance, so the cart must not drop it.
+    const served = servedCodes(map);
+    expect(served.has("AMKBUR01")).toBe(true);
+    expect(served.has("AMKBUR06")).toBe(true);
+    expect(served.has("MMDBRH01")).toBe(true);
+    expect(served.has("MMDBRH99")).toBe(false);
+  });
+
+  it("reads a container page's sizes off the ERP, not off its own SKU", () => {
+    // AMKBUR-GROUP is a WooCommerce bundle. Unleashed has never held it, and
+    // never will; what it holds is the six kettlebells behind it.
+    const map = clearance();
+    const page = allProducts().find((p) => p.sku === "AMKBUR-GROUP")!;
+    expect(pageCodes(page, map)).toEqual(["AMKBUR01", "AMKBUR02", "AMKBUR06"]);
+    expect(servedCodes(map).has("AMKBUR-GROUP")).toBe(false);
+  });
+
+  it("matches a store SKU that drifted from its code by hyphens only", () => {
+    const map = clearance();
+    const page = allProducts().find((p) => p.sku === "ABPBMS-01")!;
+    expect(pageCodes(page, map)).toEqual(["ABPBMS01"]);
+  });
+
+  it("does not resolve a page onto a code the ERP has retired", () => {
+    // Both plyometric box pages sell codes Unleashed marks IsObsoleted.
+    const map = clearance();
+    map["ABPBMS01"] = { ...map["ABPBMS01"], sellable: false };
+    const page = allProducts().find((p) => p.sku === "ABPBMS-01")!;
+    expect(pageCodes(page, map)).toEqual([]);
+  });
+
+  it("refuses to squash a WooCommerce duplicate suffix onto the wrong product", () => {
+    // ABPBMS-01-1 is the 45cm page, made by copying the 30cm one. Squashing the
+    // suffix away would sell a 45cm box at the 30cm box's code and price.
+    const map = clearance();
+    const page = allProducts().find((p) => p.sku === "ABPBMS-01-1")!;
+    expect(pageCodes(page, map)).toEqual([]);
   });
 });

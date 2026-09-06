@@ -23,9 +23,9 @@
 // from ERP data alone.
 import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
-import { anchorCodes, compareSizeLabels } from "@/lib/ranges";
+import { anchorCodes, compareSizeLabels, getRange } from "@/lib/ranges";
 import { defaultCartonFor } from "@/lib/freight";
-import { filterListable, formatPrice, type WcProduct } from "@/lib/woocommerce";
+import { filterListable, formatPrice, isBrandSku, type WcProduct } from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
 
 export type ErpUnit = {
@@ -518,4 +518,84 @@ function hash(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return Math.abs(h) || 1;
+}
+
+// WHAT THE CART MAY KEEP, WHICH IS NOT WHAT erpUnits() HOLDS.
+//
+// erpUnits IS the ERP catalogue, and it is brand-filtered to MK, Concept 2 and
+// NO BRAND. Clearance is deliberately built the other way — ex-display
+// third-party stock, listed straight from the frozen snapshot with the brand
+// filter OFF (see lib/categories.ts). So a clearance product is sold by this
+// site and absent from every unit, and anything that asks erpUnits "do we still
+// sell this?" gets told no about live stock.
+//
+// /api/cart/check asked exactly that, and emptied clearance lines out of
+// people's baskets on the next page load: production reported AMKBUR01,
+// AWWPCP01 and ABCTDR01 unavailable on 2026-09-06 while all three were
+// sellable, non-obsolete, and on sale at /equipment/clearance.
+//
+// So servability is: IN A UNIT, OR OFFERED BY A PAGE WE STILL SERVE.
+
+const isClearancePage = (p: WcProduct) =>
+  (p.categories ?? []).some((c) => c.slug === "clearance");
+
+/**
+ * The snapshot pages the site still serves: the brand allowlist, plus Clearance,
+ * which runs with the brand filter off. The same two rules the listings use —
+ * see getAllProductsByCategory's `brandFilter` and lib/categories.
+ */
+function servedPages(): WcProduct[] {
+  return filterListable(allProducts()).filter((p) => isBrandSku(p.sku) || isClearancePage(p));
+}
+
+// THE SNAPSHOT'S SKU IS NOT ALWAYS THE ERP'S CODE. Two clearance pages carry a
+// hand-typed store SKU that drifted from the code Unleashed holds — `ABPBMS-01`
+// against `ABPBMS01`, `ABPBSB-06` against `ABPBSB06`. Only the hyphens differ,
+// so removing them matches.
+//
+// `ABPBMS-01-1` IS NOT RESCUED THIS WAY, AND MUST NOT BE. That trailing `-1` is
+// WooCommerce's duplicate-SKU suffix, from someone copying the 30cm box to make
+// the 45cm page — squashing it would point a 45cm page at the 30cm box's code,
+// which is the wrong price and the wrong thing picked in the warehouse. It
+// squashes to ABPBMS011, matches nothing, and stays unresolved until somebody
+// corrects it at one end or the other.
+//
+// SELLABLE ONLY, like getRange above it. Both plyometric box pages sell codes
+// Unleashed has since retired (ABPBMS01 and ABPBMS02 are IsObsoleted), and
+// resolving one of those would put a retired product back into a basket - the
+// exact failure this whole path exists to prevent.
+function erpCodeFor(sku: string | undefined, map: UnleashedMap): string | undefined {
+  const live = (code: string) => !!map[code] && map[code].sellable !== false;
+  const raw = sku?.trim().toUpperCase();
+  if (!raw) return undefined;
+  if (live(raw)) return raw;
+  const squashed = raw.replace(/-/g, "");
+  return live(squashed) ? squashed : undefined;
+}
+
+/**
+ * The ERP codes a snapshot page can put in a cart: its range's sizes when it is
+ * a range, otherwise its own code.
+ *
+ * getRange is used rather than the page's SKU because the SKU of a range page is
+ * a WooCommerce CONTAINER — `AMKBUR-GROUP` is a bundle, `AMDBRH` a variable
+ * parent — and neither is a product Unleashed has ever held.
+ */
+export function pageCodes(product: WcProduct, map: UnleashedMap): string[] {
+  const range = getRange(product, map);
+  if (range) return range.sizes.map((s) => s.code.toUpperCase());
+  const own = erpCodeFor(product.sku, map);
+  return own ? [own] : [];
+}
+
+/** Every ERP code the site can still sell, from either source. */
+export function servedCodes(map: UnleashedMap): Set<string> {
+  const served = new Set<string>();
+  for (const unit of erpUnits(map).values()) {
+    for (const code of unit.codes) served.add(code.toUpperCase());
+  }
+  for (const page of servedPages()) {
+    for (const code of pageCodes(page, map)) served.add(code);
+  }
+  return served;
 }
