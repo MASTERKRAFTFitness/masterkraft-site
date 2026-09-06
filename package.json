@@ -38,6 +38,8 @@
     "report:ranges": "node scripts/range-report.mjs",
     "load:content": "vitest run --config vitest.reports.config.mts scripts/content.load.ts",
     "load:content:write": "CONTENT_LOAD_WRITE=true vitest run --config vitest.reports.config.mts scripts/content.load.ts",
+    "mirror:erp": "vitest run --config vitest.reports.config.mts scripts/erp-mirror.load.ts",
+    "mirror:erp:write": "ERP_MIRROR_WRITE=true vitest run --config vitest.reports.config.mts scripts/erp-mirror.load.ts",
     "report:copy": "vitest run --config vitest.reports.config.mts scripts/erp-copy.report.ts",
     "report:dimensions": "vitest run --config vitest.reports.config.mts scripts/erp-dimensions.report.ts",
     "report:orphans": "vitest run --config vitest.reports.config.mts scripts/snapshot-orphans.report.ts",
