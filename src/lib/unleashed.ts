@@ -3,6 +3,7 @@
 // Pagination is PATH-based: /Products/{page}?pageSize=200 (a ?page= param is ignored).
 import crypto from "crypto";
 import { unstable_cache } from "next/cache";
+import type { Gallery } from "@/lib/product-gallery";
 import {
   formatPrice,
   getBundleFromPrice,
@@ -345,8 +346,46 @@ const isSnapshotImage = (src?: string) =>
  * Returns the product UNTOUCHED when the ERP has no photograph for it, so this
  * can be applied at every surface without auditing which products it will hit.
  */
-export function withErpImages<T extends WcProduct>(product: T, map: UnleashedMap): T {
-  if (!(product.images ?? []).some((i) => isSnapshotImage(i.src))) return product;
+/**
+ * The extra angles held for a code in Supabase, if any.
+ *
+ * Resolved the same way lookupBySku resolves a price, so a product whose SKU
+ * the ERP knows under an alias finds its gallery too. A `-GROUP` container has
+ * no ERP code at all and is keyed on the WooCommerce SKU itself — that is the
+ * case the table mainly exists for.
+ */
+function galleryFor(gallery: Gallery, sku?: string): string[] {
+  const up = (sku ?? "").trim().toUpperCase();
+  if (!up) return [];
+  return gallery[up] ?? gallery[skuAliases[up] ?? ""] ?? [];
+}
+
+export function withErpImages<T extends WcProduct>(
+  product: T,
+  map: UnleashedMap,
+  gallery: Gallery = {}
+): T {
+  // Supabase holds what the ERP structurally cannot: a SECOND photograph for a
+  // code, and any photograph at all for a `-GROUP` container. It never leads —
+  // these sit behind the ERP's own picture — so they are resolved first but
+  // placed last. See supabase/migrations/20260908_product_images.sql.
+  const extra = galleryFor(gallery, product.sku);
+
+  // A product carrying no snapshot photography has nothing to swap: an ErpUnit
+  // from unitAsProduct is ERP-sourced already. It can still gain extra angles,
+  // though, so this returns early only when there is genuinely nothing to add —
+  // and returns the SAME OBJECT when so, which is what lets the callers apply
+  // this blind at every surface.
+  if (!(product.images ?? []).some((i) => isSnapshotImage(i.src))) {
+    if (!extra.length) return product;
+    const already = new Set((product.images ?? []).map((i) => i.src));
+    const add = extra.filter((src) => !already.has(src));
+    if (!add.length) return product;
+    return {
+      ...product,
+      images: [...(product.images ?? []), ...add.map((src) => ({ src, alt: product.name }))],
+    };
+  }
 
   const erp: string[] = [];
   const push = (src?: string) => {
@@ -364,16 +403,24 @@ export function withErpImages<T extends WcProduct>(product: T, map: UnleashedMap
   // disagrees with. It is also what turns one parent photo into one per size.
   for (const size of getRange(product, map)?.sizes ?? []) push(size.image);
 
-  if (erp.length === 0) return product;
+  // NOTHING FROM EITHER SOURCE MEANS KEEP WHAT IT HAS. 12 live pages are in
+  // this state — `-GROUP` containers the ERP has no record of — and a blank
+  // tile is worse than an off-shade backdrop. Supabase is how those get a
+  // picture, so once a row exists for one it stops falling through here.
+  if (erp.length === 0 && extra.length === 0) return product;
 
   // Anything that was never WordPress photography stays, and stays behind the
   // ERP's. Today that is nothing on the snapshot path; it is here so a future
   // hand-added image is not silently dropped.
   const kept = (product.images ?? []).filter((i) => !isSnapshotImage(i.src));
+  const seen = new Set(erp);
   return {
     ...product,
     images: [
       ...erp.map((src) => ({ src, alt: product.name })),
+      // Deduplicated against the ERP's, so a curated row that happens to repeat
+      // the default photograph does not show it twice.
+      ...extra.filter((src) => !seen.has(src)).map((src) => ({ src, alt: product.name })),
       ...kept,
     ],
   };

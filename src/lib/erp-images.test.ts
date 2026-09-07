@@ -153,6 +153,65 @@ describe("withErpImages", () => {
     expect(out.images.map((i) => i.src)).toEqual(["erp/1kg.jpg", "/hand-added.jpg"]);
   });
 
+  // ------------------------------------------------- the Supabase gallery
+  //
+  // The third source, for the two things Unleashed structurally cannot hold: a
+  // SECOND photograph for a code, and any photograph at all for a `-GROUP`
+  // container that is not an ERP code. It never leads over the ERP's own.
+
+  it("puts the gallery BEHIND the ERP's photograph, never in front", () => {
+    const map = erp([["MMDBRH01", "Rubber Hex Dumbbell - 1kg", "erp/1kg.jpg"]]);
+    const out = withErpImages(product("MMDBRH01", [WOO]), map, {
+      MMDBRH01: ["/product-bg/MMDBRH01-2.jpg"],
+    });
+    expect(out.images.map((i) => i.src)).toEqual(["erp/1kg.jpg", "/product-bg/MMDBRH01-2.jpg"]);
+  });
+
+  it("gives a -GROUP container a picture when the ERP has none — the whole point", () => {
+    // MBASADJ-GROUP is a WooCommerce bundle container. It is not an Unleashed
+    // ProductCode, so no upload can ever give it a photograph; without this it
+    // keeps its WordPress one forever.
+    const out = withErpImages(product("MBASADJ-GROUP", [WOO]), {}, {
+      "MBASADJ-GROUP": ["/product-images/MBASADJ-1.jpg"],
+    });
+    expect(out.images.map((i) => i.src)).toEqual(["/product-images/MBASADJ-1.jpg"]);
+  });
+
+  it("still keeps the snapshot photograph when neither source has anything", () => {
+    // The original guard, unchanged by the third source.
+    expect(withErpImages(product("SWWPOPR"), {}, {}).images[0].src).toBe(WOO);
+  });
+
+  it("does not show one photograph twice when the gallery repeats the ERP's", () => {
+    const map = erp([["MMDBRH01", "Rubber Hex Dumbbell - 1kg", "erp/1kg.jpg"]]);
+    const out = withErpImages(product("MMDBRH01", [WOO]), map, {
+      MMDBRH01: ["erp/1kg.jpg", "/product-bg/MMDBRH01-2.jpg"],
+    });
+    expect(out.images.map((i) => i.src)).toEqual(["erp/1kg.jpg", "/product-bg/MMDBRH01-2.jpg"]);
+  });
+
+  it("resolves the gallery through the alias map, like the price does", () => {
+    const map = erp([["MMDBRH01", "Rubber Hex Dumbbell - 1kg", "erp/1kg.jpg"]]);
+    const out = withErpImages(product("SCRWAR04", [WOO]), map, {
+      C2ROWERG: ["/product-bg/C2ROWERG-2.jpg"],
+    });
+    expect(out.images.some((i) => i.src === "/product-bg/C2ROWERG-2.jpg")).toBe(true);
+  });
+
+  it("adds angles to an ERP-sourced product that carries no snapshot photography", () => {
+    // An ErpUnit from unitAsProduct never had a WordPress URL, so the swap has
+    // nothing to do — but it can still gain a second angle.
+    const p = product("MMDBRH01", ["erp/1kg.jpg"]);
+    const out = withErpImages(p, {}, { MMDBRH01: ["/product-bg/MMDBRH01-2.jpg"] });
+    expect(out.images.map((i) => i.src)).toEqual(["erp/1kg.jpg", "/product-bg/MMDBRH01-2.jpg"]);
+  });
+
+  it("returns the SAME OBJECT when the gallery adds nothing to such a product", () => {
+    const p = product("MMDBRH01", ["erp/1kg.jpg"]);
+    expect(withErpImages(p, {}, {})).toBe(p);
+    expect(withErpImages(p, {}, { MMDBRH01: ["erp/1kg.jpg"] })).toBe(p);
+  });
+
   it("never emits a wp-content URL once the ERP has answered", () => {
     const map = erp([["MMDBRH01", "Rubber Hex Dumbbell - 1kg", "erp/1kg.jpg"]]);
     const out = withErpImages(product("MMDBRH01", [WOO, WOO2]), map);

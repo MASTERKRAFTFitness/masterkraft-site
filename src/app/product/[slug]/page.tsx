@@ -16,6 +16,7 @@ import {
   type WcProduct,
 } from "@/lib/woocommerce";
 import { getUnleashedMap, enrich, enrichCard, lookupBySku, withErpImages, type EnrichedProduct } from "@/lib/unleashed";
+import { getGallery } from "@/lib/product-gallery";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
@@ -56,10 +57,13 @@ export async function generateMetadata({
   // it off the snapshot pointed every share at the WordPress photograph while
   // the page itself showed the ERP's. It is the same cached map the body awaits
   // on this request, so this costs a cache read, not a second catalogue build.
-  const unleashed = await getUnleashedMap().catch(() => ({}));
+  const [unleashed, gallery] = await Promise.all([
+    getUnleashedMap().catch(() => ({})),
+    getGallery(),
+  ]);
   const unit = wooProduct ? undefined : erpUnitBySlug(unleashed, slug);
   const p = wooProduct
-    ? withErpImages(wooProduct, unleashed)
+    ? withErpImages(wooProduct, unleashed, gallery)
     : unit && unitAsProduct(unit);
   if (!p) return { title: "Product" };
   return {
@@ -98,7 +102,10 @@ export default async function ProductPage({
   // segment in Suspense, which flushes the shell - and a 200 - before this line
   // runs, turning every 404 into a SOFT 404 (404 body, 200 status) that Google
   // would happily index. Re-adding a skeleton here brings that back.
-  const unleashed = await getUnleashedMap().catch(() => ({}));
+  const [unleashed, gallery] = await Promise.all([
+    getUnleashedMap().catch(() => ({})),
+    getGallery(),
+  ]);
   const wooProduct = await getProductBySlug(slug).catch(() => null);
   const unit = erpUnitBySlug(unleashed, slug);
   if (!wooProduct && !unit) {
@@ -111,7 +118,9 @@ export default async function ProductPage({
   // The ERP's photography, in place of the snapshot's WordPress URLs. A no-op
   // for a unit — unitAsProduct is ERP-sourced already — and a no-op for the
   // products the ERP has no photograph of. See withErpImages.
-  const product = wooProduct ? withErpImages(wooProduct, unleashed) : unitAsProduct(unit!);
+  const product = wooProduct
+    ? withErpImages(wooProduct, unleashed, gallery)
+    : withErpImages(unitAsProduct(unit!), unleashed, gallery);
 
   const cat = product.categories?.[0];
 
@@ -247,7 +256,7 @@ export default async function ProductPage({
     const others = filterBrandSku(rel?.data ?? [])
       .filter((p) => p.id !== product.id)
       .slice(0, 4)
-      .map((p) => withErpImages(p, unleashed));
+      .map((p) => withErpImages(p, unleashed, gallery));
     related = await Promise.all(
       others.map(async (p) => ({ product: p, enriched: await enrichCard(p, unleashed) }))
     );

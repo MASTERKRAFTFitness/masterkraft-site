@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { searchProducts } from "@/lib/woocommerce";
 import { getUnleashedMap, withErpImages } from "@/lib/unleashed";
+import { getGallery } from "@/lib/product-gallery";
 
 // Lightweight typeahead: product name/slug/image only (no pricing, for speed).
 export async function GET(request: Request) {
@@ -13,8 +14,11 @@ export async function GET(request: Request) {
     // this is a cache read; on the cold instance that has to build it the
     // suggestions arrive late rather than wrong, and an outright failure still
     // falls through to the snapshot's own image rather than dropping the row.
-    const unleashed = await getUnleashedMap().catch(() => ({}));
-    const results = data.map((p) => withErpImages(p, unleashed)).map((p) => ({
+    const [unleashed, gallery] = await Promise.all([
+      getUnleashedMap().catch(() => ({})),
+      getGallery(),
+    ]);
+    const results = data.map((p) => withErpImages(p, unleashed, gallery)).map((p) => ({
       slug: p.slug,
       name: p.name,
       image: p.images?.[0]?.src ?? null,
