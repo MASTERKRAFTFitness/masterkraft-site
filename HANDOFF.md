@@ -817,10 +817,24 @@ carton data and so recur until someone acts - and a rejection naming no field at
 all still mails, because that is one we have never seen and 6 September is the
 argument for being woken.
 
-**NOT FIXED: the cooldown is still an in-memory `Map`.** It needs a table and a
-migration applied to production, which is a separate decision. It matters less
-now that the repeating alert was the false one; what remains is a genuine outage
-mailing once per cold lambda instead of once per six hours.
+**FIXED for 3 as well.** The cooldown now lives in Postgres:
+`freight_alert_cooldown`, one row per carrier+kind, claimed through
+`claim_freight_alert()` in a single conditional upsert so two lambdas noticing
+the same dead carrier cannot both decide they are first. The in-memory `Map` is
+kept in front of it as a fast path, so a warm instance answers without a database
+round trip on a checkout request.
+
+**It fails open, deliberately, in three places** - no Supabase configured, the
+database unreachable, or the migration not applied. All three send the mail. A
+duplicate is a nuisance; an alerter that goes silent because a SECOND system is
+down goes silent exactly when things are broken.
+
+`suppressed_since_last` counts what it swallowed, because otherwise a quiet inbox
+and a broken alerter look identical.
+
+**THE MIGRATION MUST BE APPLIED BEFORE THE CODE DEPLOYS**, or rather: it can be
+applied after, and until it is the alerter simply behaves as it did before.
+`supabase/migrations/20260907_freight_alert_cooldown.sql`.
 
 **And find out who the alerts go to.** The recipient is
 `FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` and `.env.local` sets neither to Steve,

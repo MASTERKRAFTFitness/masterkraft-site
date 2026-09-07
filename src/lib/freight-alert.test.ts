@@ -1,5 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { classifyFailure, clearAlertHistory, reportCarrierFailure } from "@/lib/freight-alert";
+
+// The durable cooldown. Unconfigured by default, which is how local dev and
+// every test above it behave: no database, so the claim always succeeds and the
+// in-process Map is the only gate.
+type RpcResult = { data: boolean | null; error: { message: string } | null };
+const rpc = vi.fn(async (): Promise<RpcResult> => ({ data: true, error: null }));
+let dbConfigured = false;
+vi.mock("@/lib/admin-db", () => ({
+  adminDb: () => (dbConfigured ? { rpc } : null),
+  adminDbConfigured: () => dbConfigured,
+}));
+
+const { classifyFailure, clearAlertHistory, reportCarrierFailure } = await import("@/lib/freight-alert");
 
 // The router fails soft, so a carrier dropping out is invisible from the
 // outside. That is correct for a customer and dangerous for us: the Easyship
@@ -86,6 +98,9 @@ describe("alerting a human", () => {
     process.env.QUOTE_FROM_EMAIL = "site@masterkraft.com";
     process.env.FREIGHT_ALERT_EMAIL = "michael@masterkraft.com";
     sent = [];
+    dbConfigured = false;
+    rpc.mockClear();
+    rpc.mockImplementation(async () => ({ data: true, error: null }));
     clearAlertHistory();
     vi.spyOn(console, "error").mockImplementation(() => {});
     globalThis.fetch = (async (_url: string, init: RequestInit) => {
@@ -162,6 +177,71 @@ describe("alerting a human", () => {
     }) as unknown as typeof fetch;
     expect(() => reportCarrierFailure("Easyship", "API usage limit exceeded")).not.toThrow();
     await settle();
+  });
+
+  // THE COOLDOWN DOES NOT SURVIVE A COLD START, which is the bug. The Map above
+  // is per instance, so on Vercel "one mail per six hours" was one per lambda.
+  // A fresh instance is exactly what clearAlertHistory() simulates.
+  describe("the cooldown that outlives the instance", () => {
+    it("does not re-send after a cold start when the database says no", async () => {
+      dbConfigured = true;
+      reportCarrierFailure("Easyship", "API usage limit exceeded");
+      await settle();
+      expect(sent).toHaveLength(1);
+
+      // A new lambda: empty Map, same problem, same six-hour window.
+      clearAlertHistory();
+      rpc.mockImplementation(async () => ({ data: false, error: null }));
+      reportCarrierFailure("Easyship", "API usage limit exceeded");
+      await settle();
+      expect(sent).toHaveLength(1);
+    });
+
+    it("asks Postgres with the carrier, the kind and the window", async () => {
+      dbConfigured = true;
+      process.env.FREIGHT_ALERT_COOLDOWN_MINUTES = "30";
+      reportCarrierFailure("Australia Post", "HTTP 401: unauthorized");
+      await settle();
+      expect(rpc).toHaveBeenCalledWith("claim_freight_alert", {
+        p_carrier: "Australia Post",
+        p_kind: "auth",
+        p_cooldown_seconds: 1800,
+      });
+    });
+
+    // A duplicate mail is a nuisance. An alerter that goes quiet because a
+    // SECOND system is down goes quiet exactly when things are broken.
+    it("sends anyway when the cooldown table cannot be reached", async () => {
+      dbConfigured = true;
+      rpc.mockImplementation(async () => {
+        throw new Error("supabase unreachable");
+      });
+      reportCarrierFailure("Easyship", "API usage limit exceeded");
+      await settle();
+      expect(sent).toHaveLength(1);
+    });
+
+    it("sends anyway when the migration has not been applied", async () => {
+      dbConfigured = true;
+      rpc.mockImplementation(async () => ({
+        data: null,
+        error: { message: "function claim_freight_alert does not exist" },
+      }));
+      reportCarrierFailure("Easyship", "API usage limit exceeded");
+      await settle();
+      expect(sent).toHaveLength(1);
+    });
+
+    // Nothing about the durable claim may reach a carrier that is fine, or a
+    // cart that simply cannot be carried.
+    it("never asks about a failure it would not mail about", async () => {
+      dbConfigured = true;
+      reportCarrierFailure("Easyship", "ECONNREFUSED");
+      reportCarrierFailure("Easyship", "The request body content is not valid. No shipping solutions available based on the information provided");
+      await settle();
+      expect(rpc).not.toHaveBeenCalled();
+      expect(sent).toHaveLength(0);
+    });
   });
 
   it("logs even when email is not configured", async () => {

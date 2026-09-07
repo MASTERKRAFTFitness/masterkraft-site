@@ -30,16 +30,36 @@
 // fault Easyship names lives in `details`, not in the wrapper. An alerter that
 // cries outage over one cart is one nobody reads by the time it is right.
 //
+// THE COOLDOWN LIVES IN THE DATABASE, and the Map below is only a fast path.
+// A module-scope Map is the right answer for one long-lived process and the
+// wrong one on Vercel: every cold lambda starts empty, so "one mail per problem
+// per six hours" was really one per problem per INSTANCE. See
+// supabase/migrations/20260907_freight_alert_cooldown.sql.
+//
+// IT FAILS OPEN. If the database is unreachable, or not configured at all, the
+// alert is sent. A duplicate mail is a nuisance; an alerter that goes quiet
+// because a second system is down is the failure this whole file exists to
+// prevent, and it would go quiet at exactly the moment things are broken.
+//
 // NEVER BLOCKS A QUOTE. Every call here is fire-and-forget and swallows its own
 // errors. An alerting system that can slow down or break a checkout is worse
 // than no alerting system.
+
+import { adminDb } from "@/lib/admin-db";
 
 /** How long to stay quiet after alerting about the same thing. */
 const DEFAULT_COOLDOWN_MINUTES = 360; // 6 hours
 
 export type CarrierFailure = "quota" | "auth" | "config" | "consignment" | "transient";
 
-/** Last time each carrier+kind was emailed about, so a busy hour sends one mail. */
+/**
+ * Last time THIS INSTANCE emailed about each carrier+kind.
+ *
+ * Not the cooldown - `claimAlert` is. This only saves a database round trip on
+ * an instance that has already been told no, and on a warm one it does most of
+ * the work. It is deliberately kept even though the durable claim is
+ * authoritative: the alerting path must stay cheap on a checkout request.
+ */
 const lastAlerted = new Map<string, number>();
 
 const cooldownMs = (): number => {
@@ -112,6 +132,38 @@ export function classifyFailure(detail: string): CarrierFailure {
   return "transient";
 }
 
+/**
+ * Claim the right to send this alert, across every instance at once.
+ *
+ * Returns true when nobody has mailed about this carrier+kind inside the
+ * cooldown. The decision is made by Postgres in a single statement, so two
+ * lambdas noticing the same dead carrier cannot both decide they are first.
+ *
+ * FAILS OPEN, twice over: no database configured (local dev, and the site's
+ * posture everywhere else that Supabase is optional) and a database that errors
+ * both return true. See the note at the top of the file.
+ */
+async function claimAlert(carrier: string, kind: CarrierFailure): Promise<boolean> {
+  const db = adminDb();
+  if (!db) return true;
+  try {
+    const { data, error } = await db.rpc("claim_freight_alert", {
+      p_carrier: carrier,
+      p_kind: kind,
+      p_cooldown_seconds: cooldownMs() / 1000,
+    });
+    // A missing migration should be loud in the log and harmless to the alert.
+    if (error) {
+      console.error("[freight-alert] cooldown unavailable, sending anyway", error.message);
+      return true;
+    }
+    return data !== false;
+  } catch (e) {
+    console.error("[freight-alert] cooldown unavailable, sending anyway", e instanceof Error ? e.message : e);
+    return true;
+  }
+}
+
 async function email(subject: string, body: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.QUOTE_FROM_EMAIL;
@@ -177,13 +229,18 @@ export function reportCarrierFailure(carrier: string, detail: string): void {
         `npm run check:carriers`;
 
   // Fire and forget. A checkout must never wait on an alert, and an alert that
-  // fails must never surface as a freight error.
-  void email(subject, body).catch((e) =>
+  // fails must never surface as a freight error - so the durable claim happens
+  // in here rather than above, where awaiting it would put a database round trip
+  // in front of a customer's freight quote.
+  void (async () => {
+    if (!(await claimAlert(carrier, kind))) return;
+    await email(subject, body);
+  })().catch((e) =>
     console.error("[freight-alert] could not send", e instanceof Error ? e.message : e)
   );
 }
 
-/** For tests. */
+/** For tests. Clears the in-process fast path only; the durable claim is in Postgres. */
 export function clearAlertHistory(): void {
   lastAlerted.clear();
 }
