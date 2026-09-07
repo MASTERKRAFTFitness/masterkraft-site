@@ -46,6 +46,7 @@
     "report:copy": "vitest run --config vitest.reports.config.mts scripts/erp-copy.report.ts",
     "report:dimensions": "vitest run --config vitest.reports.config.mts scripts/erp-dimensions.report.ts",
     "report:orphans": "vitest run --config vitest.reports.config.mts scripts/snapshot-orphans.report.ts",
+    "report:unshippable": "vitest run --config vitest.reports.config.mts scripts/unshippable.report.ts",
     "report:punchlist": "vitest run --config vitest.reports.config.mts scripts/erp-punchlist.report.ts",
     "build:redirects": "vitest run --config vitest.reports.config.mts scripts/legacy-redirects.report.ts",
     "check:redirects": "CHECK=1 vitest run --config vitest.reports.config.mts scripts/legacy-redirects.report.ts"
