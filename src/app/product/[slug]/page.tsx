@@ -15,7 +15,7 @@ import {
   formatPrice,
   type WcProduct,
 } from "@/lib/woocommerce";
-import { getUnleashedMap, enrich, enrichCard, lookupBySku, type EnrichedProduct } from "@/lib/unleashed";
+import { getUnleashedMap, enrich, enrichCard, lookupBySku, withErpImages, type EnrichedProduct } from "@/lib/unleashed";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
@@ -51,10 +51,16 @@ export async function generateMetadata({
   // on pages the sitemap advertises. The ERP is only consulted when the snapshot
   // has nothing, so a snapshot-backed page keeps the words it has always had.
   const wooProduct = await getProductBySlug(slug).catch(() => null);
-  const unit = wooProduct
-    ? undefined
-    : erpUnitBySlug(await getUnleashedMap().catch(() => ({})), slug);
-  const p = wooProduct ?? (unit && unitAsProduct(unit));
+  // THE MAP IS NOW READ EITHER WAY, where it used to be consulted only when the
+  // snapshot had nothing. og:image is what a shared link renders as, and reading
+  // it off the snapshot pointed every share at the WordPress photograph while
+  // the page itself showed the ERP's. It is the same cached map the body awaits
+  // on this request, so this costs a cache read, not a second catalogue build.
+  const unleashed = await getUnleashedMap().catch(() => ({}));
+  const unit = wooProduct ? undefined : erpUnitBySlug(unleashed, slug);
+  const p = wooProduct
+    ? withErpImages(wooProduct, unleashed)
+    : unit && unitAsProduct(unit);
   if (!p) return { title: "Product" };
   return {
     title: `${p.name}`,
@@ -102,7 +108,10 @@ export default async function ProductPage({
     after(() => recordNotFound(`/product/${encodeURIComponent(slug)}`));
     notFound();
   }
-  const product = wooProduct ?? unitAsProduct(unit!);
+  // The ERP's photography, in place of the snapshot's WordPress URLs. A no-op
+  // for a unit — unitAsProduct is ERP-sourced already — and a no-op for the
+  // products the ERP has no photograph of. See withErpImages.
+  const product = wooProduct ? withErpImages(wooProduct, unleashed) : unitAsProduct(unit!);
 
   const cat = product.categories?.[0];
 
@@ -235,7 +244,10 @@ export default async function ProductPage({
       .map(unitCard);
   } else if (cat) {
     const rel = await getProductsByCategory(cat.id, { perPage: 24 }).catch(() => null);
-    const others = filterBrandSku(rel?.data ?? []).filter((p) => p.id !== product.id).slice(0, 4);
+    const others = filterBrandSku(rel?.data ?? [])
+      .filter((p) => p.id !== product.id)
+      .slice(0, 4)
+      .map((p) => withErpImages(p, unleashed));
     related = await Promise.all(
       others.map(async (p) => ({ product: p, enriched: await enrichCard(p, unleashed) }))
     );

@@ -296,6 +296,89 @@ export function lookupBySku(map: UnleashedMap, sku?: string): UnleashedEntry | n
   return alias ? map[alias] ?? null : null;
 }
 
+// ------------------------------------------------------- WordPress -> the ERP
+//
+// THE PHOTOGRAPHY COMES FROM UNLEASHED NOW. The listing grids already read it,
+// because they are built from ErpUnits (see erp-catalogue.ts). Every other
+// surface still renders a SNAPSHOT product where WooCommerce has a page for it,
+// and the snapshot carries the old WordPress URLs — so the product page's
+// gallery, its og:image and JSON-LD image, the related strip and the typeahead
+// all still pointed at masterkraft.com/wp-content/uploads while the card that
+// opened them showed the ERP's picture. 512 snapshot products were doing that.
+//
+// THE RULE IS "ONLY WHERE THE ERP HAS ONE". 26 live products have a WordPress
+// photograph and no ERP photograph at all — mostly the S-prefixed SNAP twins of
+// MasterKraft ranges — and a blanket swap would leave those pages with no
+// picture, which is worse than an off-shade backdrop. They keep what they have
+// until the ERP is given a photograph for them; `npm run report:wooimages`
+// lists them and is how that set is re-measured.
+//
+// THE DEFAULT IMAGE ONLY, NEVER the ERP's Images[] array. Around 125 products
+// were converted to a matched backdrop by hand, and each KEPT ITS ORIGINAL as a
+// second attachment so the change reverts in one click. Rendering the array
+// would put every one of those originals — the white boxes the conversion
+// removed — back into the gallery beside the corrected file.
+const isWordPressImage = (src?: string) => !!src && /\/wp-content\/uploads\//.test(src);
+
+// WooCommerce photography served out of /public, which is most of it now.
+// product-image-overrides.json swaps both of these in BEFORE this runs, so by
+// the time a snapshot product gets here its wp-content URLs are already local
+// paths — matching the WordPress host alone would let nearly all of it through.
+//
+//   /product-images/  scripts/mirror-product-images.mjs. The same photographs,
+//                     rehosted to get the catalogue off the dead WordPress host.
+//   /product-bg/      scripts/normalize-product-bg.py. The same photographs
+//                     again, recoloured onto a matched backdrop.
+//
+// Rehosting and recolouring change where a picture is served from and what
+// colour sits behind it. Neither makes it the ERP's photograph, so both are
+// snapshot photography and an ERP photograph replaces them on the same terms.
+// Leaving either behind shows one product twice, once from each source — which
+// is what 142 live pages were doing, gallery and og:image disagreeing.
+const isSnapshotImage = (src?: string) =>
+  isWordPressImage(src) ||
+  (!!src && (src.startsWith("/product-bg/") || src.startsWith("/product-images/")));
+
+/**
+ * A snapshot product's WordPress photography, replaced by the ERP's own.
+ *
+ * Returns the product UNTOUCHED when the ERP has no photograph for it, so this
+ * can be applied at every surface without auditing which products it will hit.
+ */
+export function withErpImages<T extends WcProduct>(product: T, map: UnleashedMap): T {
+  if (!(product.images ?? []).some((i) => isSnapshotImage(i.src))) return product;
+
+  const erp: string[] = [];
+  const push = (src?: string) => {
+    if (src && !erp.includes(src)) erp.push(src);
+  };
+
+  // The product's own code first — for a single product that is the whole
+  // answer, and for a range it is the size the card and the picker open on.
+  push(lookupBySku(map, product.sku)?.image);
+
+  // Then every size, in the picker's order. A `-GROUP` SKU is a WooCommerce
+  // bundle container and is not an ERP code at all, so this is the ONLY thing
+  // that resolves it — and it resolves it the same way the size picker on that
+  // page already does, so a gallery cannot show a photograph the dropdown
+  // disagrees with. It is also what turns one parent photo into one per size.
+  for (const size of getRange(product, map)?.sizes ?? []) push(size.image);
+
+  if (erp.length === 0) return product;
+
+  // Anything that was never WordPress photography stays, and stays behind the
+  // ERP's. Today that is nothing on the snapshot path; it is here so a future
+  // hand-added image is not silently dropped.
+  const kept = (product.images ?? []).filter((i) => !isSnapshotImage(i.src));
+  return {
+    ...product,
+    images: [
+      ...erp.map((src) => ({ src, alt: product.name })),
+      ...kept,
+    ],
+  };
+}
+
 // ---------------------------------------------------------------- live reads
 //
 // getUnleashedMap above is a 60-minute snapshot of the WHOLE catalogue, and that
