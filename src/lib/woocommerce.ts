@@ -209,9 +209,11 @@ function isUnservable(p: Retirable): boolean {
 // rower and ski erg at $1,250 and $1,200. Set HIDE_UNSHIPPABLE=true to hide them,
 // and expect to be asked where the ergs went.
 //
-// THE FIX IS A TAPE MEASURE, NOT THIS FLAG. 34 products is an afternoon, and
+// THE FIX IS A TAPE MEASURE, NOT THIS FLAG. 32 products is an afternoon, and
 // every one measured turns the flag back off for that product automatically.
-// reports/unshippable-products.xlsx is the list.
+// `npm run report:unshippable` writes the list, derived by asking this rule
+// rather than typed out - four of the 32 need a single number, three of those
+// being the C2 ergs at $2,770 between them.
 const hideUnshippable = () => process.env.HIDE_UNSHIPPABLE === "true";
 
 const num = (v: unknown) => {

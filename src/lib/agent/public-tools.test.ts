@@ -52,9 +52,14 @@ describe("public tool surface", () => {
   };
 
   /** Answer every WooCommerce order request with `order`, or 404 when null. */
-  const stubWoo = (order: unknown | null, searchHits: unknown[] = []) => {
+  const stubWoo = (order: unknown | null, searchHits: unknown[] = [], shipments: unknown = []) => {
     globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      // Unleashed shipments go through the same global fetch as WooCommerce.
+      if (url.includes("unleashed") || url.includes("/Shipments")) {
+        if (shipments === null) return new Response("boom", { status: 500 });
+        return new Response(JSON.stringify({ Items: shipments }), { status: 200 });
+      }
       if (url.includes("/orders?search=")) {
         return new Response(JSON.stringify(searchHits), { status: 200 });
       }
@@ -185,5 +190,90 @@ describe("public tool surface", () => {
 
     expect(out.matched).toBe(false);
     expect(called).not.toHaveBeenCalled();
+  });
+
+  it("never leaks the delivery address from a despatch record", async () => {
+    const { publicToolByName } = await load();
+    stubWoo(ORDER, [], [
+      {
+        ShipmentNumber: "SH-1",
+        ShipmentStatus: "Completed",
+        DispatchDate: "2026-08-03",
+        TrackingNumber: "TT12345",
+        ShippingCompany: { Name: "Followmont" },
+        NumberOfPackages: 2,
+        DeliveryName: "Jane Smith",
+        DeliveryStreetAddress: "12 Example St",
+      },
+    ]);
+    const tool = publicToolByName("check_order_status")!;
+    const out = await tool.run(
+      { order_number: "490118", email: "jane.smith@example.com.au" },
+      { visitor: "8.8.8.1" }
+    );
+
+    const json = JSON.stringify(out);
+    expect(json).toContain("TT12345");
+    expect(json).not.toContain("12 Example St");
+    expect(json).not.toContain("Jane");
+  });
+
+  it("does not claim an order was never sent when the despatch lookup fails", async () => {
+    const { publicToolByName } = await load();
+    stubWoo(ORDER, [], null);
+    const tool = publicToolByName("check_order_status")!;
+    const out = (await tool.run(
+      { order_number: "490118", email: "jane.smith@example.com.au" },
+      { visitor: "8.8.8.2" }
+    )) as Record<string, unknown>;
+
+    expect(out.matched).toBe(true);
+    // null, not false: "we could not check" is a different claim from "not sent".
+    expect(out.despatched).toBeNull();
+  });
+
+  it("strips the freight cap out of a too_expensive refusal", async () => {
+    const { PUBLIC_TOOLS } = await load();
+    const freight = PUBLIC_TOOLS.find((t) => t.definition.name === "quote_freight")!;
+    const internal = await import("./tools");
+    // Drive the redaction directly: the point under test is what leaves the
+    // public wrapper, not how quoteFreight decides to refuse.
+    vi.spyOn(internal.toolByName("quote_freight")!, "run").mockResolvedValue({
+      ok: false,
+      reason: "too_expensive",
+      detail: "cheapest $340.00 over the $200.00 cap",
+    });
+
+    const out = (await freight.run({}, { visitor: "9.9.9.1" })) as Record<string, unknown>;
+    const json = JSON.stringify(out);
+    expect(json).not.toContain("340");
+    expect(json).not.toContain("cap");
+    expect(out.detail).toBeUndefined();
+    expect(out.customer_note).toMatch(/manual freight quote/i);
+  });
+
+  it("strips raw carrier errors out of an error refusal", async () => {
+    const { PUBLIC_TOOLS } = await load();
+    const freight = PUBLIC_TOOLS.find((t) => t.definition.name === "quote_freight")!;
+    const internal = await import("./tools");
+    vi.spyOn(internal.toolByName("quote_freight")!, "run").mockResolvedValue({
+      ok: false,
+      reason: "error",
+      detail: "AusPost 401 unauthorized: key expired",
+    });
+
+    const out = (await freight.run({}, { visitor: "9.9.9.2" })) as Record<string, unknown>;
+    expect(JSON.stringify(out)).not.toContain("401");
+    expect(out.detail).toBeUndefined();
+  });
+
+  it("passes a successful freight quote through untouched", async () => {
+    const { PUBLIC_TOOLS } = await load();
+    const freight = PUBLIC_TOOLS.find((t) => t.definition.name === "quote_freight")!;
+    const internal = await import("./tools");
+    const ok = { ok: true, options: [{ name: "Parcel Post", price: 24.5 }] };
+    vi.spyOn(internal.toolByName("quote_freight")!, "run").mockResolvedValue(ok);
+
+    expect(await freight.run({}, { visitor: "9.9.9.3" })).toEqual(ok);
   });
 });

@@ -18,6 +18,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import { getOrder, ordersConfigured } from "@/lib/wc-admin";
+import { getShipmentsForOrder } from "@/lib/unleashed";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { orderLookupBlocked, recordOrderMiss } from "@/lib/agent/rate-limit";
 import { toolByName, type AgentTool, type ToolInput } from "@/lib/agent/tools";
@@ -64,6 +65,43 @@ function redactProduct(output: unknown): unknown {
   // Kept, because offering a discontinued machine to a customer is worse than
   // the small amount it reveals, but renamed to something customer-shaped.
   return { ...rest, available_to_order: !retired };
+}
+
+// quote_freight grew from two refusal reasons to seven while this branch sat
+// unmerged, and two of them carry text written for staff:
+//   too_expensive -> "cheapest $340.00 over the $200.00 cap", which is our
+//                    freight margin policy, not something a customer hears.
+//   error         -> raw carrier error strings joined together.
+// The public prompt tells the agent to quote tool output exactly, so the detail
+// is dropped here rather than trusted to the prompt. Every refusal also gets a
+// customer_note, because "why can you not price this" needs the same answer
+// every time.
+const FREIGHT_REFUSALS: Record<string, string> = {
+  not_configured:
+    "Online delivery pricing is unavailable right now. Offer to pass the request to the team for a manual quote.",
+  incomplete_dimensions:
+    "This item has no carton data on file, so it cannot be priced online. It needs a manual freight quote: offer to pass their details to the team.",
+  oversize:
+    "Too large for parcel delivery. This is normal for big equipment and is not a fault: it travels as pallet freight and needs a manual quote.",
+  too_many_parcels:
+    "This order is too many cartons to price online. Offer a manual freight quote.",
+  too_expensive:
+    "Parcel delivery is not economical for this order, so it needs a manual freight quote. Do NOT quote or mention any figure or threshold for this: simply say it has to be quoted manually.",
+  no_services:
+    "No delivery service covers that address for these goods. Offer to pass it to the team for a manual quote.",
+  error:
+    "The delivery quote could not be completed. Say you could not price it and offer to pass it to the team. Do not speculate about why.",
+};
+
+function redactFreight(output: unknown): unknown {
+  if (!output || typeof output !== "object") return output;
+  const quote = output as Record<string, unknown>;
+  if (quote.ok !== false) return quote;
+  const rest = { ...quote };
+  // Written for a staff member in both cases.
+  delete rest.detail;
+  const reason = typeof quote.reason === "string" ? quote.reason : "";
+  return { ...rest, customer_note: FREIGHT_REFUSALS[reason] ?? FREIGHT_REFUSALS.error };
 }
 
 // ------------------------------------------------------------- order status
@@ -147,15 +185,58 @@ const orderStatusTool: PublicTool = {
       total: `${order.currency ?? "AUD"} ${order.total}`,
       delivery_charged: order.shipping_total ?? null,
       items: (order.line_items ?? []).map((l) => ({ name: l.name, sku: l.sku || null, qty: l.quantity })),
-      // No tracking number: the WooCommerce order payload this store returns has
-      // no tracking field, so there is nothing to read. Saying "we cannot see a
-      // tracking number here" is honest; inventing one is not.
-      tracking: null,
-      tracking_note:
-        "Tracking numbers are not visible to this assistant. If the order is despatched and they want tracking, take it to the team through the contact form.",
+      ...(await despatchFacts(number)),
     };
   },
 };
+
+/**
+ * Despatch and tracking for an order that has ALREADY passed the email check.
+ *
+ * The internal check_shipment tool reads the same records but takes an order
+ * number alone and returns deliverTo, so it cannot be a public tool. Reached
+ * only from inside a verified lookup, and the address is dropped on the way out:
+ * the customer knows where they live, and echoing it back only creates a way to
+ * confirm it.
+ *
+ * A failure here degrades to "no despatch info" rather than failing the whole
+ * lookup. The order status is the answer to the question; tracking is a bonus.
+ */
+async function despatchFacts(orderNumber: string) {
+  const shipments = await getShipmentsForOrder(orderNumber).catch(() => null);
+
+  if (shipments === null) {
+    return {
+      despatched: null,
+      despatch_note:
+        "The despatch system could not be reached, so say you cannot see despatch details right now and offer to pass it to the team. Do not say the order has not been sent.",
+    };
+  }
+
+  if (!shipments.length) {
+    return {
+      despatched: false,
+      despatch_note:
+        "No despatch record yet, which means it has not left the warehouse. This is not a lost order.",
+    };
+  }
+
+  return {
+    despatched: true,
+    despatches: shipments.map((s) => ({
+      despatched_at: s.dispatchedAt,
+      carrier: s.carrier,
+      tracking_number: s.trackingNumber,
+      cartons: s.packages,
+      // Dispatched with no tracking recorded is the common case by a wide
+      // margin, so the agent needs wording for it that does not sound like the
+      // goods are missing.
+      tracking_note: s.trackingNumber
+        ? null
+        : "Despatched, but no tracking number was recorded against it. The goods went out; the carrier paperwork was completed outside our system. Say it has been despatched and offer to have the team trace it with the carrier.",
+    })),
+  };
+}
 
 // ------------------------------------------------------------ lead capture
 
@@ -217,7 +298,7 @@ export const PUBLIC_TOOLS: PublicTool[] = [
   reuse("search_catalogue"),
   reuse("get_product", redactProduct),
   reuse("check_stock"),
-  reuse("quote_freight"),
+  reuse("quote_freight", redactFreight),
   orderStatusTool,
   enquiryTool,
 ];
