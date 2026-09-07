@@ -332,10 +332,42 @@ fetching the new default from the CDN and re-measuring its backdrop.
      that is also a **2.5** plate, just with the `M` mark instead of Snap's. So
      the 1.5kg appears never to have been photographed on either brand.
 
-     THE FIX IS A PHOTOGRAPH, NOT A RETOUCH. Editing the moulded "2.5" to "1.5"
-     would still depict the wrong object: a 1.5kg plate differs from a 2.5kg one
-     in diameter and thickness, not only in its number. Shoot the 1.5kg plate,
-     or leave both records without an image, which is what they have now.
+     **CORRECTION (2026-09-08): "shoot it" was wrong, and so was the reasoning
+     under it.** These are not photographs. Every size in the ladder — 2.5, 5,
+     10, 15, 20, 25kg — is a RENDER with a pixel-identical subject box of
+     (211, 267, 771, 835) on a 1000x1080 canvas. A real 15kg Olympic plate
+     dwarfs a 2.5kg one; these show them the same size. The range does not
+     depict physical scale AT ALL, so "a 1.5kg differs in diameter and
+     thickness" is not a difference this artwork was ever making. The moulded
+     number is the only thing separating one size from another, and a
+     photograph would not match the set.
+
+     RESTAMPING IS THE HOUSE METHOD, not a fudge. See
+     `~/Desktop/masterkraft-catalogue-ops/snap-render-generator/restamp-snap-plates.py`,
+     which states it plainly: "The 3D scene is not available, so each per-weight
+     file is made by erasing the moulded marking on a 5kg render and stamping
+     the new one." It already generates SWWPCNB07-10 that way.
+
+     **BUT THAT PIPELINE DOES NOT TRANSFER TO THIS LADDER.** It works by
+     thresholding a WHITE painted marking. Measured:
+
+     | | marking contrast (p2-p98) | median |
+     |---|---|---|
+     | `MWWPCNB06`, the base it restamps | **215** | 235 (white paint) |
+     | `SWWPOU02`, this ladder | **28** | 43 (moulded, dark on black) |
+
+     There is no white marking to threshold here — the numerals are relief in
+     the same black rubber, carrying only ~28 levels of shading. Erase-and-stamp
+     would leave a flat number where the others have moulded depth.
+
+     WHAT WOULD WORK. The renders are pixel-aligned with identical lighting, so
+     the moulded "1" in the 15kg render is directly transplantable onto the 2.5kg
+     face — same relief, same shading, same canvas position. Only the horizontal
+     placement differs, because "15" is two glyphs and "2.5" is three. That is a
+     contained job and the honest one; it has NOT been done. Failing that, the
+     designer who owns the urethane renders regenerates 1.5 from source.
+
+     Until then both records are better with no image than with a 2.5.
    - **3 are REVL "Freight & Delivery Allowance" line items** pointing at a
      generic logistics stock photo. Not products. Skip.
 
