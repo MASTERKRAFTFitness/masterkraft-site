@@ -18,7 +18,11 @@ redirects to apex, `/admin` 404s, `robots.txt` indexable on the apex and still
 `Disallow: /` on `web.test`. **Email survived**: MX and SPF untouched, nameservers
 left on Netregistry deliberately, and a real message was received after the change.
 
-**It launched as browse-and-quote.** `NEXT_PUBLIC_CHECKOUT_MODE=quote` is set, so
+**HISTORY - card checkout is open and the flag is gone (2026-09-06). See §0g.**
+The rest of this section describes the cutover as it happened and is kept for that
+record; do not act on it.
+
+**It launched as browse-and-quote.** `NEXT_PUBLIC_CHECKOUT_MODE=quote` was set, so
 the card form is hidden and every cart goes to the quote flow. Two things have to
 happen before card checkout returns, in either order:
 
@@ -622,6 +626,142 @@ not the SKU prefix, so a product Unleashed calls MK or NO BRAND on an R-code
 comes through. Whether the ERP or the SKU is right about those is a real
 question and a redirect map was the wrong place to answer it, so they were left
 alone. See §10.
+
+---
+
+## 0g. Shipped 2026-09-06 and 07 - freight, checkout, and 109 corrected cartons
+
+**Card checkout is open and freight is quoted live.** `NEXT_PUBLIC_CHECKOUT_MODE`
+is gone, so §0's "freight is dormant until that flag changes" no longer applies -
+every paragraph about quote mode above is history, kept for the cutover record.
+
+### The checkout prices delivery before it asks for a card
+
+The button reads **Calculate Freight**. Pressing it fills in the freight line and
+the total; only then does it become **Continue to Payment**. It used to do both
+behind one button, so the first time a customer saw the delivery cost was the
+screen asking for their card.
+
+**ANY EDIT TO THE FORM DISCARDS THE QUOTE** and the button reverts. This is not
+tidiness: a price quoted for Melbourne sitting above a Perth postcode would be
+charged at the Perth rate the customer never saw. Verified both ways - the
+Melbourne quote is dropped on a postcode change, and Perth re-quotes to a
+genuinely different number rather than reusing it.
+
+When freight cannot be priced there is **no card path at all**, so the button
+stays on Calculate Freight rather than offering a Continue that returns a 422.
+
+The wording a customer sees when that happens now lives once, in
+`lib/freight-message.ts`, shared by the browser and the server. It used to say
+"we don't have shipping dimensions on file", which tells a customer about our
+record-keeping and invites the obvious question. Only items above the enquiry
+threshold reach checkout unmeasured, so in practice these are racks and machines
+that ship as freight and were always going to be priced by a person - which is
+what it says now.
+
+### The ceiling moved to $450 (Michael, 2026-09-07)
+
+`FREIGHT_MAX_AUTO_QUOTE` was $250. Measured on the Air Rower Pro, that meant a
+$1,399 product could not be bought by card in **Brisbane, Hobart, Perth or
+Darwin** - Hobart missed by 31 cents.
+
+| | Melbourne | Sydney/Adelaide | Hobart | Brisbane | Perth | Darwin |
+|---|---|---|---|---|---|---|
+| freight | $168.52 | $211.58 | $250.31 | $285.89 | $398.93 | $437.64 |
+| under $250 | yes | yes | **no** | **no** | **no** | **no** |
+| under $450 | yes | yes | yes | yes | yes | yes |
+
+**What the cap was for has not gone away.** Easyship bills bulky freight on
+VOLUME at 250kg/m3 and 38 of 107 bulky products bill at a mean 1.41x their real
+weight - a 16kg medicine ball rack bills as 175kg. The rower is dense so its
+prices are honest road freight; at $450 the volumetric outliers can now reach
+card checkout too. Watch the first bulky orders.
+
+### A cart line with no ERP code is dropped
+
+`sku` only became part of a cart line on 2026-09-02 (e918530), so a basket saved
+before that holds lines that cannot be matched, cannot be priced, cannot be
+quoted and cannot be written to an order - and survived every check. They are
+dropped on load and named in the notice.
+
+**This one does NOT fail open**, unlike the availability check beside it. That
+check fails open because a network error cannot be told apart from a retirement,
+and emptying somebody's basket over a timeout is worse than a stale line. Here
+there is no network and nothing to be uncertain about: no code, no line.
+
+### 109 cartons corrected in Unleashed, in three passes
+
+Freight needs a weight and all three dimensions, and one unmeasured product makes
+the WHOLE basket unquotable. Products with a usable carton went 687 -> 700.
+
+| pass | n | what was wrong |
+|---|---|---|
+| millimetres in a centimetre field | 36 | a 12" foam box as 850 x 1000 x 305, read as 259 cubic metres |
+| recovered from the WooCommerce snapshot | 19 | 13 cartons and 19 weights the ERP never had |
+| found by DENSITY, not size | 54 | order-of-magnitude unit slips that passed the size guard |
+
+**THE SIZE GUARD IS NOT ENOUGH, AND HERE IS THE RULE THAT IS.** `isPlausibleCarton`
+catches cartons impossible by SIZE - over 3 cubic metres, or a side over 3 metres.
+It missed `MWWPOPR01`, a 2kg weight plate recorded as 170 x 170 x 32cm: only 0.92
+cubic metres, so it passed, but that is a steel plate at 2.2 kg/m3, lighter than
+air. Density finds what size cannot.
+
+**The first attempt at the density rule was wrong and nearly shipped.** Selecting
+on "density outside 100-8000 kg/m3" also caught `MWWLATT01`, a 2kg ankle strap
+recorded as 25 x 8.5 x 1cm - a perfectly good carton that is merely dense - and
+would have "corrected" it to a TWO AND A HALF METRE ankle strap. It would also
+have shrunk a 55cm fitness ball to 5.5cm, because an inflated ball really is
+lighter than that floor.
+
+So: **only densities below 5 or above 50,000 kg/m3 count as unit errors**, and a
+row where more than one multiplier lands somewhere plausible is left for a person
+rather than guessed at. That left 11 - ankle straps, Mini Bands, collar pairs, two
+barbell sets, artificial turf that genuinely is 15m long, and a 1mm LED dimmer.
+
+`reports/carton-unit-fix-rollback.csv` holds the pre-import millimetre values.
+
+### The catalogue, counted correctly
+
+**COUNT OUR OWN BRANDS ONLY.** Unleashed holds REVL, SNAP, Golds, Fernwood, Hyper
+Health and Air Locker stock that has never been on the site; including it inflated
+an earlier version of these figures and made the measured share look better than
+it is. `erpUnits()` admits MK, CONCEPT 2 and NO BRAND, nothing else.
+
+| | |
+|---|---|
+| sellable and priced | 703 |
+| **fully measured - quotes automatically** | **312 (44%)** |
+| over $500, unmeasured - stays up, priced on enquiry | 94 |
+| under $500, unmeasured - hidden | 297 |
+| **measurement backlog that reaches a customer** | **391** |
+
+284 product pages are live. **REVL is not in the site catalogue and never was** -
+checked four ways: the brand filter, every REVL SKU reporting unavailable, no REVL
+page in the sitemap, and no R-prefix SKU in the clearance category, which is the
+one path that bypasses the brand filter.
+
+### Also
+
+- **Supabase is wired to production.** `SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` are in Vercel. The only consumer in `src/` is the
+  admin desk and 404 logging - there is still NO storefront read path, so this
+  changed nothing a customer sees. Turning one on is what retires the frozen
+  snapshot. Mirror holds 1,484 products, 700 with a full carton.
+- **`npm run lint` is clean.** 25 errors cleared; four were real. The worst:
+  `search/page.tsx` built its entire result view inside the try/catch guarding the
+  ERP lookup, so a render error was shown to customers as "no products matched"
+  instead of reaching an error boundary.
+- **Clearance was being emptied out of live baskets.** `erpUnits()` is
+  brand-filtered but Clearance is listed with the filter OFF, so `/api/cart/check`
+  was told "no" about live stock. Servability is now "in a unit, OR offered by a
+  page we still serve".
+
+### STILL UNPROVEN: no order has ever come through
+
+**The `WEB-MASTERKRAFT` customer has zero sales orders, ever.** Stripe
+verification, the server repricing and the amount-match guard have never run
+against a real payment. A test order was staged on 7 September - Abdominal Wheel
+$22.00 plus Australia Post $23.29, $45.29 - and is waiting on a card.
 
 ---
 
@@ -1572,8 +1712,23 @@ what syncs to Unleashed and what Interparcel's Shipping Manager fetches (§6).
 pair; Vercel's are unverified and probably not** - see §10, first item.
 
 Set and working: `WC_*`, `UNLEASHED_*`, `NEXT_PUBLIC_GA_ID` (G-86MEH5QL99),
-`NEXT_PUBLIC_HUBSPOT_PORTAL_ID`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (**pk_test**),
-`NEXT_PUBLIC_SITE_URL` (= web.test.masterkraft.com).
+`NEXT_PUBLIC_HUBSPOT_PORTAL_ID`, `NEXT_PUBLIC_SITE_URL` (= masterkraft.com).
+
+**Production, as at 2026-09-07** (`vercel env ls --scope masterkraft`):
+`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is **pk_live** and `STRIPE_SECRET_KEY` is set;
+`UNLEASHED_WRITE_ENABLED`, `UNLEASHED_WEB_CUSTOMER_CODE` (WEB-MASTERKRAFT) and
+`UNLEASHED_FREIGHT_CODE` (MKFR) are set, so orders write to the ERP;
+`FREIGHT_MAX_AUTO_QUOTE` is **450** (was 250, raised 2026-09-07 - see §0g);
+`HIDE_UNSHIPPABLE` is true, with the $500 enquiry threshold from
+`HIDE_UNSHIPPABLE_BELOW` (defaults to 500 in code); `FREIGHT_COLLECTION_*` set.
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` added 2026-09-06.
+
+**`.env.local` has an EMPTY `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`**, so local dev
+falls back to quote mode and never renders the card form. Put a dummy `pk_test_...`
+in it to exercise the checkout UI locally; do not put the live key in a dev file.
+
+**ROTATE `SUPABASE_SERVICE_ROLE_KEY`.** It was printed into a session transcript.
+It is now in Vercel as well as `.env.local`, so rotating means updating both.
 
 Not set: `NEXT_PUBLIC_ALLOW_INDEX` (correct for staging), `INTERPARCEL_API_KEY`,
 `FREIGHT_COLLECTION_*`. Server secrets (HubSpot form GUIDs, Resend, Stripe secret,
