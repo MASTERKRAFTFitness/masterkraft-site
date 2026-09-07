@@ -312,8 +312,30 @@ fetching the new default from the CDN and re-measuring its backdrop.
      threshold) and every one carries a real alpha channel, so the `C2BIKEERG`
      extension-check trap is avoided. Each now has exactly one image, set as
      default, and it is the PNG cutout.
-   - **28 need Snap's own photography** (S-code filenames). Same provenance
-     question the mirror guard raises; decide before moving these.
+   - ~~**28 need Snap's own photography**~~ — **27 DONE and API-verified
+     2026-09-07/08.** Michael's call: MasterKraft supplies these SNAP lines, the
+     ERP is MasterKraft's, and a prior pass already converted 64 SNAP images
+     there, so the mirror guard (which is about GIT HISTORY) does not apply.
+     Bytes came from the WooCommerce box via `WC_STORE_PIN` into scratch, cut
+     with `backdrop.py` — all passed `is_studio` at gaps of 159-188.
+
+     **`SWWPOU01` IS THE ONE THAT WAS NOT DONE, AND IT SHOULD NOT BE.** It is the
+     1.5kg Olympic Urethane plate, and the only photograph WooCommerce has for it
+     is `SWWPOU02-1S.jpg` — the 2.5kg plate, which carries **"2.5" moulded into
+     its face, twice, plainly legible**. Attaching it would be a caption that
+     lies, and the plate's own marking is what contradicts it. This is the same
+     rule `RANGE_REPRESENTATIVE` states in the catalogue: a representative shot is
+     fine where no size is stamped, and wrong where one is.
+
+     **The MasterKraft side has the identical fault, already live.** `MWWPOU01`
+     ("Olympic Urethane Weight Plates (3 Grip) - 1.5kg") carries an ERP default
+     that is also a **2.5** plate, just with the `M` mark instead of Snap's. So
+     the 1.5kg appears never to have been photographed on either brand.
+
+     THE FIX IS A PHOTOGRAPH, NOT A RETOUCH. Editing the moulded "2.5" to "1.5"
+     would still depict the wrong object: a 1.5kg plate differs from a 2.5kg one
+     in diameter and thickness, not only in its number. Shoot the 1.5kg plate,
+     or leave both records without an image, which is what they have now.
    - **3 are REVL "Freight & Delivery Allowance" line items** pointing at a
      generic logistics stock photo. Not products. Skip.
 
