@@ -270,6 +270,40 @@ describe("the ERP is the catalogue", () => {
     expect(slugify("Rigs & Racks")).toBe("rigs-and-racks");
   });
 
+  it("lists the ERP's own clearance group whatever brand it carries", () => {
+    // Ex-display stock is somebody else's equipment: four of the six the ERP
+    // holds carry the brand "OLD". The brand allowlist is about what MasterKraft
+    // sells, so clearance runs without it — the same carve-out its snapshot half
+    // has always had.
+    const units = erpUnits(
+      erp([
+        ["OEFRDB02", "Hoist DRV10", 0, "Clearance", "OLD", "Freestanding"],
+        ["SMDBRH01", "Rubber Hex Dumbbell - 1kg", 5, "Mixed Implements", "SNAP"],
+      ])
+    );
+    expect([...units.keys()]).toEqual(["hoist-drv10"]);
+    expect(units.get("hoist-drv10")!.group).toBe("Clearance");
+  });
+
+  it("never lets a clearance item take the slug of something we still sell", () => {
+    // The ERP holds a used "Functional trainer" on clearance and a new one in
+    // Strength. Whichever the ERP returned first used to win the URL, which is a
+    // coin toss over whether a shopper lands on the new machine or the used one.
+    //
+    // Neither code has a page in the snapshot, so both fall back to a slug made
+    // from the name — which is the only way the two can actually collide. The
+    // real MSCMDU01 does have one (`functional-trainer-pro`) and so never
+    // contests the bare slug; the clearance item loses it to a different unit.
+    const units = erpUnits(
+      erp([
+        ["OZZFTR01", "Functional trainer", 0, "Clearance", "OLD"],
+        ["MZZFTR01", "Functional trainer", 4500, "Strength"],
+      ])
+    );
+    expect(units.get("functional-trainer")!.codes).toEqual(["MZZFTR01"]);
+    expect(units.get("functional-trainer-clearance")!.codes).toEqual(["OZZFTR01"]);
+  });
+
   it("has a category for every group it lists", () => {
     // ERP_GROUPS is what the navigation is built from; a group missing from it
     // would be products with nowhere to appear.

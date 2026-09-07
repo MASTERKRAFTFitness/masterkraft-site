@@ -63,8 +63,10 @@ export type ErpUnit = {
 //
 //   Other Costs (33)  freight, allowances, delivery — never a category
 //   Storage (1)       one product mis-filed; belongs in Equipment Storage
-//   Clearance (1)     the site's Clearance page is A-prefixed ex-display stock
-//                     from WooCommerce, a different thing entirely
+//
+// CLEARANCE IS NOT LISTED HERE BUT IS NO LONGER EXCLUDED. It is not a navigation
+// category — /equipment/clearance already exists, built from the snapshot — but
+// its ERP members are now units, so the page can show both. See CLEARANCE_GROUP.
 //
 // Order is the order they appear in the navigation.
 export const ERP_GROUPS = [
@@ -81,7 +83,24 @@ export const ERP_GROUPS = [
   "Packages",
 ] as const;
 
-const EXCLUDED_GROUPS = new Set(["Other Costs", "Clearance", "Storage"]);
+/**
+ * The ERP's own Clearance group. NOT in ERP_GROUPS and not a category: the
+ * clearance PAGE is `wcId: 356` in lib/categories.ts and lists from the frozen
+ * snapshot, and these units are appended to it rather than replacing it.
+ *
+ * IT WAS EXCLUDED UNTIL 2026-09-07, on the reading that the ERP's Clearance
+ * group was a stub holding one product while the site's clearance was the
+ * A-prefixed ex-display stock from WooCommerce — "a different thing entirely".
+ * The first half of that is no longer true: the group holds six products and
+ * five of them carry stock (19 Hoist DRV10, 6 plate trees, 3 IFDB4 tiers, 2 leg
+ * attachments, 1 functional trainer), which was equipment the site could not
+ * sell because nothing read the group. The second half still is — these are a
+ * different set from the 35 snapshot pages, with no overlap — which is why this
+ * is a UNION on the clearance listing and not a replacement of it.
+ */
+export const CLEARANCE_GROUP = "Clearance";
+
+const EXCLUDED_GROUPS = new Set(["Other Costs", "Storage"]);
 
 // Brands the site sells, in preference order. SNAP, REVL, FERNWOOD, AIR LOCKER
 // and HYPER HEALTH belong to somebody else and have never been on this site.
@@ -274,7 +293,12 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
 
   for (const [code, entry] of Object.entries(map)) {
     if (entry.sellable === false || !entry.name || !entry.group) continue;
-    if (!OUR_BRANDS.has(entry.brand ?? "")) continue;
+    // CLEARANCE RUNS WITH THE BRAND FILTER OFF, exactly as its snapshot half
+    // does (lib/categories.ts). Ex-display stock is somebody else's equipment by
+    // definition — four of the six carry the ERP brand "OLD" and one "CLEARANCE"
+    // — so the brand allowlist, which is about what MasterKraft SELLS, would
+    // throw away all but one of them.
+    if (entry.group !== CLEARANCE_GROUP && !OUR_BRANDS.has(entry.brand ?? "")) continue;
     if (EXCLUDED_GROUPS.has(entry.group)) continue;
     // Drop the individual SIZE, not the whole range: a rack that is measured in
     // three sizes and not in a fourth should still sell the three.
@@ -353,9 +377,27 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
   }
 
   const units = new Map<string, ErpUnit>();
-  for (const u of draft) {
+  // CLEARANCE LAST, AND IT NEVER WINS A SLUG. A used machine and the new one we
+  // sell can share a name — the ERP holds an OSCMDU01 "Functional trainer" on
+  // clearance and a Strength unit of the same name — and under the size rule
+  // below the pair was decided by whichever the ERP happened to return first.
+  // That is a coin toss over which product a shopper gets at /product/
+  // functional-trainer, and one of them is ex-display. So clearance is placed
+  // after everything else and takes a `-clearance` slug when the name is
+  // already spoken for, which is also the honest URL for it.
+  const ordered = [
+    ...draft.filter((u) => u.group !== CLEARANCE_GROUP),
+    ...draft.filter((u) => u.group === CLEARANCE_GROUP),
+  ];
+  for (const u of ordered) {
     const { page: _page, ...unit } = u;
     void _page;
+    if (unit.group === CLEARANCE_GROUP && units.has(unit.slug)) {
+      const suffixed = `${unit.slug}-clearance`;
+      // Two clearance items under one name is the only case left; the code is
+      // unique by definition, so this cannot loop.
+      unit.slug = units.has(suffixed) ? `${unit.slug}-${slugify(unit.codes[0])}` : suffixed;
+    }
     // Two units can still land on one generated slug if their names slugify the
     // same. Keep the larger, so a collision cannot hide the bigger range.
     const existing = units.get(unit.slug);

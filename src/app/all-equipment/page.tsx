@@ -6,7 +6,7 @@ import SortSelect from "@/components/shop/SortSelect";
 import CategoryJumpNav from "@/components/shop/CategoryJumpNav";
 import { getAllProducts, type WcProduct } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
-import { erpSubgroups, erpUnits, unitCard, type ErpUnit } from "@/lib/erp-catalogue";
+import { CLEARANCE_GROUP, erpSubgroups, erpUnits, unitCard, type ErpUnit } from "@/lib/erp-catalogue";
 import { categories } from "@/lib/categories";
 
 export const metadata: Metadata = {
@@ -49,7 +49,15 @@ export default async function AllEquipmentPage({
     // Category order, then name — so the page reads down the catalogue the way
     // the navigation does rather than in WooCommerce's old menu_order.
     const order = new Map(categories.map((c, i) => [c.erpGroup, i]));
-    units = [...erpUnits(unleashed).values()].sort(
+    // CLEARANCE IS NOT PART OF THE RANGE. Its units became listable on
+    // 2026-09-07 (see CLEARANCE_GROUP), but the 35 snapshot clearance pages have
+    // never appeared here and these are the same kind of thing: one-off
+    // ex-display stock, not equipment MasterKraft sells. Including only the ERP
+    // half would advertise six pieces of somebody else's used gear inside the
+    // catalogue while the other thirty-five stayed on their own page.
+    units = [...erpUnits(unleashed).values()]
+      .filter((u) => u.group !== CLEARANCE_GROUP)
+      .sort(
       (a, b) =>
         (order.get(a.group) ?? 99) - (order.get(b.group) ?? 99) || a.name.localeCompare(b.name)
     );

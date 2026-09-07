@@ -13,7 +13,7 @@ import {
   type WcCategoryChild,
 } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
-import { erpSubgroups, erpUnitsInGroup, unitCard } from "@/lib/erp-catalogue";
+import { CLEARANCE_GROUP, erpSubgroups, erpUnitsInGroup, unitCard } from "@/lib/erp-catalogue";
 
 export function generateStaticParams() {
   return categories.map((c) => ({ category: c.slug }));
@@ -86,10 +86,11 @@ export default async function CategoryPage({
       let enrichedAll: { product: WcProduct; enriched: EnrichedProduct }[];
 
       // CLEARANCE IS THE CARVE-OUT, and so is an unreachable ERP. Clearance is
-      // ex-display stock on A-prefixed codes that Unleashed does not group, so
-      // it keeps listing from the snapshot with the brand filter off. And if the
-      // ERP map came back empty — the API is down, or throttling — every category
-      // falls back to the snapshot rather than telling a visitor we sell nothing.
+      // ex-display stock on A-prefixed codes, listed from the snapshot with the
+      // brand filter off, because nothing in the ERP marks a product as
+      // ex-display. And if the ERP map came back empty — the API is down, or
+      // throttling — every category falls back to the snapshot rather than
+      // telling a visitor we sell nothing.
       const erpUsable = !!c.erpGroup && Object.keys(unleashed).length > 0;
       if (erpUsable) {
         let units = erpUnitsInGroup(unleashed, c.erpGroup!);
@@ -102,6 +103,22 @@ export default async function CategoryPage({
         enrichedAll = await Promise.all(
           all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
         );
+
+        // AND THE ERP'S OWN CLEARANCE GROUP, WHICH IS A SECOND SET (2026-09-07).
+        // Unleashed groups six products under "Clearance" and they are not the
+        // 35 the snapshot lists — zero overlap, different codes, different
+        // brands. They were sellable stock that no page offered, so they are
+        // APPENDED here rather than replacing anything: the snapshot half is
+        // still the only record of which WooCommerce pages were ex-display.
+        //
+        // Appended after, not merged and re-sorted, so the pages that have been
+        // on this listing keep their order and their position on page 1.
+        if (c.slug === "clearance") {
+          enrichedAll = [
+            ...enrichedAll,
+            ...erpUnitsInGroup(unleashed, CLEARANCE_GROUP).map(unitCard),
+          ];
+        }
       }
 
       if (priceMin !== undefined) {

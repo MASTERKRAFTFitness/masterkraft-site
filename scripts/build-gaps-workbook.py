@@ -1,6 +1,7 @@
 # Builds the Excel workbook Steve and Gaetana actually work in.
 #
-#   npm run report:cartons && npm run report:bulky   (refresh the source data)
+#   npm run report:cartons && npm run report:bulky && npm run report:clearance
+#                                                    (refresh the source data)
 #   python3 scripts/build-gaps-workbook.py           -> reports/MasterKraft-Product-Data-Gaps.xlsx
 #
 # The markdown reports are for reading. This is for DOING: the two fill-in sheets
@@ -78,6 +79,11 @@ def legend(ws, row, lines):
 
 gaps = read("carton-gaps.csv")
 bulky = [r for r in read("bulky-freight-profile.csv") if r["segment"] == "bulky"]
+clearance = read("clearance-gaps.csv")
+
+
+def clr(issue):
+    return [r for r in clearance if r["issue"] == issue]
 
 wb = Workbook()
 
@@ -85,7 +91,7 @@ wb = Workbook()
 ws = wb.active
 ws.title = "Summary"
 title(ws, "Product data gaps: what needs doing",
-      "Generated from reports/carton-gaps.csv. Counts are formulas, so they follow the sheets.")
+      "Generated from reports/carton-gaps.csv and clearance-gaps.csv. Counts are formulas, so they follow the sheets.")
 
 header_row(ws, 4, ["Pile", "Products", "Who does it", "Effort"], [34, 11, 30, 40])
 n_units = sum(1 for g in gaps if g["pile"] == "1-units")
@@ -112,12 +118,22 @@ r = 5 + len(rows)
 ws.cell(row=r, column=1, value="Total blocked from online freight quoting").font = Font(name=FONT, size=10, bold=True, color=INK)
 ws.cell(row=r, column=2, value="=SUM(B5:B7)").font = Font(name=FONT, size=10, bold=True, color=INK)
 
+# CLEARANCE SITS BELOW THE TOTAL, NOT INSIDE IT. Nothing on that sheet blocks a
+# freight quote — it is stock and pricing — so adding it to the figure above
+# would overstate the freight problem to whoever reads only the first number.
+r += 2
+body(ws, r, ["4. Clearance vs Unleashed", None, "Steve: stock and pricing", "Ex-display stock nobody can buy."])
+ws.cell(row=r, column=2, value=f"=COUNTA('4 Clearance'!A6:A{5 + len(clearance)})")
+ws.cell(row=r, column=2).font = Font(name=FONT, size=10, color=INK)
+ws.cell(row=r, column=2).border = BORDER
+
 nxt = legend(ws, r + 2, [
     "How to use this",
     "Yellow cells are for you to fill in. Everything else is reference.",
     "Work sheet 1 first: those figures are wrong on the live website today, not merely missing.",
     "Sheet 2 needs a decision from the business before anyone touches data.",
     "Sheet 3 is the only pile that needs a physical tape measure.",
+    "Sheet 4 is separate: nothing on it blocks a freight quote, so it is not in the total above.",
 ])
 legend(ws, nxt, [
     "What this is not",
@@ -196,6 +212,56 @@ legend(ws, row + 1, [
     "Where a weight is already known it is shown in 'Already known'. Only the missing figures need filling.",
 ])
 
+# ------------------------------------------------------- 4 clearance (decision)
+#
+# NOT A FREIGHT SHEET. Everything above is carton data; this is stock and price,
+# and it is here because it is the same person's morning. The rows come from
+# `npm run report:clearance`, which asks Unleashed rather than recording an
+# answer — so a row that gets fixed disappears on the next run.
+ws = wb.create_sheet("4 Clearance")
+title(ws, "Pile 4: clearance against Unleashed",
+      "Unleashed has no flag for ex-display stock, so these are the disagreements, not a diff of two lists.")
+header_row(ws, 4, ["What", "Code", "Product", "Site", "Unleashed", "Stock", "What it means", "Decision"],
+           [17, 17, 40, 11, 11, 8, 46, 30])
+
+ISSUE_LABEL = {
+    "not-listed": "Not on the site",
+    "dearer-than-erp": "Dearer than ERP",
+    "no-erp-price": "No ERP price",
+    "phantom-size": "Size not in ERP",
+    "erp-group-unused": "ERP Clearance group",
+}
+
+body(ws, 5, ["EXAMPLE", "AXXXXX01", "This row is an example, delete it", "", "$99.00", 4,
+             "In stock in Unleashed, on no page of the site", "List it / write it off"],
+     input_cols=(8,), italic=True, fill=NOTE_FILL)
+
+row = 6
+for c in clearance:
+    site = f'${c["site_price"]}' if c["site_price"] else ""
+    erp = f'${c["erp_price_inc_gst"]}' if c["erp_price_inc_gst"] else ""
+    stock = int(c["stock"]) if c["stock"] else ""
+    body(ws, row, [ISSUE_LABEL.get(c["issue"], c["issue"]), c["code"], c["product"],
+                   site, erp, stock, c["detail"], None], input_cols=(8,))
+    row += 1
+ws.auto_filter.ref = f"A4:H{row - 1}"
+
+# Only explain the piles that have rows. A pile empties as it is worked through
+# — the ERP Clearance group did, on 2026-09-07 — and a note about rows that are
+# no longer there reads as an instruction nobody can follow.
+PILE_NOTES = [
+    ("not-listed", "Not on the site: ex-display stock sitting in Unleashed that no page sells. Either give it a clearance page or write it off."),
+    ("dearer-than-erp", "Dearer than ERP: the clearance markdown is frozen in the old store's data and the ERP price has since come down under it."),
+    ("no-erp-price", "No ERP price: the page sells at the old store's number because Unleashed holds no sell price. Put a price in Unleashed."),
+    ("phantom-size", "Size not in ERP: the size picker offers a weight the ERP has never held, so nothing can price or pick it."),
+    ("erp-group-unused", "ERP Clearance group: in Unleashed's own Clearance group and still on no page of the site."),
+]
+legend(ws, row + 1, [
+    "What each pile needs",
+    *[note for issue, note in PILE_NOTES if clr(issue)],
+    "Prices are GST-inclusive on both sides, which is what the website shows.",
+])
+
 # ------------------------------------------------------------ bulky reference
 ws = wb.create_sheet("Bulky reference")
 title(ws, "Reference: the 107 products no parcel network will carry",
@@ -218,4 +284,5 @@ print(f"wrote {OUT}")
 print(f"  1 Fix units      {sum(1 for g in gaps if g['pile'] == '1-units')}")
 print(f"  2 Sets decision  {sum(1 for g in gaps if g['pile'] == '2-set')}")
 print(f"  3 Measure        {sum(1 for g in gaps if g['pile'] == '3-measure')}")
+print(f"  4 Clearance      {len(clearance)}")
 print(f"  Bulky reference  {len(bulky)}")
