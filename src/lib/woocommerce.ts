@@ -11,16 +11,19 @@
 // snapshot stays a faithful mirror and cannot drift from what we serve.
 
 import imageOverrides from "./product-image-overrides.json";
+import erpCartonData from "./erp-cartons.json";
 import {
   allProducts,
   categoryById,
   categoryChildren,
+  productBySku,
   productBySlug,
   productsInCategory,
   searchCatalogue,
   variationsFor,
 } from "@/lib/catalogue";
 import { isRetiredSku } from "./obsolete";
+import { skuAliases } from "./unleashed-aliases";
 
 const BASE = `${process.env.WC_STORE_URL}/wp-json/wc/v3`;
 
@@ -180,6 +183,8 @@ type Retirable = {
   sku?: string;
   weight?: string;
   dimensions?: { length?: string; width?: string; height?: string };
+  /** Present on products, absent on variations; a container is found by it. */
+  id?: number;
 };
 
 export function isObsolete(p: Retirable): boolean {
@@ -224,14 +229,80 @@ const num = (v: unknown) => {
  * product off the listings for a fault the quote never suffers - HIDE_UNSHIPPABLE
  * would hide barbells the checkout prices correctly. Deciding what to QUOTE FROM
  * gets the stricter rule; deciding what to SHOW does not. */
-function isShippable(p: { weight?: string; dimensions?: { length?: string; width?: string; height?: string } }): boolean {
-  const kg = num(p.weight);
+const plausibleSides = (a: number, b: number, c: number) =>
+  a > 0 && b > 0 && c > 0 &&
+  [a, b, c].every((s) => s >= 0.5 && s <= 300) &&
+  (a * b * c) / 1e6 <= 3;
+
+// The ERP's cartons, committed by scripts/build-erp-cartons.mjs so this module
+// can consult them without awaiting getUnleashedMap(). Keyed by UPPERCASE
+// ProductCode; the value is [weightKg, widthCm, depthCm, heightCm] in the ERP's
+// own axis order, which is fine here because plausibleSides does not care which
+// side is which. See the script header before using it for anything else.
+const ERP_CARTONS = (erpCartonData as { cartons: Record<string, number[]> }).cartons;
+
+function erpCarton(sku?: string): number[] | undefined {
+  if (!sku) return undefined;
+  const up = sku.trim().toUpperCase();
+  return ERP_CARTONS[up] ?? ERP_CARTONS[(skuAliases[up] ?? "").toUpperCase()];
+}
+
+/**
+ * The variations a container stands for, or none if it is not a container.
+ *
+ * TWO SHAPES, and missing the second is what kept the Competition Kettlebells
+ * hidden after the first attempt at this. A bare `variable` product holds its
+ * own variations, but a `-GROUP` bundle holds NONE - the sizes belong to the
+ * hidden `variable` twin beside it, and the bundle is the visible page. So
+ * MMKBPGC-GROUP looks childless and MMKBPGC, which has the twelve, is not
+ * listable in the first place. lib/ranges' anchorCodes resolves the same pair
+ * the same way; it is not imported because ranges imports THIS module.
+ */
+function containerKids(p: Retirable): WcVariation[] {
+  if (p.id !== undefined) {
+    const own = variationsFor(p.id);
+    if (own.length) return own;
+  }
+  const sku = (p.sku ?? "").trim().toUpperCase();
+  const stem = sku.replace(/-(?:GROUP|1)$/, "");
+  if (!stem || stem === sku) return [];
+  const twin = productBySku(stem);
+  return twin ? variationsFor(twin.id) : [];
+}
+
+/**
+ * Can this product be freight-quoted - from EITHER source, the way freight
+ * actually resolves a carton?
+ *
+ * ASKING THE SNAPSHOT ALONE HID PRODUCTS THE CHECKOUT PRICES CORRECTLY. This is
+ * the rule lib/erp-catalogue's codeIsShippable already applies to product pages
+ * and the sitemap, and the two disagreeing is what left ABPBSB04 - the 12" foam
+ * plyo box - off every listing: its snapshot carton is 850 x 1000 x 305, which
+ * is millimetres in a file written in centimetres, so it measures 259 cubic
+ * metres. The ERP holds the same box at 85 x 100 x 30.5. The unit error was
+ * corrected in Unleashed and never flowed back into the frozen snapshot, and
+ * nothing here could see the correction.
+ *
+ * A CONTAINER HAS NO CARTON OF ITS OWN, and judging it by one is a category
+ * error. `MMKBPGC-GROUP` is the Competition Kettlebells range: WooCommerce holds
+ * it only to group twelve sizes, every one of which carries a complete carton,
+ * and it was hidden for having no measurements of its own. A container ships when
+ * something inside it does, so it is judged by its variations - and only when it
+ * has some, which is what keeps an ordinary unmeasured product from sneaking
+ * through this branch.
+ */
+function isShippable(p: Retirable): boolean {
+  const kids = containerKids(p);
+  if (kids.length) return kids.some(isShippable);
   const l = num(p.dimensions?.length);
   const w = num(p.dimensions?.width);
   const h = num(p.dimensions?.height);
-  if (!kg || !l || !w || !h) return false;
-  if ([l, w, h].some((s) => s < 0.5 || s > 300)) return false;
-  return (l * w * h) / 1e6 <= 3;
+  const erp = erpCarton(p.sku);
+  // A weight from either source. Freight needs one, and a carton with sides but
+  // no mass cannot be consigned.
+  if (!num(p.weight) && !erp?.[0]) return false;
+  if (plausibleSides(l, w, h)) return true;
+  return !!erp && plausibleSides(erp[1], erp[2], erp[3]);
 }
 
 // "search" means search-only (excluded from catalogue listings); "catalog"
