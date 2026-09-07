@@ -809,9 +809,18 @@ Nothing is broken for a customer: the router fails soft, Australia Post still
 answers, and an unquotable consignment falls back to "Calculated on quote", which
 is the right outcome for a cart that genuinely needs a person.
 
-**NOT YET FIXED.** Classify on `error.details` rather than the wrapper `message`,
-give "no shipping solutions" a class that logs without emailing, and move the
-cooldown somewhere that survives a cold start - Supabase is already wired.
+**FIXED for 1 and 2, on 7 September.** There is a fourth class, `consignment`,
+tested BEFORE `config`: "no shipping solutions", or any fault naming
+`destination_address`, is logged and never mailed. `origin_address` and `parcels`
+faults still mail, because those come from our own configuration and our own
+carton data and so recur until someone acts - and a rejection naming no field at
+all still mails, because that is one we have never seen and 6 September is the
+argument for being woken.
+
+**NOT FIXED: the cooldown is still an in-memory `Map`.** It needs a table and a
+migration applied to production, which is a separate decision. It matters less
+now that the repeating alert was the false one; what remains is a genuine outage
+mailing once per cold lambda instead of once per six hours.
 
 **And find out who the alerts go to.** The recipient is
 `FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` and `.env.local` sets neither to Steve,

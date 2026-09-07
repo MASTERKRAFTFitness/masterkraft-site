@@ -21,6 +21,15 @@
 // classified transient, and would never have been emailed - the site quietly
 // served Australia Post alone and looked entirely healthy from outside.
 //
+// AND THEN IT OVERSHOT. That third rule matched "the request body content is not
+// valid", which is the wrapper Easyship puts on every 422 - so an ordinary cart
+// nobody can carry (two 300cm cartons; a half-typed address) arrived worded
+// exactly like a broken deployment and sent the same "EVERY quote is affected,
+// the carrier is switched off" mail. Steve got it repeatedly on 6-7 September
+// while Easyship was answering normally. Hence `consignment`, tested first: the
+// fault Easyship names lives in `details`, not in the wrapper. An alerter that
+// cries outage over one cart is one nobody reads by the time it is right.
+//
 // NEVER BLOCKS A QUOTE. Every call here is fire-and-forget and swallows its own
 // errors. An alerting system that can slow down or break a checkout is worse
 // than no alerting system.
@@ -28,7 +37,7 @@
 /** How long to stay quiet after alerting about the same thing. */
 const DEFAULT_COOLDOWN_MINUTES = 360; // 6 hours
 
-export type CarrierFailure = "quota" | "auth" | "config" | "transient";
+export type CarrierFailure = "quota" | "auth" | "config" | "consignment" | "transient";
 
 /** Last time each carrier+kind was emailed about, so a busy hour sends one mail. */
 const lastAlerted = new Map<string, number>();
@@ -50,19 +59,6 @@ export function classifyFailure(detail: string): CarrierFailure {
   if (d.includes("usage limit") || d.includes("usage_limit") || d.includes("quota")) {
     return "quota";
   }
-  // A malformed request never fixes itself, and it fails EVERY quote rather than
-  // some. Classified as needing a human after a 35-character street line silently
-  // removed Easyship from production on 2026-09-06 - logged, but as "transient",
-  // so nobody would have been told.
-  if (
-    d.includes("not valid") ||
-    d.includes("invalid_content") ||
-    d.includes("too long") ||
-    d.includes("can't be blank") ||
-    d.includes("is required")
-  ) {
-    return "config";
-  }
   if (
     d.includes("unauthor") ||
     d.includes("invalid api") ||
@@ -71,6 +67,47 @@ export function classifyFailure(detail: string): CarrierFailure {
     d.includes("http 401")
   ) {
     return "auth";
+  }
+  // THIS CART, NOT THIS CARRIER - and it must be tested BEFORE `config`, because
+  // Easyship words the two identically.
+  //
+  // "The request body content is not valid." is the wrapper on EVERY Easyship
+  // 422, a genuinely malformed request and an unservable consignment alike. The
+  // fault is in `details`, and matching the wrapper is what emailed Steve
+  // repeatedly through 6-7 September about an outage that was not happening.
+  //
+  // Two 300 x 60 x 60cm cartons at 80kg is "No shipping solutions available
+  // based on the information provided"; ONE of them prices fine, and both pass
+  // isPlausibleCarton. It is one-parcel-per-unit meeting a quantity above one,
+  // not a broken deployment. A blank destination state is the same shape: the
+  // customer is still typing.
+  //
+  // Nothing is broken when this happens. The router drops the carrier for that
+  // one quote, Australia Post still answers, and a consignment neither can carry
+  // falls back to "Calculated on quote" - which is the right answer for a cart
+  // that was always going to be priced by a person. So: log it, never mail it.
+  if (d.includes("no shipping solutions") || d.includes("destination_address")) {
+    return "consignment";
+  }
+  // A malformed request never fixes itself, and it fails EVERY quote rather than
+  // some. Classified as needing a human after a 35-character street line silently
+  // removed Easyship from production on 2026-09-06 - logged, but as "transient",
+  // so nobody would have been told.
+  //
+  // `origin_address` and `parcels` faults stay here on purpose: those come from
+  // OUR configuration and OUR carton data, so they recur until someone acts. The
+  // bare wrapper stays too, as a last resort - a fault naming no field at all is
+  // one we have never seen, and being woken for it beats losing a carrier
+  // silently a second time.
+  if (
+    d.includes("not valid") ||
+    d.includes("invalid_content") ||
+    d.includes("too long") ||
+    d.includes("can't be blank") ||
+    d.includes("is required") ||
+    d.includes("must be greater than")
+  ) {
+    return "config";
   }
   return "transient";
 }
@@ -102,7 +139,8 @@ export function reportCarrierFailure(carrier: string, detail: string): void {
   const kind = classifyFailure(detail);
   console.error(`[freight] ${carrier} failed (${kind}): ${detail}`);
 
-  if (kind === "transient") return;
+  // `consignment` is logged and never mailed: it is one cart, not the carrier.
+  if (kind === "transient" || kind === "consignment") return;
 
   const key = `${carrier}:${kind}`;
   const now = Date.now();

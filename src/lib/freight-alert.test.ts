@@ -27,6 +27,45 @@ describe("classifying a carrier failure", () => {
     expect(classifyFailure("parcels[0].items[0].category can't be blank")).toBe("config");
   });
 
+  // The exact strings Easyship returned on 2026-09-07, probed against the live
+  // rates endpoint. Both wear the same wrapper as the line_1 outage above, which
+  // is why matching the wrapper emailed Steve about an outage that was not
+  // happening while the carrier answered every other request normally.
+  it("separates a cart nobody can carry from a request we are sending wrong", () => {
+    expect(
+      classifyFailure(
+        "The request body content is not valid. No shipping solutions available based on the information provided"
+      )
+    ).toBe("consignment");
+    expect(
+      classifyFailure(
+        "The request body content is not valid. destination_address.state can't be blank"
+      )
+    ).toBe("consignment");
+  });
+
+  // The distinction is WHOSE fault recurs. An origin address or a carton comes
+  // from our own configuration and data, so it breaks every cart until someone
+  // fixes it; a destination and a quantity arrive from the customer.
+  it("still calls our own origin and carton data a config fault", () => {
+    expect(
+      classifyFailure(
+        "The request body content is not valid. origin_address.line_1 is too long (maximum is 35 characters)"
+      )
+    ).toBe("config");
+    expect(
+      classifyFailure(
+        "The request body content is not valid. parcels[0].total_actual_weight must be greater than 0"
+      )
+    ).toBe("config");
+  });
+
+  // A fault naming no field is one we have never seen. Being woken for it beats
+  // losing a carrier silently the way 2026-09-06 did.
+  it("keeps waking someone for an unrecognised rejection", () => {
+    expect(classifyFailure("The request body content is not valid.")).toBe("config");
+  });
+
   // A false alarm at 2am costs more trust than it buys, so anything that is not
   // clearly a quota, a credential or a malformed request stays quiet.
   it("treats anything else as transient", () => {
@@ -95,6 +134,19 @@ describe("alerting a human", () => {
     reportCarrierFailure("Easyship", "The request body content is not valid. line_1 is too long");
     await settle();
     expect(sent[0]).toContain("rejecting our requests");
+  });
+
+  // THE REGRESSION THIS FILE EXISTS FOR. Two 300cm cartons is an unservable
+  // cart, not a broken deployment, and the mail it used to send said the carrier
+  // was switched off and every quote was affected. Neither was true.
+  it("does not mail about a consignment no carrier will take", async () => {
+    reportCarrierFailure(
+      "Easyship",
+      "The request body content is not valid. No shipping solutions available based on the information provided"
+    );
+    await settle();
+    expect(sent).toHaveLength(0);
+    expect(console.error).toHaveBeenCalled();
   });
 
   it("stays quiet about a network blip", async () => {
