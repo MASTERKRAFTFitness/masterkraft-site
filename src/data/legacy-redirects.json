@@ -1039,6 +1039,10 @@
       "destination": "/equipment/body-weight"
     },
     {
+      "source": "/product/plyometric-box-45cm",
+      "destination": "/equipment/body-weight"
+    },
+    {
       "source": "/product/plyometric-box-set-of-4-sf",
       "destination": "/equipment/body-weight"
     },
