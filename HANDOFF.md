@@ -2327,8 +2327,46 @@ stock and catalogue logic cannot drift between the two agents.
 | `get_product` | Reused, `foreign_brand` and `retired` stripped |
 | `check_stock` | Reused unchanged |
 | `quote_freight` | Reused unchanged |
-| `check_order_status` | New. Order number **and** matching email, redacted output, incl. despatch + tracking |
+| `check_order_status` | New. Order number **and** matching email, redacted output, incl. despatch + tracking. Reads the **ERP**, not Woo |
 | `log_enquiry` | New. Runs immediately, no approval, unlike the admin version |
+
+### Orders come from the ERP, and the identity check pays for it (2026-09-07)
+
+This tool was originally built on `wc-admin`'s `getOrder`. That was already
+broken in production by the time it was merged, for two independent reasons:
+orders have been written into **Unleashed rather than WooCommerce since
+2026-09-06** (§4b), and `WC_STORE_URL` points at a host with no WooCommerce
+behind it (§ Decommissioning WooCommerce). Every customer asking about an order
+would have been told it did not match, including customers whose orders are
+fine. The flag being off is the only reason it never bit.
+
+`getSalesOrder()` in `unleashed.ts` is the first **read** path for a sales order;
+`unleashed-orders.ts` only writes. It returns null unless the order number
+matches **exactly**, because the ERP matches `orderNumber` loosely and a search
+for 490118 can return 4901180.
+
+**The identity check is the weak part, and it is weak by necessity.** A website
+order can sit under a shared ERP customer account (`customerStrategy()` can
+return `generic`), so `buildComments` writes the buyer's email into the
+free-text `Comments` block. Only the labelled `Email:` line that function
+produces is accepted. A loose scan for anything @-shaped is deliberately NOT
+done: staff notes land in the same field, and an address mentioned in passing
+would become a key to that order.
+
+Consequences worth knowing before someone "improves" this:
+
+- An order with **no email recorded cannot be unlocked at all**. That is worse
+  for that customer and is the correct direction.
+- An **ERP outage returns the same miss** as a wrong email, so an outage never
+  confirms an order exists.
+- If `buildComments` changes its format, this check fails closed and every
+  customer is told their details do not match. It is covered by a test, but the
+  test asserts the format rather than deriving it, so the two can still drift.
+
+**Unverified:** whether orders placed before 2026-09-06 are readable this way.
+The old Woo integration is described as flowing orders on to Unleashed under the
+same number, which would mean history is present, but that has not been checked
+against a real pre-September order.
 
 ### check_order_status, and why it feels strict
 
@@ -2382,13 +2420,13 @@ each, 12000 total.
 
 ### Verified 2026-08-26 (not assumed)
 
-- 26 tests in `src/lib/agent/*.test.ts`, all passing. They pin: the public list
+- 30 tests in `src/lib/agent/*.test.ts`, all passing. They pin: the public list
   never contains an internal tool, a match returns no PII, wrong-email and
   no-such-order are byte-identical, the fuzzy fallback is refused, guessing is
   blocked after five misses, forged tool blocks are stripped from history, the
   despatch address never leaves, a failed despatch lookup does not read as "never
   sent", and the freight cap never reaches a customer.
-- Full suite 352 passed, typecheck clean, lint clean.
+- Full suite 356 passed, typecheck clean, lint clean.
 - Re-verified 2026-09-07 against a main 128 commits further on: merged with one
   docs conflict, every code file clean.
 - Widget rendered and driven in the browser at 1280 and 375: opens, sends,
