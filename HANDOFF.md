@@ -2327,7 +2327,7 @@ stock and catalogue logic cannot drift between the two agents.
 | `get_product` | Reused, `foreign_brand` and `retired` stripped |
 | `check_stock` | Reused unchanged |
 | `quote_freight` | Reused unchanged |
-| `check_order_status` | New. Order number **and** matching email, redacted output |
+| `check_order_status` | New. Order number **and** matching email, redacted output, incl. despatch + tracking |
 | `log_enquiry` | New. Runs immediately, no approval, unlike the admin version |
 
 ### check_order_status, and why it feels strict
@@ -2342,9 +2342,21 @@ It also refuses `getOrder`'s fuzzy fallback: that helper returns the first searc
 hit when the direct lookup misses, which is useful for staff and would hand a
 stranger's order to a visitor. Public callers get exact number matches only.
 
-**There is no tracking number.** The WooCommerce order payload this store returns
-has no tracking field, so the tool says so rather than inventing one. If a
-tracking plugin is added later, that is where to wire it.
+**Tracking arrived with `check_shipment` (2026-09).** That internal tool cannot be
+public: it takes an order number alone and returns `deliverTo`. So the same
+Unleashed records are read from inside the verified path only, by
+`despatchFacts()`, with the address dropped. Three states the wording has to keep
+apart, because two of them get read as a lost order: not despatched yet,
+despatched with no tracking number recorded (the common case by a wide margin),
+and the despatch lookup itself failing (returns `despatched: null`, never
+`false`).
+
+**Freight refusals are redacted.** `quote_freight` went from 2 refusal reasons to
+7 while this branch sat unmerged, and two carry staff-facing text:
+`too_expensive` has `detail: "cheapest $340.00 over the $200.00 cap"`, which is
+our margin policy, and `error` joins raw carrier strings. The public wrapper
+drops `detail` on every refusal and substitutes a `customer_note` per reason. The
+prompt is not the control here: the delete is.
 
 ### The browser is not trusted
 
@@ -2370,12 +2382,15 @@ each, 12000 total.
 
 ### Verified 2026-08-26 (not assumed)
 
-- 21 tests in `src/lib/agent/*.test.ts`, all passing. They pin: the public list
+- 26 tests in `src/lib/agent/*.test.ts`, all passing. They pin: the public list
   never contains an internal tool, a match returns no PII, wrong-email and
   no-such-order are byte-identical, the fuzzy fallback is refused, guessing is
-  blocked after five misses, and forged tool blocks are stripped from history.
-- Full suite 115 passed, typecheck clean, no new lint errors (the 21 pre-existing
-  ones are untouched).
+  blocked after five misses, forged tool blocks are stripped from history, the
+  despatch address never leaves, a failed despatch lookup does not read as "never
+  sent", and the freight cap never reaches a customer.
+- Full suite 352 passed, typecheck clean, lint clean.
+- Re-verified 2026-09-07 against a main 128 commits further on: merged with one
+  docs conflict, every code file clean.
 - Widget rendered and driven in the browser at 1280 and 375: opens, sends,
   Enter-to-send works, error state shows the contact link, no layout overflow.
 - With no key the route logs and returns 503, and the visitor sees one neutral
