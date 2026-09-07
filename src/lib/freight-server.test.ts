@@ -23,6 +23,16 @@ const snapshot = [
     weight: "13",
     dimensions: { length: "850", width: "1000", height: "305" },
   },
+  // The same fault that SIZE cannot see. Every side of this is inside the size
+  // bounds, so it passed for a month: a 14kg barbell in a box 10.54 x 1.63 x
+  // 1.63cm, which is 500,000 kg/m3.
+  {
+    id: 404,
+    name: "Urethane Fixed Barbell 12.5kg",
+    sku: "MWBBFRU02",
+    weight: "14",
+    dimensions: { length: "10.54", width: "1.63", height: "1.63" },
+  },
 ];
 
 const variations = {
@@ -46,6 +56,11 @@ const erp: UnleashedMap = {
   ABPBSB04: {
     price: 200, stock: 1, name: "Foam Plyometric Box 12in",
     widthCm: 85, heightCm: 30.5, depthCm: 100, weightKg: 13,
+  },
+  // Corrected by the density pass: the same barbell, times ten.
+  MWBBFRU02: {
+    price: 100, stock: 1, name: "Urethane Fixed Barbell 12.5kg",
+    widthCm: 105.4, heightCm: 16.3, depthCm: 16.3, weightKg: 14,
   },
 };
 
@@ -157,6 +172,18 @@ describe("a carton that could not be real is not used", () => {
     const { refsToFreightItems } = await import("@/lib/freight-server");
     const [item] = await refsToFreightItems([{ productId: 101, sku: "MBPB3I101", quantity: 1 }]);
     expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([77, 52, 62]);
+  });
+
+  // SIZE WAS NOT ENOUGH. This one is inside every size bound and still cannot
+  // exist, and there were 42 of them in the snapshot - a 41kg barbell declared
+  // as a box the size of a paperback. The consignment goes out under-declared,
+  // the carrier weighs it, and we absorb the difference.
+  it("falls through to the ERP when the snapshot carton is denser than metal", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 404, sku: "MWBBFRU02", quantity: 1 }]);
+    // 105.4 x 16.3 x 16.3 from the ERP, in the site's axis order.
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([105.4, 16.3, 16.3]);
+    expect(item.weightKg).toBe(14);
   });
 
   // With no plausible carton anywhere the line is unquotable, which fails the

@@ -303,6 +303,13 @@ export function itemsToParcels(items: FreightItem[]): {
 export const MAX_PLAUSIBLE_SIDE_CM = 300;
 export const MAX_PLAUSIBLE_VOLUME_M3 = 3;
 export const MIN_PLAUSIBLE_SIDE_CM = 0.5;
+// Density bounds, deliberately far apart: this is looking for a misplaced
+// decimal point, not judging whether a box is well packed. Below 5 is lighter
+// than expanded polystyrene and above 50,000 is denser than any metal. Anything
+// between is somebody's real carton and is left alone - the pair of bounds that
+// caught the errors without inventing new ones. See the note on the guard.
+export const MIN_PLAUSIBLE_DENSITY_KG_M3 = 5;
+export const MAX_PLAUSIBLE_DENSITY_KG_M3 = 50_000;
 
 /**
  * True when a carton could exist.
@@ -319,11 +326,43 @@ export const MIN_PLAUSIBLE_SIDE_CM = 0.5;
  * The point is not to hide bad data - `docs/freight-brief-bulky.md` and
  * `npm run report:coverage` both name it. It is that a quote must never be built
  * from a number nobody believes.
+ *
+ * SIZE ALONE IS NOT ENOUGH, AND THE SITE UNDER-CHARGED FOR A MONTH PROVING IT.
+ * `MWBBFRU02` is a 14kg fixed barbell recorded in the frozen snapshot as
+ * 10.54 x 1.63 x 1.63cm - every side inside the bounds above, 0.000028 cubic
+ * metres, so it passed - which is 500,000 kg/m3, denser than any metal on earth.
+ * There were 42 like it, up to a 41kg barbell in a box the size of a paperback.
+ * They under-declare the consignment, the carrier weighs it, and we absorb the
+ * difference. That is the exact loss this file says elsewhere it exists to stop.
+ *
+ * Rejecting them here rather than correcting the data is what freight-server's
+ * candidate chain is FOR: the snapshot is asked first, an impossible carton is
+ * skipped, and Unleashed's corrected 105.4 x 16.3 x 16.3 answers instead. All 42
+ * resolve that way, so nothing is pushed onto the quote flow by this.
+ *
+ * THE BOUNDS ARE WIDE ON PURPOSE, and the first draft of them was wrong. Chosen
+ * on density alone, "outside 100-8000 kg/m3" also condemned a 2kg ankle strap at
+ * 25 x 8.5 x 1cm - a perfectly good carton that is merely dense - and would have
+ * turned it into a two-and-a-half-metre one. An inflated 55cm fitness ball sits
+ * near the floor legitimately. 5 and 50,000 catch the order-of-magnitude slips
+ * and touch nothing real. See §0g of HANDOFF.md.
+ *
+ * NO WEIGHT MEANS NO OPINION. Density needs a mass, and a carton with dimensions
+ * and no weight is common in the snapshot. Judging those would reject a box for
+ * a field nobody filled in, so the density test is skipped and the size bounds
+ * stand alone - the same "half a rule is worse than none" argument
+ * defaultCartonFor makes about the satchel.
  */
 export function isPlausibleCarton(p: Parcel): boolean {
   const sides = [p.length, p.width, p.height];
   if (sides.some((s) => !(s >= MIN_PLAUSIBLE_SIDE_CM) || s > MAX_PLAUSIBLE_SIDE_CM)) return false;
-  return (p.length * p.width * p.height) / 1e6 <= MAX_PLAUSIBLE_VOLUME_M3;
+  const volumeM3 = (p.length * p.width * p.height) / 1e6;
+  if (volumeM3 > MAX_PLAUSIBLE_VOLUME_M3) return false;
+  if (p.weight > 0) {
+    const density = p.weight / volumeM3;
+    if (density < MIN_PLAUSIBLE_DENSITY_KG_M3 || density > MAX_PLAUSIBLE_DENSITY_KG_M3) return false;
+  }
+  return true;
 }
 
 // A DEFAULT CARTON, FOR THE ONE CASE WHERE GUESSING IS HONEST.

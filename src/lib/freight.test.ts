@@ -915,4 +915,41 @@ describe("cartons that could not be real", () => {
   it("rejects something bigger than a pallet of pallets", () => {
     expect(isPlausibleCarton({ weight: 50, length: 400, width: 100, height: 100 })).toBe(false);
   });
+
+  // THE 42. Every side inside the size bounds, so the size rule passed them and
+  // the site quoted freight from them - a 41kg barbell declared as a box the
+  // size of a paperback under-declares the consignment and we absorb the
+  // carrier's correction.
+  it("rejects a carton denser than any metal", () => {
+    // MWBBFRU02: a 14kg fixed barbell recorded 10.54 x 1.63 x 1.63cm. 500,000 kg/m3.
+    expect(isPlausibleCarton({ weight: 14, length: 10.54, width: 1.63, height: 1.63 })).toBe(false);
+    // MWWLACC01: 1kg of collars recorded 4.5 x 1.1 x 1.1cm.
+    expect(isPlausibleCarton({ weight: 1, length: 4.5, width: 1.1, height: 1.1 })).toBe(false);
+  });
+
+  // MWWPOPR01, the case that proved size was not enough: a 2kg weight plate
+  // recorded 170 x 170 x 32cm. 0.92 cubic metres, so the size rule passed it -
+  // but that is steel at 2.2 kg/m3, lighter than air.
+  it("rejects a carton lighter than air", () => {
+    expect(isPlausibleCarton({ weight: 2, length: 170, width: 170, height: 32 })).toBe(false);
+  });
+
+  // The bounds are wide because the first draft of them was not. "Outside
+  // 100-8000 kg/m3" would have condemned both of these and rewritten a 2kg ankle
+  // strap into a two-and-a-half-metre one.
+  it("leaves a dense little box and a big light one alone", () => {
+    // MWWLATT01: a 2kg ankle strap, 25 x 8.5 x 1cm - 9,412 kg/m3 and perfectly real.
+    expect(isPlausibleCarton({ weight: 2, length: 25, width: 8.5, height: 1 })).toBe(true);
+    // An inflated 55cm fitness ball is genuinely close to the floor.
+    expect(isPlausibleCarton({ weight: 1.2, length: 55, width: 55, height: 55 })).toBe(true);
+  });
+
+  // Density needs a mass. Dimensions with no weight are ordinary in the
+  // snapshot, and rejecting a box over a field nobody filled in would lose
+  // cartons that quote perfectly well.
+  it("has no opinion on density when the weight is missing", () => {
+    expect(isPlausibleCarton({ weight: 0, length: 10.54, width: 1.63, height: 1.63 })).toBe(true);
+    // The size rule still applies without a weight.
+    expect(isPlausibleCarton({ weight: 0, length: 850, width: 1000, height: 305 })).toBe(false);
+  });
 });

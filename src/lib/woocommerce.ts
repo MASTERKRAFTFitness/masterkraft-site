@@ -214,9 +214,16 @@ const num = (v: unknown) => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
-/** Same bounds as lib/freight's isPlausibleCarton, duplicated here rather than
- * imported to keep this module free of the freight domain - it is the one
- * chokepoint every visibility rule already lives at. */
+/** The SIZE bounds of lib/freight's isPlausibleCarton, duplicated here rather
+ * than imported to keep this module free of the freight domain - it is the one
+ * chokepoint every visibility rule already lives at.
+ *
+ * NOT the density bound, and that divergence is deliberate. This sees only what
+ * WooCommerce recorded, and 42 snapshot cartons are impossible by density while
+ * the ERP holds a good one for every single of them. Rejecting here would take a
+ * product off the listings for a fault the quote never suffers - HIDE_UNSHIPPABLE
+ * would hide barbells the checkout prices correctly. Deciding what to QUOTE FROM
+ * gets the stricter rule; deciding what to SHOW does not. */
 function isShippable(p: { weight?: string; dimensions?: { length?: string; width?: string; height?: string } }): boolean {
   const kg = num(p.weight);
   const l = num(p.dimensions?.length);

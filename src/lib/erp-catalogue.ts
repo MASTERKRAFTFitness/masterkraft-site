@@ -124,7 +124,18 @@ const cartonNum = (v: unknown) => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
-/** Same bounds as lib/freight's isPlausibleCarton: this is data entry, not carrier limits. */
+/**
+ * The SIZE half of lib/freight's isPlausibleCarton: this is data entry, not
+ * carrier limits.
+ *
+ * It stops at size on purpose. The freight guard also rejects impossible
+ * DENSITY, but it is choosing between two candidate cartons and can fall through
+ * to the other source; this is asking "can this code be quoted from EITHER
+ * source", and it already asks both below. A snapshot carton that fails on
+ * density is one the ERP answers for, so failing it here would hide a product
+ * that quotes perfectly well. Adding a weight to this signature is what it would
+ * take to share the rule, and there is nothing to gain by it.
+ */
 const plausible = (l: number, w: number, h: number) =>
   l > 0 && w > 0 && h > 0 &&
   [l, w, h].every((x) => x >= 0.5 && x <= 300) &&
