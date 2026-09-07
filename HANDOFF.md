@@ -826,6 +826,47 @@ mailing once per cold lambda instead of once per six hours.
 `FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` and `.env.local` sets neither to Steve,
 so production points one of them at him and nobody wrote down which. See §12.
 
+### 42 cartons the site quoted from that could not exist
+
+The 109 corrections went into Unleashed. **The frozen snapshot still holds the
+old numbers, and the snapshot is asked first** - so for anything wrong in BOTH
+systems, the corrections never reached a customer's quote.
+
+`isPlausibleCarton` was supposed to catch that, and for the millimetre errors it
+does: 850 x 1000 x 305 is over 3 cubic metres, rejected, and the ERP answers. But
+it tests SIZE, and §0g's whole finding was that size is not enough. `MWBBFRU02`
+is a 14kg fixed barbell recorded as **10.54 x 1.63 x 1.63cm** - every side inside
+the bounds, 0.000028 cubic metres - which is 500,000 kg/m3, denser than any
+metal. 42 cartons in the snapshot are like it, the worst a 41kg barbell in a box
+the size of a paperback.
+
+**This was real money, not a theoretical gap.** Production priced that barbell to
+Parramatta at **$27.67**; the same product quoted from its real carton is
+**$40.00**. The gap is a consignment we under-declare, the carrier corrects, and
+we absorb - the exact loss `freight-server.ts` says it exists to prevent.
+
+`isPlausibleCarton` now also rejects densities below 5 or above 50,000 kg/m3, so
+the candidate chain skips the bad snapshot carton and Unleashed's corrected
+105.4 x 16.3 x 16.3 answers instead. **Checked against the live ERP: all 42
+resolve that way and none is pushed onto the quote flow**, so this costs no
+product its card checkout.
+
+Two things about the shape of it:
+
+- **A carton with no weight gets no density opinion.** Dimensions without a
+  weight are ordinary in the snapshot, and rejecting a box over a field nobody
+  filled in would lose cartons that quote perfectly well. The size bounds still
+  stand alone there.
+- **`woocommerce.ts` and `erp-catalogue.ts` keep the size-only bounds, on
+  purpose,** and now say why. They decide what to SHOW, from a single source.
+  Rejecting on density there would take 42 products off the listings under
+  `HIDE_UNSHIPPABLE` for a fault the quote no longer suffers. Deciding what to
+  QUOTE FROM gets the stricter rule; deciding what to show does not.
+
+The snapshot itself is still wrong. Nothing reads those values now, but a
+`build:catalogue` re-run will not fix them either - the bad numbers are in
+WooCommerce.
+
 ### A size container is a structure, not a `-GROUP` suffix
 
 `npm run report:orphans` decided "this WooCommerce record exists only to group
