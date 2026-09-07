@@ -1722,6 +1722,16 @@ Set and working: `WC_*`, `UNLEASHED_*`, `NEXT_PUBLIC_GA_ID` (G-86MEH5QL99),
 `HIDE_UNSHIPPABLE` is true, with the $500 enquiry threshold from
 `HIDE_UNSHIPPABLE_BELOW` (defaults to 500 in code); `FREIGHT_COLLECTION_*` set.
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` added 2026-09-06.
+**`NEXT_PUBLIC_ALLOW_INDEX` is `true`**, which is not something Vercel has to be
+asked: `https://masterkraft.com/robots.txt` served `Allow: /` with the sitemap
+line on 2026-09-07, and `isIndexableHost()` returns false for every host unless
+that flag is on. An earlier version of this section listed it as unset - see
+below for why that mattered.
+
+**Who gets the freight alerts is NOT recorded here, and should be.** Alerts go to
+`FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` (`lib/freight-alert.ts`). Neither is in
+`.env.local`, and Steve receives them, so production holds one of the two pointed
+at him. Nobody has written down which. See §0h.
 
 **`.env.local` has an EMPTY `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`**, so local dev
 falls back to quote mode and never renders the card form. Put a dummy `pk_test_...`
@@ -1730,9 +1740,18 @@ in it to exercise the checkout UI locally; do not put the live key in a dev file
 **ROTATE `SUPABASE_SERVICE_ROLE_KEY`.** It was printed into a session transcript.
 It is now in Vercel as well as `.env.local`, so rotating means updating both.
 
-Not set: `NEXT_PUBLIC_ALLOW_INDEX` (correct for staging), `INTERPARCEL_API_KEY`,
-`FREIGHT_COLLECTION_*`. Server secrets (HubSpot form GUIDs, Resend, Stripe secret,
-WC write) remain unverifiable without a live test.
+**This list said the wrong thing for eleven days.** It read "Not set:
+`NEXT_PUBLIC_ALLOW_INDEX` (correct for staging), `INTERPARCEL_API_KEY`,
+`FREIGHT_COLLECTION_*`" - written when the site WAS staging and never revisited at
+cutover. Two of those three were false in production, and the section above said
+so nine lines earlier: freight has quoted from Thomastown since 5 September, and
+the apex has been indexable since 27 August. A reader who believed it would have
+concluded the live site was `noindex` and that freight had no origin.
+
+Not set, and correctly: `INTERPARCEL_API_KEY` - Interparcel was the first carrier
+(`3453487`) and no code has read that variable since Australia Post and Easyship
+replaced it, so it is dead rather than pending. Server secrets (HubSpot form
+GUIDs, Resend, Stripe secret, WC write) remain unverifiable without a live test.
 
 `FREIGHT_MARGIN_PERCENT` defaults to 15 in code; set it only to change that.
 
