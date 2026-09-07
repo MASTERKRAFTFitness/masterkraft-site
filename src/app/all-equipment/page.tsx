@@ -4,8 +4,9 @@ import PageHero from "@/components/marketing/PageHero";
 import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
 import CategoryJumpNav from "@/components/shop/CategoryJumpNav";
-import { getAllProducts, getCategoryChildren, type WcProduct } from "@/lib/woocommerce";
+import { getAllProducts, type WcProduct } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
+import { erpSubgroups, erpUnits, unitCard, type ErpUnit } from "@/lib/erp-catalogue";
 import { categories } from "@/lib/categories";
 
 export const metadata: Metadata = {
@@ -27,48 +28,75 @@ export default async function AllEquipmentPage({
   const sort = sp.sort ?? "featured";
   const priceSort = sort === "price-asc" || sort === "price-desc";
 
-  // The ERP map, the dropdown's sub-categories and the catalogue itself are
-  // independent, and WooCommerce answers in 1.5-2.5s per request, so these ran
-  // as three serial stages. In parallel the page costs the slowest one.
-  const [unleashed, jumpGroups, products] = await Promise.all([
-    getUnleashedMap().catch(() => ({})),
-    // Category dropdown groups (each category + its sub-categories from WooCommerce).
-    Promise.all(
-      categories.map(async (c) => ({
-        label: c.label,
-        slug: c.slug,
-        children: await getCategoryChildren(c.wcId).catch(() => []),
-      }))
-    ),
-    getAllProducts().catch(() => null),
-  ]);
-  const failed = products === null;
-  const all: WcProduct[] = products ?? [];
+  // The ERP is the catalogue now (lib/erp-catalogue.ts), so this page lists
+  // UNITS: one card per product or per range, in the ERP's own grouping. The
+  // WooCommerce snapshot is only the fallback for when Unleashed is unreachable.
+  const unleashed = await getUnleashedMap().catch(() => ({}));
+  const erpUsable = Object.keys(unleashed).length > 0;
 
-  // Name sorts need no pricing; featured = the store's menu_order (as fetched).
-  if (sort === "name-asc") all.sort((a, b) => a.name.localeCompare(b.name));
-  else if (sort === "name-desc") all.sort((a, b) => b.name.localeCompare(a.name));
+  // Category dropdown groups: each category and its ProductSubGroups.
+  const jumpGroups = categories.map((c) => ({
+    label: c.label,
+    slug: c.slug,
+    children: c.erpGroup && erpUsable ? erpSubgroups(unleashed, c.erpGroup) : [],
+  }));
 
-  const total = all.length;
+  let units: ErpUnit[] = [];
+  let all: WcProduct[] = [];
+  let failed = false;
+
+  if (erpUsable) {
+    // Category order, then name — so the page reads down the catalogue the way
+    // the navigation does rather than in WooCommerce's old menu_order.
+    const order = new Map(categories.map((c, i) => [c.erpGroup, i]));
+    units = [...erpUnits(unleashed).values()].sort(
+      (a, b) =>
+        (order.get(a.group) ?? 99) - (order.get(b.group) ?? 99) || a.name.localeCompare(b.name)
+    );
+    if (sort === "name-asc") units.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === "name-desc") units.sort((a, b) => b.name.localeCompare(a.name));
+  } else {
+    const products = await getAllProducts().catch(() => null);
+    failed = products === null;
+    all = products ?? [];
+    if (sort === "name-asc") all.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === "name-desc") all.sort((a, b) => b.name.localeCompare(a.name));
+  }
+
+  const total = erpUsable ? units.length : all.length;
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
   let cards: { product: WcProduct; enriched: EnrichedProduct }[] = [];
-  if (priceSort) {
-    // Price sort needs corrected prices across the whole set, so enrich all.
-    let enrichedAll = await Promise.all(
+  if (erpUsable) {
+    // ERP units already carry their price, so there is nothing to enrich and a
+    // price sort costs one pass over an in-memory array rather than a fetch.
+    let list = units.map(unitCard);
+    if (priceSort) {
+      list = list.sort((a, b) => {
+        const av = a.enriched.priceValue;
+        const bv = b.enriched.priceValue;
+        if (av === 0 && bv === 0) return 0;
+        if (av === 0) return 1; // POA always last
+        if (bv === 0) return -1;
+        return sort === "price-asc" ? av - bv : bv - av;
+      });
+    }
+    cards = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  } else if (priceSort) {
+    // Snapshot fallback: price sort needs corrected prices across the whole set.
+    const enrichedAll = await Promise.all(
       all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) })),
     );
     enrichedAll.sort((a, b) => {
       const av = a.enriched.priceValue;
       const bv = b.enriched.priceValue;
       if (av === 0 && bv === 0) return 0;
-      if (av === 0) return 1; // POA always last
+      if (av === 0) return 1;
       if (bv === 0) return -1;
       return sort === "price-asc" ? av - bv : bv - av;
     });
     cards = enrichedAll.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   } else {
-    // Enrich only the current page for the common (featured/name) case.
     const slice = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     cards = await Promise.all(
       slice.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) })),

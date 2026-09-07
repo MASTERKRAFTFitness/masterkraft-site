@@ -4,17 +4,45 @@
 // store until we've verified the price-override behaviour.
 
 import { getProductById, getVariation } from "@/lib/woocommerce";
-import { getUnleashedMap, enrich } from "@/lib/unleashed";
+import { getUnleashedMap, enrich, lookupBySku } from "@/lib/unleashed";
 
-const STORE = process.env.WC_STORE_URL;
+// READ AT CALL TIME. As a module-level const this froze at import, which made
+// the gate below unable to see a value set afterwards and untestable — the same
+// fault as the freight code in lib/unleashed-orders. No behaviour change in the
+// server runtime, where the variable is present before this module loads.
+const storeUrl = () => process.env.WC_STORE_URL;
 // The store has GST (10%) enabled and adds it on top of submitted line totals.
 // Our unitPrice is GST-INCLUSIVE, so we divide it back out before submitting.
 const GST = 1.1;
 
-export type CartRef = { productId: number; variationId?: number; quantity: number };
+export type CartRef = {
+  productId: number;
+  variationId?: number;
+  quantity: number;
+  /** Unleashed ProductCode. The preferred key — see resolveOrderLines. */
+  sku?: string;
+};
 
-// Re-price the cart on the SERVER from WooCommerce + Unleashed — never trust
-// client-sent prices for payment. Returns authoritative lines + total (inc GST).
+// Re-price the cart on the SERVER — never trust client-sent prices for payment.
+// Returns authoritative lines + total (inc GST).
+//
+// THE ERP IS THE PRICE, AND NOW THE NAME TOO. Both halves of a line already came
+// from Unleashed in all but name: `enrich` reads the price off the cached map and
+// WooCommerce was consulted only for the product's title and its variation label.
+// That made a live WooCommerce the difference between an order and a 500, for two
+// strings the ERP holds itself.
+//
+// So a ref carrying a ProductCode resolves entirely from the map, and the
+// WooCommerce path below is kept only for carts saved before this shipped —
+// localStorage outlives a deploy, and a cart mid-checkout must not start failing
+// because we changed our minds about the lookup key. That branch can go once the
+// oldest surviving cart has expired.
+//
+// GST IS UNCHANGED. `UnleashedEntry.price` is GST-INCLUSIVE (unleashed.ts applies
+// the 1.1 at map-build time), which is exactly what `enrich().priceValue` returned
+// here before. Both paths still produce an inc-GST unitPrice, so the ex-GST
+// conversion at submission is untouched. Getting this backwards would charge or
+// record a figure 10% out, which is the fault that produced order 490118.
 export async function resolveOrderLines(
   refs: CartRef[]
 ): Promise<{ lines: OrderLine[]; total: number; hasPoa: boolean }> {
@@ -22,6 +50,28 @@ export async function resolveOrderLines(
   const lines: OrderLine[] = [];
   for (const r of refs) {
     const qty = Math.max(1, Math.floor(r.quantity || 1));
+
+    const code = r.sku?.trim();
+    const erp = code ? lookupBySku(map, code) : null;
+    // A code that the ERP does not know is NOT a reason to fall through to
+    // WooCommerce: it means the cart and the catalogue disagree, and quietly
+    // re-pricing that line somewhere else is how the wrong number gets charged.
+    if (code && !erp) throw new Error(`Unresolvable line item: ERP code ${code}`);
+    if (erp) {
+      // A sellable product with no name in the ERP cannot be put on an order
+      // line a human has to read in the warehouse.
+      if (!erp.name) throw new Error(`ERP code ${code} has no product name`);
+      lines.push({
+        productId: r.productId,
+        variationId: r.variationId,
+        sku: code,
+        quantity: qty,
+        unitPrice: erp.price,
+        name: erp.name,
+      });
+      continue;
+    }
+
     if (r.variationId) {
       const [v, parent] = await Promise.all([
         getVariation(r.productId, r.variationId),
@@ -59,6 +109,8 @@ function authHeader() {
 export type OrderLine = {
   productId: number; // WC parent/product id
   variationId?: number; // set for variable products
+  /** Unleashed ProductCode, when the line resolved from the ERP. */
+  sku?: string;
   quantity: number;
   unitPrice: number; // GST-inclusive unit price (from Unleashed/cart)
   name: string;
@@ -98,7 +150,7 @@ export type WooOrderResult = {
 };
 
 export function ordersEnabled(): boolean {
-  return process.env.WC_WRITE_ENABLED === "true" && !!STORE;
+  return process.env.WC_WRITE_ENABLED === "true" && !!storeUrl();
 }
 
 export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderResult> {
@@ -157,7 +209,7 @@ export async function createWooOrder(input: CreateOrderInput): Promise<WooOrderR
     ...(input.paymentIntentId ? { transaction_id: input.paymentIntentId } : {}),
   };
 
-  const res = await fetch(`${STORE}/wp-json/wc/v3/orders`, {
+  const res = await fetch(`${storeUrl()}/wp-json/wc/v3/orders`, {
     method: "POST",
     headers: { Authorization: authHeader(), "Content-Type": "application/json" },
     body: JSON.stringify(body),

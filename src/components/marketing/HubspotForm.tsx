@@ -31,14 +31,15 @@ export default function HubspotForm({
   formId?: string;
   hostedUrl: string;
 }) {
-  const [state, setState] = useState<"loading" | "embedded" | "fallback">("loading");
+  // Whether the embed is possible at all is a property of the props, not
+  // something to be discovered in an effect. Only the probe result is state.
+  const configured = Boolean(PORTAL_ID && formId);
+  const [probe, setProbe] = useState<"loading" | "embedded" | "fallback">("loading");
+  const state = configured ? probe : "fallback";
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!PORTAL_ID || !formId) {
-      setState("fallback");
-      return;
-    }
+    if (!configured) return;
     const el = ref.current;
     if (!el) return;
 
@@ -46,25 +47,23 @@ export default function HubspotForm({
       const f = el.querySelector("iframe");
       return !!f && f.offsetHeight >= RENDERED_MIN_HEIGHT;
     };
-    if (rendered()) {
-      setState("embedded");
-      return;
-    }
     // Watch the iframe grow; HubSpot self-sizes it via postMessage when allowed.
+    // No synchronous check first: ResizeObserver fires once on observe with the
+    // element's current size, so an already-rendered iframe is caught below.
     const ro = new ResizeObserver(() => {
-      if (rendered()) setState("embedded");
+      if (rendered()) setProbe("embedded");
     });
     const mo = new MutationObserver(() => {
       const f = el.querySelector("iframe");
       if (f) ro.observe(f);
-      if (rendered()) setState("embedded");
+      if (rendered()) setProbe("embedded");
     });
     mo.observe(el, { childList: true, subtree: true });
     const existing = el.querySelector("iframe");
     if (existing) ro.observe(existing);
 
     const timer = setTimeout(() => {
-      setState((s) => (s === "embedded" ? s : "fallback"));
+      setProbe((s) => (s === "embedded" ? s : "fallback"));
     }, PROBE_MS);
 
     return () => {
@@ -72,9 +71,7 @@ export default function HubspotForm({
       mo.disconnect();
       clearTimeout(timer);
     };
-  }, [formId]);
-
-  const configured = PORTAL_ID && formId;
+  }, [configured, formId]);
 
   return (
     <div className="mk-hsform">

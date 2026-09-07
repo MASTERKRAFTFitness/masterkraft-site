@@ -91,7 +91,7 @@ describe.skipIf(!LIVE)("catalogue snapshot parity with live WooCommerce", () => 
     expect(allProducts().length).toBe(total);
   }, 60_000);
 
-  it.each(categories.map((c) => [c.slug, c.wcId] as const))(
+  it.each(categories.flatMap((c) => (c.wcId ? [[c.slug, c.wcId] as const] : [])))(
     "category %s resolves the same products (including sub-category-only ones)",
     async (_slug, wcId) => {
       const expected = await liveIds({ category: wcId });
@@ -106,7 +106,7 @@ describe.skipIf(!LIVE)("catalogue snapshot parity with live WooCommerce", () => 
     60_000
   );
 
-  it.each(categories.map((c) => [c.slug, c.wcId] as const))(
+  it.each(categories.flatMap((c) => (c.wcId ? [[c.slug, c.wcId] as const] : [])))(
     "category %s resolves the same sub-categories",
     async (_slug, wcId) => {
       const { data } = await live<{ id: number; slug: string; count: number }[]>(

@@ -7,13 +7,19 @@ import { useEffect, useState } from "react";
 const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const HS_ID = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID;
+const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 
 export default function CookieConsent() {
   const [choice, setChoice] = useState<"accepted" | "declined" | null>(null);
   const [ready, setReady] = useState(false);
 
+  // The stored choice is in localStorage, which the server cannot read, so the
+  // first render has to be "undecided" and the real answer has to arrive in an
+  // effect. Rendering the banner from a server-unknowable value any other way
+  // is a hydration mismatch. Hence the disable.
   useEffect(() => {
     const stored = localStorage.getItem(KEY) as "accepted" | "declined" | null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoice(stored);
     setReady(true);
   }, []);
@@ -26,11 +32,16 @@ export default function CookieConsent() {
   return (
     <>
       {/* Analytics load only after explicit consent, and only if IDs are configured */}
-      {ready && choice === "accepted" && GA_ID && (
+      {ready && choice === "accepted" && (GA_ID || ADS_ID) && (
         <>
-          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+          {/* ONE gtag.js serves both properties — loading it twice would double
+              every event. The src id only has to be one of them; what actually
+              turns a property on is its own config line below. */}
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID || ADS_ID}`} strategy="afterInteractive" />
           <Script id="ga4-init" strategy="afterInteractive">
-            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`}
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());` +
+              (GA_ID ? `gtag('config','${GA_ID}');` : "") +
+              (ADS_ID ? `gtag('config','${ADS_ID}');` : "")}
           </Script>
         </>
       )}

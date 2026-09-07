@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
-import { track, trackBeginCheckout } from "@/lib/analytics";
-import { paymentsConfigured } from "@/lib/stripe-client";
+import { trackBeginCheckout, trackLead } from "@/lib/analytics";
+import { cartSellableByCard } from "@/lib/cart-eligibility";
+import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout from "@/components/shop/StripeCheckout";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -14,10 +15,13 @@ const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
 export default function CheckoutPage() {
-  const { items, subtotal, clear, ready } = useCart();
+  const { items, subtotal, clear, ready, removed, dismissRemoved } = useCart();
   // Card checkout when Stripe is configured AND every item has a real price.
   // Carts containing "Contact for pricing" items fall back to the quote flow.
-  const canPay = paymentsConfigured && ready && items.length > 0 && items.every((i) => i.price > 0);
+  // Every line must be re-pricable server-side before a card is charged. That
+  // rule lives in lib/cart-eligibility, which explains why it is now the ERP
+  // ProductCode that decides it and no longer the WooCommerce product id.
+  const canPay = paymentsConfigured && ready && cartSellableByCard(items);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,13 +59,13 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contact,
-          items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
+          items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
           subtotal,
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      track("generate_lead", { currency: "AUD", value: subtotal, items: items.length });
+      trackLead(subtotal, items.length);
       clear();
       setDone(true);
     } catch (err) {
@@ -77,10 +81,37 @@ export default function CheckoutPage() {
         <div className="container-mk">
           <p className="font-mono text-xs tracking-widest text-accent uppercase mb-3">Checkout</p>
           <h1 className="text-4xl lg:text-5xl font-bold">{paidOrder || canPay ? "Checkout" : "Request a Quote"}</h1>
+          {/* Only when quote-only is DELIBERATE. A cart that simply contains a
+              POA item already lands on the quote flow by design and needs no
+              apology for it. */}
+          {checkoutMode === "quote" && !paidOrder && (
+            <p className="mt-3 max-w-xl text-sm text-white/70">
+              Card payment is briefly unavailable while we move our systems. Send your cart
+              through and we will confirm pricing, freight and lead times, normally within one
+              business day.
+            </p>
+          )}
         </div>
       </div>
 
       <section className="container-mk py-16">
+        {removed.length > 0 && (
+          <div className="mb-8 border border-accent bg-accent/5 p-5">
+            <p className="text-sm text-ink">
+              {removed.length === 1 ? "One item is" : `${removed.length} items are`} no longer
+              available and {removed.length === 1 ? "has" : "have"} been removed from your cart:{" "}
+              <strong>{removed.join(", ")}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={dismissRemoved}
+              className="mt-3 font-mono text-[11px] uppercase tracking-wide text-ash hover:text-accent"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {paidOrder ? (
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
             <p className="font-display uppercase tracking-wide text-2xl">Order confirmed</p>

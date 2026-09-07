@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef } from "@/lib/woo-orders";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
+import { freightMessage } from "@/lib/freight-message";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
 export async function POST(request: Request) {
+  // QUOTE-ONLY IS A SERVER RULE, NOT A HIDDEN FORM. The checkout page reads the
+  // same flag to render the quote flow, but that only stops the browser we
+  // shipped. This route is a public endpoint: without this check, quote mode
+  // means "the card form is hidden" rather than "no card may be charged", and a
+  // direct POST would start a real payment against live keys while every page
+  // on the site promised a quote.
+  if (quoteOnly) {
+    return NextResponse.json(
+      { ok: false, error: "Card payment is unavailable. Please request a quote." },
+      { status: 503 }
+    );
+  }
+
   if (!stripe) {
     return NextResponse.json({ ok: false, error: "Payments not configured" }, { status: 503 });
   }
@@ -96,23 +111,4 @@ export async function POST(request: Request) {
       : null,
     freightReason: freight.selected ? null : freight.reason,
   });
-}
-
-// Say WHY the order needs a quote. Most rejections here are not the customer's
-// address failing - they are a rack or a machine, which ships as freight rather
-// than parcel post and always did. Telling a Sydney customer we could not price
-// "this delivery address" for a 250kg machine sends them off to re-check a
-// postcode that was never the problem.
-function freightMessage(reason?: string): string {
-  switch (reason) {
-    case "oversize":
-    case "too_many_parcels":
-      return "This order ships as freight rather than parcel post, so we price delivery per order. Request a quote and our team will confirm the cost with you.";
-    case "incomplete_dimensions":
-      return "We don't have shipping dimensions on file for one or more items in this order. Request a quote and our team will confirm delivery with you.";
-    case "no_delivery_address":
-      return "Please enter your delivery suburb and postcode so we can calculate freight.";
-    default:
-      return "We couldn't calculate freight for this order right now. Please request a quote and our team will confirm it.";
-  }
 }

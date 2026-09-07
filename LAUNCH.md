@@ -25,8 +25,12 @@ Everything that could be finished without the domain switchover has been.
   (283) matches the servable set exactly. No console errors. Mobile pass clean.
 
 **Blockers, all waiting on the domain (§2):**
-1. ⚙️ **Stripe is in TEST mode.** `pk_test` is baked into the deployed bundle, so
-   the card form renders and every real card would be declined.
+1. ~~⚙️ **Stripe is in TEST mode.**~~ **Live keys are in** (Michael, 2026-09-06).
+   Not independently confirmed by reading the bundle, because it cannot be: the
+   site is in quote mode, so no publishable key is shipped to the browser at all
+   (12 chunks checked 2026-09-06, no `pk_live` and no `pk_test`). Vercel's own
+   dashboard is the only place this is visible. **Stripe is no longer the gate —
+   see the checkout-mode line below.**
 2. ⚙️ `NEXT_PUBLIC_SITE_URL` is `https://web.test.masterkraft.com`, so every
    canonical, sitemap entry and share link points at a test subdomain.
 3. ⚙️ `NEXT_PUBLIC_ALLOW_INDEX` is **not set at all**, so `robots.txt` is
@@ -76,6 +80,15 @@ missing var fails **silently** — that's why each must be checked deliberately.
 - ⚙️ `NEXT_PUBLIC_GA_ID` — **already set (G-86MEH5QL99) and working on staging.**
   GA4 loads after cookie consent. Re-check it is present on the production domain
   after the cutover, since a redeploy is what bakes it in.
+- ⚙️ `NEXT_PUBLIC_GOOGLE_ADS_ID` + `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` +
+  `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` — **not set, and paid advertising cannot be
+  measured until they are.** A GA4 event is not a Google Ads conversion: Ads only
+  counts what is addressed to a conversion action it owns. The tag ships wired up
+  and inert — with these unset the GA4 events still fire and nothing goes to Ads.
+  The ID is the Ads account's `AW-…`; each label comes from that action's tag
+  setup under Goals > Conversions. Two actions are wired: a paid card order
+  (purchase) and a submitted quote (lead) — keep them separate, a quote is a lead
+  and not revenue. Values are read at build time, so setting them needs a redeploy.
 
 ### Forms — verify these are set (enquiries are the point of the site) 🔎
 The enquiry/quote/newsletter forms post to HubSpot (server-side) and email via
@@ -92,12 +105,33 @@ Resend. If the vars below are absent the submission is accepted but **goes nowhe
 confirm (a) the email lands and (b) a HubSpot contact/submission appears. (This
 creates a real contact + email, so do it deliberately as the final check.)
 
-### Card checkout — only if launching with payments 🧠
-**Correction (2026-08-20): checkout is NOT quote-only as configured.**
-`paymentsConfigured` in `src/lib/stripe-client.ts` is simply "a publishable key is
-present", and staging has a **`pk_test`** key set, so the card form shows and would
-reject real cards. To launch quote-only, **remove the Stripe keys**. To enable live
-card payment you need all of:
+### Card checkout — the one remaining gate ⚙️🔎
+
+**Superseded (2026-09-06).** The 2026-08-20 correction below said
+`paymentsConfigured` was "simply a publishable key is present", so quote-only
+meant removing the Stripe keys. **That is no longer how the code works.** It now
+reads `!!key && checkoutMode === "card"`, and `payment-intent` refuses with a 503
+on the server as well, so the flag is a real rule rather than a hidden form.
+
+**Production is in QUOTE MODE right now.** Verified 2026-09-06 by fetching
+`https://masterkraft.com/checkout`: it serves the banner "Card payment is briefly
+unavailable while we move our systems", which renders only when
+`checkoutMode === "quote"`.
+
+**This is what stops freight running in production.** In quote mode
+`paymentsConfigured` is false, so `canPay` is false, so `StripeCheckout` never
+renders, so `/api/freight/quote` is never called. Both carriers, the cache and
+the alerting are all correct and all dormant until this flag changes.
+
+To enable live card payment, now that the keys are in:
+- 🧠 the decision that bulky products should be card-buyable at a freight price
+  no invoice has yet validated. See `docs/easyship-evaluation.md`.
+- ⚙️ **remove `NEXT_PUBLIC_CHECKOUT_MODE` from Vercel Production** (or set it to
+  `card`). Nothing else switches the card form back on.
+- ⚙️ the freight variables below, or freight works locally and silently does
+  nothing in production.
+
+Historical, kept because it explains the shape of the code:
 - 🧠 decision to go live with payments now vs. later.
 - ⚙️ `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` — from the store's
   Stripe account.
@@ -109,21 +143,228 @@ card payment you need all of:
 
 ---
 
-## 1b. Freight (Australia Post) ⚙️🔎🧠
+## 1a. Orders are written into UNLEASHED ⚙️🔎
 
-**Carrier switched from Interparcel to Australia Post (Michael, 2026-08-24.)** The
-adapter is built against their Postage Assessment Calculator API. It turns on when:
+**Switched on 2026-09-06.** `orderBackend()` returns `unleashed` and
+`createWooOrder` is never reached. WooCommerce is being decommissioned; it is no
+longer part of placing an order.
 
-- ⚙️ `AUSPOST_API_KEY` — from the MasterKraft Australia Post account. **Not yet set
-  in `.env.local` or in Vercel.** Until it is, freight stays off.
+| variable | state | notes |
+|---|---|---|
+| `UNLEASHED_WRITE_ENABLED` | ✅ `true` | the whole switch. Without it the backend silently falls back to WooCommerce, which no longer exists |
+| `UNLEASHED_WEB_CUSTOMER_CODE` | ✅ `WEB-MASTERKRAFT` | the shared web sales account. `resolveCustomer` **throws rather than guess** — a web order written into a real trade account lands in somebody's ledger |
+| `UNLEASHED_FREIGHT_CODE` | ✅ `MKFR` | "Freight - Local". **Unset by default, and any freight-bearing order throws without it.** This was on nobody's list until the first order was built |
+| `UNLEASHED_CUSTOMER_STRATEGY` | optional | defaults to `generic`. `per-order` and `match-email` are **deliberately unimplemented** — see the decision note in `lib/unleashed-orders.ts` |
+| `UNLEASHED_API_ID` / `UNLEASHED_API_KEY` | ✅ set | write scope proven 2026-09-06 |
+
+### ⚠️ Why this became urgent rather than planned
+
+Card checkout was opened while orders still pointed at WooCommerce, and
+`stripe.confirmPayment` runs **before** `/api/order`. With `WC_WRITE_ENABLED=false`
+and `WC_STORE_URL` pointing at `https://masterkraft.com` — this Next.js app, where
+`wp-json` returns 404 — every card payment would have been **captured and then
+refused** with a 503. Nobody hit it. Nothing prevented it either.
+
+**The lesson worth keeping: freight was verified end to end and the order path
+was not.** Both sit behind the same flag.
+
+### The dead WooCommerce variables
+
+`WC_WRITE_ENABLED` and `WC_STORE_URL` no longer affect order placement. Leave them
+until the snapshot build moves off Woo, but do not trust them: `WC_STORE_URL`
+points at a host with no WooCommerce behind it.
+
+### 🔎 One real card order is still owed
+
+`SO-00000851` proves the write path, including freight riding as an `MKFR` line —
+but it called `buildSalesOrderPayload` directly. **Stripe verification,
+`resolveOrderLines` repricing and the amount-match check are still unexercised
+against a real payment.** Production returns 402 "Payment not verified" to a bogus
+PaymentIntent rather than 503, which confirms the route is enabled and reaches the
+payment check, and nothing beyond that.
+
+Buy something cheap that carries carton data, so freight is exercised too.
+
+### 🧠 557 products are still quote-only, and this is the fix
+
+`canPay` requires `productId > 0` because `resolveOrderLines` cannot price a line
+with no WooCommerce product. That forces **557 of 1,345 sellable ERP products** to
+the quote flow — Apparel 97%, Strength 79% (`npm run report:erponly`, and read its
+caveat before quoting the number). Once repricing resolves an ERP-only line from
+the ERP, the rule can relax and those products become card-buyable. Same fix as
+decommissioning Woo.
+
+---
+
+## 1b. Freight (two carriers, priced against each other) ⚙️🔎🧠
+
+**Australia Post and Easyship are now BOTH asked on every quote, in parallel, and
+the cheapest wins** (added 2026-09-05, `src/lib/freight.ts`). They win opposite
+ends of the catalogue, so neither is redundant — see `docs/easyship-evaluation.md`
+for the measurements. Freight turns on when:
+
+- ✅ `AUSPOST_API_KEY` — from the MasterKraft Australia Post account. Set in
+  `.env.local` and in Vercel Production; verified live 2026-08-25.
+- ⚙️ `EASYSHIP_API_TOKEN` — the production access token from the Easyship
+  dashboard, API & Webhooks, integration "MASTERKRAFT Website". **Not yet set in
+  `.env.local` or in Vercel.** Until it is, the router runs Australia Post alone
+  and every bulky cart still says "Calculated on quote".
 - ✅ `FREIGHT_COLLECTION_POSTCODE=3074` (Thomastown VIC) — the despatch warehouse.
-  Set in `.env.local` 2026-08-24. **Still needs adding in Vercel**, or freight
-  works locally and silently does nothing in production.
-- ⚙️ `FREIGHT_MARGIN_PERCENT` — handling margin. **Defaults to 15** (Michael,
-  2026-08-20); set it only to change that.
+- ⚙️ `FREIGHT_COLLECTION_LINE1` — street line of the despatch warehouse
+  (`8/337-339 Settlement Rd`). Australia Post ignores it; **Easyship requires a
+  street on both ends** and falls back to a placeholder without it.
+- ⚙️ `FREIGHT_MARGIN_PERCENT` — handling margin, applied to BOTH carriers.
+  **Defaults to 15** (Michael, 2026-08-20); set it only to change that.
+- ⚙️ `EASYSHIP_PRICES_INCLUDE_GST` — defaults to `true`, which matches what the
+  Easyship dashboard shows. Same trap as its Australia Post twin: wrong in the
+  other direction undercharges every freight-bearing order by 10%.
 
-**Until they are set the checkout says "Calculated on quote" and charges goods
-only. It never says "Free".**
+**ONE CARRIER IS ENOUGH TO QUOTE.** A carrier that is unconfigured or broken is
+dropped and the other still answers. Only an empty pool falls back to "Calculated
+on quote" — and it never says "Free".
+
+### The Vercel Production checklist for freight
+
+Everything the freight path reads, from `grep process.env` across `freight.ts`,
+`freight-cache.ts`, `freight-alert.ts` and `freight-server.ts`. **Anything marked
+MISSING is only in `.env.local` today**, which means it works on a laptop and
+does nothing in production.
+
+| variable | state | notes |
+|---|---|---|
+| `AUSPOST_API_KEY` | ✅ set | verified live 2026-08-25 |
+| `EASYSHIP_API_TOKEN` | ⚙️ **MISSING** | Easyship dashboard, API & Webhooks, "MASTERKRAFT Website" |
+| `FREIGHT_COLLECTION_POSTCODE` | ✅ set | `3074` |
+| `FREIGHT_COLLECTION_CITY` | ✅ set | `Thomastown` |
+| `FREIGHT_COLLECTION_STATE` | ✅ set | `VIC` |
+| `FREIGHT_COLLECTION_COUNTRY` | optional | defaults to `Australia` |
+| `FREIGHT_COLLECTION_LINE1` | ⚙️ **MISSING** | `8/337-339 Settlement Rd`. AusPost ignores it; **Easyship requires a street on both ends** and falls back to a placeholder |
+| `FREIGHT_MARGIN_PERCENT` | optional | defaults to **15**, applied to both carriers |
+| `AUSPOST_PRICES_INCLUDE_GST` | optional | defaults `true` |
+| `EASYSHIP_PRICES_INCLUDE_GST` | optional | defaults `true` |
+| `FREIGHT_CACHE_TTL_SECONDS` | optional | defaults **900**; `0` disables |
+| `FREIGHT_CACHE_ERROR_TTL_SECONDS` | optional | defaults **60** |
+| `FREIGHT_ALERT_EMAIL` | optional | falls back to `QUOTE_TO_EMAIL` |
+| `FREIGHT_ALERT_COOLDOWN_MINUTES` | optional | defaults **360** |
+| `RESEND_API_KEY`, `QUOTE_FROM_EMAIL` | ✅ set | needed for the alert to email rather than only log |
+| `FREIGHT_CARRIERS` | optional | allowlist, defaults to **both**. `easyship` or `auspost` narrows it. See below before narrowing it. |
+| `FREIGHT_MAX_AUTO_QUOTE` | optional | ceiling in dollars; **unset means no cap** |
+| `NEXT_PUBLIC_CHECKOUT_MODE` | ⚙️ `quote` | **remove it to switch card checkout, and therefore freight, back on** |
+
+Set the two MISSING ones and redeploy — a Vercel env change does not reach a
+build that already shipped.
+
+**Verify with `npm run check:carriers`**, which quotes three real carts through
+the actual router and prints which carrier won each. `npm run report:carriers`
+prices the two separately across all six lanes and tests rate stability.
+
+### Quotes are cached, and that is load-bearing
+
+`src/lib/freight-cache.ts` sits in front of both carriers, keyed on the cartons,
+the destination, the margin and the GST flags.
+
+- ⚙️ `FREIGHT_CACHE_TTL_SECONDS` — successful quotes. **Defaults to 900** (15
+  minutes: longer than a checkout, far shorter than a rate card). `0` disables.
+- ⚙️ `FREIGHT_CACHE_ERROR_TTL_SECONDS` — failures. **Defaults to 60**, so a
+  carrier that is down or over quota is not re-asked on every keystroke.
+
+**It is not only a cost control.** The checkout quotes to DISPLAY and
+payment-intent quotes again to CHARGE; serving both from one cached answer means
+the two cannot disagree, which removes the "rate drifted between the quote and
+the charge" failure that refuses an order after the card is captured.
+
+It is in-memory and therefore per-lambda on Vercel. The display-then-charge pair
+usually lands on the same warm instance; a cold start misses and costs what it
+costs today.
+
+### A carrier that stops answering now says so
+
+`src/lib/freight-alert.ts`. The router fails soft, so a dead carrier is invisible
+from the outside — which is how an exhausted Easyship allowance went unnoticed
+for an afternoon on 2026-09-05. Every carrier failure is now logged as
+`[freight] <carrier> failed (<kind>): <detail>`, and the two kinds that do NOT
+fix themselves — an exhausted quota and a rejected credential — also send one
+email. A network blip stays quiet, because a false alarm at 2am costs more trust
+than it buys.
+
+- ⚙️ `FREIGHT_ALERT_EMAIL` — who to tell. Falls back to `QUOTE_TO_EMAIL`.
+  Needs `RESEND_API_KEY` and `QUOTE_FROM_EMAIL`, both already set.
+- ⚙️ `FREIGHT_ALERT_COOLDOWN_MINUTES` — **defaults to 360** (6 hours), so a busy
+  checkout sends one mail per problem rather than one per request.
+
+Alerting is fire-and-forget and swallows its own errors: it can never slow down
+or break a checkout.
+
+### ⚙️ `FREIGHT_MAX_AUTO_QUOTE` — the ceiling that makes going live safe
+
+**The one setting that lets card checkout open without betting the bulky half of
+the catalogue on unvalidated rates.** Any cart whose cheapest freight exceeds it
+goes to the quote flow with the same "ships as freight" message an over-limit
+carton already gets. Options above it are never offered at all, so an expensive
+express service cannot sneak in as the "faster" second line.
+
+- **Unset by default, meaning no cap.** A new build must never start refusing
+  quotes because someone forgot to configure something. Set it deliberately.
+- Verified live 2026-09-06 at 250: the 43kg turf roll at $513.57 goes to the
+  quote flow, a 21kg parcel at $57 still sells by card.
+- It is part of the quote cache key, so raising it takes effect immediately
+  rather than serving the refusal the old value produced.
+
+**Suggested rollout.** Open card checkout with the cap set low, so the parcel
+range and the bulky items that price sensibly sell themselves, and everything
+expensive still reaches a human. Raise it as real invoices confirm what bulky
+freight actually costs. That is the alternative to the all-or-nothing choice of
+switching 107 unvalidated products on at once.
+
+### 🧠 Both carriers, and why narrowing to one costs money
+
+`FREIGHT_CARRIERS` is an allowlist and **defaults to both**. Considered narrowing
+it to Easyship alone on 2026-09-06 for a single dispatch workflow, and kept both
+after measuring what that costs:
+
+```
+1kg parcel, Thomastown -> Perth
+  $11.73  Australia Post Extra small   <- wins
+  $47.20  UPS Express Saver (via Easyship)
+```
+
+Four times the price on the light end, because Australia Post charges a flat
+national rate under about 2kg that no reseller matches. PAC calls are also free
+where Easyship's are metered, so consolidating roughly doubles metered volume.
+
+**If one dispatch workflow is the goal, the right move is not this flag.** It is
+connecting the Australia Post account INSIDE Easyship, under "Your own courier
+accounts", so their rates still appear but labels, tracking and the ERP write-back
+all come from one platform. That needs a paid plan and a payment method.
+
+### 🧠 Bulky freight is priced on VOLUME, and it is expensive
+
+Measured on a real consignment 2026-09-06 (`docs/easyship-evaluation.md`): a 43kg
+turf roll to Adelaide quoted **A$446.58**, of which **A$248.50 was an oversize
+surcharge** — 61% of the pre-tax cost. It was billed as **101.25kg** because the
+carton is 0.405m3 and the volumetric divisor is 250kg/m3.
+
+Across the bulky range, **38 of 107 products (36%) are billed on volume rather
+than weight**, at a mean 1.41x their actual. The tail is far worse: a 16kg
+medicine ball rack bills as 175kg. Racks and rigs are large, light and mostly
+air, so any volume-priced carrier does this.
+
+**Decide this before removing `NEXT_PUBLIC_CHECKOUT_MODE`**, because that is the
+moment those products become card-buyable at these rates. TNT also notes on the
+quote that "additional handling fees may occur for the oversize & DG shipment",
+and the customer having already been charged means we absorb the difference.
+
+### ⚠️ The Easyship trial allowance is already exhausted
+
+**Every Easyship call currently returns `403 usage_limit`.** It took ~90 calls on
+2026-09-05, all of it building and testing, not real traffic. The account is a
+free Plus trial with no payment method, expiring in 13 days, with zero shipments.
+
+Nothing is broken by this — the router fails soft and Australia Post answers
+alone — but **the bulky half of the catalogue is back on "Calculated on quote"
+until the allowance resets or the plan is upgraded**, and nothing surfaces the
+403 to anyone. Read `docs/easyship-evaluation.md` before this carries real
+orders, and add an alert on Easyship 403s.
 
 ### 🧠 Decision, Michael 2026-08-24: heavy carts go to the quote flow
 
@@ -131,10 +372,12 @@ Once the key is set, a cart Australia Post cannot carry is **not** charged for g
 with freight invoiced later. It is pushed to the quote flow, the same way an item
 priced on application already is. Nobody is charged with an unknown delivery cost.
 
-**Know what this changes on launch day:** every rack, machine and rig stops being
-buyable by card the moment `AUSPOST_API_KEY` reaches Vercel. That is roughly
-two-thirds of the catalogue moving from "add to cart" to "request a quote". It is
-deliberate. §1d is how to get them back.
+**This is what `EASYSHIP_API_TOKEN` changes.** With Australia Post alone, every
+rack, machine and rig is unbuyable by card — 107 of 186 measured products, moved
+from "add to cart" to "request a quote". Easyship prices that whole segment
+(verified to 601kg and 268cm), so setting the token moves them back the other way.
+Decide deliberately: that is a lot of catalogue becoming card-buyable at a freight
+price nobody has yet checked against a real invoice.
 
 The rejection message now explains itself per reason, so a Sydney customer buying a
 250kg machine is told it ships as freight, not that their address failed.
@@ -253,7 +496,16 @@ problem, since that is what they are built for.
 
 ---
 
-## 2. Domain / DNS cutover 🌐🧠 (needs Steve — the biggest item)
+## 2. Domain / DNS cutover ✅ DONE 2026-08-27
+
+**Option B was not needed and option A was not taken either.** The apex was
+pointed at Vercel while WordPress stayed exactly where it was, because only the
+buy path reads the live store. The site launched as browse-and-quote via
+`NEXT_PUBLIC_CHECKOUT_MODE=quote`. WooCommerce still needs to move for card
+checkout to return; it is no longer a launch blocker. See `docs/dns-cutover.md`
+and HANDOFF section 0.
+
+<details><summary>Original plan, kept for the reasoning</summary>
 
 The new site currently **reads the catalogue from `masterkraft.com`'s
 WooCommerce** while itself living on Vercel. The WordPress/WooCommerce backend and
@@ -270,6 +522,8 @@ the new Next.js front-end can't both own `masterkraft.com`. Options:
 Whichever: add the domain in Vercel, set the DNS records Vercel provides, confirm
 HTTPS, then flip `NEXT_PUBLIC_ALLOW_INDEX` + `NEXT_PUBLIC_SITE_URL` for that domain
 and redeploy.
+
+</details>
 
 ---
 

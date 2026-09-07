@@ -21,8 +21,12 @@ export default function NavProgress() {
     document.documentElement.classList.remove("nav-busy");
   };
 
-  // Route settled -> stop.
+  // Route settled -> stop. Clearing the overlay IS the effect: the new pathname
+  // arriving is the only signal that the navigation finished, and stop() also
+  // clears two timers and a class on <html>. Nothing about it is derivable
+  // during render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     stop();
   }, [pathname]);
 
@@ -56,7 +60,9 @@ export default function NavProgress() {
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="rounded-2xl bg-carbon/85 backdrop-blur-sm px-6 py-5 shadow-xl">
+      {/* text-white sets the mark's currentColor - without it the spinner is
+          black on a near-black panel. */}
+      <div className="rounded-2xl bg-carbon/85 text-white backdrop-blur-sm px-6 py-5 shadow-xl">
         <BrandSpinner size={44} />
       </div>
     </div>

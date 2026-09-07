@@ -1,25 +1,56 @@
-// Live freight quoting at checkout, via the Australia Post Postage Assessment
-// Calculator (PAC) API.
+// Live freight quoting at checkout, across TWO carriers, priced against each
+// other on every request.
 //
-// Docs: https://developers.auspost.com.au/apis/pac/reference/domestic-parcel-postage
+//   Australia Post, via the Postage Assessment Calculator (PAC)
+//     https://developers.auspost.com.au/apis/pac/reference/domestic-parcel-postage
+//   Easyship, a reseller fronting TNT, Aramex, CouriersPlease, Allied and others
+//     https://developers.easyship.com/reference/rates_request
 //
-// AUSTRALIA POST CAN ONLY CARRY PART OF THIS CATALOGUE, BY DESIGN. PAC prices
-// parcels, and a parcel is capped at 22kg, 105cm on its longest side and 0.25
-// cubic metres. Measured against the served catalogue on 2026-08-24: of the 246
-// products with usable carton data, 111 fit those limits and 135 do not. Racks,
-// rigs, machines and benches are pallet freight. Anything over the limits is NOT
-// sent to AusPost and NOT guessed at - it returns `oversize` and the checkout
-// falls back to "Freight is calculated on quote", which is the same path heavy
-// goods already took before any of this was switched on.
+// WHY BOTH, AND NOT ONE. They win opposite ends of this catalogue, measured
+// 2026-09-05 (docs/easyship-evaluation.md). Australia Post charges a FLAT
+// national rate for small parcels - 1kg to Perth is the same $10.20 as 1kg to
+// Melbourne - and Easyship cannot beat that, quoting $17.70 for the same carton.
+// Above roughly 4kg AusPost turns steeply zoned and loses badly: a 21kg carton to
+// Perth is $149.45 against Easyship's $111.20. And above the parcel limits
+// Australia Post does not compete at all, because it refuses outright.
 //
-// FAILS SOFT, ALWAYS. Every failure path - no API key, a product without carton
-// dimensions, an over-limit carton, no common service, a network error - returns
-// `ok: false` with a reason, and the checkout falls back to "calculated on
-// quote". That is the honest answer and it matches the cart, the quote flow and
-// the Shipping page. It must NEVER fall back to "Free": these are heavy goods
-// and free freight would be a promise we cannot keep.
+// So neither carrier is redundant, and the cheapest answer depends on the carton
+// and the lane. Both are asked in PARALLEL, their options are pooled, and
+// selectOptions() picks from the pool. The customer sees the winner, not the
+// routing.
+//
+// THE PARCEL LIMITS ARE AUSTRALIA POST'S ONLY. PAC prices parcels, capped at
+// 22kg, 105cm on the longest side and 0.25 cubic metres. Of the 186 products with
+// usable carton data, 79 fit and 107 do not - racks, rigs, machines and benches
+// are freight, not parcels. An over-limit carton is NOT sent to PAC and NOT
+// guessed at; it simply means Australia Post is not a candidate. Easyship carries
+// the whole catalogue envelope, verified to 601kg and 268cm, so those carts now
+// get a real price instead of "calculated on quote".
+//
+// FAILS SOFT, ALWAYS. Every failure path - no credentials, a product without
+// carton dimensions, an over-limit carton with no second carrier to take it, no
+// common service, a network error - returns `ok: false` with a reason, and the
+// checkout falls back to "calculated on quote". That is the honest answer and it
+// matches the cart, the quote flow and the Shipping page. It must NEVER fall back
+// to "Free": these are heavy goods and free freight would be a promise we cannot
+// keep. One carrier failing is not a failure; both failing is.
+//
+// PRICED TWICE, DELIBERATELY. The checkout quotes to DISPLAY and
+// payment-intent/route.ts quotes again to CHARGE, because the browser sends only
+// the option id and never the price. Option ids are therefore namespaced by
+// carrier and must stay stable for identical inputs, or the re-quote fails to
+// match and the order is refused after the card is captured.
+
+import { reportCarrierFailure } from "@/lib/freight-alert";
+import {
+  cacheErrorTtlSeconds,
+  cacheTtlSeconds,
+  getCached,
+  setCached,
+} from "@/lib/freight-cache";
 
 const SERVICE_URL = "https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json";
+const EASYSHIP_RATES_URL = "https://public-api.easyship.com/2024-09/rates";
 const GST = 1.1;
 
 // Handling margin on top of the carrier's rate: packing labour, and the gap
@@ -33,10 +64,15 @@ export const MAX_PARCEL_WEIGHT_KG = 22;
 export const MAX_PARCEL_DIMENSION_CM = 105;
 export const MAX_PARCEL_VOLUME_M3 = 0.25;
 
-// PAC prices ONE parcel per call, so a cart costs one call per distinct carton
-// shape. Identical cartons are priced once and multiplied. These caps stop a
-// large order turning into a burst of API calls mid-checkout; past them the
+// PAC prices ONE parcel per call, so a cart costs one AusPost call per distinct
+// carton shape. Identical cartons are priced once and multiplied. These caps stop
+// a large order turning into a burst of API calls mid-checkout; past them the
 // order goes to the quote flow, where a human was going to price it anyway.
+//
+// Easyship needs no such cap: it prices a whole consignment in ONE call, which is
+// the latency win docs/freight-brief-bulky.md asked carriers for. MAX_DISTINCT
+// therefore gates Australia Post only, while MAX_TOTAL stays a sanity limit on
+// the consignment itself and applies to both.
 const MAX_DISTINCT_PARCELS = 8;
 const MAX_TOTAL_PARCELS = 30;
 
@@ -45,6 +81,13 @@ export type FreightAddress = {
   state?: string;
   postcode: string;
   country: string;
+  /**
+   * Street line. Australia Post rates on postcodes alone and ignores this, but
+   * Easyship's schema requires a line_1 on both ends. Optional here because the
+   * checkout collects the suburb and postcode BEFORE the street, and we want a
+   * freight figure on screen at that point rather than after the full address.
+   */
+  line1?: string;
 };
 
 export type Parcel = {
@@ -86,6 +129,7 @@ export type FreightQuote =
         | "incomplete_dimensions"
         | "oversize"
         | "too_many_parcels"
+        | "too_expensive"
         | "no_services"
         | "error";
       detail?: string;
@@ -123,6 +167,75 @@ export function pricesIncludeGst(): boolean {
   return (process.env.AUSPOST_PRICES_INCLUDE_GST ?? "true").toLowerCase() !== "false";
 }
 
+// Easyship's own quote screen labels every row "Incl. GST" on this account
+// (verified 2026-09-05), so the default matches Australia Post's: do NOT add GST
+// on top. Same escape hatch, same reason - getting it backwards undercharges
+// every freight-bearing order by 10%.
+export function easyshipPricesIncludeGst(): boolean {
+  return (process.env.EASYSHIP_PRICES_INCLUDE_GST ?? "true").toLowerCase() !== "false";
+}
+
+/**
+ * The most we will quote online without a human looking at it, or 0 for no cap.
+ *
+ * WHY THIS EXISTS. Bulky freight is priced on VOLUME, not weight, and this
+ * catalogue is full of things that are large, light and mostly air. Measured
+ * 2026-09-06 against a live quote: the volumetric divisor is 250kg per m3, so a
+ * 16kg medicine ball rack bills as 175kg and 38 of the 107 bulky products are
+ * charged on volume at a mean 1.41x their real weight. One real consignment came
+ * back at $446.58 against the $145 this business charged on the same lane three
+ * months earlier.
+ *
+ * A ceiling lets the bulky items that price sensibly sell by card while the
+ * volumetric disasters go to the quote flow, where a human was going to price
+ * them anyway. It is the difference between opening 107 products all at once at
+ * rates nobody has validated, and opening them as the evidence arrives.
+ *
+ * OFF BY DEFAULT. Unset means no cap and the behaviour is exactly as before -
+ * this must never start silently refusing quotes because someone deployed a new
+ * build. Set it deliberately.
+ */
+export function maxAutoQuote(): number {
+  const v = parseFloat(process.env.FREIGHT_MAX_AUTO_QUOTE ?? "");
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+
+/**
+ * Which carriers the router is allowed to ask, from `FREIGHT_CARRIERS`.
+ *
+ * A comma-separated allowlist. Unset means BOTH, which is the measured-best
+ * configuration and must stay the default: nothing should change carrier
+ * behaviour because a variable was forgotten.
+ *
+ *   FREIGHT_CARRIERS=easyship           everything through Easyship
+ *   FREIGHT_CARRIERS=auspost            parcels only, bulky to the quote flow
+ *   FREIGHT_CARRIERS=auspost,easyship   both, priced against each other
+ *
+ * WHAT SETTING THIS TO `easyship` COSTS, so the trade is on the record rather
+ * than rediscovered. Australia Post charges a FLAT national rate under about
+ * 2kg that Easyship cannot match - 1kg to Perth measured at $10.20 direct
+ * against $17.70 through Easyship on 2026-09-05 - and PAC calls are free while
+ * Easyship's rates endpoint is metered against a monthly allowance. Routing
+ * everything through one reseller therefore makes light parcels dearer and
+ * roughly doubles metered call volume.
+ *
+ * It buys one dispatch workflow, one label source, one invoice and one tracking
+ * feed, which is a real operational argument and Michael's call (2026-09-06).
+ * The better version of it is connecting the Australia Post account INSIDE
+ * Easyship, so their rates still appear but everything ships from one platform;
+ * that needs a paid plan and a payment method on the account.
+ */
+export function enabledCarriers(): Set<string> {
+  const raw = (process.env.FREIGHT_CARRIERS ?? "").trim();
+  if (!raw) return new Set(["auspost", "easyship"]);
+  return new Set(
+    raw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
 export function collectionAddress(): FreightAddress | null {
   const postcode = process.env.FREIGHT_COLLECTION_POSTCODE;
   const city = process.env.FREIGHT_COLLECTION_CITY;
@@ -132,7 +245,26 @@ export function collectionAddress(): FreightAddress | null {
     state: process.env.FREIGHT_COLLECTION_STATE,
     postcode,
     country: process.env.FREIGHT_COLLECTION_COUNTRY ?? "Australia",
+    line1: process.env.FREIGHT_COLLECTION_LINE1,
   };
+}
+
+/**
+ * True once freight can be quoted at all: an origin, and at least ONE carrier
+ * with credentials.
+ *
+ * Exported so freight-server.ts decides "is freight part of this order" with the
+ * same rule the router uses to decide who to ask. They drifted once already -
+ * gating on the Australia Post key alone would silently skip freight on an
+ * Easyship-only deployment and charge goods with no delivery.
+ */
+export function freightConfigured(): boolean {
+  if (collectionAddress() === null) return false;
+  const on = enabledCarriers();
+  return Boolean(
+    (on.has("auspost") && process.env.AUSPOST_API_KEY) ||
+      (on.has("easyship") && process.env.EASYSHIP_API_TOKEN)
+  );
 }
 
 // ONE PARCEL PER UNIT. Each product carries the dimensions of ITS OWN carton, so
@@ -163,6 +295,101 @@ export function itemsToParcels(items: FreightItem[]): {
     }
   }
   return { parcels, missing };
+}
+
+// A carton has to be physically possible before it is worth asking whether a
+// carrier will take it. These bounds are not carrier limits - they are the line
+// between a measurement and a data-entry error.
+export const MAX_PLAUSIBLE_SIDE_CM = 300;
+export const MAX_PLAUSIBLE_VOLUME_M3 = 3;
+export const MIN_PLAUSIBLE_SIDE_CM = 0.5;
+// Density bounds, deliberately far apart: this is looking for a misplaced
+// decimal point, not judging whether a box is well packed. Below 5 is lighter
+// than expanded polystyrene and above 50,000 is denser than any metal. Anything
+// between is somebody's real carton and is left alone - the pair of bounds that
+// caught the errors without inventing new ones. See the note on the guard.
+export const MIN_PLAUSIBLE_DENSITY_KG_M3 = 5;
+export const MAX_PLAUSIBLE_DENSITY_KG_M3 = 50_000;
+
+/**
+ * True when a carton could exist.
+ *
+ * WHY THIS IS NOT PARANOIA. Measured 2026-09-06: 40 sellable products carry
+ * cartons recorded in MILLIMETRES in a centimetre field, and every one becomes
+ * an ordinary box when divided by ten. `ABPBSB04`, a 12-inch foam plyo box,
+ * reads 850 x 1000 x 305 - which is 259 cubic metres, and at Easyship's 250kg/m3
+ * divisor prices as a four-tonne consignment.
+ *
+ * A side under half a centimetre is the same fault the other way: `SLLE2502`
+ * records a height of 0.001cm, a decimal point in the wrong place.
+ *
+ * The point is not to hide bad data - `docs/freight-brief-bulky.md` and
+ * `npm run report:coverage` both name it. It is that a quote must never be built
+ * from a number nobody believes.
+ *
+ * SIZE ALONE IS NOT ENOUGH, AND THE SITE UNDER-CHARGED FOR A MONTH PROVING IT.
+ * `MWBBFRU02` is a 14kg fixed barbell recorded in the frozen snapshot as
+ * 10.54 x 1.63 x 1.63cm - every side inside the bounds above, 0.000028 cubic
+ * metres, so it passed - which is 500,000 kg/m3, denser than any metal on earth.
+ * There were 42 like it, up to a 41kg barbell in a box the size of a paperback.
+ * They under-declare the consignment, the carrier weighs it, and we absorb the
+ * difference. That is the exact loss this file says elsewhere it exists to stop.
+ *
+ * Rejecting them here rather than correcting the data is what freight-server's
+ * candidate chain is FOR: the snapshot is asked first, an impossible carton is
+ * skipped, and Unleashed's corrected 105.4 x 16.3 x 16.3 answers instead. All 42
+ * resolve that way, so nothing is pushed onto the quote flow by this.
+ *
+ * THE BOUNDS ARE WIDE ON PURPOSE, and the first draft of them was wrong. Chosen
+ * on density alone, "outside 100-8000 kg/m3" also condemned a 2kg ankle strap at
+ * 25 x 8.5 x 1cm - a perfectly good carton that is merely dense - and would have
+ * turned it into a two-and-a-half-metre one. An inflated 55cm fitness ball sits
+ * near the floor legitimately. 5 and 50,000 catch the order-of-magnitude slips
+ * and touch nothing real. See §0g of HANDOFF.md.
+ *
+ * NO WEIGHT MEANS NO OPINION. Density needs a mass, and a carton with dimensions
+ * and no weight is common in the snapshot. Judging those would reject a box for
+ * a field nobody filled in, so the density test is skipped and the size bounds
+ * stand alone - the same "half a rule is worse than none" argument
+ * defaultCartonFor makes about the satchel.
+ */
+export function isPlausibleCarton(p: Parcel): boolean {
+  const sides = [p.length, p.width, p.height];
+  if (sides.some((s) => !(s >= MIN_PLAUSIBLE_SIDE_CM) || s > MAX_PLAUSIBLE_SIDE_CM)) return false;
+  const volumeM3 = (p.length * p.width * p.height) / 1e6;
+  if (volumeM3 > MAX_PLAUSIBLE_VOLUME_M3) return false;
+  if (p.weight > 0) {
+    const density = p.weight / volumeM3;
+    if (density < MIN_PLAUSIBLE_DENSITY_KG_M3 || density > MAX_PLAUSIBLE_DENSITY_KG_M3) return false;
+  }
+  return true;
+}
+
+// A DEFAULT CARTON, FOR THE ONE CASE WHERE GUESSING IS HONEST.
+//
+// This codebase refuses to guess a carton everywhere else, and it is right to:
+// an invented box under-declares a consignment, the carrier finds out, and we
+// absorb the difference. That argument does not hold for a t-shirt.
+//
+// Apparel is 95 products with ZERO weights and ZERO dimensions recorded, and
+// measuring 95 hoodies to discover they go in a satchel is not work worth doing.
+// Every one of them fits the same satchel, and the numbers below are chosen to
+// be GENEROUS rather than accurate: over-declaring raises the price the customer
+// is quoted, which is recoverable, while under-declaring produces a carrier
+// invoice larger than what we charged, which is not.
+//
+// 40 x 30 x 10cm at 1kg is 0.012m3 - comfortably a parcel by every Australia Post
+// limit, so apparel prices as a satchel rather than as freight.
+//
+// KEEP THIS LIST SHORT. It is defensible for apparel because the whole group is
+// one shape. It would not be defensible for Strength, where "no dimensions"
+// spans a 2kg collar and a 300kg rack.
+export const SATCHEL_GROUPS = new Set(["Apparel"]);
+export const DEFAULT_SATCHEL: Parcel = { weight: 1, length: 40, width: 30, height: 10 };
+
+/** The stand-in carton for a group that has one, or null for everything else. */
+export function defaultCartonFor(group?: string): Parcel | null {
+  return group && SATCHEL_GROUPS.has(group) ? { ...DEFAULT_SATCHEL } : null;
 }
 
 /** True when a carton is outside what Australia Post will carry as a parcel. */
@@ -216,16 +443,25 @@ const TRANSIT_DAYS: Record<string, { from: number; to: number }> = {
 };
 
 function serviceLevelFor(code: string): string {
+  // "Road Express" is a road service, not an express one - TNT's cheapest and
+  // slowest. Checked BEFORE the express rule, which would otherwise label the
+  // standard bulky service as premium and mislead the customer.
+  if (/ROAD/i.test(code)) return "standard";
   if (/COURIER/i.test(code)) return "courier";
-  if (/EXPRESS/i.test(code)) return "express";
+  if (/EXPRESS|OVERNIGHT/i.test(code)) return "express";
   return "standard";
 }
 
-/** Apply the handling margin, and GST only if the carrier rate excludes it. */
-function priceFor(base: number): number {
+/**
+ * Apply the handling margin, and GST only if the carrier rate excludes it.
+ *
+ * `includesGst` is per CARRIER, not global: the two are configured separately
+ * because they are separate accounts and either could change independently.
+ */
+function priceFor(base: number, includesGst: boolean): number {
   if (!Number.isFinite(base) || base <= 0) return 0;
   const withMargin = base * (1 + marginPercent() / 100);
-  const withGst = pricesIncludeGst() ? withMargin : withMargin * GST;
+  const withGst = includesGst ? withMargin : withMargin * GST;
   return Math.round(withGst * 100) / 100;
 }
 
@@ -278,30 +514,20 @@ async function quoteParcel(
   return out;
 }
 
-export async function quoteFreight(
-  items: FreightItem[],
-  delivery: FreightAddress
-): Promise<FreightQuote> {
-  const apiKey = process.env.AUSPOST_API_KEY;
-  const collection = collectionAddress();
-  if (!apiKey || !collection) return { ok: false, reason: "not_configured" };
-
-  const { parcels, missing } = itemsToParcels(items);
-  // Fail the WHOLE cart, not just the line: quoting part of an order and
-  // silently shipping the rest for nothing is worse than quoting none of it.
-  if (missing.length > 0 || parcels.length === 0) {
-    return { ok: false, reason: "incomplete_dimensions", missing };
-  }
-
-  // Pallet freight is not a parcel. Send it to the quote flow rather than to an
-  // API that will reject it, so the customer gets the honest answer immediately.
-  const oversize = oversizeSkus(items);
-  if (oversize.length > 0) return { ok: false, reason: "oversize", oversize };
-
-  if (parcels.length > MAX_TOTAL_PARCELS) {
-    return { ok: false, reason: "too_many_parcels", detail: `${parcels.length} cartons` };
-  }
-
+/**
+ * Every Australia Post option for a whole consignment, or a typed failure.
+ *
+ * PAC prices one parcel per call, so this fans out over distinct carton shapes
+ * and sums. Only services EVERY carton can travel on survive, because the whole
+ * consignment has to ship somehow and a service one carton cannot use is not a
+ * service we can sell.
+ */
+async function quoteAusPost(
+  parcels: Parcel[],
+  collection: FreightAddress,
+  delivery: FreightAddress,
+  apiKey: string
+): Promise<FreightOption[] | { error: string }> {
   // Identical cartons are priced once and multiplied, so six of the same drop
   // pad is one API call rather than six.
   const groups = new Map<string, { parcel: Parcel; count: number }>();
@@ -312,7 +538,7 @@ export async function quoteFreight(
     else groups.set(key, { parcel: p, count: 1 });
   }
   if (groups.size > MAX_DISTINCT_PARCELS) {
-    return { ok: false, reason: "too_many_parcels", detail: `${groups.size} carton types` };
+    return { error: `${groups.size} carton types` };
   }
 
   const results = await Promise.all(
@@ -324,13 +550,12 @@ export async function quoteFreight(
     )
   );
 
-  // One bad carton fails the cart. A partial total would undercharge the order.
+  // One bad carton fails this carrier. A partial total would undercharge the
+  // order, so it is better to let the other carrier answer alone.
   for (const { r } of results) {
-    if ("error" in r) return { ok: false, reason: "error", detail: r.error };
+    if ("error" in r) return { error: r.error };
   }
 
-  // Only services EVERY carton can travel on are offered, since the whole
-  // consignment has to ship somehow. Prices are summed across cartons.
   const totals = new Map<string, { name: string; price: number }>();
   let first = true;
   for (const { r, count } of results) {
@@ -347,18 +572,311 @@ export async function quoteFreight(
     }
   }
 
-  const options: FreightOption[] = [...totals.entries()]
+  const includesGst = pricesIncludeGst();
+  return [...totals.entries()]
     .map(([code, s]) => ({
-      id: code,
+      id: `auspost:${code}`,
       carrier: "Australia Post",
       service: s.name,
       serviceLevel: serviceLevelFor(code),
-      price: priceFor(s.price),
+      price: priceFor(s.price, includesGst),
       daysFrom: TRANSIT_DAYS[code]?.from,
       daysTo: TRANSIT_DAYS[code]?.to,
     }))
     .filter((o) => o.price > 0);
+}
 
-  if (options.length === 0) return { ok: false, reason: "no_services" };
-  return { ok: true, options: selectOptions(options) };
+type EasyshipRate = {
+  total_charge?: number | string;
+  courier_service?: { id?: string; name?: string };
+  min_delivery_time?: number;
+  max_delivery_time?: number;
+};
+
+/**
+ * Easyship names a service as "TNT - Road Express", one string carrying both the
+ * carrier and the service. Split it so the customer sees "TNT" as the carrier
+ * rather than "Easyship", which is a billing relationship they have no reason to
+ * care about. Anything without the separator is shown whole.
+ */
+function splitEasyshipService(name: string): { carrier: string; service: string } {
+  const at = name.indexOf(" - ");
+  if (at <= 0) return { carrier: name.trim() || "Easyship", service: name.trim() };
+  return { carrier: name.slice(0, at).trim(), service: name.slice(at + 3).trim() };
+}
+
+/**
+ * Every Easyship option for a whole consignment, or a typed failure.
+ *
+ * ONE CALL FOR THE WHOLE CART. `parcels` is an array, so unlike PAC there is no
+ * fan-out and no per-carton summing: the returned `total_charge` already covers
+ * the consignment. This is the single biggest reason to have them.
+ */
+async function quoteEasyship(
+  parcels: Parcel[],
+  collection: FreightAddress,
+  delivery: FreightAddress,
+  token: string
+): Promise<FreightOption[] | { error: string }> {
+  // Easyship requires a street line at both ends. Rating is driven by the
+  // suburb, postcode and the carton, so a placeholder keeps a quote on screen
+  // while the customer is still typing their address. It is never used to
+  // dispatch anything - booking a real consignment will carry the real address.
+  // TRUNCATED AT 35, because Easyship rejects the WHOLE request if either street
+  // line is longer - "origin_address.line_1 is too long (maximum is 35
+  // characters)" - and it took down every Easyship quote in production on
+  // 2026-09-06 when FREIGHT_COLLECTION_LINE1 was set to a full address rather
+  // than a street. A carrier must not be lost to a config typo, and a slightly
+  // clipped street on a rating call costs nothing: it is the suburb and postcode
+  // that price the consignment.
+  const line = (a: FreightAddress) => (a.line1?.trim() || "1 Main St").slice(0, 35);
+  const body = {
+    origin_address: {
+      line_1: line(collection),
+      city: collection.city,
+      state: collection.state ?? "",
+      postal_code: collection.postcode,
+      country_alpha2: "AU",
+    },
+    destination_address: {
+      line_1: line(delivery),
+      city: delivery.city,
+      state: delivery.state ?? "",
+      postal_code: delivery.postcode,
+      country_alpha2: "AU",
+    },
+    // Domestic only, so there is nothing to collect at a border. Stated rather
+    // than omitted so the rate never comes back carrying an import duty line.
+    incoterms: "DDU",
+    parcels: parcels.map((p) => ({
+      total_actual_weight: p.weight,
+      box: { length: p.length, width: p.width, height: p.height },
+      items: [
+        {
+          description: "Gym equipment",
+          // REQUIRED, despite the schema calling it nullable: Easyship rejects
+          // the whole request with 422 unless an item carries a `category` slug
+          // or an `hs_code`. Slugs come from GET /2024-09/item_categories, and
+          // `sport_leisure` maps to HS 9506910000 - "equipment for general
+          // physical exercise, gymnastics or athletics" - which is the catalogue.
+          category: "sport_leisure",
+          quantity: 1,
+          actual_weight: p.weight,
+          dimensions: { length: p.length, width: p.width, height: p.height },
+          declared_currency: "AUD",
+          // The schema demands a positive value. This is a DOMESTIC rating call,
+          // so nothing is declared to customs and the figure does not reach a
+          // carrier. It would have to become the real line value before turning
+          // Easyship's insurance on, which prices off declared value.
+          declared_customs_value: 100,
+          origin_country_alpha2: "AU",
+        },
+      ],
+    })),
+  };
+
+  let json: { rates?: EasyshipRate[] } | null;
+  try {
+    const res = await fetch(EASYSHIP_RATES_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    const parsed = (await res.json().catch(() => null)) as
+      | {
+          rates?: EasyshipRate[];
+          error?: { message?: string; details?: string[] };
+          message?: string;
+        }
+      | null;
+    if (!res.ok) {
+      // `details` is where Easyship names the offending FIELD; `message` is the
+      // useless "The request body content is not valid." on its own. Keep both,
+      // because a rate call that fails while the other carrier succeeds is
+      // otherwise invisible - which is exactly how the missing `category` above
+      // went unnoticed until a cart had no second carrier to fall back on.
+      const details = Array.isArray(parsed?.error?.details)
+        ? parsed.error.details.join("; ")
+        : "";
+      const message = parsed?.error?.message ?? parsed?.message ?? `HTTP ${res.status}`;
+      return { error: details ? `${message} ${details}` : message };
+    }
+    json = parsed;
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "fetch failed" };
+  }
+
+  const includesGst = easyshipPricesIncludeGst();
+  return (json?.rates ?? [])
+    .map((r) => {
+      const id = String(r.courier_service?.id ?? "").trim();
+      const name = String(r.courier_service?.name ?? "").trim();
+      const { carrier, service } = splitEasyshipService(name);
+      return {
+        id: `easyship:${id}`,
+        carrier,
+        service,
+        // Unlike PAC, Easyship returns real transit times, so serviceLevel is
+        // read off the name only to label the option, never to invent a date.
+        serviceLevel: serviceLevelFor(name),
+        price: priceFor(Number(r.total_charge), includesGst),
+        daysFrom: r.min_delivery_time,
+        daysTo: r.max_delivery_time,
+      };
+    })
+    .filter((o) => o.id !== "easyship:" && o.price > 0);
+}
+
+/**
+ * The cache key: everything that can change the ANSWER, and nothing else.
+ *
+ * Cartons are sorted, so two carts holding the same boxes in a different order
+ * share one entry. The handling margin and both GST flags are included because
+ * they change the number we return, and a cached price that outlived a margin
+ * change would be charged.
+ *
+ * `line1` is deliberately EXCLUDED. Carriers rate on the suburb and postcode,
+ * not the street, and the checkout quotes while the customer is still typing
+ * their address - keying on it would miss on every keystroke and cost exactly
+ * the calls this exists to save. If a carrier is ever added that prices off the
+ * street, this is the line that has to change.
+ */
+function cacheKey(parcels: Parcel[], collection: FreightAddress, delivery: FreightAddress): string {
+  const boxes = parcels
+    .map((p) => `${p.weight}x${p.length}x${p.width}x${p.height}`)
+    .sort()
+    .join(",");
+  const to = [delivery.postcode, delivery.city, delivery.state ?? "", delivery.country]
+    .map((v) => v.trim().toLowerCase())
+    .join("|");
+  const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}|${[...enabledCarriers()].sort().join("+")}`;
+  return `${collection.postcode}>${to}>${boxes}>${config}`;
+}
+
+/**
+ * How long an answer is worth remembering.
+ *
+ * The three reasons decided locally, before any carrier is asked, cost nothing
+ * to recompute and must NOT be cached: they depend on configuration and cart
+ * contents that change between requests, and a stale `not_configured` would keep
+ * freight switched off after the credentials arrived.
+ */
+function cacheableFor(quote: FreightQuote): number {
+  if (quote.ok) return cacheTtlSeconds();
+  if (
+    quote.reason === "not_configured" ||
+    quote.reason === "incomplete_dimensions" ||
+    quote.reason === "too_many_parcels"
+  ) {
+    return 0;
+  }
+  return cacheErrorTtlSeconds();
+}
+
+/**
+ * Price a consignment with every carrier that can carry it, and return the best
+ * of the pooled options.
+ *
+ * The two carriers are asked CONCURRENTLY, so having a second one costs no extra
+ * latency - the request takes as long as the slower carrier, not the sum. A
+ * carrier that fails is dropped and the other one still answers; only an empty
+ * pool is a failure.
+ */
+export async function quoteFreight(
+  items: FreightItem[],
+  delivery: FreightAddress
+): Promise<FreightQuote> {
+  const auspostKey = process.env.AUSPOST_API_KEY;
+  const easyshipToken = process.env.EASYSHIP_API_TOKEN;
+  const collection = collectionAddress();
+  if (!collection || !freightConfigured()) return { ok: false, reason: "not_configured" };
+
+  const { parcels, missing } = itemsToParcels(items);
+  // Fail the WHOLE cart, not just the line: quoting part of an order and
+  // silently shipping the rest for nothing is worse than quoting none of it.
+  if (missing.length > 0 || parcels.length === 0) {
+    return { ok: false, reason: "incomplete_dimensions", missing };
+  }
+
+  if (parcels.length > MAX_TOTAL_PARCELS) {
+    return { ok: false, reason: "too_many_parcels", detail: `${parcels.length} cartons` };
+  }
+
+  // Checked AFTER the local validations, so a key is only ever built for a cart
+  // that would actually reach a carrier.
+  const key = cacheKey(parcels, collection, delivery);
+  const cached = getCached<FreightQuote>(key);
+  if (cached) return cached;
+
+  // An over-limit carton does not fail the cart any more - it just rules
+  // Australia Post out. PAC would reject the request, so asking is a wasted call
+  // and a slower checkout.
+  const oversize = oversizeSkus(items);
+  const on = enabledCarriers();
+  const askAusPost = on.has("auspost") && Boolean(auspostKey) && oversize.length === 0;
+  const askEasyship = on.has("easyship") && Boolean(easyshipToken);
+
+  const [ap, es] = await Promise.all([
+    askAusPost
+      ? quoteAusPost(parcels, collection, delivery, auspostKey as string)
+      : Promise.resolve(null),
+    askEasyship
+      ? quoteEasyship(parcels, collection, delivery, easyshipToken as string)
+      : Promise.resolve(null),
+  ]);
+
+  const options: FreightOption[] = [];
+  const errors: string[] = [];
+  for (const [carrier, r] of [
+    ["Australia Post", ap],
+    ["Easyship", es],
+  ] as const) {
+    if (r === null) continue;
+    if ("error" in r) {
+      errors.push(`${carrier}: ${r.error}`);
+      // Say so out loud. A carrier dropping out of the pool is invisible from
+      // the outside - the other one answers and the checkout carries on - which
+      // is how an exhausted Easyship allowance went unnoticed for an afternoon.
+      reportCarrierFailure(carrier, r.error);
+    } else {
+      options.push(...r);
+    }
+  }
+
+  // Nothing could carry it. Say WHY in the most useful order: an over-limit
+  // consignment with no carrier for it is "oversize", which the checkout turns
+  // into the honest "ships as freight" message. A carrier that broke is an
+  // error. Everything else genuinely had no service to offer.
+  const failure = (): FreightQuote => {
+    if (oversize.length > 0 && !askEasyship) return { ok: false, reason: "oversize", oversize };
+    if (errors.length > 0) return { ok: false, reason: "error", detail: errors.join("; ") };
+    if (oversize.length > 0) return { ok: false, reason: "oversize", oversize };
+    return { ok: false, reason: "no_services" };
+  };
+
+  // Applied BEFORE selectOptions, so an over-ceiling express service is never
+  // offered as the "faster" second option either. The cheapest is what decides
+  // whether this cart can be sold online at all.
+  const cap = maxAutoQuote();
+  const affordable = cap > 0 ? options.filter((o) => o.price <= cap) : options;
+  const cheapest = Math.min(...options.map((o) => o.price));
+
+  const quote: FreightQuote =
+    affordable.length > 0
+      ? { ok: true, options: selectOptions(affordable) }
+      : options.length > 0
+        ? {
+            ok: false,
+            reason: "too_expensive",
+            detail: `cheapest $${cheapest.toFixed(2)} over the $${cap.toFixed(2)} cap`,
+          }
+        : failure();
+
+  setCached(key, quote, cacheableFor(quote));
+  return quote;
 }

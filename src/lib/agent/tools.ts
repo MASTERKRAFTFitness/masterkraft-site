@@ -7,10 +7,10 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import { allProducts, productBySlug, searchCatalogue } from "@/lib/catalogue";
-import { formatPrice, isForeignBrandSku, type WcProduct } from "@/lib/woocommerce";
+import { formatPrice, isPortalOnlyBrand, type WcProduct } from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
 import { parseProductDetail } from "@/lib/spec";
-import { enrich, getLiveEntries, getUnleashedMap } from "@/lib/unleashed";
+import { enrich, getLiveEntries, getShipmentsForOrder, getUnleashedMap } from "@/lib/unleashed";
 import { collectionAddress, quoteFreight, type FreightItem } from "@/lib/freight";
 import { getOrder, listRecentOrders, ordersConfigured, summariseOrder } from "@/lib/wc-admin";
 import { submitHubspotForm } from "@/lib/hubspot";
@@ -204,7 +204,9 @@ const getProductTool: AgentTool = {
       stock_qty: live ? live.stock : e?.stockQty ?? null,
       stock_basis: live?.live ? "read live from the ERP just now" : "up to 60 minutes old, the live read failed",
       retired: isRetiredSku(product.sku),
-      foreign_brand: isForeignBrandSku(product.sku),
+      // Not "we don't sell it" — it is sold through the franchisee portals and
+      // the catalogues rather than listed on masterkraft.com.
+      portal_only_brand: isPortalOnlyBrand(product.sku),
       categories: product.categories?.map((c) => c.name) ?? [],
       overview: detail.overviewDescription || detail.overviewShort || product.short_description || null,
       features: detail.features ?? [],
@@ -310,6 +312,70 @@ const recentOrdersTool: AgentTool = {
     if (!ordersConfigured()) return { error: "WooCommerce credentials are not configured." };
     const orders = await listRecentOrders(num(input.limit, 10) || 10, str(input.status) || undefined);
     return { count: orders.length, orders: orders.map(summariseOrder) };
+  },
+};
+
+const checkShipmentTool: AgentTool = {
+  definition: {
+    name: "check_shipment",
+    description:
+      "Whether an order has been dispatched, when, and with which carrier and tracking number. Reads the dispatch record in Unleashed. Use for any 'where is my delivery' question, before quoting freight or apologising for a delay.",
+    input_schema: {
+      type: "object",
+      properties: {
+        order_number: { type: "string", description: "The order number, e.g. 490118." },
+      },
+      required: ["order_number"],
+      additionalProperties: false,
+    },
+  },
+  run: async (input) => {
+    const reference = str(input.order_number).trim();
+    if (!reference) return { error: "Provide an order number." };
+
+    const shipments = await getShipmentsForOrder(reference).catch((e: Error) => e);
+    if (shipments instanceof Error) return { error: shipments.message };
+
+    if (!shipments.length) {
+      // No dispatch record. Distinguish "not shipped yet" from "no such order",
+      // otherwise a typo reads back as a delayed delivery.
+      const order = ordersConfigured() ? await getOrder(reference).catch(() => null) : null;
+      if (!order) {
+        return {
+          order: reference,
+          found: false,
+          note: "No dispatch record and no matching order. Check the number before telling the customer anything.",
+        };
+      }
+      return {
+        order: order.number,
+        dispatched: false,
+        order_status: order.status,
+        placed: order.date_created ?? null,
+        note: "The order exists but has not been dispatched. This is not a missing record, it means it has not left yet.",
+      };
+    }
+
+    return {
+      order: reference,
+      dispatched: true,
+      shipments: shipments.map((s) => ({
+        shipment: s.shipmentNumber,
+        status: s.status,
+        dispatched_at: s.dispatchedAt,
+        tracking_number: s.trackingNumber,
+        carrier: s.carrier,
+        packages: s.packages,
+        weight_kg: s.weightKg,
+        deliver_to: s.deliverTo,
+        lines: s.lineCount,
+        // The common case by a wide margin. Say what we know rather than
+        // implying the goods are unaccounted for.
+        tracking_note: s.trackingNumber
+          ? null
+          : "Dispatched, but no tracking number or carrier was recorded against it. The goods went out; the paperwork was completed in the carrier's own system rather than here. To trace it, the despatch team needs to look it up with the carrier.",
+      })),
+    };
   },
 };
 
@@ -539,6 +605,7 @@ export const AGENT_TOOLS: AgentTool[] = [
   lookupOrderTool,
   recentOrdersTool,
   checkPaymentTool,
+  checkShipmentTool,
   freightTool,
   sendReplyTool,
   logEnquiryTool,

@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
+import { placeQuote } from "@/lib/orders";
 
 // Quote request handler. Does two things when configured:
 //   1. Emails the team (via Resend) — needs RESEND_API_KEY + QUOTE_FROM_EMAIL.
-//   2. Creates a pending WooCommerce order — needs a WRITE-capable WC key AND
-//      WC_WRITE_ENABLED=true (the flag is a safety guard so test submissions
-//      never create junk orders in the live store).
+//   2. Records it in whichever order system is live — see lib/orders. Gated, so
+//      test submissions never create junk orders, and separately gated again for
+//      the ERP, where a quote in the order book is a commercial question rather
+//      than a technical one.
 // Every step degrades gracefully: an unconfigured/failed side-effect is logged
 // but never blocks the customer's submission.
 
-type QuoteItem = { id: number; name: string; qty: number; price: number };
+// `sku` is the Unleashed ProductCode. The ERP now carries sizes the old store
+// never listed, so the code is the only identifier that is certain to mean
+// something to whoever fulfils the quote.
+type QuoteItem = { id: number; name: string; qty: number; price: number; sku?: string };
 type QuoteContact = {
   name?: string;
   email?: string;
@@ -49,7 +54,7 @@ export async function POST(request: Request) {
       console.error("[quote] email failed", e);
       return "error" as const;
     }),
-    order: await createOrder(contact, items).catch((e) => {
+    order: await placeQuote(contact, items).catch((e) => {
       console.error("[quote] order failed", e);
       return "error" as const;
     }),
@@ -87,7 +92,7 @@ async function sendEmail(
   const rows = items
     .map(
       (i) =>
-        `<tr><td style="padding:6px 12px 6px 0">${escape(i.name)}</td><td style="padding:6px 0;text-align:center">${i.qty}</td><td style="padding:6px 0;text-align:right">${money(i.price * i.qty)}</td></tr>`
+        `<tr><td style="padding:6px 12px 6px 0">${escape(i.name)}${i.sku ? `<br><span style="color:#777;font:12px monospace">${escape(i.sku)}</span>` : ""}</td><td style="padding:6px 0;text-align:center">${i.qty}</td><td style="padding:6px 0;text-align:right">${money(i.price * i.qty)}</td></tr>`
     )
     .join("");
 
@@ -115,41 +120,6 @@ async function sendEmail(
   });
   if (!res.ok) throw new Error(`Resend ${res.status}`);
   return "sent";
-}
-
-async function createOrder(
-  contact: QuoteContact,
-  items: QuoteItem[]
-): Promise<"created" | "skipped"> {
-  // Guard: only write to the live store when explicitly enabled.
-  if (process.env.WC_WRITE_ENABLED !== "true") return "skipped";
-  const key = process.env.WC_CONSUMER_KEY;
-  const secret = process.env.WC_CONSUMER_SECRET;
-  const store = process.env.WC_STORE_URL;
-  if (!key || !secret || !store) return "skipped";
-
-  const [firstName, ...rest] = (contact.name ?? "").split(" ");
-  const auth = "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
-
-  const res = await fetch(`${store}/wp-json/wc/v3/orders`, {
-    method: "POST",
-    headers: { Authorization: auth, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      status: "pending",
-      set_paid: false,
-      billing: {
-        first_name: firstName || contact.name,
-        last_name: rest.join(" "),
-        email: contact.email,
-        phone: contact.phone,
-        company: contact.company,
-      },
-      line_items: items.map((i) => ({ product_id: i.id, quantity: i.qty })),
-      customer_note: `Website quote request.${contact.location ? ` Delivery: ${contact.location}.` : ""}${contact.notes ? ` Notes: ${contact.notes}` : ""}`,
-    }),
-  });
-  if (!res.ok) throw new Error(`WC orders ${res.status}`);
-  return "created";
 }
 
 function escape(s: string) {

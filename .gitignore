@@ -39,3 +39,26 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Throwaway artifacts, regenerable
+lh-desktop.json
+reports/*.xlsx
+.claude/
+
+# Throwaway artifacts, regenerable
+lh-desktop.json
+reports/*.xlsx
+.claude/
+
+# Credentials kept locally, never committed
+Stripe Keys.rtf
+*.rtf
+
+# supabase CLI scratch
+supabase/.temp
+
+# Brand image exports from scripts/export-brand-images.py. Hundreds of MB of
+# PNGs, regenerated on demand, and NOT part of the site: `vercel deploy --prod`
+# uploads the working tree, so an untracked export directory would be shipped to
+# production and would also trip the dirty-tree guard in check-deploy-branch.
+reports/*-images/

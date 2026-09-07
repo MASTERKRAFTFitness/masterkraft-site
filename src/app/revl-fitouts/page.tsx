@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
-import { revlSites, revlNetwork } from "@/lib/revl";
+import { revlSites, revlNetwork, revlOperatingMarketCount } from "@/lib/revl";
 
 export const metadata: Metadata = {
   title: "REVL Fitouts",
@@ -57,8 +57,8 @@ export default function RevlLanding() {
             Every REVL studio, fitted out by MasterKraft
           </h2>
           <p className="mt-4 text-ash max-w-2xl leading-relaxed">
-            As REVL Training&apos;s exclusive global equipment supplier since 2023, MasterKraft has
-            fitted out its studios across eight markets worldwide - each delivered to the same spec,
+            As REVL Training&apos;s exclusive global equipment supplier since 2022, MasterKraft has
+            fitted out its studios across {revlOperatingMarketCount} markets worldwide - each delivered to the same spec,
             the same quality and the same branding.
           </p>
 

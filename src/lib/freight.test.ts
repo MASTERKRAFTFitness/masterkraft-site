@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { clearFreightCache, freightCacheStats } from "@/lib/freight-cache";
 import {
   collectionAddress,
+  enabledCarriers,
   isOversize,
+  isPlausibleCarton,
   itemsToParcels,
   marginPercent,
+  maxAutoQuote,
   oversizeSkus,
   pricesIncludeGst,
   quoteFreight,
@@ -45,6 +49,11 @@ const opt = (over: Partial<FreightOption> = {}): FreightOption => ({
   price: 100,
   ...over,
 });
+
+// The quote cache is module-level state shared by every test in this file.
+// Without clearing it between tests, a quote from one is served to the next and
+// the mocked carriers below look as though they are being ignored.
+beforeEach(clearFreightCache);
 
 describe("cart to parcels", () => {
   // Each product carries its OWN carton, so 3 steps are 3 cartons rather than
@@ -172,6 +181,9 @@ describe("failing soft", () => {
   const saved = { ...process.env };
   beforeEach(() => {
     process.env = { ...saved };
+    // These cover Australia Post on its own. The two-carrier behaviour has its
+    // own suite below.
+    delete process.env.EASYSHIP_API_TOKEN;
   });
   afterEach(() => {
     process.env = { ...saved };
@@ -179,8 +191,9 @@ describe("failing soft", () => {
 
   // The whole point: no key, missing cartons, pallet freight or a dead API must
   // never produce "Free". Heavy goods, and free freight is a promise we cannot keep.
-  it("reports not_configured when there is no API key", async () => {
+  it("reports not_configured when neither carrier has credentials", async () => {
     delete process.env.AUSPOST_API_KEY;
+    delete process.env.EASYSHIP_API_TOKEN;
     const q = await quoteFreight([item()], delivery);
     expect(q).toEqual({ ok: false, reason: "not_configured" });
   });
@@ -217,6 +230,7 @@ describe("what the customer is actually charged", () => {
   beforeEach(() => {
     process.env = { ...saved };
     process.env.AUSPOST_API_KEY = "test-key";
+    delete process.env.EASYSHIP_API_TOKEN;
     process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
     process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     process.env.FREIGHT_COLLECTION_STATE = "VIC";
@@ -292,7 +306,7 @@ describe("what the customer is actually charged", () => {
     const q = await quoteFreight([item(), item({ sku: "OTHER", weightKg: 5 })], delivery);
     expect(q.ok).toBe(true);
     if (q.ok) {
-      expect(q.options.map((o) => o.id)).toEqual(["AUS_PARCEL_REGULAR"]);
+      expect(q.options.map((o) => o.id)).toEqual(["auspost:AUS_PARCEL_REGULAR"]);
       expect(q.options[0].price).toBe(45);
     }
   });
@@ -306,7 +320,11 @@ describe("what the customer is actually charged", () => {
       ])
     );
     const q = await quoteFreight([item()], delivery);
-    if (q.ok) expect(q.options.map((o) => o.id)).toEqual(["AUS_PARCEL_REGULAR", "AUS_PARCEL_EXPRESS"]);
+    if (q.ok)
+      expect(q.options.map((o) => o.id)).toEqual([
+        "auspost:AUS_PARCEL_REGULAR",
+        "auspost:AUS_PARCEL_EXPRESS",
+      ]);
   });
 
   // PAC collapses a single service to an object rather than a one-item array.
@@ -325,7 +343,13 @@ describe("what the customer is actually charged", () => {
         headers: { "Content-Type": "application/json" },
       })) as typeof fetch;
     const q = await quoteFreight([item()], delivery);
-    expect(q).toMatchObject({ ok: false, reason: "error", detail: "Length exceeds maximum" });
+    // The detail names the carrier, because with two of them "it failed" is not
+    // enough to act on.
+    expect(q).toMatchObject({
+      ok: false,
+      reason: "error",
+      detail: "Australia Post: Length exceeds maximum",
+    });
   });
 
   it("treats an empty service list as unquotable", async () => {
@@ -348,5 +372,584 @@ describe("what the customer is actually charged", () => {
     reply(pac([{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }]));
     const q = await quoteFreight([item({ quantity: 40 })], delivery);
     expect(q).toMatchObject({ ok: false, reason: "too_many_parcels" });
+  });
+});
+
+// The point of having two carriers: they win opposite ends of this catalogue, so
+// the cheapest answer depends on the carton and the lane. Australia Post is flat
+// and unbeatable on small parcels; Easyship is far cheaper on heavy ones, on long
+// lanes, and is the only one that carries the bulky 58% at all.
+describe("two carriers, priced against each other", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let hits: string[] = [];
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.EASYSHIP_API_TOKEN = "test-token";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_COLLECTION_STATE = "VIC";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    hits = [];
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+  });
+
+  /** Route the mock by URL, so each carrier can be given its own answer. */
+  const carriers = (opts: { auspost?: unknown | Error; easyship?: unknown | Error }) => {
+    globalThis.fetch = (async (url: string) => {
+      const u = String(url);
+      hits.push(u);
+      const which = u.includes("easyship") ? opts.easyship : opts.auspost;
+      if (which instanceof Error) throw which;
+      return new Response(JSON.stringify(which ?? {}), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+  };
+
+  const pac = (price: string, code = "AUS_PARCEL_REGULAR", name = "Parcel Post") => ({
+    services: { service: [{ code, name, price }] },
+  });
+  const es = (charge: number, name = "TNT - Road Express", days = [1, 3]) => ({
+    rates: [
+      {
+        total_charge: charge,
+        courier_service: { id: "uuid-tnt-road", name },
+        min_delivery_time: days[0],
+        max_delivery_time: days[1],
+      },
+    ],
+  });
+
+  const calledAusPost = () => hits.some((u) => u.includes("auspost"));
+  const calledEasyship = () => hits.some((u) => u.includes("easyship"));
+
+  it("asks both at once and sells whichever is cheaper", async () => {
+    carriers({ auspost: pac("20.00"), easyship: es(15) });
+    const q = await quoteFreight([item()], delivery);
+    expect(calledAusPost()).toBe(true);
+    expect(calledEasyship()).toBe(true);
+    expect(q.ok).toBe(true);
+    if (q.ok) {
+      expect(q.options[0].price).toBe(15);
+      expect(q.options[0].carrier).toBe("TNT");
+    }
+  });
+
+  // The flat national satchel rate is the case Easyship cannot beat, and the
+  // router has to be willing to return Australia Post to prove it is comparing
+  // rather than preferring.
+  it("sells Australia Post when it is the cheaper of the two", async () => {
+    carriers({ auspost: pac("10.20"), easyship: es(17.7) });
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) {
+      expect(q.options[0].carrier).toBe("Australia Post");
+      expect(q.options[0].price).toBe(10.2);
+    }
+  });
+
+  // 107 products are over the parcel limits. PAC would reject them, so asking is
+  // a wasted call and a slower checkout - but the cart is no longer unquotable.
+  it("gives an over-limit carton to Easyship alone, without calling PAC", async () => {
+    carriers({ easyship: es(619.96) });
+    const q = await quoteFreight([barbell()], delivery);
+    expect(calledAusPost()).toBe(false);
+    expect(calledEasyship()).toBe(true);
+    expect(q.ok).toBe(true);
+    if (q.ok) expect(q.options[0].price).toBe(619.96);
+  });
+
+  it("still quotes when one carrier breaks", async () => {
+    carriers({ auspost: new Error("ECONNREFUSED"), easyship: es(15) });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) expect(q.options[0].price).toBe(15);
+  });
+
+  // Both down is the one case that must still never say "Free".
+  it("fails soft when both carriers break", async () => {
+    carriers({ auspost: new Error("ECONNREFUSED"), easyship: new Error("ECONNREFUSED") });
+    const q = await quoteFreight([item()], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "error" });
+  });
+
+  // An over-limit cart with no second carrier configured is the OLD behaviour,
+  // and it has to survive: that is what the checkout turns into "ships as freight".
+  it("still reports oversize when Easyship is not configured", async () => {
+    delete process.env.EASYSHIP_API_TOKEN;
+    carriers({});
+    const q = await quoteFreight([barbell()], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "oversize", oversize: ["MWBBOL04"] });
+  });
+
+  // Ids travel to the browser and come back to be re-priced when the card is
+  // charged. Two carriers means they must not collide.
+  it("namespaces option ids by carrier", async () => {
+    carriers({ auspost: pac("10.00"), easyship: es(30, "TNT - Overnight", [1, 1]) });
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) {
+      expect(q.options.map((o) => o.id)).toEqual(["auspost:AUS_PARCEL_REGULAR", "easyship:uuid-tnt-road"]);
+    }
+  });
+
+  it("shows the courier, not the reseller we buy through", async () => {
+    carriers({ auspost: new Error("x"), easyship: es(15, "CouriersPlease - Multi Box STD") });
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) {
+      expect(q.options[0].carrier).toBe("CouriersPlease");
+      expect(q.options[0].service).toBe("Multi Box STD");
+    }
+  });
+
+  // Easyship quotes GST-inclusive on this account. Adding GST again would
+  // overcharge; assuming it when it is absent would undercharge by 10%.
+  it("does not add GST to an Easyship rate that already includes it", async () => {
+    carriers({ auspost: new Error("x"), easyship: es(100) });
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) expect(q.options[0].price).toBe(100);
+  });
+
+  it("adds GST to an Easyship rate when told the account excludes it", async () => {
+    process.env.EASYSHIP_PRICES_INCLUDE_GST = "false";
+    carriers({ auspost: new Error("x"), easyship: es(100) });
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) expect(q.options[0].price).toBe(110);
+  });
+
+  it("applies the handling margin to Easyship too", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "15";
+    carriers({ auspost: new Error("x"), easyship: es(100) });
+    const q = await quoteFreight([item()], delivery);
+    if (q.ok) expect(q.options[0].price).toBe(115);
+  });
+
+  // Easyship prices a whole consignment in one request, which is the latency win
+  // the bulky brief asked carriers for. PAC needs one call per carton shape.
+  it("prices a multi-carton cart in a single Easyship call", async () => {
+    carriers({ auspost: pac("20.00"), easyship: es(90) });
+    await quoteFreight([item({ quantity: 3 })], delivery);
+    expect(hits.filter((u) => u.includes("easyship"))).toHaveLength(1);
+  });
+});
+
+// The cache is not just a cost control. It is what makes the price SHOWN and the
+// price CHARGED the same number, because both come out of one carrier answer.
+describe("caching the carrier answer", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    delete process.env.EASYSHIP_API_TOKEN;
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    clearFreightCache();
+    calls = 0;
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+    clearFreightCache();
+  });
+
+  /** Each call returns a DIFFERENT price, so a second live call is visible. */
+  const drifting = () => {
+    globalThis.fetch = (async () => {
+      calls++;
+      return new Response(
+        JSON.stringify({
+          services: {
+            service: [{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: String(10 * calls) }],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }) as unknown as typeof fetch;
+  };
+
+  // THE POINT. The checkout quotes to display, payment-intent quotes again to
+  // charge. Against a carrier whose rate drifts, that is a 409 after the card is
+  // captured. One cached answer serves both.
+  it("charges what it displayed, even against a carrier that drifts", async () => {
+    drifting();
+    const shown = await quoteFreight([item()], delivery);
+    const charged = await quoteFreight([item()], delivery);
+    expect(calls).toBe(1);
+    expect(shown.ok && charged.ok).toBe(true);
+    if (shown.ok && charged.ok) expect(charged.options[0].price).toBe(shown.options[0].price);
+  });
+
+  it("does not re-ask the carrier for a cart it has already priced", async () => {
+    drifting();
+    await quoteFreight([item()], delivery);
+    await quoteFreight([item()], delivery);
+    await quoteFreight([item()], delivery);
+    expect(calls).toBe(1);
+    expect(freightCacheStats().hits).toBe(2);
+  });
+
+  // Same boxes, different order: still the same consignment and the same price.
+  it("treats a reordered cart as the same consignment", async () => {
+    drifting();
+    const a = item({ sku: "A", weightKg: 5 });
+    const b = item({ sku: "B", weightKg: 9 });
+    await quoteFreight([a, b], delivery);
+    // Two distinct cartons cost two PAC calls on the way in. What matters is
+    // that asking again in the other order costs nothing.
+    const afterFirst = calls;
+    await quoteFreight([b, a], delivery);
+    expect(calls).toBe(afterFirst);
+  });
+
+  it("asks again for a different destination", async () => {
+    drifting();
+    await quoteFreight([item()], delivery);
+    await quoteFreight([item()], { ...delivery, postcode: "6000", city: "Perth" });
+    expect(calls).toBe(2);
+  });
+
+  it("asks again for a different cart", async () => {
+    drifting();
+    await quoteFreight([item()], delivery);
+    await quoteFreight([item({ weightKg: 3 })], delivery);
+    expect(calls).toBe(2);
+  });
+
+  // The street arrives after the suburb during checkout. Keying on it would miss
+  // the cache on every keystroke and burn the metered calls this exists to save.
+  it("ignores the street line, which does not change a rate", async () => {
+    drifting();
+    await quoteFreight([item()], delivery);
+    await quoteFreight([item()], { ...delivery, line1: "12 Example St" });
+    expect(calls).toBe(1);
+  });
+
+  // A cached price that outlived a margin change would be charged.
+  it("does not serve a price across a margin change", async () => {
+    drifting();
+    const before = await quoteFreight([item()], delivery);
+    process.env.FREIGHT_MARGIN_PERCENT = "15";
+    const after = await quoteFreight([item()], delivery);
+    expect(calls).toBe(2);
+    if (before.ok && after.ok) expect(after.options[0].price).not.toBe(before.options[0].price);
+  });
+
+  it("can be switched off entirely", async () => {
+    process.env.FREIGHT_CACHE_TTL_SECONDS = "0";
+    drifting();
+    await quoteFreight([item()], delivery);
+    await quoteFreight([item()], delivery);
+    expect(calls).toBe(2);
+  });
+
+  // A carrier over its quota stays over it. Re-asking on every keystroke burns
+  // the allowance that caused the problem in the first place.
+  it("remembers a failure briefly rather than hammering a dead carrier", async () => {
+    globalThis.fetch = (async () => {
+      calls++;
+      throw new Error("ECONNREFUSED");
+    }) as unknown as typeof fetch;
+    const a = await quoteFreight([item()], delivery);
+    const b = await quoteFreight([item()], delivery);
+    expect(a).toMatchObject({ ok: false, reason: "error" });
+    expect(b).toMatchObject({ ok: false, reason: "error" });
+    expect(calls).toBe(1);
+  });
+
+  // Config-dependent and instant to recompute. Caching it would keep freight
+  // switched off after the credentials arrived.
+  it("never caches not_configured", async () => {
+    delete process.env.AUSPOST_API_KEY;
+    expect(await quoteFreight([item()], delivery)).toMatchObject({ reason: "not_configured" });
+    process.env.AUSPOST_API_KEY = "test-key";
+    drifting();
+    expect((await quoteFreight([item()], delivery)).ok).toBe(true);
+  });
+});
+
+// Bulky freight is priced on volume, and this catalogue is large, light and
+// mostly air: 38 of 107 bulky products bill on volume at a mean 1.41x, and a
+// 16kg medicine ball rack bills as 175kg. The ceiling lets the ones that price
+// sensibly sell by card and sends the rest to a human.
+describe("the ceiling on what we will quote online", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    delete process.env.EASYSHIP_API_TOKEN;
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    clearFreightCache();
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+    clearFreightCache();
+  });
+
+  const priced = (...services: { code: string; name: string; price: string }[]) => {
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ services: { service: services } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })) as unknown as typeof fetch;
+  };
+
+  // Unset must mean "no cap". A new build must never start refusing quotes
+  // because someone forgot to configure something.
+  it("is off unless configured", () => {
+    delete process.env.FREIGHT_MAX_AUTO_QUOTE;
+    expect(maxAutoQuote()).toBe(0);
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    expect(maxAutoQuote()).toBe(250);
+  });
+
+  it("ignores a nonsense value rather than capping at zero", () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "not-a-number";
+    expect(maxAutoQuote()).toBe(0);
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "-50";
+    expect(maxAutoQuote()).toBe(0);
+  });
+
+  it("sells a delivery that comes in under the cap", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "120.00" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) expect(q.options[0].price).toBe(120);
+  });
+
+  it("sends a delivery over the cap to the quote flow", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "446.58" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "too_expensive" });
+    if (!q.ok) expect(q.detail).toContain("446.58");
+  });
+
+  // The cap filters BEFORE selectOptions, so an over-ceiling express service is
+  // never offered as the "faster" second line either.
+  it("never offers a service that is over the cap", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "250";
+    priced(
+      { code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "120.00" },
+      { code: "AUS_PARCEL_EXPRESS", name: "Express Post", price: "900.00" }
+    );
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) {
+      expect(q.options.map((o) => o.price)).toEqual([120]);
+      expect(q.options.every((o) => o.price <= 250)).toBe(true);
+    }
+  });
+
+  it("charges what it can carry when nothing is capped", async () => {
+    delete process.env.FREIGHT_MAX_AUTO_QUOTE;
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "446.58" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(true);
+  });
+
+  // The cap is part of the cache key. Without that, raising it would keep
+  // serving the refusal that the old value produced.
+  it("does not serve a refusal across a change to the cap", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "100";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "300.00" });
+    expect(await quoteFreight([item()], delivery)).toMatchObject({ reason: "too_expensive" });
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "500";
+    expect((await quoteFreight([item()], delivery)).ok).toBe(true);
+  });
+
+  // Still never "Free". Too expensive to sell online is not too cheap to charge.
+  it("is a refusal, not a zero", async () => {
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "10";
+    priced({ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "446.58" });
+    const q = await quoteFreight([item()], delivery);
+    expect(q.ok).toBe(false);
+    if (!q.ok) expect(q.reason).not.toBe("no_services");
+  });
+});
+
+// Michael's call, 2026-09-06: everything through Easyship, for one dispatch
+// workflow, one label source and one tracking feed. Made configuration rather
+// than a deletion so the measured-best setup is one variable away.
+describe("choosing which carriers to ask", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let hits: string[] = [];
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.EASYSHIP_API_TOKEN = "test-token";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    hits = [];
+    clearFreightCache();
+    globalThis.fetch = (async (url: string) => {
+      const u = String(url);
+      hits.push(u);
+      const body = u.includes("easyship")
+        ? { rates: [{ total_charge: 30, courier_service: { id: "es1", name: "TNT - Road Express" } }] }
+        : { services: { service: [{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price: "20.00" }] } };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+    clearFreightCache();
+  });
+
+  const asked = (who: string) => hits.some((u) => u.includes(who));
+
+  // Unset must keep both. Nothing should change carrier behaviour because a
+  // variable was forgotten.
+  it("asks both when unconfigured", async () => {
+    delete process.env.FREIGHT_CARRIERS;
+    expect([...enabledCarriers()].sort()).toEqual(["auspost", "easyship"]);
+    await quoteFreight([item()], delivery);
+    expect(asked("auspost")).toBe(true);
+    expect(asked("easyship")).toBe(true);
+  });
+
+  it("routes everything through Easyship when told to", async () => {
+    process.env.FREIGHT_CARRIERS = "easyship";
+    const q = await quoteFreight([item()], delivery);
+    expect(asked("auspost")).toBe(false);
+    expect(asked("easyship")).toBe(true);
+    // Easyship's $30 wins by default, even though Australia Post would have
+    // quoted $20. That is the cost of the decision, asserted rather than implied.
+    if (q.ok) expect(q.options[0].price).toBe(30);
+  });
+
+  it("can be pointed at Australia Post alone", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    const q = await quoteFreight([item()], delivery);
+    expect(asked("easyship")).toBe(false);
+    if (q.ok) expect(q.options[0].price).toBe(20);
+  });
+
+  // With Easyship the only carrier, an over-limit carton is its problem alone -
+  // and it can actually carry it, which Australia Post never could.
+  it("still prices a bulky cart with Easyship alone", async () => {
+    process.env.FREIGHT_CARRIERS = "easyship";
+    const q = await quoteFreight([barbell()], delivery);
+    expect(q.ok).toBe(true);
+    expect(asked("auspost")).toBe(false);
+  });
+
+  // Australia Post alone cannot carry it, so it goes where it went before any
+  // of this existed.
+  it("sends a bulky cart to the quote flow with Australia Post alone", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    expect(await quoteFreight([barbell()], delivery)).toMatchObject({
+      ok: false,
+      reason: "oversize",
+    });
+  });
+
+  // Freight must not read as "on" when the allowlist leaves nobody to ask.
+  it("is not configured when the allowlist excludes every carrier", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    delete process.env.AUSPOST_API_KEY;
+    expect(await quoteFreight([item()], delivery)).toEqual({
+      ok: false,
+      reason: "not_configured",
+    });
+  });
+
+  // The allowlist changes the answer, so a cached price must not outlive it.
+  it("does not serve a price across a change of carrier", async () => {
+    process.env.FREIGHT_CARRIERS = "auspost";
+    const a = await quoteFreight([item()], delivery);
+    process.env.FREIGHT_CARRIERS = "easyship";
+    const b = await quoteFreight([item()], delivery);
+    if (a.ok && b.ok) expect(b.options[0].price).not.toBe(a.options[0].price);
+  });
+});
+
+// Forty sellable products carry cartons recorded in millimetres in a centimetre
+// field. A quote must never be built from a number nobody believes.
+describe("cartons that could not be real", () => {
+  it("accepts an ordinary box", () => {
+    expect(isPlausibleCarton({ weight: 18, length: 45, width: 45, height: 37 })).toBe(true);
+  });
+
+  // The real record: a 12-inch foam plyo box, 850 x 1000 x 305, which is 259
+  // cubic metres and prices as a four-tonne consignment.
+  it("rejects millimetres typed into a centimetre field", () => {
+    expect(isPlausibleCarton({ weight: 13, length: 850, width: 1000, height: 305 })).toBe(false);
+    // An 8kg kettlebell recorded 220 x 220 x 290.
+    expect(isPlausibleCarton({ weight: 9, length: 220, width: 220, height: 290 })).toBe(false);
+  });
+
+  it("rejects a decimal point in the wrong place", () => {
+    // SLLE2502 records a height of 0.001cm.
+    expect(isPlausibleCarton({ weight: 1, length: 30, width: 30, height: 0.001 })).toBe(false);
+  });
+
+  // A 224cm barbell is long, not impossible. The line is data entry, not the
+  // carrier's limits - isOversize decides what a carrier will take.
+  it("accepts a genuinely long item", () => {
+    expect(isPlausibleCarton({ weight: 21, length: 224, width: 8, height: 8 })).toBe(true);
+    expect(isPlausibleCarton({ weight: 43, length: 200, width: 45, height: 45 })).toBe(true);
+  });
+
+  it("rejects something bigger than a pallet of pallets", () => {
+    expect(isPlausibleCarton({ weight: 50, length: 400, width: 100, height: 100 })).toBe(false);
+  });
+
+  // THE 42. Every side inside the size bounds, so the size rule passed them and
+  // the site quoted freight from them - a 41kg barbell declared as a box the
+  // size of a paperback under-declares the consignment and we absorb the
+  // carrier's correction.
+  it("rejects a carton denser than any metal", () => {
+    // MWBBFRU02: a 14kg fixed barbell recorded 10.54 x 1.63 x 1.63cm. 500,000 kg/m3.
+    expect(isPlausibleCarton({ weight: 14, length: 10.54, width: 1.63, height: 1.63 })).toBe(false);
+    // MWWLACC01: 1kg of collars recorded 4.5 x 1.1 x 1.1cm.
+    expect(isPlausibleCarton({ weight: 1, length: 4.5, width: 1.1, height: 1.1 })).toBe(false);
+  });
+
+  // MWWPOPR01, the case that proved size was not enough: a 2kg weight plate
+  // recorded 170 x 170 x 32cm. 0.92 cubic metres, so the size rule passed it -
+  // but that is steel at 2.2 kg/m3, lighter than air.
+  it("rejects a carton lighter than air", () => {
+    expect(isPlausibleCarton({ weight: 2, length: 170, width: 170, height: 32 })).toBe(false);
+  });
+
+  // The bounds are wide because the first draft of them was not. "Outside
+  // 100-8000 kg/m3" would have condemned both of these and rewritten a 2kg ankle
+  // strap into a two-and-a-half-metre one.
+  it("leaves a dense little box and a big light one alone", () => {
+    // MWWLATT01: a 2kg ankle strap, 25 x 8.5 x 1cm - 9,412 kg/m3 and perfectly real.
+    expect(isPlausibleCarton({ weight: 2, length: 25, width: 8.5, height: 1 })).toBe(true);
+    // An inflated 55cm fitness ball is genuinely close to the floor.
+    expect(isPlausibleCarton({ weight: 1.2, length: 55, width: 55, height: 55 })).toBe(true);
+  });
+
+  // Density needs a mass. Dimensions with no weight are ordinary in the
+  // snapshot, and rejecting a box over a field nobody filled in would lose
+  // cartons that quote perfectly well.
+  it("has no opinion on density when the weight is missing", () => {
+    expect(isPlausibleCarton({ weight: 0, length: 10.54, width: 1.63, height: 1.63 })).toBe(true);
+    // The size rule still applies without a weight.
+    expect(isPlausibleCarton({ weight: 0, length: 850, width: 1000, height: 305 })).toBe(false);
   });
 });

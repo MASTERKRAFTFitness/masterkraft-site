@@ -1,39 +1,72 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useVariantSelection } from "@/components/shop/VariantSelection";
 import { trackAddToCart } from "@/lib/analytics";
+import { variantLine } from "@/lib/variant-line";
 
 export type Variant = {
-  id: number;
+  id: number; // cart key: the WooCommerce variation id, or a negative code hash
+  code: string; // Unleashed ProductCode — what the warehouse picks
   label: string;
   priceLabel: string;
   priceValue: number;
   inStock: boolean;
   stockQty?: number;
   image?: string;
+  wooProductId?: number;
+  wooVariationId?: number;
 };
 
 export default function VariantSelector({
-  productId,
   productName,
   productSlug,
   variants,
 }: {
-  productId: number;
+  /** The range's own ERP name, e.g. "Rubber Hex Dumbbell". */
   productName: string;
   productSlug: string;
   variants: Variant[];
 }) {
   const { add } = useCart();
+  const selection = useVariantSelection();
   const [selectedId, setSelectedId] = useState(
     (variants.find((v) => v.inStock) ?? variants[0])?.id
   );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  // A click in the strip or the table moves the SELECTION, not just the
+  // picture. Every thumbnail on a range page is a size and is captioned with
+  // it, so clicking "12kg" and being left on 6kg — picture changed, price did
+  // not — was the confusing half of the old gallery.
+  //
+  // Adjusted during render rather than in an effect: this is derived state
+  // catching up with a prop, which is the case React documents for it, and it
+  // spares the extra paint on the wrong size an effect would give.
+  const request = selection?.request;
+  const [lastRequest, setLastRequest] = useState(request?.n ?? 0);
+  if (request && request.n !== lastRequest) {
+    setLastRequest(request.n);
+    const hit = variants.find((v) => v.code === request.code);
+    if (hit) setSelectedId(hit.id);
+  }
+
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
+
+  // Publish the selection: the gallery shows the right photograph — ranges
+  // carry one per size, 26 for the Rubber Hex Dumbbells, so this is the
+  // difference between "a dumbbell" and the 9kg the shopper is looking at —
+  // and the size table highlights the right row.
+  const selectedCode = selected?.code;
+  const selectedImage = selected?.image;
+  const setSelected = selection?.setSelected;
+  useEffect(() => {
+    setSelected?.(selectedCode, selectedImage);
+  }, [setSelected, selectedCode, selectedImage]);
+
   if (!selected) return null;
 
   return (
@@ -51,25 +84,44 @@ export default function VariantSelector({
         · Prices inc. GST
       </p>
 
-      {/* Variant options */}
+      {/* Size picker. A dropdown rather than a row of chips: the ranges run to
+          26 options, which as buttons is a wall that pushes the price and the
+          add-to-cart below the fold on a phone. */}
       <div className="mt-6">
-        <p className="font-mono text-xs uppercase tracking-widest text-ash mb-2">Options</p>
-        <div className="flex flex-wrap gap-2">
-          {variants.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              onClick={() => setSelectedId(v.id)}
-              className={`px-3 py-2 text-sm border transition-colors ${
-                v.id === selectedId
-                  ? "border-accent text-accent-600"
-                  : "border-line text-ink hover:border-ash"
-              } ${!v.inStock ? "opacity-60" : ""}`}
-            >
-              {v.label}
-            </button>
-          ))}
+        <label
+          htmlFor="variant-select"
+          className="block font-mono text-xs uppercase tracking-widest text-ash mb-2"
+        >
+          Size
+        </label>
+        <div className="relative max-w-xs">
+          <select
+            id="variant-select"
+            value={selectedId}
+            onChange={(e) => setSelectedId(Number(e.target.value))}
+            className="w-full appearance-none border border-line bg-white text-ink h-12 pl-4 pr-10 font-mono text-sm focus:outline-none focus:border-accent transition-colors cursor-pointer"
+          >
+            {variants.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.label}
+                {v.priceValue > 0 ? ` — ${v.priceLabel}` : ""}
+                {v.inStock ? "" : " (made to order)"}
+              </option>
+            ))}
+          </select>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ash text-xs"
+          >
+            ▾
+          </span>
         </div>
+        <p className="mt-2 font-mono text-xs uppercase tracking-widest text-ash">
+          Code: {selected.code}
+        </p>
+        <p className="mt-1 text-xs text-ash">
+          {variants.length} {variants.length === 1 ? "option" : "options"} in this range
+        </p>
       </div>
 
       {/* Qty + add */}
@@ -97,20 +149,12 @@ export default function VariantSelector({
           type="button"
           className="btn btn-accent"
           onClick={() => {
-            const name = `${productName} - ${selected.label}`;
-            add(
-              {
-                id: selected.id,
-                productId,
-                variationId: selected.id,
-                slug: productSlug,
-                name,
-                image: selected.image,
-                price: selected.priceValue,
-              },
-              qty
-            );
-            trackAddToCart({ id: selected.id, name, price: selected.priceValue }, qty);
+            // Built by lib/variant-line, which the size table's ADD also uses,
+            // so the two paths cannot put the same size in the cart twice under
+            // two different keys.
+            const line = variantLine(productName, productSlug, selected);
+            add(line, qty);
+            trackAddToCart({ id: line.id, name: line.name, price: line.price }, qty);
             setAdded(true);
             setQty(1);
             setTimeout(() => setAdded(false), 2500);

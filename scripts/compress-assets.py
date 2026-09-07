@@ -31,7 +31,11 @@ import sys
 from PIL import Image
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-IMAGE_DIRS = [ROOT / "public/product-images", ROOT / "public/product-bg"]
+IMAGE_DIRS = [
+    ROOT / "public/product-images",
+    ROOT / "public/product-bg",
+    ROOT / "public/erp-bg",
+]
 MANUALS = ROOT / "public/manuals"
 
 JPEG_QUALITY = 88

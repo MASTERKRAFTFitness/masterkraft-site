@@ -257,7 +257,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "heading": "28 PRIVACY AND MARKETING",
       "body": [
         "By entering into these Terms and Conditions, you agree to:",
-        "(a) be bound by the terms of our Privacy Policy which can be found at www.gymequipmentdirect.com.au; and",
+        "(a) be bound by the terms of our Privacy Policy which can be found at masterkraft.com/privacy-policy; and",
         "(b) receive relevant information and materials regarding our product offerings (“the Information”). The Information will be sent to you via electronic message as defined pursuant to the Spam Act 2003 (Vic) from us or our permitted agents."
       ]
     },
@@ -312,12 +312,6 @@ export const legalContent: Record<string, ContentSection[]> = {
       "heading": "34 ENTIRE AGREEMENT",
       "body": [
         "These terms and conditions supersede and replace any arrangements, representations, understandings or agreements made or existing between the Customer and the Company and (except as otherwise may be agreed in writing) constitute the entire agreement relating to the supply of the Products."
-      ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
       ]
     }
   ],
@@ -407,6 +401,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "body": [
         "When you visit our website, we may collect information about the session between your computer and our website using cookies. Cookies are text files which are stored on your computer or mobile device (by your web browser) that record specific information, such as which pages you visit, the information you have searched for, or the device you are using to access our website. We use cookies for the purposes of managing and improving our website, improving our business processes, and gathering demographic information about the persons who visit our website, among other things. Third parties may store cookies on our website, including, by way of example, the following entities.",
         "Google Analytics (provided by Google Inc.) to enable us: – To perform statistical analyses of e.g. number of visitors, information on gender, age, location, interests, and the like to learn about our visitors; and – To improve the website friendliness and usability (e.g. on the basis of website traffic measurements).",
+        "Google Ads (provided by Google Inc.) to measure which advertisements led to an enquiry or an order, so that we can judge which of our advertising is worth continuing, and to show you our advertisements on other websites you visit.",
         "YouTube (provided by YouTube LLC.) to store session preferences (e.g. language) and suggest other content based on your previous uses (only activated when you are logged in to YouTube when visiting our website and only when clicking the YouTube button).",
         "Facebook (provided by Facebook, Inc.) to identify users logged in to Facebook for the purpose of sharing content on Facebook (only when you are logged in to Facebook when visiting our website and only when clicking the Facebook button).",
         "LinkedIn (provided by LinkedIn Corp.) to enable the “follow” and “share” features of LinkedIn (only when you are logged in to LinkedIn when visiting our website and only when clicking the LinkedIn button).",
@@ -539,12 +534,6 @@ export const legalContent: Record<string, ContentSection[]> = {
       "heading": "Changes to this Privacy Policy",
       "body": [
         "We will update this Privacy Policy from time to time. We therefore recommend that you read it each time you visit our website. If you do not agree with the Privacy Policy at any time, please do not continue to use our website. If you do continue to use our website, you are deemed to have accepted the terms of the Privacy Policy as they appear at the time of use."
-      ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
       ]
     }
   ],
@@ -721,12 +710,6 @@ export const legalContent: Record<string, ContentSection[]> = {
         "(2) Warranty Period – 3 months.",
         "For more information or warranty information for additional products please email admin@masterkraft.com"
       ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
-      ]
     }
   ],
   "returns": [
@@ -781,12 +764,6 @@ export const legalContent: Record<string, ContentSection[]> = {
         "You may return the items to the address below:",
         "MasterKraft Attn: Returns Department 8/337-339 Settlement Rd, Thomastown, Vic. 3074 AUSTRALIA",
         "*Please note there are no returns or exchanges on sale items for change of mind purchases. All sales are final. **A 20% restocking fee applies for all change of mind returns."
-      ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
       ]
     }
   ],
@@ -864,12 +841,6 @@ export const legalContent: Record<string, ContentSection[]> = {
         "Can I add items to my order?",
         "If an order has been dispatched then we will not be able to add anything to your order sorry.",
         "If you have items on backorder, we may be able to add more products."
-      ]
-    },
-    {
-      "heading": "You were not leaving your cart just like that, right?",
-      "body": [
-        "Enter your details below to save your shopping cart for later. And, who knows, maybe we will even send you a sweet discount code :)"
       ]
     }
   ]

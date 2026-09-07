@@ -13,12 +13,64 @@ import {
   type WcProduct,
 } from "@/lib/woocommerce";
 import { skuAliases } from "@/lib/unleashed-aliases";
+import { getRange } from "@/lib/ranges";
+import erpImageOverrides from "@/lib/erp-image-overrides.json";
 
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
 
-export type UnleashedEntry = { price: number; stock: number };
-type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
+// 214 ERP photos were shot on white (or an off-shade grey) rather than on the
+// #e6e6e6 the shop's product tiles are painted, so `object-contain` rendered
+// them as a white box floating inside a grey tile. scripts/normalize-erp-bg.py
+// repaints those backdrops into /public/erp-bg/ and records the local path
+// here; the rest keep their Unleashed CDN URL. Keyed by UPPERCASE ProductCode,
+// which is how `map` is keyed, so the swap happens as the map is built and
+// every consumer of `entry.image` — the grid, ranges.ts, the variant picker —
+// gets the corrected file without knowing this exists.
+const IMAGE_OVERRIDES = erpImageOverrides as Record<string, string>;
+
+// The ERP record the site actually uses. Price and stock were the whole of it
+// until 2026-09-02, when ranges started being built from Unleashed rather than
+// from WooCommerce's variable/bundle containers (see lib/ranges.ts): a range
+// needs the product's NAME to know which range it belongs to, its IMAGE, and its
+// BRAND to keep MasterKraft's range apart from the identical Snap, Air Locker,
+// Hyper Health and NO BRAND ranges that sit beside it under the same names.
+export type UnleashedEntry = {
+  price: number;
+  stock: number;
+  /** ProductDescription, e.g. "Rubber Hex Dumbbell - 9kg". */
+  name?: string;
+  /** Default image on Unleashed's own CDN — not the WordPress box. */
+  image?: string;
+  /** ProductBrand.BrandName: MK, SNAP, REVL, AIR LOCKER, NO BRAND, ... */
+  brand?: string;
+  /** ProductGroup.GroupName — the site's categories. See lib/erp-catalogue.ts. */
+  group?: string;
+  /** ProductSubGroup.GroupName — the sub-filter on a category page. */
+  subgroup?: string;
+  sellable?: boolean;
+  /**
+   * The ERP's own primary key. Unleashed identifies a product on a sales order
+   * line by Guid; ProductCode is the human handle. Carried so an order can be
+   * written without a second round trip per line.
+   */
+  guid?: string;
+  /**
+   * Carton, as the ERP holds it. SAME UNITS as the WooCommerce snapshot —
+   * verified across the 307 codes carrying dimensions in both, where weight and
+   * largest-dimension ratios are exactly 1.000.
+   *
+   * THE AXES ARE NOT IN THE SAME ORDER, which is the part that bites. The
+   * snapshot's length/width/height map to Width/Depth/Height here, not to
+   * Width/Height/Depth: 77/52/62 in the snapshot is 77/62/52 in the ERP. See
+   * lib/freight-server.ts, which is the only place that translates.
+   */
+  widthCm?: number;
+  heightCm?: number;
+  depthCm?: number;
+  weightKg?: number;
+};
+export type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
 function sign(query: string): string {
   return crypto
@@ -75,14 +127,46 @@ async function buildMap(): Promise<UnleashedMap> {
   // from the committed list in `obsolete.ts`, so this fetch stays at 6 pages
   // rather than 10. See that file for why.
   await Promise.all([
-    fetchAllPages<{ ProductCode?: string; DefaultSellPrice?: number | string }>(
+    fetchAllPages<{
+      ProductCode?: string;
+      DefaultSellPrice?: number | string;
+      ProductDescription?: string;
+      ImageUrl?: string;
+      Images?: { Url?: string; IsDefault?: boolean }[];
+      ProductBrand?: { BrandName?: string };
+      ProductGroup?: { GroupName?: string };
+      ProductSubGroup?: { GroupName?: string };
+      IsSellable?: boolean;
+      Guid?: string;
+      Width?: number;
+      Height?: number;
+      Depth?: number;
+      Weight?: number;
+    }>(
     "Products",
     (p) => {
       if (!p.ProductCode) return;
       const price = parseFloat(String(p.DefaultSellPrice ?? "0"));
-      map[p.ProductCode.toUpperCase()] = {
+      const code = p.ProductCode.toUpperCase();
+      const image =
+        IMAGE_OVERRIDES[code] ??
+        p.Images?.find((i) => i.IsDefault)?.Url ??
+        p.Images?.[0]?.Url ??
+        p.ImageUrl;
+      map[code] = {
         price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
         stock: 0,
+        name: p.ProductDescription?.trim() || undefined,
+        image: image || undefined,
+        brand: p.ProductBrand?.BrandName?.trim() || undefined,
+        group: p.ProductGroup?.GroupName?.trim() || undefined,
+        subgroup: p.ProductSubGroup?.GroupName?.trim() || undefined,
+        sellable: p.IsSellable !== false,
+        guid: p.Guid || undefined,
+        widthCm: p.Width || undefined,
+        heightCm: p.Height || undefined,
+        depthCm: p.Depth || undefined,
+        weightKg: p.Weight || undefined,
       };
     }
     ),
@@ -115,7 +199,14 @@ async function buildMap(): Promise<UnleashedMap> {
 // waits on it, so a shorter window just means more visitors paying that. The
 // trade is that a price or stock change in the ERP can take up to an hour to
 // show. Lower it again if stock accuracy starts mattering more than the wait.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-price-stock-map"], {
+// KEY IS VERSIONED. The entry shape changed when name/image/brand were added;
+// a warm cache under the old key would return entries with no `name`, and every
+// range would silently come back empty. Bump the suffix whenever the shape does
+// — or whenever a FIELD'S VALUE is rewritten at build time, as v7 did when the
+// repainted /erp-bg images started overriding `image`: the entries are shaped
+// the same, so nothing breaks, but a warm v6 cache keeps serving the white
+// backdrops for the full hour and the fix looks like it did not deploy.
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v7"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });
@@ -141,6 +232,34 @@ export async function enrichCard(product: WcProduct, map: UnleashedMap): Promise
   // above zero, so a real value here would let someone card-checkout a whole
   // range at the cost of its cheapest item. Zero keeps bundles on the quote
   // flow, which is where they were before this label existed.
+  //
+  // A RANGE IS THE EXCEPTION and is priced off its ERP sizes instead. Those
+  // pages now carry a size picker (lib/ranges.ts), so the shopper buys one size
+  // at its own price and the caveat above does not apply: there is no
+  // un-configured range to card-checkout. It also means one source for the
+  // figure - the card used to read WooCommerce's bundle minimum ("From $110")
+  // while the page read Unleashed ("From $90").
+  //
+  // AND THE MARKDOWN TRAVELS WITH IT. The size that sets the "From" figure also
+  // carries the store's RRP for that same size (RangeSize.compareAt), so the
+  // card reads "From $2.50" with "$5.00" struck through and earns its SALE
+  // badge. Both halves describe one size — the cheapest — rather than pairing a
+  // range-wide RRP with a single price.
+  const range = getRange(product, map);
+  if (range) {
+    const priced = range.sizes.filter((s) => s.price > 0);
+    if (priced.length > 0) {
+      const cheapest = priced.reduce((a, b) => (b.price < a.price ? b : a));
+      return {
+        priceLabel: `From ${formatPrice(cheapest.price)}`,
+        priceValue: cheapest.price,
+        compareAtLabel: cheapest.compareAt ? formatPrice(cheapest.compareAt) : undefined,
+        inStock: range.sizes.some((s) => s.stock > 0),
+        source: "unleashed",
+      };
+    }
+  }
+
   const bundleFrom = getBundleFromPrice(product);
   if (bundleFrom !== null) {
     return {
@@ -213,6 +332,96 @@ async function unleashedLive<T>(path: string, code: string): Promise<T[]> {
   return data.Items ?? [];
 }
 
+// ----------------------------------------------------------------- shipments
+//
+// Dispatch lives in Unleashed as SalesShipments, keyed on the SAME order number
+// the website uses (verified 2026-08-25 against 488906). Kept here rather than in
+// its own module so the HMAC-over-the-query-string rule stays in one place: the
+// signature covers the query exactly, and a second copy of that would drift.
+//
+// WHAT THIS DATA IS ACTUALLY LIKE, so callers do not over-promise:
+//   923 shipments exist, and only 43 carry a tracking number. 886 have no
+//   ShippingCompany at all, because dispatch happens in carrier portals and
+//   nothing writes back. "Dispatched with no tracking" is the NORMAL case, not
+//   an error, and must be reported as such rather than as "we do not know".
+//
+// Two shapes that bite: ShippingCompany is an OBJECT ({Guid, Name}), not a
+// string, and DispatchDate is Microsoft JSON date format.
+
+export type Shipment = {
+  shipmentNumber: string | null;
+  status: string | null;
+  dispatchedAt: string | null;
+  trackingNumber: string | null;
+  carrier: string | null;
+  packages: number | null;
+  weightKg: number | null;
+  deliverTo: string | null;
+  lineCount: number;
+};
+
+type RawShipment = {
+  ShipmentNumber?: string;
+  ShipmentStatus?: string;
+  DispatchDate?: string;
+  TrackingNumber?: string | null;
+  ShippingCompany?: { Name?: string } | null;
+  NumberOfPackages?: number | null;
+  ShipmentWeight?: number | null;
+  DeliverySuburb?: string;
+  DeliveryCity?: string;
+  DeliveryRegion?: string;
+  DeliveryPostCode?: string;
+  SalesShipmentLines?: unknown[];
+};
+
+/** Unleashed serialises dates as /Date(1770681600000)/. */
+function parseUnleashedDate(value?: string): string | null {
+  const m = /\/Date\((-?\d+)/.exec(String(value ?? ""));
+  return m ? new Date(Number(m[1])).toISOString() : null;
+}
+
+/**
+ * Every shipment recorded against one order number, newest first.
+ *
+ * An empty array means no dispatch record exists, which for a recent order
+ * usually means "not shipped yet" rather than "missing". The caller has to make
+ * that distinction, because only it knows whether the order itself is real.
+ */
+export async function getShipmentsForOrder(orderNumber: string): Promise<Shipment[]> {
+  const query = `pageSize=200&orderNumber=${encodeURIComponent(orderNumber.trim())}`;
+  const res = await fetch(`${BASE}/SalesShipments/1?${query}`, {
+    headers: {
+      "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
+      "api-auth-signature": sign(query),
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0",
+    },
+    cache: "no-store", // somebody is asking where their delivery is
+  });
+  if (!res.ok) throw new Error(`Unleashed ${res.status} on SalesShipments/${orderNumber}`);
+
+  const data = (await res.json()) as { Items?: RawShipment[] };
+  return (data.Items ?? [])
+    // Deleted shipments are cancelled paperwork, not dispatches. 12 of 923.
+    .filter((s) => s.ShipmentStatus !== "Deleted")
+    .map((s) => ({
+      shipmentNumber: s.ShipmentNumber ?? null,
+      status: s.ShipmentStatus ?? null,
+      dispatchedAt: parseUnleashedDate(s.DispatchDate),
+      trackingNumber: s.TrackingNumber || null,
+      carrier: s.ShippingCompany?.Name || null,
+      packages: s.NumberOfPackages ?? null,
+      weightKg: s.ShipmentWeight ?? null,
+      deliverTo:
+        [s.DeliverySuburb, s.DeliveryCity, s.DeliveryRegion, s.DeliveryPostCode]
+          .filter(Boolean)
+          .join(", ") || null,
+      lineCount: s.SalesShipmentLines?.length ?? 0,
+    }))
+    .sort((a, b) => (b.dispatchedAt ?? "").localeCompare(a.dispatchedAt ?? ""));
+}
+
 export type LiveEntry = UnleashedEntry & { live: boolean };
 
 /**
@@ -266,6 +475,11 @@ export type EnrichedProduct = {
   priceLabel: string;
   priceValue: number; // numeric inc-GST unit price for the cart
   compareAtLabel?: string;
+  /**
+   * "16 sizes · 6kg – 75kg" on a range card. Set only by erp-catalogue's
+   * unitCard, so a WooCommerce-sourced card renders exactly as it did.
+   */
+  rangeLabel?: string;
   inStock: boolean;
   stockQty?: number;
   source: "unleashed" | "website";

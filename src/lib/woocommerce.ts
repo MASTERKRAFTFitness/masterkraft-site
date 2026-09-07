@@ -11,16 +11,19 @@
 // snapshot stays a faithful mirror and cannot drift from what we serve.
 
 import imageOverrides from "./product-image-overrides.json";
+import erpCartonData from "./erp-cartons.json";
 import {
   allProducts,
   categoryById,
   categoryChildren,
+  productBySku,
   productBySlug,
   productsInCategory,
   searchCatalogue,
   variationsFor,
 } from "@/lib/catalogue";
 import { isRetiredSku } from "./obsolete";
+import { skuAliases } from "./unleashed-aliases";
 
 const BASE = `${process.env.WC_STORE_URL}/wp-json/wc/v3`;
 
@@ -108,23 +111,55 @@ export function filterBrandSku<T extends { sku?: string }>(items: T[]): T[] {
   return items.filter((i) => isBrandSku(i.sku));
 }
 
-// OTHER COMPANIES' BRANDED RANGES must never appear on masterkraft.com:
-// S = Snap, F = Fernwood. The M/N brand filter already keeps them out of the
-// listings, but two routes bypassed it:
-//   1. Clearance runs with `brandFilter: false` to show A-prefixed ex-display
-//      stock, so a Snap or Fernwood item filed there would have been listed.
-//   2. `getProductBySlug` applied no brand filter at all, so all 149 of their
-//      product pages answered 200 on a direct URL even though nothing linked to
-//      them. Unlisted is not the same as not on the website.
-// Excluded explicitly so the rule holds however a product is categorised.
+// WHAT MAY HAVE A PAGE ON THE PUBLIC SITE. An ALLOWLIST, deliberately.
 //
-// SC IS DELIBERATELY EXEMPT: those are the Concept2 ergs (C2 Rower, C2 Ski Erg,
-// C2 Ski Erg Floor Stand), a range MasterKraft distributes. They are named "C2"
-// but carry SC SKUs, and they stay on the site (confirmed 2026-08-20). Note
-// UNLEASHED codes that same range C2*, which is a different scheme again.
-const FOREIGN_BRAND_SKU_RE = /^(?:S(?!C)|F)/i;
-export function isForeignBrandSku(sku?: string): boolean {
-  return !!sku && FOREIGN_BRAND_SKU_RE.test(sku.trim());
+//   M, N   MasterKraft's own, and unbranded stock on N-codes.
+//   SC     the Concept2 ergs MasterKraft distributes under its own name. Named
+//          "C2", SKU'd SC, and they stay (confirmed 2026-08-20). Unleashed codes
+//          the same range C2*, a different scheme again.
+//   A      third-party ex-display clearance, listed only on /clearance, which
+//          runs with brandFilter: false.
+//
+// EVERYTHING ELSE IS A CHANNEL DECISION, NOT A "WE DO NOT SELL IT". S = Snap,
+// F = Fernwood, R = REVL are live products MasterKraft supplies to those brands;
+// they belong in the franchisee portals and the catalogues, and they are absent
+// HERE because masterkraft.com is the public storefront. Their data is worth
+// maintaining in the ERP for exactly the same reasons ours is — see
+// reports/erp-dimensions.md, which counts them separately rather than off.
+//
+// THIS USED TO BE A DENYLIST, AND THAT IS THE BUG IT CAUSED. The rule named
+// S and F, the comment beside it also named REVL, and R was never added — so 63
+// R-SKU products answered 200 on a direct URL and sat in the sitemap for months.
+// Only 15 were named "REVL ..."; the rest were REVL-branded builds of lines we
+// sell publicly, under the SAME names as ours, competing with our own pages.
+//
+// Inverting it makes the default safe. Gold's and Jetts are coming and will be
+// the same arrangement: with a denylist their codes are public from the day they
+// land until somebody remembers this file. With an allowlist they are portal-only
+// until somebody decides otherwise, which is the way round the business rule
+// actually runs. Adding a brand to the PUBLIC site is now the deliberate act.
+//
+// A product with no SKU gets no page, for the same reason.
+const PUBLIC_SITE_SKU_RE = /^(?:[MN]|SC|A)/i;
+
+/** May this product have a page on masterkraft.com at all? */
+export function isPublicSiteSku(sku?: string): boolean {
+  return !!sku && PUBLIC_SITE_SKU_RE.test(sku.trim());
+}
+
+// The KNOWN client brands, named explicitly. Not the complement of the
+// allowlist: a code with an unrecognised prefix is not public, but that does not
+// make it a portal brand — it makes it unknown. Reporting and the admin agent
+// want the difference, and the serving rule above wants neither.
+//
+// Gold's and Jetts go here when their prefixes are known. Nothing on the public
+// site depends on this list being complete, which is the whole point of the
+// allowlist above.
+const PORTAL_BRAND_RE = /^(?:S(?!C)|F|R)/i;
+
+/** Snap, Fernwood, REVL: live products, sold through the portals and catalogues. */
+export function isPortalOnlyBrand(sku?: string): boolean {
+  return !!sku && PORTAL_BRAND_RE.test(sku.trim());
 }
 
 // OBSOLETE PRODUCTS. Two systems retire products independently and the site
@@ -143,7 +178,14 @@ export function isForeignBrandSku(sku?: string): boolean {
 //
 // A MISSING `catalog_visibility` counts as visible: it has to be asked for in
 // `_fields`, so a caller that forgets it must not silently empty the page.
-type Retirable = { catalog_visibility?: string; sku?: string };
+type Retirable = {
+  catalog_visibility?: string;
+  sku?: string;
+  weight?: string;
+  dimensions?: { length?: string; width?: string; height?: string };
+  /** Present on products, absent on variations; a container is found by it. */
+  id?: number;
+};
 
 export function isObsolete(p: Retirable): boolean {
   return p.catalog_visibility === "hidden" || isRetiredSku(p.sku);
@@ -151,14 +193,128 @@ export function isObsolete(p: Retirable): boolean {
 
 // Never served, for any reason: retired, hidden, or another company's brand.
 function isUnservable(p: Retirable): boolean {
-  return isObsolete(p) || isForeignBrandSku(p.sku);
+  return isObsolete(p) || !isPublicSiteSku(p.sku);
+}
+
+// UNSHIPPABLE PRODUCTS, hidden on request (Michael, 2026-09-06).
+//
+// Freight needs a weight AND all three carton dimensions; without them
+// itemsToParcels returns `incomplete_dimensions` and the WHOLE cart becomes
+// unquotable, not just the line. So an unmeasured product is a tripwire under
+// every basket it can join, and 34 of the 220 served products are one.
+//
+// OFF BY DEFAULT, and that is deliberate. Hiding a product also removes it from
+// the quote flow, which is a working sales path - these are not broken listings,
+// they are listings a human has to price freight for. The 34 include the C2
+// rower and ski erg at $1,250 and $1,200. Set HIDE_UNSHIPPABLE=true to hide them,
+// and expect to be asked where the ergs went.
+//
+// THE FIX IS A TAPE MEASURE, NOT THIS FLAG. 34 products is an afternoon, and
+// every one measured turns the flag back off for that product automatically.
+// reports/unshippable-products.xlsx is the list.
+const hideUnshippable = () => process.env.HIDE_UNSHIPPABLE === "true";
+
+const num = (v: unknown) => {
+  const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+/** The SIZE bounds of lib/freight's isPlausibleCarton, duplicated here rather
+ * than imported to keep this module free of the freight domain - it is the one
+ * chokepoint every visibility rule already lives at.
+ *
+ * NOT the density bound, and that divergence is deliberate. This sees only what
+ * WooCommerce recorded, and 42 snapshot cartons are impossible by density while
+ * the ERP holds a good one for every single of them. Rejecting here would take a
+ * product off the listings for a fault the quote never suffers - HIDE_UNSHIPPABLE
+ * would hide barbells the checkout prices correctly. Deciding what to QUOTE FROM
+ * gets the stricter rule; deciding what to SHOW does not. */
+const plausibleSides = (a: number, b: number, c: number) =>
+  a > 0 && b > 0 && c > 0 &&
+  [a, b, c].every((s) => s >= 0.5 && s <= 300) &&
+  (a * b * c) / 1e6 <= 3;
+
+// The ERP's cartons, committed by scripts/build-erp-cartons.mjs so this module
+// can consult them without awaiting getUnleashedMap(). Keyed by UPPERCASE
+// ProductCode; the value is [weightKg, widthCm, depthCm, heightCm] in the ERP's
+// own axis order, which is fine here because plausibleSides does not care which
+// side is which. See the script header before using it for anything else.
+const ERP_CARTONS = (erpCartonData as { cartons: Record<string, number[]> }).cartons;
+
+function erpCarton(sku?: string): number[] | undefined {
+  if (!sku) return undefined;
+  const up = sku.trim().toUpperCase();
+  return ERP_CARTONS[up] ?? ERP_CARTONS[(skuAliases[up] ?? "").toUpperCase()];
+}
+
+/**
+ * The variations a container stands for, or none if it is not a container.
+ *
+ * TWO SHAPES, and missing the second is what kept the Competition Kettlebells
+ * hidden after the first attempt at this. A bare `variable` product holds its
+ * own variations, but a `-GROUP` bundle holds NONE - the sizes belong to the
+ * hidden `variable` twin beside it, and the bundle is the visible page. So
+ * MMKBPGC-GROUP looks childless and MMKBPGC, which has the twelve, is not
+ * listable in the first place. lib/ranges' anchorCodes resolves the same pair
+ * the same way; it is not imported because ranges imports THIS module.
+ */
+function containerKids(p: Retirable): WcVariation[] {
+  if (p.id !== undefined) {
+    const own = variationsFor(p.id);
+    if (own.length) return own;
+  }
+  const sku = (p.sku ?? "").trim().toUpperCase();
+  const stem = sku.replace(/-(?:GROUP|1)$/, "");
+  if (!stem || stem === sku) return [];
+  const twin = productBySku(stem);
+  return twin ? variationsFor(twin.id) : [];
+}
+
+/**
+ * Can this product be freight-quoted - from EITHER source, the way freight
+ * actually resolves a carton?
+ *
+ * ASKING THE SNAPSHOT ALONE HID PRODUCTS THE CHECKOUT PRICES CORRECTLY. This is
+ * the rule lib/erp-catalogue's codeIsShippable already applies to product pages
+ * and the sitemap, and the two disagreeing is what left ABPBSB04 - the 12" foam
+ * plyo box - off every listing: its snapshot carton is 850 x 1000 x 305, which
+ * is millimetres in a file written in centimetres, so it measures 259 cubic
+ * metres. The ERP holds the same box at 85 x 100 x 30.5. The unit error was
+ * corrected in Unleashed and never flowed back into the frozen snapshot, and
+ * nothing here could see the correction.
+ *
+ * A CONTAINER HAS NO CARTON OF ITS OWN, and judging it by one is a category
+ * error. `MMKBPGC-GROUP` is the Competition Kettlebells range: WooCommerce holds
+ * it only to group twelve sizes, every one of which carries a complete carton,
+ * and it was hidden for having no measurements of its own. A container ships when
+ * something inside it does, so it is judged by its variations - and only when it
+ * has some, which is what keeps an ordinary unmeasured product from sneaking
+ * through this branch.
+ */
+function isShippable(p: Retirable): boolean {
+  const kids = containerKids(p);
+  if (kids.length) return kids.some(isShippable);
+  const l = num(p.dimensions?.length);
+  const w = num(p.dimensions?.width);
+  const h = num(p.dimensions?.height);
+  const erp = erpCarton(p.sku);
+  // A weight from either source. Freight needs one, and a carton with sides but
+  // no mass cannot be consigned.
+  if (!num(p.weight) && !erp?.[0]) return false;
+  if (plausibleSides(l, w, h)) return true;
+  return !!erp && plausibleSides(erp[1], erp[2], erp[3]);
 }
 
 // "search" means search-only (excluded from catalogue listings); "catalog"
 // means catalogue-only (excluded from search). Nothing in the store uses either
 // today, but honouring them keeps us faithful to WooCommerce's own semantics.
 export function filterListable<T extends Retirable>(items: T[]): T[] {
-  return items.filter((i) => !isUnservable(i) && i.catalog_visibility !== "search");
+  return items.filter(
+    (i) =>
+      !isUnservable(i) &&
+      i.catalog_visibility !== "search" &&
+      (!hideUnshippable() || isShippable(i))
+  );
 }
 
 export function filterSearchable<T extends Retirable>(items: T[]): T[] {
@@ -428,6 +584,25 @@ export function getBundleFromPrice(p: {
   if (p.type !== "bundle") return null;
   const v = parseFloat(p.bundle_price?.regular_price?.min?.incl_tax ?? "");
   return Number.isFinite(v) && v > 0 ? v : null;
+}
+
+/**
+ * The RRP to strike through, GST-inclusive, or 0 when there is nothing honest to
+ * strike out. Split from getPricing because a range card prices off the ERP and
+ * so needs the compare-at as a NUMBER, to check it actually sits above what we
+ * are charging before it is shown.
+ *
+ * ONLY A RECORDED MARKDOWN COUNTS: `regular_price` above a real `sale_price`.
+ * NOT `price`, which the wholesale plugin distorts downwards (see getPricing) —
+ * reading that as an RRP would paint a discount onto full-price products. The
+ * Drop In Core Trainer is the worked example: regular $63.64, no sale_price at
+ * all, and a `price` of $41.80 that is the plugin talking, not a markdown.
+ */
+export function getCompareAtValue(p: Priceable): number {
+  const regular = parseFloat(p.regular_price || "0");
+  const sale = parseFloat(p.sale_price || "0");
+  if (!(sale > 0 && sale < regular)) return 0;
+  return Math.round(regular * GST * 100) / 100;
 }
 
 export function getPriceValue(p: Priceable): number {

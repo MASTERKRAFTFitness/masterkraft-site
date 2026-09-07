@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import PageHero from "@/components/marketing/PageHero";
 import ContactForm from "@/components/marketing/ContactForm";
@@ -40,9 +41,9 @@ export default function ContactPage() {
                 portal
               </a>
               . New partners - see{" "}
-              <a href="/distributor" className="underline decoration-accent-600 underline-offset-2">
+              <Link href="/distributor" className="underline decoration-accent-600 underline-offset-2">
                 Become a Distributor
-              </a>
+              </Link>
               .
             </p>
           </div>

@@ -10,6 +10,920 @@ needs a decision, a credential, or content. **Launch gates and env vars live in
 
 ---
 
+## 0. THE SITE IS LIVE (2026-08-27)
+
+`https://masterkraft.com` serves this Next.js site. Cut over from WordPress on
+27 August. Verified over real DNS: valid certificate covering apex and www, www
+redirects to apex, `/admin` 404s, `robots.txt` indexable on the apex and still
+`Disallow: /` on `web.test`. **Email survived**: MX and SPF untouched, nameservers
+left on Netregistry deliberately, and a real message was received after the change.
+
+**HISTORY - card checkout is open and the flag is gone (2026-09-06). See §0g.**
+The rest of this section describes the cutover as it happened and is kept for that
+record; do not act on it.
+
+**It launched as browse-and-quote.** `NEXT_PUBLIC_CHECKOUT_MODE=quote` was set, so
+the card form is hidden and every cart goes to the quote flow. Two things have to
+happen before card checkout returns, in either order:
+
+1. ~~**Stripe live keys** in Vercel Production.~~ **Done** - live keys are in
+   (Michael, 2026-09-06). This can no longer be confirmed from the bundle the way
+   3 September's `pk_test_51OgYExS…` was: quote mode means no publishable key is
+   shipped to the browser at all, and 12 chunks checked on 2026-09-06 carry
+   neither `pk_live` nor `pk_test`. Vercel's dashboard is the only view of it.
+   **So the flag itself is now the only thing standing between here and card
+   checkout** - and `NEXT_PUBLIC_CHECKOUT_MODE=quote` is confirmed still live,
+   because `https://masterkraft.com/checkout` served the quote-mode banner
+   ("Card payment is briefly unavailable...") when fetched on 2026-09-06.
+2. **Paul moves WooCommerce to a subdomain** (`docs/email-paul-subdomain.md`),
+   then `WC_STORE_URL` changes and `NEXT_PUBLIC_CHECKOUT_MODE` is removed.
+
+**Freight is dormant until that flag changes.** In quote mode `paymentsConfigured`
+is false, so `canPay` is false, so `StripeCheckout` never renders, so
+`/api/freight/quote` is never called. The two-carrier router, the quote cache and
+the carrier alerting are all live in the code and all unreachable in production.
+
+The buy path (payment-intent, order, freight quote) is the only thing that reads
+the live store. Everything a visitor browses comes from the committed snapshot,
+which is why the cutover could happen before Paul did anything.
+
+**DNS, for reference:** apex A records at Vercel (`216.198.79.1`, `64.29.17.1`),
+`www` CNAME to `cname.vercel-dns.com`, everything else untouched. Rollback is both
+A records back to `103.26.237.235`. See `docs/dns-cutover.md`.
+
+---
+
+## 0b. Shipped the evening of 27 August, after the cutover
+
+Four commits, all pushed and deployed to production, all verified live.
+
+### `3b91747` The cutover broke every product image, and this fixed it
+
+Product images were absolute URLs on `masterkraft.com/wp-content/uploads/`. The
+moment the apex became Vercel they all 404'd, and Next's image optimiser returned
+502. **279 of 512 products** were affected. The earlier mirror
+(`mirror-product-images.mjs`) had copied the product *data* but only the image
+*URLs*, and it drew a brand line (`/^(?:[MN]|SC)/`) that excluded REVL and the
+foreign ranges - sound while the domain still pointed at WordPress, a fault line
+once it did not.
+
+`scripts/mirror-remaining-images.mjs` picks up what it skipped. Two differences
+from the original, both forced:
+
+* it reads `src/data/catalogue.json`, not the WooCommerce API - that API is
+  unreachable post-cutover, so **the original script cannot run at all**;
+* it fetches over `node:http` against `103.26.237.235` with an explicit
+  `Host: masterkraft.com` header. That host serves uploads **only** to its exact
+  vhost name (a made-up subdomain and the bare IP both 404), and `fetch()` cannot
+  do this because undici drops a `host` header in favour of the URL's authority.
+
+`scripts/dedupe-product-images.mjs` then collapses byte-identical files by
+SHA-256. One photo shared by several SKUs was written once per SKU.
+
+    1494 files / 109.9 MB  ->  510 files / 36 MB
+
+**Snap (S) and Fernwood (F) are excluded and must stay excluded.** The first run
+pulled 174 of their products - another company's brand photography, headed into
+this repo, for pages that 404 by design under `isForeignBrandSku`. The filter now
+lives in the script with its reasoning.
+
+Every product the site serves resolves to a local image; none remain remote.
+
+### `c9d251f` Warranty claim form, REVL markets, scraped cart popup
+
+* **`/warranty#claim`** - the page said what was covered and gave nobody a way to
+  act. Follows the **waitlist** route's shape, not the contact route's: when
+  HubSpot does not confirm, the claim is emailed to a human, and when neither
+  lands the customer is told to email rather than shown a receipt we cannot
+  honour. `HUBSPOT_FORM_WARRANTY` does not exist yet, so today every submission
+  takes the email fallback to `QUOTE_TO_EMAIL`. **Nobody has yet submitted a real
+  claim end to end** - worth doing once.
+* **REVL** - Thailand (coming soon) and New Zealand added, Indonesia promoted to
+  operating. Neither new market has named studios, so both use the existing
+  "Studios operating" branch. A hardcoded "eight markets" in the intro had already
+  gone stale; it counts from the data now (`revlOperatingMarketCount`).
+* **"since 2022"** on both the homepage feature and the fit-outs page, confirmed
+  by Michael. The two previously disagreed (2022 vs 2023).
+* **Cart popup** - "You were not leaving your cart just like that, right?" was
+  scraped WordPress cart-abandonment copy at the foot of **five** legal pages, not
+  the three reported. All removed.
+
+### `2107df0` Apparel, Lighting and Reformers categories
+
+All three ranges exist in **Unleashed** under MasterKraft's own codes: 107 products
+in its Apparel group (`MAAAU01` Trucker Hat, `MAACU02` Oversized Hoodie …),
+`NBLLE2501`/`NBLLE2502` in Lighting, `MCRFAL01`/`MCRFWO01` reformers filed under
+Cardio. **None were ever created in WooCommerce**, which only received the Snap and
+REVL equivalents (`SAAAU01` against `MAAAU01`, `SLLE`/`RLLE` against `NBLLE`), and
+those are excluded by `isForeignBrandSku`.
+
+So all three render the empty state today. Apparel and Lighting point at the real
+WooCommerce terms (349, 348) and **populate with no code change** the day
+MasterKraft-coded products are filed under them. Reformers has no term in the store
+at all; one needs creating.
+
+`image` and `wcId` are now **optional** on `Category` - no image falls back to the
+`mk-glow` hero, no `wcId` means nothing to query. Four call sites guarded, and the
+parity test skips termless categories because it compares against the live store.
+
+**Deliberately not linked from the nav** while they have no stock. One line each in
+`nav.ts` when there is.
+
+### `b9784d2` The Terms pointed at a competitor's domain
+
+Clause 28(a) bound customers to "our Privacy Policy which can be found at
+`www.gymequipmentdirect.com.au`" - a domain MasterKraft does not own, scraped in
+with the rest of the legal content. Now `masterkraft.com/privacy-policy`.
+
+**Still there and NOT touched:** section 29 of the same page is the full terms of a
+competition that closed **29 April 2023** (Australian Fitness Expo Sydney, $1,795
+Air Rowing Machine), presented as current. Removing live legal copy is Michael's
+call, not a fix to make unasked.
+
+---
+
+## 0c. Shipped 2026-09-02 - one page per range, sized from Unleashed
+
+**The problem.** A shopper could not choose a weight. The Rubber Hex Dumbbells
+page was one photo, a "From $X" and no picker, and the 26 weights behind it were
+unreachable. Across the catalogue that is **258 sized products with their own
+prices and photographs, none of it selectable.**
+
+**Why it looked hard, and was not.** WooCommerce modelled a range as two
+container records - a hidden `variable` parent holding the variations, and a
+visible `-GROUP` bundle holding nothing. The first cut of this paired them. That
+was the wrong thing to key on: those containers are precisely what is being
+dropped. Of the 27 served products with no Unleashed record, **24 are those
+containers**. Nothing real is missing from the ERP.
+
+**Unleashed does not have containers.** A range there is a set of ordinary
+products whose `ProductDescription` shares a name:
+
+```
+MMDBRH01   "Rubber Hex Dumbbell - 1kg"      $5.00    own photo, own stock
+MMDBRH26   "Rubber Hex Dumbbell - 45kg"     $225.00
+```
+
+So **the name before `" - "` is the range, and nothing else is.** `src/lib/ranges.ts`,
+one function, `getRange(product, unleashedMap)`.
+
+That is better data than WooCommerce ever held: **45 ranges over 399 products**
+against Woo's 32 over 258. Sizes the old store never listed now sell - the PU
+Dumbbells go from 17 to 28, the straight barbell from 10 to 14.
+
+### The three rules that stop it going wrong
+
+1. **Never group on the code stem.** `MWBBFUR` holds a curl barbell AND a straight
+   barbell, both running 10-40kg. `MCBIAR` holds the Classic, Pro and Elite air
+   bikes. Grouping on the stem puts unrelated products behind one picker.
+2. **One brand only.** "Rubber Hex Dumbbell" is 26 products on MK and another 26
+   each on SNAP, NO BRAND, Air Locker and Hyper Health. Without the brand guard a
+   dropdown shows every weight five times at five prices.
+3. **Never merge two name-groups.** An earlier cut merged groups whose sizes did
+   not collide, to rescue stragglers left by half-finished renames in the ERP. It
+   rescued them - and put the Micro Bands in the Power Bands dropdown and mixed kg
+   with lb on the Wall Ball. Disjoint sizes do not mean "same product".
+
+Where a stem holds several real ranges, the codes the page **already sold** decide
+which one is its own. That is what keeps `MWBBFUR-GROUP` on the straight barbell
+(14 sizes) rather than the curl barbell that shares its stem and has more (19).
+
+### What still comes from WooCommerce, and why
+
+The URL and the words. `src/data` is a **frozen text archive** now - nothing is
+fetched from the store - supplying the slug the page is routed by, the marketing
+copy, the features and the spec table. **Unleashed holds no product copy at all:
+`Notes` is empty on all 1,476 sellable records and `ProductDescription` is just a
+name.** Until that copy is written into the ERP, the snapshot is the only place it
+exists. Deleting `src/data` empties every product page of prose.
+
+### Checkout
+
+A cart line now carries the **ERP code** (`sku`), which is what the warehouse picks
+and what the quote email prints. It also carries the WooCommerce ids **when the
+frozen snapshot still has them**, because `resolveOrderLines` re-prices a *paid*
+order against the store. Sizes the old store never listed have no such ids, so
+they carry `productId: 0`, and `canPay` in `checkout/page.tsx` now requires
+`productId > 0`. Those sizes still sell - through the quote flow, which needs
+only a code, a name and a price. Without that guard the customer fills in a card
+form and then hits `resolveOrderLines` failing closed.
+
+### Photography
+
+Per-size shots come from Unleashed's own CDN (`unlappcdn.unleashedsoftware.com`,
+public, no auth, ~100 KB each), allowlisted in `next.config.ts`. The `/public`
+mirror holds one shot per PRODUCT, taken from WooCommerce parents; it has nothing
+for the individual sizes. Mirroring these the way `scripts/mirror-product-images.mjs`
+did is how to drop the external dependency - worth doing, not urgent.
+
+### `npm run report:ranges`
+
+Prints what the ERP's naming is doing wrong, because rule 3 above is only as good
+as the naming:
+
+- **ORPHANS** - a size stranded under an unfinished rename, so it is missing from
+  its picker on the live site. 3 today; `MMDBUR19` is called "Urethane Fixed
+  Dumbbells (Pair) - 7.5kg" while its other 28 are "PU Dumbbells (Pair)". **Fix is
+  one field in Unleashed.** Advisory - read each, some are genuinely separate.
+- **SPLITS** - 40 stems holding more than one real range. Correct, but only one of
+  them can have a page while pages are routed by the old WooCommerce slugs. The
+  Wall Ball (Armatex), 5 sizes, has no page for exactly this reason.
+
+Files: `src/lib/ranges.ts`, `src/lib/ranges.test.ts`, `scripts/range-report.mjs`,
+`src/components/shop/VariantSelection.tsx` (new); `VariantSelector.tsx`,
+`ProductGallery.tsx`, `app/product/[slug]/page.tsx`, `app/checkout/page.tsx`,
+`app/api/quote/route.ts`, `cart/CartProvider.tsx`, `lib/unleashed.ts`,
+`lib/catalogue.ts`, `next.config.ts`.
+
+---
+
+## 0d. Shipped 2026-09-02 - the categories are the ERP's product groups
+
+**The site was showing 157 of the 696 products the ERP sells under MasterKraft
+codes.** 184 cards where the ERP has 319 once a range is counted once. Apparel,
+Lighting and Reformers had been sitting empty since 27 August with a comment
+explaining that their products exist in Unleashed and were never created in
+WooCommerce - which was the visible corner of the real problem.
+
+**`ProductGroup` IS the category now**, the same way the franchisee catalogues
+have always grouped. `src/lib/erp-catalogue.ts`. Nothing maps, nothing is
+maintained by hand: a product appears in Strength because the ERP files it there.
+
+| | before | after |
+|---|---|---|
+| Strength | 11 | **81** |
+| Apparel | 0 | **18** |
+| Weightlifting | 29 | 42 |
+| Mixed Implements | 20 | 41 |
+| Body Weight | 25 | 33 |
+| Rigs & Racks | 11 | 26 |
+| Cardio | 13 | 20 |
+| Flooring | 0 | 8 |
+| Lighting | 0 | 2 |
+
+Sub-filters are `ProductSubGroup` - Dumbbells, Barbells, Wall Mounted, Lower Body
+Machines - which is richer and better kept than the WooCommerce child terms it
+replaces. **165 units had no WooCommerce record at all** and now have a generated
+page: name, ERP code, price, stock, photographs, and a size picker when it is a
+range. No marketing copy, because the ERP has none.
+
+### A UNIT is what earns one card
+
+Either a range (everything sharing a name before `" - "`, one card with a picker)
+or a single product. Same rule the product page uses, so a card and the page it
+opens cannot disagree - `sizesFromCodes` in ranges.ts is the ONE place a size row
+is built. That is what makes 731 products into 319 cards rather than 731.
+
+### Five rules, each of which was a bug first
+
+1. **Never group on the code stem.** `MWBBFUR` is three barbells, `MCBIAR` is the
+   Classic, Pro and Elite air bikes.
+2. **A brand prefix is not a range.** "CONCEPT 2 - Ski Erg with PM5" read as a
+   range gives one "CONCEPT 2" card whose sizes are four whole ergs.
+3. **A trailing `(L)` is a size; a trailing `(Armatex)` is not.** Apparel is named
+   "Sweatshirt (Unisex) (L)", so the `" - "` rule alone gave 52 cards for about a
+   dozen products. The whitelist is XS-3XL and deliberately nothing else.
+4. **NO BRAND fills gaps, it does not duplicate.** N-codes have always counted as
+   ours (`/^(?:[MN]|SC)/`) and Lighting exists only there, but NO BRAND also
+   holds white-label copies of MK ranges - a whole 26-weight `NBMDBRH` beside
+   `MMDBRH`. Same name in the same group: earliest brand in `BRAND_ORDER` wins.
+5. **The loser of a page contest gets its own page, not oblivion.** Three ranges
+   want `/product/urethane-fixed-barbells-2`. The winner is decided by the codes
+   that page ALREADY sold - the same anchor rule ranges.ts uses, shared on purpose
+   - and the others get a slug from their own name. That is how the Fixed PU Curl
+   Barbell (19 sizes) is listed at all; the old store never had a page for it.
+
+### What did NOT change
+
+- **URLs.** Slugs stay hand-written in `categories.ts` and inherited from the
+  snapshot for products. "Rigs & Racks" slugifies to `rigs-and-racks` and this
+  category has lived at `/equipment/rigs-racks` since launch; a change of source
+  is not a reason to break every link into it. `/equipment/reformers` 308s to
+  `/equipment/cardio`, where the ERP files both reformers.
+- **Clearance.** Ex-display stock on A-prefixed codes, still listed from the
+  snapshot with the brand filter off. Unleashed's "Clearance" group holds one
+  product and is not the same thing.
+- **The words.** `src/data` is a frozen text archive supplying copy, features and
+  specs. Deleting it empties every product page of prose.
+
+### If Unleashed is unreachable
+
+Every listing surface - category, all-equipment, search, sitemap - checks for an
+empty map and **falls back to the snapshot**. A visitor sees the old, smaller
+catalogue rather than a site that sells nothing. Worth keeping when editing any
+of them.
+
+### `npm run report:ranges`
+
+Now also reports what the category pages are missing, because the ERP is the
+catalogue and its gaps are holes on live pages.
+
+> **Superseded 3 September.** The counts below are as at 2 September.
+> `npm run report:punchlist` (§0e) replaces this list with a per-field punch list
+> and is the one to work from.
+
+- **48 with no price** - render "Contact for pricing".
+- **186 with no photograph** - render an empty tile. `masterkraft-portals-franchisee`
+  has `scripts/harvest-unleashed-images.py`, which fills blanks from the ERP's own
+  CDN; the same trick would help here.
+- **2 near-duplicate names** - "Multi Dead Lift" vs "Multi Deadlift", "V Squat"
+  vs "V-Squat". Two cards for one product; fix the name and they merge.
+- Plus the apparel mess: `MAACU02-L "Oversized Hoodie (L)"` beside
+  `MAACU02L "Oversized Hoodie (Unisex) (L)"`, and `MAACU02-XL` is spelled
+  **"Oversided Hoodie (XL)"**. Three hoodie cards where there should be one.
+
+Files: `src/lib/erp-catalogue.ts`, `src/lib/erp-catalogue.test.ts` (new);
+`lib/categories.ts`, `lib/ranges.ts`, `lib/unleashed.ts`,
+`app/equipment/[category]/page.tsx`, `app/all-equipment/page.tsx`,
+`app/product/[slug]/page.tsx`, `app/search/page.tsx`, `app/sitemap.ts`,
+`scripts/range-report.mjs`, `next.config.ts`.
+
+---
+
+## 0e. Shipped 2026-09-03 - what a range costs, and every size in it
+
+Deployed to production and verified on `masterkraft.com`. Five changes, all on top
+of §0c/§0d: the ERP was already the catalogue, but a card would not say what a
+range cost end to end and a shopper could not see two sizes at once.
+
+`cc5ed0f`, `b3892f5`, `3b0ff30`, plus `6418e20` (retirements) and `e600caf`
+(metadata).
+
+### The card spans the price
+
+`From $40.00` became `$40.00 – $300.00`. The old label hid that the top of the
+High Grip Dead Balls is seven times the bottom, and it collapsed three different
+situations into one. There are now three, and the distinction matters:
+
+| Label | Means |
+| --- | --- |
+| `$40.00 – $300.00` | The sizes cost different amounts. |
+| `From $40.00` | Some sizes are unpriced, so the top is genuinely unknown and must not be implied. |
+| `$65.00` | Every size costs the same - the apparel ranges. "From" on a flat price is noise. |
+
+`ErpUnit` gained `priceMax` and `pricedCount` to tell the last two apart.
+
+### And says what is in the range
+
+`16 sizes · 6kg – 75kg` under the price, from `enriched.rangeLabel`.
+
+**The span reads the measurement each label OPENS with, not the whole label.**
+The competition kettlebells are eleven plain weights and one
+`6kg (Aluminium)`; on the whole label that is either nonsense or nothing, and on
+the leading measurement it is `12 sizes · 6kg – 40kg`. A unit is required, which
+is what keeps `2 Tier (10 Pair) 1.0` out - a bare leading number is a model
+number as often as a size. A label with no measurement gets the count alone:
+`Set of 6 – Set of 10` is not a span.
+
+### The thumbnails are labelled, and clicking one selects that size
+
+Each thumbnail on a range page is captioned with its weight and moves the
+selection, so the price and the add-to-cart follow. Previously a click swapped
+the picture only, which is how the page could show a 12kg ball above a 6kg price.
+
+Captions are passed from the page (`galleryLabels`), not published through the
+selection context - through context they arrived a frame after hydration and
+shifted the strip under the cursor.
+
+### The size table
+
+The franchisee catalogue's table, on the storefront: size, ERP code,
+availability, price, ADD. The dropdown is the right control for buying one
+dumbbell and the wrong shape for a gym comparing 26 weights and buying eight.
+
+**Prices are inc-GST here, unlike the franchisee catalogue's ex-GST column.** The
+storefront quotes inc-GST everywhere else on the page and a table that switched
+convention halfway down would be misread.
+
+### The page is two columns all the way down
+
+The table is in the LEFT column under the thumbnails. **Product Overview,
+Features and Specifications all moved up into the RIGHT column**, under the
+price, in that order.
+
+Overview and Specifications were each a full-width band in their own centred
+`max-w-3xl`, which lined up with neither column and read as stray blocks below
+the fold. They are now the same 598px column as the price at 1440.
+
+### Garment sizes were ordered alphabetically
+
+The Long Sleeve Tee picker read **`L, M, S, XL`** on the live site. Garment
+labels carry no number, so the numeric sort fell through to `localeCompare`.
+`compareSizeLabels` in `ranges.ts` now ranks them by body and is the ONE
+ordering, read by the picker, the card's span and the captions. It also writes
+out a comparison that had been leaning on `Infinity - Infinity` being `NaN` and
+`NaN` being falsy.
+
+### Four rules that are load-bearing
+
+Break any of these and it regresses quietly:
+
+1. **One owner, two askers.** Three controls can now change the selected size -
+   dropdown, thumbnail strip, table. The picker OWNS it, keyed by ERP code; the
+   strip and the table only ask, and the picker answers by moving the code and
+   the photograph together. Two owners fight over one value.
+2. **The ask carries a counter.** Click 9kg, choose 12kg in the dropdown, click
+   9kg again: with the code alone the second ask sets state to the value it
+   already holds, React skips the render, and the control goes dead.
+3. **One cart-line builder** - `lib/variant-line.ts`. Two add paths exist now,
+   and `productId: 0` is what routes a size the old store never listed to the
+   quote flow instead of card checkout. A second copy would drift. Verified:
+   adding 9kg from the table then 9kg from the picker gives ONE line at qty 2.
+4. **The table is a grid SIBLING, not a child of the gallery column.** Nested it
+   renders before the buy box on a phone, pushing price and Add to Cart below 26
+   rows. `lg:row-span-2` on the right column is what still places it under the
+   thumbnails on desktop - without it row 1 is sized by the taller column and the
+   table lands 317px below the strip. Measured at 1440: 317px -> 64px.
+
+### Retirements and metadata
+
+`6418e20` - Unleashed retired 66 SKUs during the day (`SMDBPRH`, `SMDBRH`,
+`SMDBVR`, `SBSAROL01`). All SNAP-branded, so nothing a customer sees changed, but
+`check:obsolete` refuses to ship a stale list and that is what it is for.
+
+`e600caf` - `generateMetadata` resolved the snapshot only, so the 165 ERP-only
+units went out as `Product | MASTERKRAFT` in search results with no og:title, on
+pages the sitemap advertises. It now falls back to the ERP unit the way the page
+body already did.
+
+### `npm run report:punchlist`
+
+New. Writes `reports/erp-punchlist.md` and `.csv` - **170 fixes, every one a
+field in Unleashed**, no code change and no deploy, because the site rebuilds its
+cards from the ERP every 15 minutes.
+
+| Problem | Rows | Field |
+| --- | ---: | --- |
+| No photo anywhere | 62 | Product > Images |
+| Size has no photo | 59 | Product > Images |
+| No price | 39 | Default Sell Price |
+| Two cards, one product | 5 | Product Description |
+| No card - not on the site | 3 | Product Description |
+| Filed under the wrong group | 1 | Product Group |
+| Size has no price | 1 | Default Sell Price |
+
+**49 cards across 19 families would collapse into one picker from a rename
+alone.** `Artificial Turf Black (2m x 10m / 15m / 20m)`,
+`Coloured Bumper Plates (Set of 6 / 8 / 10)` and so on. The site groups on the
+part before `" - "`, so renaming to `Coloured Bumper Plates - Set of 8` makes the
+dropdown appear by itself, and the franchisee catalogues get it too.
+
+This was deliberately NOT done in code. Reading every trailing bracket as an
+option is the trap from §0d that put `Wall Ball (Armatex)` and `Wall Ball` behind
+one picker at two prices. Five of the nineteen are judgement calls - Olympic
+Power Rack 1.0-5.0 may be five different racks rather than five options on one.
+
+**19 cards hide a second product.** Two ERP records share a name under two code
+schemes - `MRSPFW02` and `MSSPFW02` are both "Olympic Power Rack 2.0" - and only
+the first is ever sold. Merge them or give them different names.
+
+### Known limits
+
+- **A product gets ONE dropdown.** `Olympic Urethane Weight Plates` would need
+  grip x weight. That one is a code change, not a rename.
+- **15 thumbnails against 16 options** on the dead ball. 70kg has no ERP photo,
+  falls back to the shared product image, and dedupes out of the strip. Data.
+
+### Deploys went quiet twice
+
+Three deploy attempts, two of which produced **no deployment at all** - the CLI
+gave no useful output and nothing appeared in Vercel. Same silent class of
+failure as the git-author block on 2 September (§0d era), cause not established
+this time because the third attempt simply worked.
+
+**Always confirm a deploy landed rather than assuming:**
+
+```
+npx vercel@latest ls --scope masterkraft
+```
+
+The top row must be minutes old and `Ready`. If it hangs on `Building…`, rerun
+with `--debug` - that is what surfaced `readyState: BLOCKED` last time. Never
+pipe the deploy through `tail`; it hides the reason.
+
+Files: `src/lib/variant-line.ts`, `src/components/shop/SizeTable.tsx`,
+`scripts/erp-punchlist.report.ts` (all new); `lib/erp-catalogue.ts`,
+`lib/ranges.ts`, `lib/unleashed.ts`, `components/shop/ProductCard.tsx`,
+`ProductGallery.tsx`, `VariantSelection.tsx`, `VariantSelector.tsx`,
+`app/product/[slug]/page.tsx`.
+
+---
+
+## 0f. Shipped later on 2026-09-03 - what the outside world can reach
+
+Four changes about URLs rather than about products: what this site still serves
+that it should not, what it stopped serving at the cutover and never redirected,
+how we find out what else is missing, and a dead URL that was answering 200.
+`c97e985`, `e29894e`, `1ca536a`, `4dfe075`.
+
+### `c97e985` REVL is off the site, which the rule always said it was
+
+`FOREIGN_BRAND_SKU_RE` named REVL "R" in its own comment but only ever matched
+S and F. So **63 R-SKU products stayed servable** - excluded from every listing
+by the M/N brand filter, and still answering 200 on a direct URL, and still in
+the sitemap. Unlisted is not the same as not on the website, which is the exact
+thing the rule was added to fix for Snap and Fernwood.
+
+What those 63 are matters more than the count. Only 15 are named "REVL ...".
+The other **48 are REVL's own-brand copies of lines we sell under the SAME
+names** - Abdominal Mat, Olympic Barbell - 20kg, Premium Rubber Hex Dumbbells,
+Wall Balls - one for one against the Snap set already excluded. Indexed, they
+competed with our own pages for our own product names.
+
+Servable product pages **283 -> 220**. Nothing linked to them: the REVL fitout
+pages are editorial and fetch no products, and Clearance is all A-prefixed
+ex-display stock. **SC is untouched and tested to stay that way** - the Concept2
+ergs are named "C2", SKU'd "SC", and stay by the 2026-08-20 decision.
+
+### `e29894e` The inbound links that have 404ed since 27 August
+
+The internal link graph was already clean - 497 URLs crawled from the homepage,
+all 200. What was broken was everything pointing IN. Since the apex moved,
+**69 `/product-category/` archives and 225 product URLs** answered 404, none of
+it reachable from inside the site, so nothing surfaced it. The biggest archive
+covered 106 products.
+
+WooCommerce's own term tree picks the destinations: each site category records
+the Woo term it used to list from, so walking a term up its parents maps 66 of
+the 69 non-empty archives with nobody guessing. The three that do not resolve
+are not equipment categories - `new-products` is promotional, `freight-delivery`
+was never a product, and `studio-kit` is REVL's own kit on R-SKUs, which points
+at `/revl-fitouts` rather than bait-and-switching to a MasterKraft category.
+
+**GENERATED, BECAUSE THE ORDERING IS DANGEROUS.** Config redirects match BEFORE
+routing, so a redirect whose source still serves does not lose an argument with
+the page - it deletes it. The generator therefore imports the visibility rules
+rather than restating them, and refuses to write a map that collides with a
+servable URL.
+
+362 redirects against Vercel's ceiling of 1,024. **The generator fails at 900**,
+which is the signal to move to the Proxy + Bloom filter approach in the Next
+docs rather than quietly ship a map the platform truncates.
+
+### `1ca536a` The site records its own 404s
+
+The redirect map above was written from what the old store served - a complete
+account of what the cutover broke and no account of what anyone actually
+requests. So `/admin/dead-links` now reads back a table of 404s, busiest first,
+marking whether a crawler or a person asked. A crawler means it is still
+indexed; a person means something still links to it and someone just failed to
+buy something.
+
+**One row per PATH, not per request** - the traffic is mostly crawlers, so
+aggregating bounds the table by how many dead URLs exist rather than by how hard
+we are being crawled. Counting is a Postgres function so simultaneous hits
+increment rather than race.
+
+**The obvious implementation would have cost the whole site.** `not-found.tsx`
+cannot see the path it was rendered for, so the natural move is a header from
+Proxy plus `headers()` in the 404 page - which takes the build from 35 static
+routes to NONE, because a root not-found that reads request headers cannot be
+prerendered and any route can fall back to it. Measured, not assumed. Instead
+the path is passed in by callers that already know it: a catch-all route at the
+lowest routing precedence, plus the five existing `notFound()` call sites, which
+have their slug in params.
+
+> ~~**NOT LIVE.**~~ **The table exists as of 2026-09-06** - see §13c for the
+> database it now lives in. `not_found_hits` and `record_not_found` are both
+> applied.
+>
+> **It still no-ops in production**, because `recordNotFound` calls `adminDb()`,
+> which returns null unless `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are
+> set, and **neither is in Vercel yet**. Local runs work; production does not
+> record a thing until those two variables are added.
+>
+> Nothing is broken meanwhile - the site is built to run without a database and
+> does. What it costs is that the log collects nothing, so the evidence the next
+> redirect map should be argued from is not accumulating, and every day this
+> waits is a day of 404s nobody can see. See §10.
+
+### `4dfe075` A dead category URL said 200
+
+`/equipment/anything-at-all` answered **200 with the 404 page inside it**. The
+`loading.tsx` in that segment wraps the page in Suspense; the moment its
+fallback renders the headers are already sent, so `notFound()` in `page.tsx`
+could change the body and not the status. Same trap the product page documents
+and sidesteps by having no `loading.tsx` at all.
+
+Not as bad as it looks - Next marks a streamed 404 `noindex` and the live page
+carried it, so Google was not indexing these. What a 200 on a dead URL does
+break is everything that counts on the STATUS: link checkers, Search Console's
+soft-404 report, and the 404 log added an hour earlier.
+
+Fixed **without losing the skeleton**. A layout renders outside its own
+segment's Suspense boundary, so a check there still runs while the status can be
+set. It has to be cheap and must not suspend or it starts the stream itself -
+`getCategory` is a lookup over twelve committed entries, no `await`. Deleting
+`loading.tsx` would also have worked and would have cost the skeleton on a page
+that waits on Unleashed, which is a bad trade for a status code.
+
+### One question these two left open, on purpose
+
+**8 R-prefixed slugs still serve** - `pro-bumper-plates`, `power-bands`,
+`retail-rack` and five more - and are in the sitemap, despite failing the brand
+rule `c97e985` just tightened. `erpUnits()` filters on the ERP's **brand field**,
+not the SKU prefix, so a product Unleashed calls MK or NO BRAND on an R-code
+comes through. Whether the ERP or the SKU is right about those is a real
+question and a redirect map was the wrong place to answer it, so they were left
+alone. See §10.
+
+---
+
+## 0g. Shipped 2026-09-06 and 07 - freight, checkout, and 109 corrected cartons
+
+**Card checkout is open and freight is quoted live.** `NEXT_PUBLIC_CHECKOUT_MODE`
+is gone, so §0's "freight is dormant until that flag changes" no longer applies -
+every paragraph about quote mode above is history, kept for the cutover record.
+
+### The checkout prices delivery before it asks for a card
+
+The button reads **Calculate Freight**. Pressing it fills in the freight line and
+the total; only then does it become **Continue to Payment**. It used to do both
+behind one button, so the first time a customer saw the delivery cost was the
+screen asking for their card.
+
+**ANY EDIT TO THE FORM DISCARDS THE QUOTE** and the button reverts. This is not
+tidiness: a price quoted for Melbourne sitting above a Perth postcode would be
+charged at the Perth rate the customer never saw. Verified both ways - the
+Melbourne quote is dropped on a postcode change, and Perth re-quotes to a
+genuinely different number rather than reusing it.
+
+When freight cannot be priced there is **no card path at all**, so the button
+stays on Calculate Freight rather than offering a Continue that returns a 422.
+
+The wording a customer sees when that happens now lives once, in
+`lib/freight-message.ts`, shared by the browser and the server. It used to say
+"we don't have shipping dimensions on file", which tells a customer about our
+record-keeping and invites the obvious question. Only items above the enquiry
+threshold reach checkout unmeasured, so in practice these are racks and machines
+that ship as freight and were always going to be priced by a person - which is
+what it says now.
+
+### The ceiling moved to $450 (Michael, 2026-09-07)
+
+`FREIGHT_MAX_AUTO_QUOTE` was $250. Measured on the Air Rower Pro, that meant a
+$1,399 product could not be bought by card in **Brisbane, Hobart, Perth or
+Darwin** - Hobart missed by 31 cents.
+
+| | Melbourne | Sydney/Adelaide | Hobart | Brisbane | Perth | Darwin |
+|---|---|---|---|---|---|---|
+| freight | $168.52 | $211.58 | $250.31 | $285.89 | $398.93 | $437.64 |
+| under $250 | yes | yes | **no** | **no** | **no** | **no** |
+| under $450 | yes | yes | yes | yes | yes | yes |
+
+**What the cap was for has not gone away.** Easyship bills bulky freight on
+VOLUME at 250kg/m3 and 38 of 107 bulky products bill at a mean 1.41x their real
+weight - a 16kg medicine ball rack bills as 175kg. The rower is dense so its
+prices are honest road freight; at $450 the volumetric outliers can now reach
+card checkout too. Watch the first bulky orders.
+
+### A cart line with no ERP code is dropped
+
+`sku` only became part of a cart line on 2026-09-02 (e918530), so a basket saved
+before that holds lines that cannot be matched, cannot be priced, cannot be
+quoted and cannot be written to an order - and survived every check. They are
+dropped on load and named in the notice.
+
+**This one does NOT fail open**, unlike the availability check beside it. That
+check fails open because a network error cannot be told apart from a retirement,
+and emptying somebody's basket over a timeout is worse than a stale line. Here
+there is no network and nothing to be uncertain about: no code, no line.
+
+### 109 cartons corrected in Unleashed, in three passes
+
+Freight needs a weight and all three dimensions, and one unmeasured product makes
+the WHOLE basket unquotable. Products with a usable carton went 687 -> 700.
+
+| pass | n | what was wrong |
+|---|---|---|
+| millimetres in a centimetre field | 36 | a 12" foam box as 850 x 1000 x 305, read as 259 cubic metres |
+| recovered from the WooCommerce snapshot | 19 | 13 cartons and 19 weights the ERP never had |
+| found by DENSITY, not size | 54 | order-of-magnitude unit slips that passed the size guard |
+
+**THE SIZE GUARD IS NOT ENOUGH, AND HERE IS THE RULE THAT IS.** `isPlausibleCarton`
+catches cartons impossible by SIZE - over 3 cubic metres, or a side over 3 metres.
+It missed `MWWPOPR01`, a 2kg weight plate recorded as 170 x 170 x 32cm: only 0.92
+cubic metres, so it passed, but that is a steel plate at 2.2 kg/m3, lighter than
+air. Density finds what size cannot.
+
+**The first attempt at the density rule was wrong and nearly shipped.** Selecting
+on "density outside 100-8000 kg/m3" also caught `MWWLATT01`, a 2kg ankle strap
+recorded as 25 x 8.5 x 1cm - a perfectly good carton that is merely dense - and
+would have "corrected" it to a TWO AND A HALF METRE ankle strap. It would also
+have shrunk a 55cm fitness ball to 5.5cm, because an inflated ball really is
+lighter than that floor.
+
+So: **only densities below 5 or above 50,000 kg/m3 count as unit errors**, and a
+row where more than one multiplier lands somewhere plausible is left for a person
+rather than guessed at. That left 11 - ankle straps, Mini Bands, collar pairs, two
+barbell sets, artificial turf that genuinely is 15m long, and a 1mm LED dimmer.
+
+`reports/carton-unit-fix-rollback.csv` holds the pre-import millimetre values.
+
+### The catalogue, counted correctly
+
+**COUNT OUR OWN BRANDS ONLY.** Unleashed holds REVL, SNAP, Golds, Fernwood, Hyper
+Health and Air Locker stock that has never been on the site; including it inflated
+an earlier version of these figures and made the measured share look better than
+it is. `erpUnits()` admits MK, CONCEPT 2 and NO BRAND, nothing else.
+
+| | |
+|---|---|
+| sellable and priced | 703 |
+| **fully measured - quotes automatically** | **312 (44%)** |
+| over $500, unmeasured - stays up, priced on enquiry | 94 |
+| under $500, unmeasured - hidden | 297 |
+| **measurement backlog that reaches a customer** | **391** |
+
+284 product pages are live. **REVL is not in the site catalogue and never was** -
+checked four ways: the brand filter, every REVL SKU reporting unavailable, no REVL
+page in the sitemap, and no R-prefix SKU in the clearance category, which is the
+one path that bypasses the brand filter.
+
+### Also
+
+- **Supabase is wired to production.** `SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` are in Vercel. The only consumer in `src/` is the
+  admin desk and 404 logging - there is still NO storefront read path, so this
+  changed nothing a customer sees. Turning one on is what retires the frozen
+  snapshot. Mirror holds 1,484 products, 700 with a full carton.
+- **`npm run lint` is clean.** 25 errors cleared; four were real. The worst:
+  `search/page.tsx` built its entire result view inside the try/catch guarding the
+  ERP lookup, so a render error was shown to customers as "no products matched"
+  instead of reaching an error boundary.
+- **Clearance was being emptied out of live baskets.** `erpUnits()` is
+  brand-filtered but Clearance is listed with the filter OFF, so `/api/cart/check`
+  was told "no" about live stock. Servability is now "in a unit, OR offered by a
+  page we still serve".
+
+### STILL UNPROVEN: no order has ever come through
+
+**The `WEB-MASTERKRAFT` customer has zero sales orders, ever.** Stripe
+verification, the server repricing and the amount-match guard have never run
+against a real payment. A test order was staged on 7 September - Abdominal Wheel
+$22.00 plus Australia Post $23.29, $45.29 - and is waiting on a card.
+
+---
+
+## 0h. Shipped 2026-09-07 - a false alarm, and two reports that lied quietly
+
+### THE EASYSHIP ALERT IS A FALSE ALARM, AND EASYSHIP IS NOT DOWN
+
+Steve has been receiving `MasterKraft freight: Easyship is rejecting our
+requests`, which says the request is malformed, that it "affects EVERY quote, not
+some", and that the carrier "is effectively switched off". **None of that is true
+of the thing actually firing it.** Easyship answered every scenario in
+`npm run check:carriers` on 7 September, bulky included.
+
+The detail line the email carries is Easyship's `error.message` plus
+`error.details` (`lib/freight.ts`, the `!res.ok` branch). Probed against the live
+rates endpoint, that exact string comes from a consignment no courier will take:
+
+| consignment | Easyship |
+|---|---|
+| 1 x 300cm carton, 80kg | 200, five rates |
+| **2 x 300cm carton, 80kg** | **422 "No shipping solutions available based on the information provided"** |
+| 1 x 300 x 300 x 30cm (2.7m3) | **422, same string** |
+| 1-4 x 224cm barbell | 200 (six rates at qty 1, one at qty 2+) |
+| blank destination state | 422 "destination_address.state can't be blank" |
+
+**Every one of those cartons passes `isPlausibleCarton`.** 300cm is exactly
+`MAX_PLAUSIBLE_SIDE_CM` and 2.7m3 is inside the 3m3 ceiling, so nothing upstream
+is wrong. It is one parcel per unit meeting a quantity: a customer who adds a
+SECOND long, heavy item takes the consignment from five options to a 422.
+
+Three things turn that into mail:
+
+1. **`classifyFailure` matches on the wrapper, not the fault.** It tests for
+   `"not valid"`, and "The request body content is not valid." is what Easyship
+   wraps EVERY 422 in - a real malformed request and an unservable cart arrive
+   worded identically. So a per-cart outcome lands in `config`, the bucket built
+   for the 6 September `line_1` outage.
+2. **The `config` email then asserts things that are false here** - every quote,
+   carrier switched off. Written for an outage, sent for a cart.
+3. **The six-hour cooldown does not hold in production.** `lastAlerted` is a
+   module-scope `Map`, so on Vercel it is per lambda instance, not per carrier.
+   That is why the mail repeats.
+
+Nothing is broken for a customer: the router fails soft, Australia Post still
+answers, and an unquotable consignment falls back to "Calculated on quote", which
+is the right outcome for a cart that genuinely needs a person.
+
+**FIXED for 1 and 2, on 7 September.** There is a fourth class, `consignment`,
+tested BEFORE `config`: "no shipping solutions", or any fault naming
+`destination_address`, is logged and never mailed. `origin_address` and `parcels`
+faults still mail, because those come from our own configuration and our own
+carton data and so recur until someone acts - and a rejection naming no field at
+all still mails, because that is one we have never seen and 6 September is the
+argument for being woken.
+
+**FIXED for 3 as well.** The cooldown now lives in Postgres:
+`freight_alert_cooldown`, one row per carrier+kind, claimed through
+`claim_freight_alert()` in a single conditional upsert so two lambdas noticing
+the same dead carrier cannot both decide they are first. The in-memory `Map` is
+kept in front of it as a fast path, so a warm instance answers without a database
+round trip on a checkout request.
+
+**It fails open, deliberately, in three places** - no Supabase configured, the
+database unreachable, or the migration not applied. All three send the mail. A
+duplicate is a nuisance; an alerter that goes silent because a SECOND system is
+down goes silent exactly when things are broken.
+
+`suppressed_since_last` counts what it swallowed, because otherwise a quiet inbox
+and a broken alerter look identical.
+
+**THE MIGRATION MUST BE APPLIED BEFORE THE CODE DEPLOYS**, or rather: it can be
+applied after, and until it is the alerter simply behaves as it did before.
+`supabase/migrations/20260907_freight_alert_cooldown.sql`.
+
+**And find out who the alerts go to.** The recipient is
+`FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` and `.env.local` sets neither to Steve,
+so production points one of them at him and nobody wrote down which. See §12.
+
+### 42 cartons the site quoted from that could not exist
+
+The 109 corrections went into Unleashed. **The frozen snapshot still holds the
+old numbers, and the snapshot is asked first** - so for anything wrong in BOTH
+systems, the corrections never reached a customer's quote.
+
+`isPlausibleCarton` was supposed to catch that, and for the millimetre errors it
+does: 850 x 1000 x 305 is over 3 cubic metres, rejected, and the ERP answers. But
+it tests SIZE, and §0g's whole finding was that size is not enough. `MWBBFRU02`
+is a 14kg fixed barbell recorded as **10.54 x 1.63 x 1.63cm** - every side inside
+the bounds, 0.000028 cubic metres - which is 500,000 kg/m3, denser than any
+metal. 42 cartons in the snapshot are like it, the worst a 41kg barbell in a box
+the size of a paperback.
+
+**This was real money, not a theoretical gap.** Production priced that barbell to
+Parramatta at **$27.67**; the same product quoted from its real carton is
+**$40.00**. The gap is a consignment we under-declare, the carrier corrects, and
+we absorb - the exact loss `freight-server.ts` says it exists to prevent.
+
+`isPlausibleCarton` now also rejects densities below 5 or above 50,000 kg/m3, so
+the candidate chain skips the bad snapshot carton and Unleashed's corrected
+105.4 x 16.3 x 16.3 answers instead. **Checked against the live ERP: all 42
+resolve that way and none is pushed onto the quote flow**, so this costs no
+product its card checkout.
+
+Two things about the shape of it:
+
+- **A carton with no weight gets no density opinion.** Dimensions without a
+  weight are ordinary in the snapshot, and rejecting a box over a field nobody
+  filled in would lose cartons that quote perfectly well. The size bounds still
+  stand alone there.
+- **`woocommerce.ts` and `erp-catalogue.ts` keep the size-only bounds, on
+  purpose,** and now say why. They decide what to SHOW, from a single source.
+  Rejecting on density there would take 42 products off the listings under
+  `HIDE_UNSHIPPABLE` for a fault the quote no longer suffers. Deciding what to
+  QUOTE FROM gets the stricter rule; deciding what to show does not.
+
+The snapshot itself is still wrong. Nothing reads those values now, but a
+`build:catalogue` re-run will not fix them either - the bad numbers are in
+WooCommerce.
+
+### A size container is a structure, not a `-GROUP` suffix
+
+`npm run report:orphans` decided "this WooCommerce record exists only to group
+sizes, so the ERP is right not to hold it" by testing `/-GROUP$/`. That is one
+SPELLING of a container, not the definition. 70 of the 126 containers carry no
+suffix at all - `AMDBRH`, `MWBBFUR`, `AWWPOU` - and the ERP holds their sizes as
+`AMDBRH01`, `MWBBFUR01`, `AWWPOU01`. Eight were live on the site, so the list
+somebody has to act on read **9 when one of them was real**.
+
+It now asks `anchorCodes()` whether the record holds variations (or whether its
+hidden twin does), which is the same question `lib/ranges` asks to build a card.
+
+**Splitting the two questions bought a gap the old shape could not express.**
+"Is this a container?" and "does the ERP hold what it stands for?" used to be one
+test, so a container backed by NOTHING looked exactly like a container backed by
+everything - a page rendering a size picker over stock no system has. There are
+none today. The report has a row for them now, so there will not be silently.
+
+### The same report claimed to count obsolete records, and did not
+
+Its own header said "checked against every code it holds, obsolete included" -
+for a month, while `GET /Products` hides obsolete records unless you ask. It
+returned 1,484 products every one of which said `Obsolete:false`, which reads
+convincingly as a company that never retires anything; with
+`includeObsolete=true` it returns 2,364, of which 880 are obsolete. **19 products
+the ERP had merely RETIRED were being reported as ones it had never heard of.**
+
+This is the same trap, with the same wording, as `build-obsolete-skus.mjs`. The
+field is `Obsolete`, not `IsObsolete`. A short read now throws rather than
+publishing a list in which every retired product is an orphan.
+
+### §12 described staging, eleven days after the cutover
+
+It listed `NEXT_PUBLIC_ALLOW_INDEX` as unset "(correct for staging)" and
+`FREIGHT_COLLECTION_*` as unset - while the paragraph nine lines above it said
+`FREIGHT_COLLECTION_*` was set, and the apex has served an indexable `robots.txt`
+since 27 August. Believing that section meant believing the live site was
+`noindex` and that freight had no origin to quote from. Only `INTERPARCEL_API_KEY`
+is genuinely unset, and it is dead rather than pending: nothing has read it since
+Australia Post and Easyship replaced Interparcel in `3453487`.
+
+---
+
 ## 1. Start here
 
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.
@@ -45,11 +959,61 @@ errors, so gating on it would block every deploy. Run it and compare against `HE
 offline on purpose: the point of the snapshot is that rendering does not depend on
 WooCommerce being up, and a networked pre-build check would hand that back.
 
-To deploy without the gate (it is a safety net, not a law):
-`npx --yes vercel@latest deploy --prod --yes`. There is no local or global `vercel`
-binary on this machine, so a bare `vercel --prod` fails with command-not-found.
+**THE GATE PASSES AGAIN (28 Aug).** It was broken from the cutover until then:
+`check:catalogue` queries `masterkraft.com/wp-json/wc/v3`, which is Vercel now, so
+it died on `WooCommerce 403 after 4 tries` and the `&&` chain stopped **before**
+`vercel` ran. Two things fixed it, and both are worth knowing about.
 
-If it says **"Not authorized"**, run `npx vercel login` first (Michael's account).
+**1. The store never went away, it only lost its name.** WordPress is still
+serving on the old box, our consumer key still works, and its certificate covers
+both `masterkraft.com` and `www.masterkraft.com`, so it validates fully if you
+resolve the name yourself. `scripts/lib/store-dns-pin.mjs` does exactly that,
+driven by `WC_STORE_PIN=masterkraft.com=103.26.237.235` in `.env.local`. Read the
+header of that file before touching it. It is a splint: it is inert unless the
+variable is set, it announces itself on stderr every run, and it goes stale by
+itself the moment `WC_STORE_URL` moves to a subdomain. **Delete `WC_STORE_PIN`
+the day Paul gives the store a hostname.**
+
+Do not reach for `http://103.26.237.235` instead. That host serves by vhost name
+so the bare IP 404s, and it would put the consumer key on the wire in clear text.
+
+**2. The check was also crying wolf.** It compared whole products with
+`JSON.stringify`, and WooCommerce does not promise a stable order for a product's
+`categories`. Six rigs came back with the same four terms reshuffled, which the
+gate called drift. It now compares `categories[0]` exactly - that is the one thing
+the site reads from that order, for the breadcrumb on `product/[slug]` - and the
+rest as a set. The snapshot is still **written** in the store's own order, because
+that is what `categories[0]` reads. No snapshot data changed; the gate simply
+stopped failing over a reshuffle that changes nothing on any page.
+
+Full gate verified green end to end on 28 Aug: 512 products, 80 categories, 98
+tests, obsolete list clean, no drift.
+
+`npm run deploy` was also missing `--scope masterkraft`, so it would have failed
+at the `vercel` step even once the gate passed. Fixed in `package.json`.
+
+If you ever do need to skip the gate, that is only safe when the commit does not
+touch `src/data/` - that snapshot is exactly what the check guards.
+
+**Watch for the silent version of this failure.** Piping `npm run deploy` through
+`tail` reports the *pipe's* exit code, so a failed gate looks like a clean exit 0
+and it appears to have deployed when nothing did. Confirm against production, not
+against the exit code.
+
+To deploy without the gate (it is a safety net, not a law):
+
+```bash
+npx --yes vercel@latest deploy --prod --yes --scope masterkraft
+```
+
+There is no local or global `vercel` binary on this machine, so a bare
+`vercel --prod` fails with command-not-found.
+
+**`--scope masterkraft` IS REQUIRED.** Without it the CLI returns a bare
+`{"status":"error","reason":"deploy_failed","message":"Not authorized"}` even
+though `vercel whoami` returns marketing-8481 and `vercel teams ls` shows
+MASTERKRAFT as the current team. The error never mentions scope, so it reads like
+a credentials problem and is not - **do not go re-authenticating.**
 `NEXT_PUBLIC_*` vars are build-time inlined, so changing one in Vercel does nothing
 until a redeploy. Claude cannot deploy or set Vercel env / DNS - surface those.
 
@@ -91,8 +1055,10 @@ Each of these was hit for real. They look like bugs in our code and are not.
 Four rules, all applied at one chokepoint in `src/lib/woocommerce.ts`. **If a
 category shows 0 products, suspect these first.**
 
-512 published products → **184 shown** (plus 36 Clearance; this was recorded as 37
-on 2026-08-20, and three of the 39 raw Clearance products are ERP-retired).
+**SUPERSEDED BY §0d.** The rules below still decide what the WooCommerce snapshot
+serves — Clearance, and the fallback when Unleashed is unreachable — but they no
+longer decide what the site LISTS. Categories come from the ERP's `ProductGroup`
+now, and the count is 319 units, not 184 products.
 
 The rules run against the **committed snapshot** in `src/data/`, not a live call
 (§4). The snapshot is a faithful mirror of what the store published and holds NO
@@ -110,7 +1076,8 @@ visibility rules, so these four are still the only thing deciding what appears.
    and sitting in the sitemap.
 3. **Obsolete, WordPress side.** `catalog_visibility: "hidden"` is the store's own
    "do not list this" switch, used both for withdrawn lines and for an old single
-   listing superseded by its `-GROUP` product. 25 products.
+   listing superseded by its `-GROUP` product. 25 products. Unchanged by §0c:
+   ranges no longer read those hidden twins at all, they read the ERP.
 4. **Obsolete, ERP side.** `src/lib/obsolete.ts` reads a **committed list** of 804
    retired Unleashed codes. 15 served products were retired in the ERP while
    WordPress still showed them, including the whole discontinued Selectorize range.
@@ -137,6 +1104,12 @@ an order for an already-bought item must not fail because marketing hid it.
   `bundle_price.regular_price.min` as a "From $X". **`priceValue` stays 0 on
   purpose** so a configurable range cannot be card-checked-out at the cost of its
   cheapest item.
+- **A RANGE is the exception** (§0c). It is priced off its ERP sizes, so
+  `priceValue` is the cheapest size and the price filter can finally see it. Safe
+  because the shopper picks a size and buys that, not an un-configured range. This
+  also settles the disagreement `getBundleFromPrice` documents - the card used to
+  say "From $110" off WooCommerce while the page said "From $90" off Unleashed.
+  One source now, and it is the ERP.
 
 ---
 
@@ -167,7 +1140,126 @@ snapshot is rebuilt and committed. Nothing rebuilds it automatically.
 
 ---
 
-## 5. Freight (Australia Post)
+## 4b. Orders are written into UNLEASHED now, not WooCommerce (2026-09-06)
+
+**`UNLEASHED_WRITE_ENABLED=true` is set in Vercel Production.** `orderBackend()`
+returns `unleashed`, and `createWooOrder` is no longer reached.
+
+**This was found the hard way, an hour after card checkout went live.** Card
+checkout was opened while `WC_WRITE_ENABLED=false` and `WC_STORE_URL` still
+pointed at `https://masterkraft.com` — which is this Next.js app, not WooCommerce.
+`masterkraft.com/wp-json/wc/v3/products` returns 404. And because
+`stripe.confirmPayment` runs BEFORE `/api/order`, every card payment would have
+been **captured and then refused** with a 503 "Order creation is not enabled".
+Nobody hit it, but nothing prevented it either.
+
+### What had to be true, and now is
+
+| gate | how it was settled |
+|---|---|
+| Unleashed key has write scope | Proven by an intentionally invalid `POST /SalesOrders/{guid}`, which came back **400 on validation** (`OrderStatus`, `Customer`, `Tax` required) rather than 401/403. Nothing was created. |
+| A web sales customer exists | **It did not.** All 4,125 customers were scanned; the 20 name matches were real gyms with "Online" or "Shop" in them. Created `WEB-MASTERKRAFT` / "MasterKraft Website", AUD, taxable, `T7-DIRECT`. |
+| `UNLEASHED_WEB_CUSTOMER_CODE` | `WEB-MASTERKRAFT`. `resolveCustomer` throws rather than guess, which is why this had to exist first. |
+| `UNLEASHED_FREIGHT_CODE` | `MKFR` ("Freight - Local"). **Nobody had this on the list** - it is unset by default and any freight-bearing order throws without it. |
+| The write path works | `SO-00000851`, written 2026-09-06 through the real `buildSalesOrderPayload`. **Delete it.** |
+
+### The test order, and what it proves
+
+`SO-00000851`, Parked, $35.40: one `MBSADO02` at $18.18 ex plus freight riding as
+an `MKFR` line at $14.00 ex ($15.40 inc), tax $3.22. That is the freight-line
+mapping section 6 has wanted proven since August, and it works.
+
+**What it does NOT prove** is the full card path. It called
+`buildSalesOrderPayload` directly, so Stripe verification, `resolveOrderLines`
+repricing and the amount-match check in `order/route.ts` are still unexercised
+against a real payment. Production was probed with a bogus PaymentIntent and
+returned **402 "Payment not verified"** rather than 503, which confirms the route
+is enabled and reaches the payment check - and nothing further.
+
+🔎 **One real card order is still owed**, and it is the only way to test the
+repricing and amount-match logic. Use something cheap with carton data.
+
+### Decommissioning WooCommerce
+
+Orders no longer touch it. Still outstanding: `WC_STORE_URL` points at a host with
+no WooCommerce behind it, the catalogue snapshot in `src/data` is still built from
+Woo by `build:catalogue`, and the `productId > 0` rule in `checkout/page.tsx`
+still forces **557 of 1,345 sellable ERP products** to the quote flow because
+`resolveOrderLines` cannot price a line with no Woo product. That rule can relax
+once repricing resolves an ERP-only line from the ERP - same fix, and it is worth
+`npm run report:erponly` before scoping it.
+
+---
+
+## 5. Freight (Australia Post + Easyship, priced against each other)
+
+### The second carrier arrived 2026-09-05
+
+**`quoteFreight()` now asks BOTH carriers in parallel and returns the best of the
+pooled options.** Australia Post via PAC as before; Easyship via
+`POST https://public-api.easyship.com/2024-09/rates`, fronting TNT, Aramex,
+CouriersPlease, Allied, Toll, FedEx, Hubbed and UPS.
+
+**Neither carrier is redundant — they win opposite ends of this catalogue.**
+Measured against the live accounts, Thomastown to a capital
+(`docs/easyship-evaluation.md`):
+
+| carton | lane | AusPost | Easyship |
+|---|---|---|---|
+| 1kg satchel | Perth | **$10.20** | $17.70 |
+| 21kg, 63x53x35 | Melbourne | $30.70 | **$27.94** |
+| 21kg, 63x53x35 | Perth | $149.45 | **$111.20** |
+| 43kg, 150x60x60 | Sydney | *refused* | **$180.84** |
+| 601kg, 200x100x120 | Sydney | *refused* | **$619.96** |
+
+Australia Post charges a FLAT national rate under about 2kg, which Easyship cannot
+beat, then turns steeply zoned and loses badly. Above the parcel limits it does not
+compete at all. So the router asks both and lets `selectOptions()` choose.
+
+**What changed structurally:** an over-limit carton no longer fails the cart, it
+just rules Australia Post out. `oversize` is now only returned when there is no
+second carrier configured to take it. One carrier failing is not a failure; both
+failing is. Option ids are namespaced (`auspost:CODE`, `easyship:UUID`) because
+they travel to the browser and come back to be re-priced when the card is charged.
+
+**`EASYSHIP_API_TOKEN` is NOT set yet**, in `.env.local` or Vercel. Until it is,
+the router runs Australia Post alone and behaves exactly as it did before. See
+`LAUNCH.md` §1b.
+
+- `npm run check:carriers` — three real carts through the actual router, prints
+  which carrier won each, then re-quotes one to prove the cache is serving it.
+- `npm run report:carriers` — prices both separately across all six lanes,
+  weighted by the real destination mix, and tests whether an Easyship rate is
+  stable across two identical calls.
+
+**Quotes are cached** (`src/lib/freight-cache.ts`, 15 min, 60s for failures).
+That is not only about the metered endpoint: display and charge now come from ONE
+carrier answer, so they cannot disagree and refuse an order after the card is
+captured. In-memory, so per-lambda on Vercel.
+
+**⚠️ The Easyship trial allowance was exhausted on 2026-09-05** — ~90 calls of
+building and testing, not traffic — and every call now returns `403 usage_limit`.
+The router fails soft, so nothing broke, but the bulky half is back on
+"Calculated on quote" and nothing surfaces the 403. Two measurements were lost to
+it: rate stability and the AusPost/Easyship crossover weight.
+
+**Two integration traps, recorded so nobody rediscovers them:** an item needs a
+`category` slug (we send `sport_leisure`, HS 9506910000) or every call 422s, and
+the useful half of an Easyship error lives in `error.details`, not `error.message`.
+
+**Rate stability is ANSWERED (2026-09-06): stable.** Two identical calls returned
+identical prices across all six services, so the display-then-charge pair does not
+drift. Latency re-measured at 693-1136ms, not the ~4s recorded while calls were
+failing. The allowance has also reset and Easyship is quoting normally again.
+
+**Three things the evaluation did NOT settle**, all in
+`docs/easyship-evaluation.md`: rate stability across our two quotes, whether the
+invoice matches the quote, tailgate and two-person delivery (still nobody's job),
+and the fact that TNT returned the only rate on every bulky quote. The account is
+also a trial with no payment method and zero shipments. **One real bulky
+consignment answers most of it.**
+
+### Australia Post, as it was
 
 **LIVE in production.** `AUSPOST_API_KEY` and all four `FREIGHT_COLLECTION_*` are
 set in Vercel Production, and the deployment serving the site is newer than they
@@ -212,10 +1304,11 @@ PAC prices parcels: 22kg, 105cm longest side, 0.25m³. Of 338 listed products, 2
 carry usable carton data and **111 fit those limits**. 96 are over 22kg and 109 over
 105cm. Racks, rigs, machines and benches are pallet freight and always were.
 
-`quoteFreight` checks the limits **before** calling the API and returns `oversize`,
-which the checkout renders as "Calculated on quote". **The heavy two-thirds still
-need a second carrier** (Mainfreight / Freight Exchange, both already named on the
-Shipping page). That is a commercial decision, not outstanding code.
+`quoteFreight` checks the limits **before** calling PAC, because PAC would only
+reject them. **That is no longer where the story ends:** since 2026-09-05 an
+over-limit consignment goes to Easyship instead of straight to the quote flow, and
+only falls back to "Calculated on quote" if Easyship is unconfigured or fails. See
+the top of this section.
 
 **Correction to earlier versions of this doc:** the "85% quotable / 33 products
 missing dimensions" figure was measured over a narrower set than the shop serves.
@@ -227,7 +1320,7 @@ reach card checkout.
 
 ### How it hangs together
 
-- `src/lib/freight.ts` is the domain logic and the AusPost transport,
+- `src/lib/freight.ts` is the domain logic and BOTH carrier transports,
   `src/lib/freight-server.ts` resolves a cart against WooCommerce, and **both the
   quote route and the payment-intent route go through it**, so the price shown and
   the price charged cannot disagree.
@@ -523,6 +1616,92 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
 ## 10. Open / blocked, by owner
 
 ### Michael
+
+**Added 27 August, in priority order. The first one gates most of the rest.**
+
+- **SEND THE EMAIL TO PAUL.** Drafted, sitting unsent in Outlook drafts, needs his
+  address. Text is `docs/email-paul-subdomain.md`; it leads with a request for a
+  full cPanel backup, with the subdomain as the fallback ask. **There is a deadline
+  that is not ours:** his server holds a Let's Encrypt certificate for
+  `masterkraft.com` expiring **27 September 2026**, renewed by HTTP validation
+  against a hostname that now resolves to Vercel, so the renewal will start
+  failing. The WooCommerce migration, the new categories filling with stock, and
+  card checkout mattering at all are all downstream of this conversation starting.
+- **107 apparel SKUs that the website has never been able to sell.** MasterKraft's
+  own apparel, lighting and reformers are all in Unleashed but were never created
+  in WooCommerce, which only ever got the Snap and REVL versions. Ask Steve or
+  Gaetana whether that was deliberate (wholesale-only) or an oversight. If it is an
+  oversight it is a product line the site has never listed. See §0b.
+- **Section 29 of the Terms is a competition that closed in April 2023.** Still
+  live, presented as current. Yes/no on removing it.
+- **Submit one real warranty claim** through `/warranty#claim` and confirm it
+  arrives. Only the rejection paths have been exercised; submitting for real sends
+  email, so it was left for a human. With no `HUBSPOT_FORM_WARRANTY` it takes the
+  email fallback to `QUOTE_TO_EMAIL`.
+- **Remove the `/etc/hosts` override.** `103.26.237.235 masterkraft.com` is still
+  in there from cutover testing, so the live site does not appear on this machine.
+- **Fix the deploy gate** (§1 DEPLOY). `check:catalogue` cannot pass while
+  WooCommerce is unreachable, so it blocks every deploy and is being stepped past.
+  It should degrade to a warning rather than fail hard.
+
+**Added 3 September (see §0e).**
+
+- **170 catalogue fixes in Unleashed.** `npm run report:punchlist` writes
+  `reports/erp-punchlist.md` grouped by category, every row one field on one
+  product. No deploy needed - the site re-reads the ERP every 15 minutes. The
+  biggest single win is photography: 121 of the 170 are a missing image, and
+  `masterkraft-portals-franchisee` has `scripts/harvest-unleashed-images.py`
+  which fills blanks from the ERP's own CDN.
+- **Decide the 19 rename families.** 49 cards that would collapse into one card
+  with a picker if renamed to the `Name - Option` shape. Listed in §0e; five are
+  judgement calls that need someone who knows whether Olympic Power Rack 1.0-5.0
+  are five racks or five options.
+- **Resolve the 19 duplicate-name pairs.** Two ERP records, one name, two code
+  schemes, only the first ever sold.
+- **Vercel seat for `michael@masterkraft.com`** is still invite-pending and needs
+  an account at that address; the invite must be accepted from that session or
+  the seat rebinds to the gmail login. Carried from 2 September.
+- **Set the git identity in the other MasterKraft repos** before their next
+  deploy - they inherit the global PartTimeCMO address and will hit the same
+  block. One line each: `git config user.email "marketing@masterkraft.com"`.
+
+**Added later on 3 September (see §0f).**
+
+- **Get at the MasterKraft Supabase project. This is one task, not two, and it
+  has been open since 25 August.** Two migrations are queued behind a single
+  credential:
+  1. `supabase/migrations/20260825_admin_identity_and_audit.sql` - the admin
+     console's identity and audit tables (§13b).
+  2. `supabase/migrations/20260903_not_found_hits.sql` - the 404 log (§0f).
+
+  ~~**Why neither has run:**~~ **BOTH HAVE RUN, 2026-09-06.** See §13c.
+
+  The diagnosis above was half right and half wrong, and the wrong half cost
+  three sessions. `pmydkwszkgjnolrcnenh` was never the website's database: it is
+  the **Catalogues** project, it holds `catalogue_quotes` and
+  `catalogue_quote_staff` for `masterkraft-portals-franchisee`, and it sits in
+  ap-northeast-2 (Seoul). Every session that tried to reach it was trying to put
+  the site's tables in another app's database, in the wrong hemisphere.
+
+  Still true: **`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not in Vercel
+  in any environment.** The service role key bypasses RLS - it must be a
+  Production secret and must never take a `NEXT_PUBLIC_` prefix.
+
+  **What it costs while it waits.** Nothing breaks: `adminDb()` returns null and
+  both features degrade by design. But `/admin` has been running without its
+  identity and audit tables since 25 August, and the 404 log records nothing, so
+  every day of dead-URL traffic since 3 September is evidence that is simply
+  gone. The redirect map cannot be argued from evidence that was never collected.
+- **Decide whether the ERP or the SKU prefix is right about 8 products.**
+  `pro-bumper-plates`, `power-bands`, `retail-rack` and five more serve and sit
+  in the sitemap on R-prefixed codes, because `erpUnits()` reads the ERP's brand
+  field while the visibility rule reads the SKU. One of the two is wrong about
+  these. If the ERP is right the codes want fixing in Unleashed; if the SKU is
+  right the brand filter needs to reach the ERP path too.
+- **Watch the redirect count.** 362 of Vercel's 1,024, and the generator hard
+  fails at 900 rather than shipping a truncated map. At that point the move is
+  the Proxy + Bloom filter approach in the Next docs.
+
 - **The Recovery Roller waitlist page (`/recovery-roller`) is built but MUST NOT be
   promoted yet.** Three things gate it, and two are promises the page makes:
   1. **`HUBSPOT_FORM_WAITLIST` does not exist.** Until it is created and set, every
@@ -692,12 +1871,46 @@ what syncs to Unleashed and what Interparcel's Shipping Manager fetches (§6).
 pair; Vercel's are unverified and probably not** - see §10, first item.
 
 Set and working: `WC_*`, `UNLEASHED_*`, `NEXT_PUBLIC_GA_ID` (G-86MEH5QL99),
-`NEXT_PUBLIC_HUBSPOT_PORTAL_ID`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (**pk_test**),
-`NEXT_PUBLIC_SITE_URL` (= web.test.masterkraft.com).
+`NEXT_PUBLIC_HUBSPOT_PORTAL_ID`, `NEXT_PUBLIC_SITE_URL` (= masterkraft.com).
 
-Not set: `NEXT_PUBLIC_ALLOW_INDEX` (correct for staging), `INTERPARCEL_API_KEY`,
-`FREIGHT_COLLECTION_*`. Server secrets (HubSpot form GUIDs, Resend, Stripe secret,
-WC write) remain unverifiable without a live test.
+**Production, as at 2026-09-07** (`vercel env ls --scope masterkraft`):
+`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is **pk_live** and `STRIPE_SECRET_KEY` is set;
+`UNLEASHED_WRITE_ENABLED`, `UNLEASHED_WEB_CUSTOMER_CODE` (WEB-MASTERKRAFT) and
+`UNLEASHED_FREIGHT_CODE` (MKFR) are set, so orders write to the ERP;
+`FREIGHT_MAX_AUTO_QUOTE` is **450** (was 250, raised 2026-09-07 - see §0g);
+`HIDE_UNSHIPPABLE` is true, with the $500 enquiry threshold from
+`HIDE_UNSHIPPABLE_BELOW` (defaults to 500 in code); `FREIGHT_COLLECTION_*` set.
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` added 2026-09-06.
+**`NEXT_PUBLIC_ALLOW_INDEX` is `true`**, which is not something Vercel has to be
+asked: `https://masterkraft.com/robots.txt` served `Allow: /` with the sitemap
+line on 2026-09-07, and `isIndexableHost()` returns false for every host unless
+that flag is on. An earlier version of this section listed it as unset - see
+below for why that mattered.
+
+**Who gets the freight alerts is NOT recorded here, and should be.** Alerts go to
+`FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` (`lib/freight-alert.ts`). Neither is in
+`.env.local`, and Steve receives them, so production holds one of the two pointed
+at him. Nobody has written down which. See §0h.
+
+**`.env.local` has an EMPTY `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`**, so local dev
+falls back to quote mode and never renders the card form. Put a dummy `pk_test_...`
+in it to exercise the checkout UI locally; do not put the live key in a dev file.
+
+**ROTATE `SUPABASE_SERVICE_ROLE_KEY`.** It was printed into a session transcript.
+It is now in Vercel as well as `.env.local`, so rotating means updating both.
+
+**This list said the wrong thing for eleven days.** It read "Not set:
+`NEXT_PUBLIC_ALLOW_INDEX` (correct for staging), `INTERPARCEL_API_KEY`,
+`FREIGHT_COLLECTION_*`" - written when the site WAS staging and never revisited at
+cutover. Two of those three were false in production, and the section above said
+so nine lines earlier: freight has quoted from Thomastown since 5 September, and
+the apex has been indexable since 27 August. A reader who believed it would have
+concluded the live site was `noindex` and that freight had no origin.
+
+Not set, and correctly: `INTERPARCEL_API_KEY` - Interparcel was the first carrier
+(`3453487`) and no code has read that variable since Australia Post and Easyship
+replaced it, so it is dead rather than pending. Server secrets (HubSpot form
+GUIDs, Resend, Stripe secret, WC write) remain unverifiable without a live test.
 
 `FREIGHT_MARGIN_PERCENT` defaults to 15 in code; set it only to change that.
 
@@ -713,8 +1926,23 @@ WC write) remain unverifiable without a live test.
 - **REVL** always uppercase. No public email address on the site.
 - Server components by default; `'use client'` only when needed.
 - **Verify on staging after deploying. Do not ask the client to check.**
-- Tests: `npx vitest run` (69). Lint and typecheck before committing; the repo has
-  2 pre-existing lint errors, so compare against `HEAD` rather than expecting zero.
+- Tests: `npx vitest run`. Lint and typecheck before committing; `npm run lint`
+  is clean as of 2026-09-06, so any error you see is yours.
+- **An Unleashed product import BLANKS every column you leave out.** It is not a
+  patch, it is a replace, and the only reason a 5-column "just fix the
+  dimensions" file does not silently wipe Notes, Barcode, prices, Product Group,
+  brand and tax settings is that Unit of Measure refuses to be cleared and takes
+  the whole row down with it. Learned the hard way on 2026-09-06: the import
+  failed with "Unit of Measure. The value was empty."
+  **So: Export first (Inventory > Products > Import/Export > Export), keep every
+  column, change only the cells you mean to change, and import those rows.**
+  `reports/carton-unit-fix-unleashed.csv` is what that looks like - 58 columns,
+  36 rows, three cells different per row. Verify afterwards by diffing the API's
+  full product object before and after; only Width/Height/Depth, LastModifiedOn
+  and LastModifiedBy should move.
+- Unleashed lives at `go.unleashed.erp.accessacloud.com`, NOT
+  `go.unleashedsoftware.com` - the latter is a different tenant host and will
+  bounce you to a login you cannot satisfy.
 - Relevant memories: `reference_masterkraft_woocommerce`, `reference_masterkraft_brand`,
   `reference_masterkraft_revl_galleries`, `reference_masterkraft_deploy`,
   `reference_masterkraft_unleashed`.
@@ -755,6 +1983,7 @@ cookie itself rather than trusting it.
 | `check_stock` | Unleashed, **live** | ERP is the source of truth, inc-GST |
 | `lookup_order`, `list_recent_orders` | WooCommerce, live, **read only** | `lib/wc-admin.ts` |
 | `check_payment` | Stripe, via the order's `transaction_id` | refunds and disputes included |
+| `check_shipment` | Unleashed `SalesShipments` | see the dispatch note below |
 | `quote_freight` | Australia Post | same numbers the checkout charges |
 | `send_reply`, `log_enquiry` | Resend, HubSpot | **write - approval required** |
 
@@ -773,6 +2002,24 @@ exactly 1. Unleashed filters server-side on `productCode` and answers in
 `search_catalogue` still uses the cached map, because a search can span the
 catalogue. Every tool result carries its own basis, and the system prompt forbids
 quoting a price or stock figure from a search without confirming it first.
+
+### Dispatch: "no tracking number" is the normal case
+
+`check_shipment` reads `SalesShipments`, keyed on the same order number the
+website uses (verified against 488906). Two field shapes bite: `ShippingCompany`
+is an OBJECT (`{Guid, Name}`) and not a string, and `DispatchDate` is Microsoft
+JSON date format.
+
+**923 shipments exist and only 43 carry a tracking number**; 886 have no carrier
+recorded, because dispatch paperwork is done in carrier portals and nothing
+writes back. So the usual answer is a dispatch date with nothing against it. The
+tool says so explicitly and the prompt forbids reading that as "lost" or "we do
+not know if it shipped". This is the same gap the freight API spec asks a
+provider to close.
+
+It also separates three cases that look alike: dispatched, order exists but has
+not shipped, and no such order. A typo must not read back to a customer as a
+delayed delivery.
 
 ### Sizes are three different things
 
@@ -917,14 +2164,20 @@ Postgres apart from the RLS block, so it runs anywhere. Every table has RLS on
 with **no policies**, which denies anon and authenticated outright; only the
 service role key reaches them, and only from server code.
 
-> **NOT YET APPLIED.** The MasterKraft Supabase project (`pmydkwszkgjnolrcnenh`)
-> lives in its own org, which this session's Supabase connection could not reach.
-> Paste the migration into that project's SQL editor, then set `SUPABASE_URL`,
-> `SUPABASE_SERVICE_ROLE_KEY` and `ADMIN_BOOTSTRAP_EMAILS`.
+> ~~**NOT YET APPLIED.**~~ **APPLIED 2026-09-06** to `masterkraft-site`
+> (`vnemkpduafnjxhkasqif`), NOT to `pmydkwszkgjnolrcnenh` - see §13c for why that
+> ref was the wrong project all along. `ADMIN_BOOTSTRAP_EMAILS` and the two
+> `SUPABASE_*` variables are still unset in Vercel.
 >
 > The SQL was validated against a real Postgres inside a transaction that was
 > rolled back: tables, foreign keys, the insert/approve flow and RLS all checked
 > out, and nothing persisted.
+>
+> **Still true on 3 September, and now blocking a second thing.** Re-checked
+> that day: the API still answers "you do not have permission" for that ref, and
+> `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are set in no Vercel environment
+> at all. The 404 log (§0f) is queued behind the same credential, so this is one
+> access problem holding two features rather than two separate jobs. §10.
 
 ### Still open
 
@@ -966,7 +2219,85 @@ shake out prompt-level behaviour on the first real use.
 
 ---
 
-## 13c. The public chat assistant (`/api/chat`), built 2026-08-26
+## 13c. The site's Supabase project (2026-09-06)
+
+**`masterkraft-site`, ref `vnemkpduafnjxhkasqif`, region `ap-southeast-2` (Sydney),
+in the MASTERKRAFT org.** All four migrations are applied and 404 products plus
+11 categories of copy are loaded.
+
+### The mistake this section exists to stop repeating
+
+Three sessions - 25 August, 3 September, and the first half of 6 September - were
+told by this document that the site's database was `pmydkwszkgjnolrcnenh`, could
+not reach it, and recorded the blocker as an access problem. **It was never the
+site's database.** It is the **Catalogues** project: it holds `catalogue_quotes`
+and `catalogue_quote_staff` for `masterkraft-portals-franchisee`, and it lives in
+`ap-northeast-2` (Seoul).
+
+So the blocker was never a permission to chase. Every attempt was trying to put
+the site's tables into another app's database, in the wrong hemisphere.
+
+**Three projects exist in the MASTERKRAFT org**, and it is worth knowing which is
+which before touching any of them:
+
+| project | ref | region | whose |
+|---|---|---|---|
+| `masterkraft-site` | `vnemkpduafnjxhkasqif` | Sydney | **this repo** |
+| Catalogues | `pmydkwszkgjnolrcnenh` | Seoul | franchisee portal |
+| masterkraft-admin | - | Sydney | the admin app |
+| snap-portal | - | Sydney | paused |
+
+### Why a separate project rather than sharing
+
+The `service_role` key bypasses RLS entirely. Putting the site's tables in the
+franchisee portal's database would mean the portal's key could read the site's
+admin identity table and its audit trail, and the site's key could read every
+franchisee's quotes. Those are different trust boundaries and one leaked key
+would cross both. `masterkraft-admin` already has its own project, so one project
+per app was the established pattern, not a new idea.
+
+It was also the cheapest possible moment: the site owned zero tables anywhere, so
+nothing had to be migrated.
+
+### What is in it
+
+Eight tables, **every one with RLS enabled and no policies**, which denies `anon`
+and `authenticated` outright and leaves the service role key - server code only -
+as the only way in.
+
+| table | migration | rows |
+|---|---|---|
+| `product_content` | `20260905_product_content.sql` | **404** |
+| `category_content` | `20260905_category_content.sql` | **11** |
+| `not_found_hits` | `20260903_not_found_hits.sql` | 0 |
+| `admin_users`, `admin_login_codes`, `agent_conversations`, `agent_messages`, `agent_actions` | `20260825_admin_identity_and_audit.sql` | 0 |
+
+### The content load changed nothing on the site
+
+Deliberately. It is a COPY, not a move: **no application code reads
+`product_content` or `category_content`**, and the site still serves every word
+from the committed snapshot in `src/data`. Verified after loading - the home page,
+the listing and a product page all still render their snapshot copy.
+
+Three things stand between here and the site reading from the database, and none
+of them has been done:
+
+1. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Vercel Production.
+2. Code that prefers a database row and **falls back to the snapshot** when there
+   is none - 404 of ~512 snapshot products have rows, and the rest are products
+   the ERP does not know, so a missing row must degrade to today rather than to
+   an empty page.
+3. A way to edit it. Otherwise one frozen store has been swapped for another, and
+   the point of the move was that somebody other than an engineer can change the
+   words.
+
+`npm run load:content` reports what it would write and writes nothing;
+`load:content:write` applies it. It is idempotent, and it tracks whether a row is
+**loader-owned** or **edited by a human** - after the first load all 404 are
+loader-owned and safe to refresh, and any row a person edits afterwards is skipped
+rather than overwritten by the frozen original.
+
+## 13d. The public chat assistant (`/api/chat`), built 2026-08-26
 
 A customer-facing chat widget on every page of the website. Related to 13b but a
 **separate build**, and the separation is the whole point.
@@ -1066,6 +2397,8 @@ each, 12000 total.
    order lookup.
 4. Only then set the flag in Vercel Production. It is a `NEXT_PUBLIC_` var, so it
    needs a rebuild, not just a redeploy.
+
+---
 
 ## 14. Reference: brand, navigation, shop, content, REVL, resources
 
