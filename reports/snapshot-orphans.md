@@ -2,12 +2,12 @@
 
 Generated 2026-09-07 · `npm run report:orphans`
 
-127 snapshot products have no record in Unleashed — checked against every
+126 snapshot products have no record in Unleashed — checked against every
 code it holds, obsolete included.
 
 | | count |
 |---|---:|
-| **Needs a decision** | 1 |
+| **Needs a decision** | 0 |
 | **Live size pickers over stock nobody holds** | 0 |
 | Size containers — correct, the ERP holds the sizes | 126 |
 | Obsolete or hidden — do not render | 61 |
@@ -15,16 +15,9 @@ code it holds, obsolete included.
 
 ## The list
 
-Live on masterkraft.com, photographed, priced, and invisible to inventory.
-**Is this stock actually in the warehouse?** If it is, it needs an ERP record.
-If it is not, the page should go.
-
-### Clearance (1)
-
-A-prefixed ex-display stock, listed on /clearance.
-
-| SKU | product | image renders |
-|---|---|---|
-| `ABPBMS-01-1` | Plyometric Box 45cm | yes |
+**Nothing.** Every product the site serves resolves to an Unleashed record —
+directly, through the alias map, or as a size container whose sizes the ERP
+holds. This is the state to keep the report in; anything appearing here is a
+page selling stock no system can confirm.
 
 Every row, including the harmless ones, is in `reports/snapshot-orphans.csv`.

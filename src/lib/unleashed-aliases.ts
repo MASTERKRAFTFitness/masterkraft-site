@@ -143,10 +143,22 @@ const generatedAliases: Record<string, string> = {
 // Unleashed also carries C2BIKEERG (Bike Erg, $2,145 inc-GST) which has NO
 // WooCommerce product, so it cannot be mapped: the Bike Erg is missing from the
 // site entirely. Add the product in WooCommerce first, then map it here.
+//
+// ABPBMS-01-1 IS THE 45cm PLYO BOX and the matcher could not see its target:
+// GET /Products hides obsolete records, ABPBMS02 is one, so the code the box
+// belongs to was invisible to the pass that generated the block above. It was
+// the last row on reports/snapshot-orphans.md's "needs a decision" list, read
+// there as stock the ERP had never heard of. It is not — the ERP retired it.
+// Its 30cm sibling was already mapped (ABPBMS-01 -> ABPBMS01, likewise
+// retired); this is the same product, one size up, and the pair now behave the
+// same way. Mapping it retires the /clearance page, which is the point: the
+// site was selling a box the ERP had marked unsellable. Confirmed by Michael
+// 2026-09-07.
 const manualAliases: Record<string, string> = {
   SCRWAR04: "C2ROWERG", // C2 Rower Model D PM5 Black
   SCSTAR03: "C2SKIERG", // C2 Ski Erg PM5
   SCSTACC04: "C2SKIERGFS", // C2 Ski Erg Floor Stand
+  "ABPBMS-01-1": "ABPBMS02", // Plyometric Box 45cm -> "Plyometric Box - 45cm (Steel)"
 };
 
 export const skuAliases: Record<string, string> = { ...generatedAliases, ...manualAliases };

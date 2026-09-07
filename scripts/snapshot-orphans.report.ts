@@ -255,10 +255,20 @@ it("snapshot orphans", { timeout: 300_000 }, async () => {
     "",
     "## The list",
     "",
-    "Live on masterkraft.com, photographed, priced, and invisible to inventory.",
-    "**Is this stock actually in the warehouse?** If it is, it needs an ERP record.",
-    "If it is not, the page should go.",
-    "",
+    ...(actionable.length
+      ? [
+          "Live on masterkraft.com, photographed, priced, and invisible to inventory.",
+          "**Is this stock actually in the warehouse?** If it is, it needs an ERP record.",
+          "If it is not, the page should go.",
+          "",
+        ]
+      : [
+          "**Nothing.** Every product the site serves resolves to an Unleashed record —",
+          "directly, through the alias map, or as a size container whose sizes the ERP",
+          "holds. This is the state to keep the report in; anything appearing here is a",
+          "page selling stock no system can confirm.",
+          "",
+        ]),
     ...(byChannel("clearance").length
       ? [
           `### Clearance (${byChannel("clearance").length})`,

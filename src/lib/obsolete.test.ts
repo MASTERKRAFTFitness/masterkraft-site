@@ -142,10 +142,16 @@ describe("what may have a page on the public site", () => {
 
 describe("the allowlist changes nothing today", () => {
   // Inverting the rule is only safe if it serves exactly what the denylist did.
-  // 220 is what the live sitemap carried after the REVL exclusion shipped, so
+  // 220 was what the live sitemap carried after the REVL exclusion shipped, so
   // if this number moves, a real product just gained or lost a page.
-  it("serves the same 220 products the denylist did", async () => {
+  //
+  // 220 -> 219 on 2026-09-07: the Plyometric Box 45cm lost its page, on purpose.
+  // The ERP had it retired all along as ABPBMS02, and the site could not tell
+  // because nothing mapped the WooCommerce SKU to it — see unleashed-aliases.
+  // Adding that alias let isRetiredSku find it, which is the rule working, not
+  // a product disappearing. Move this number only with the same kind of reason.
+  it("serves the same 219 products the denylist did", async () => {
     const { allProducts } = await import("@/lib/catalogue");
-    expect(filterListable(allProducts()).length).toBe(220);
+    expect(filterListable(allProducts()).length).toBe(219);
   });
 });
