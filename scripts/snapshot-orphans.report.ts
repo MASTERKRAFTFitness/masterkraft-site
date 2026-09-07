@@ -25,13 +25,22 @@
 // ERP had never heard of — they are in it, under the other scheme. Use the same
 // resolution lookupBySku uses, or the report invents work.
 //
-// MOST ORPHANS ARE HARMLESS and the report says so rather than listing 151 rows
-// as if they were all work:
+// MOST ORPHANS ARE HARMLESS and the report says so rather than listing all 127
+// rows as if they were all work:
 //
-//   -GROUP CODES ARE CORRECT. MMDBRH-GROUP and its kind are WooCommerce's
-//   variable-product wrappers. The ERP holds the individual sizes — MMDBRH01,
-//   MMDBRH12 — and erpUnits() collapses them into one card at render time. The
-//   ERP not knowing the wrapper is the design working, not a gap.
+//   CONTAINERS ARE CORRECT. MMDBRH-GROUP and its kind exist only to group sizes.
+//   The ERP holds the individual ones — MMDBRH01, MMDBRH12 — and erpUnits()
+//   collapses them into one card at render time. The ERP not knowing the
+//   container is the design working, not a gap.
+//
+//   A CONTAINER IS NOT ONLY A `-GROUP` CODE, and testing the suffix alone is the
+//   bug this report shipped with. 70 of the 126 containers are bare `variable`
+//   products carrying no suffix at all — AMDBRH, MWBBFUR, AWWPOU — whose sizes
+//   the ERP holds as AMDBRH01, MWBBFUR01, AWWPOU01. Eight of those were live on
+//   the site, so billing them as work put 9 rows on the list somebody has to act
+//   on when only one of them was real. Test the
+//   STRUCTURE (does this record exist to hold variations?) and then ask whether
+//   the ERP holds what it stands for.
 //
 //   HIDDEN AND RETIRED ONES DO NOT RENDER. They are snapshot residue.
 //
@@ -48,6 +57,7 @@ import crypto from "node:crypto";
 import { existsSync } from "node:fs";
 import { it } from "vitest";
 import { allProducts } from "@/lib/catalogue";
+import { anchorCodes } from "@/lib/ranges";
 import { isObsolete, isPublicSiteSku, isPortalOnlyBrand, type WcProduct } from "@/lib/woocommerce";
 import { skuAliases } from "@/lib/unleashed-aliases";
 
@@ -67,7 +77,15 @@ const env = Object.fromEntries(
 type RawProduct = { ProductCode?: string };
 
 async function productsPage(n: number) {
-  const q = "pageSize=200";
+  // includeObsolete=true IS LOAD-BEARING. GET /Products hides obsolete records
+  // by default: without it Unleashed returns 1,484 products, every one saying
+  // Obsolete:false, which reads convincingly as "this company never retires
+  // anything". With it, 2,364, of which 880 are obsolete. This report claims to
+  // check against EVERY code the ERP holds, obsolete included, and shipped for
+  // a month not doing it — so 19 products the ERP had merely RETIRED were
+  // reported as ones it had never heard of. Same trap, same wording, as
+  // scripts/build-obsolete-skus.mjs. The field is `Obsolete`, not `IsObsolete`.
+  const q = "pageSize=200&includeObsolete=true";
   const res = await fetch(`https://api.unleashedsoftware.com/Products/${n}?${q}`, {
     headers: {
       "api-auth-id": env.UNLEASHED_API_ID,
@@ -111,13 +129,51 @@ it("snapshot orphans", { timeout: 300_000 }, async () => {
   }
   // EVERY code, sellable or not. See the note above.
   const known = new Set(erp.filter((p) => p.ProductCode).map((p) => p.ProductCode!.toUpperCase()));
+  // A short read means includeObsolete quietly stopped applying, and every
+  // retired product would be reported as an orphan. Fail rather than publish it.
+  if (known.size < 1500) {
+    throw new Error(
+      `Only ${known.size} ERP codes came back, expected ~1,900 with obsolete ` +
+        `records included — includeObsolete did not apply. Refusing to write.`
+    );
+  }
+
+  /** Direct match first, then the alias — the order lookupBySku uses. */
+  const resolves = (code: string) => {
+    const alias = skuAliases[code]?.toUpperCase();
+    return known.has(code) || (!!alias && known.has(alias));
+  };
+
+  /**
+   * Does the ERP hold a `<stem><digits>` code — that is, does it know this
+   * FAMILY, whatever WooCommerce calls the container standing in front of it?
+   *
+   * The fallback for when anchor codes cannot answer, which happens two ways:
+   * AMKBUR-GROUP has no variations in the snapshot at all, and MFRFRR-GROUP's
+   * four are on a code scheme the ERP has retired. Both look like the ERP has
+   * never heard of the product, and both are wrong — it carries AMKBUR01-06 and
+   * MFRFRR01/03/06. What is stale there is WooCommerce's own bookkeeping, which
+   * is a different report's problem.
+   *
+   * USED ONLY TO ASK "DOES THE ERP KNOW THIS FAMILY", never to build a range's
+   * member list. lib/ranges is explicit that the stem is the wrong key for that
+   * — MWBBFUR holds three unrelated barbells — and it remains wrong for it.
+   */
+  const stemKnown = (stem: string) => {
+    const re = new RegExp(`^${stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\d+$`);
+    for (const c of known) if (re.test(c)) return true;
+    return false;
+  };
 
   type Row = {
     code: string;
     name: string;
     slug: string;
     channel: "public" | "clearance" | "portal";
-    isGroup: boolean;
+    /** A WooCommerce record that exists only to group sizes. */
+    container: boolean;
+    /** A container whose sizes the ERP does hold: harmless, not work. */
+    covered: boolean;
     obsolete: boolean;
     renders: boolean;
     servable: boolean;
@@ -127,21 +183,27 @@ it("snapshot orphans", { timeout: 300_000 }, async () => {
   for (const p of allProducts() as WcProduct[]) {
     const code = (p.sku ?? "").trim().toUpperCase();
     if (!code) continue;
-    // Direct match first, then the alias — the order lookupBySku uses.
-    const alias = skuAliases[code]?.toUpperCase();
-    if (known.has(code) || (alias && known.has(alias))) continue;
+    if (resolves(code)) continue;
     const obsolete = isObsolete(p);
     const channel = isPortalOnlyBrand(code)
       ? ("portal" as const)
       : code.startsWith("A")
         ? ("clearance" as const)
         : ("public" as const);
+    // STRUCTURE FIRST: a `-GROUP` suffix or a bare `variable` product holding
+    // variations. Both exist only to group sizes; the suffix is one spelling of
+    // the same thing, not the definition. See the note at the top of the file.
+    const anchors = anchorCodes(p);
+    const container = /-GROUP$/i.test(code) || anchors.length > 0;
+    // Mirrors lib/ranges' private stemOf: `-GROUP` and `-1` are bundle suffixes.
+    const stem = code.replace(/-(?:GROUP|1)$/i, "");
     rows.push({
       code,
       name: p.name,
       slug: p.slug,
       channel,
-      isGroup: /-GROUP$/i.test(code),
+      container,
+      covered: container && (anchors.some(resolves) || stemKnown(stem)),
       obsolete,
       renders: imageResolves(code, p),
       servable: !obsolete && isPublicSiteSku(code),
@@ -149,19 +211,26 @@ it("snapshot orphans", { timeout: 300_000 }, async () => {
   }
 
   // The list somebody has to do something about: live on the site, and not a
-  // variable-product wrapper the ERP is right not to have.
+  // container the ERP is right not to have.
   const actionable = rows
-    .filter((r) => r.servable && !r.isGroup)
+    .filter((r) => r.servable && !r.container)
+    .sort((a, b) => a.code.localeCompare(b.code));
+
+  // A container is only harmless while the ERP holds what it stands for. One
+  // that is live on the site and backed by nothing at all is a different gap,
+  // and a real one — the page offers a size picker over stock no system has.
+  const stranded = rows
+    .filter((r) => r.servable && r.container && !r.covered)
     .sort((a, b) => a.code.localeCompare(b.code));
 
   mkdirSync("reports", { recursive: true });
   writeFileSync(
     CSV,
     csv([
-      ["SKU", "Name", "Slug", "Channel", "-GROUP wrapper", "Obsolete", "Image renders", "Servable on site"],
+      ["SKU", "Name", "Slug", "Channel", "Size container", "ERP holds the sizes", "Obsolete", "Image renders", "Servable on site"],
       ...rows
         .sort((a, b) => Number(b.servable) - Number(a.servable) || a.code.localeCompare(b.code))
-        .map((r) => [r.code, r.name, r.slug, r.channel, r.isGroup, r.obsolete, r.renders, r.servable]),
+        .map((r) => [r.code, r.name, r.slug, r.channel, r.container, r.covered, r.obsolete, r.renders, r.servable]),
     ])
   );
 
@@ -179,7 +248,8 @@ it("snapshot orphans", { timeout: 300_000 }, async () => {
     "| | count |",
     "|---|---:|",
     `| **Needs a decision** | ${actionable.length} |`,
-    `| \`-GROUP\` wrappers — correct, the ERP holds the sizes | ${count((r) => r.isGroup)} |`,
+    `| **Live size pickers over stock nobody holds** | ${stranded.length} |`,
+    `| Size containers — correct, the ERP holds the sizes | ${count((r) => r.covered)} |`,
     `| Obsolete or hidden — do not render | ${count((r) => r.obsolete)} |`,
     `| Portal brands — not listed on the public site | ${count((r) => r.channel === "portal")} |`,
     "",
@@ -211,10 +281,26 @@ it("snapshot orphans", { timeout: 300_000 }, async () => {
           "",
         ]
       : []),
+    ...(stranded.length
+      ? [
+          `## Size pickers backed by nothing (${stranded.length})`,
+          "",
+          "These are containers, so the ERP is right not to hold the container —",
+          "but it holds none of the SIZES either, under any code. The page renders a",
+          "picker and the ERP cannot price or stock a single option behind it.",
+          "",
+          "| SKU | product | channel |",
+          "|---|---|---|",
+          ...stranded.map((r) => `| \`${r.code}\` | ${r.name} | ${r.channel} |`),
+          "",
+        ]
+      : []),
     `Every row, including the harmless ones, is in \`${CSV}\`.`,
     "",
   ];
   writeFileSync(MD, md.join("\n"));
 
-  console.log(`orphans: ${rows.length} total, ${actionable.length} needing a decision`);
+  console.log(
+    `orphans: ${rows.length} total, ${actionable.length} needing a decision, ${stranded.length} stranded containers`
+  );
 });
