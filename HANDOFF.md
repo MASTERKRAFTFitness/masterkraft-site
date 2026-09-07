@@ -765,6 +765,101 @@ $22.00 plus Australia Post $23.29, $45.29 - and is waiting on a card.
 
 ---
 
+## 0h. Shipped 2026-09-07 - a false alarm, and two reports that lied quietly
+
+### THE EASYSHIP ALERT IS A FALSE ALARM, AND EASYSHIP IS NOT DOWN
+
+Steve has been receiving `MasterKraft freight: Easyship is rejecting our
+requests`, which says the request is malformed, that it "affects EVERY quote, not
+some", and that the carrier "is effectively switched off". **None of that is true
+of the thing actually firing it.** Easyship answered every scenario in
+`npm run check:carriers` on 7 September, bulky included.
+
+The detail line the email carries is Easyship's `error.message` plus
+`error.details` (`lib/freight.ts`, the `!res.ok` branch). Probed against the live
+rates endpoint, that exact string comes from a consignment no courier will take:
+
+| consignment | Easyship |
+|---|---|
+| 1 x 300cm carton, 80kg | 200, five rates |
+| **2 x 300cm carton, 80kg** | **422 "No shipping solutions available based on the information provided"** |
+| 1 x 300 x 300 x 30cm (2.7m3) | **422, same string** |
+| 1-4 x 224cm barbell | 200 (six rates at qty 1, one at qty 2+) |
+| blank destination state | 422 "destination_address.state can't be blank" |
+
+**Every one of those cartons passes `isPlausibleCarton`.** 300cm is exactly
+`MAX_PLAUSIBLE_SIDE_CM` and 2.7m3 is inside the 3m3 ceiling, so nothing upstream
+is wrong. It is one parcel per unit meeting a quantity: a customer who adds a
+SECOND long, heavy item takes the consignment from five options to a 422.
+
+Three things turn that into mail:
+
+1. **`classifyFailure` matches on the wrapper, not the fault.** It tests for
+   `"not valid"`, and "The request body content is not valid." is what Easyship
+   wraps EVERY 422 in - a real malformed request and an unservable cart arrive
+   worded identically. So a per-cart outcome lands in `config`, the bucket built
+   for the 6 September `line_1` outage.
+2. **The `config` email then asserts things that are false here** - every quote,
+   carrier switched off. Written for an outage, sent for a cart.
+3. **The six-hour cooldown does not hold in production.** `lastAlerted` is a
+   module-scope `Map`, so on Vercel it is per lambda instance, not per carrier.
+   That is why the mail repeats.
+
+Nothing is broken for a customer: the router fails soft, Australia Post still
+answers, and an unquotable consignment falls back to "Calculated on quote", which
+is the right outcome for a cart that genuinely needs a person.
+
+**NOT YET FIXED.** Classify on `error.details` rather than the wrapper `message`,
+give "no shipping solutions" a class that logs without emailing, and move the
+cooldown somewhere that survives a cold start - Supabase is already wired.
+
+**And find out who the alerts go to.** The recipient is
+`FREIGHT_ALERT_EMAIL ?? QUOTE_TO_EMAIL` and `.env.local` sets neither to Steve,
+so production points one of them at him and nobody wrote down which. See §12.
+
+### A size container is a structure, not a `-GROUP` suffix
+
+`npm run report:orphans` decided "this WooCommerce record exists only to group
+sizes, so the ERP is right not to hold it" by testing `/-GROUP$/`. That is one
+SPELLING of a container, not the definition. 70 of the 126 containers carry no
+suffix at all - `AMDBRH`, `MWBBFUR`, `AWWPOU` - and the ERP holds their sizes as
+`AMDBRH01`, `MWBBFUR01`, `AWWPOU01`. Eight were live on the site, so the list
+somebody has to act on read **9 when one of them was real**.
+
+It now asks `anchorCodes()` whether the record holds variations (or whether its
+hidden twin does), which is the same question `lib/ranges` asks to build a card.
+
+**Splitting the two questions bought a gap the old shape could not express.**
+"Is this a container?" and "does the ERP hold what it stands for?" used to be one
+test, so a container backed by NOTHING looked exactly like a container backed by
+everything - a page rendering a size picker over stock no system has. There are
+none today. The report has a row for them now, so there will not be silently.
+
+### The same report claimed to count obsolete records, and did not
+
+Its own header said "checked against every code it holds, obsolete included" -
+for a month, while `GET /Products` hides obsolete records unless you ask. It
+returned 1,484 products every one of which said `Obsolete:false`, which reads
+convincingly as a company that never retires anything; with
+`includeObsolete=true` it returns 2,364, of which 880 are obsolete. **19 products
+the ERP had merely RETIRED were being reported as ones it had never heard of.**
+
+This is the same trap, with the same wording, as `build-obsolete-skus.mjs`. The
+field is `Obsolete`, not `IsObsolete`. A short read now throws rather than
+publishing a list in which every retired product is an orphan.
+
+### §12 described staging, eleven days after the cutover
+
+It listed `NEXT_PUBLIC_ALLOW_INDEX` as unset "(correct for staging)" and
+`FREIGHT_COLLECTION_*` as unset - while the paragraph nine lines above it said
+`FREIGHT_COLLECTION_*` was set, and the apex has served an indexable `robots.txt`
+since 27 August. Believing that section meant believing the live site was
+`noindex` and that freight had no origin to quote from. Only `INTERPARCEL_API_KEY`
+is genuinely unset, and it is dead rather than pending: nothing has read it since
+Australia Post and Easyship replaced Interparcel in `3453487`.
+
+---
+
 ## 1. Start here
 
 - Code: `~/Desktop/masterkraft-site`. Next.js 16 (App Router, Turbopack), TS, Tailwind.
