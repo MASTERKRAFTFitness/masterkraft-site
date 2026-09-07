@@ -381,6 +381,96 @@ function parseUnleashedDate(value?: string): string | null {
   return m ? new Date(Number(m[1])).toISOString() : null;
 }
 
+export type SalesOrder = {
+  orderNumber: string;
+  status: string | null;
+  orderedAt: string | null;
+  total: number | null;
+  lines: { name: string | null; code: string | null; qty: number }[];
+  /**
+   * Every email address recorded against this order, lowercased.
+   *
+   * Only the labelled `Email:` line that `buildComments` writes is accepted,
+   * plus a structured customer email if Unleashed carries one. A loose scan for
+   * anything @-shaped is deliberately NOT done: Comments also carries staff
+   * notes, and an address that leaked in there would become a way to unlock
+   * somebody else's order.
+   */
+  emails: string[];
+};
+
+type RawSalesOrder = {
+  OrderNumber?: string;
+  OrderStatus?: string;
+  OrderDate?: string;
+  Total?: number | null;
+  Comments?: string | null;
+  Customer?: { Email?: string | null; CustomerName?: string | null } | null;
+  SalesOrderLines?: {
+    Product?: { ProductCode?: string | null; ProductDescription?: string | null } | null;
+    OrderQuantity?: number | null;
+  }[];
+};
+
+function emailsOn(raw: RawSalesOrder): string[] {
+  const found = new Set<string>();
+  // buildComments writes "Email: someone@example.com" on its own line. Match
+  // that shape and nothing else.
+  const labelled = /^Email:[ \t]*(\S+@\S+?)[ \t]*$/gim;
+  const comments = String(raw.Comments ?? "");
+  for (const m of comments.matchAll(labelled)) found.add(m[1].toLowerCase());
+  const structured = raw.Customer?.Email?.trim().toLowerCase();
+  // A shared "website customer" account would put the same address on every
+  // order, so it is only useful when the account is per-order or match-email.
+  if (structured) found.add(structured);
+  return [...found];
+}
+
+/**
+ * One sales order, by the number the customer quotes.
+ *
+ * Orders have been written into Unleashed rather than WooCommerce since
+ * 2026-09-06, and WC_STORE_URL points at a host with no WooCommerce behind it,
+ * so this is the only place an order can be read from.
+ *
+ * Returns null when nothing matches EXACTLY. Unleashed's orderNumber filter is
+ * a prefix-ish search, so 490118 can return 4901180: the caller must never be
+ * handed a near miss.
+ */
+export async function getSalesOrder(orderNumber: string): Promise<SalesOrder | null> {
+  const wanted = orderNumber.trim();
+  if (!wanted) return null;
+
+  const query = `pageSize=200&orderNumber=${encodeURIComponent(wanted)}`;
+  const res = await fetch(`${BASE}/SalesOrders/1?${query}`, {
+    headers: {
+      "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
+      "api-auth-signature": sign(query),
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0",
+    },
+    cache: "no-store", // an order status is the one thing that must never be stale
+  });
+  if (!res.ok) throw new Error(`Unleashed ${res.status} on SalesOrders/${wanted}`);
+
+  const data = (await res.json()) as { Items?: RawSalesOrder[] };
+  const exact = (data.Items ?? []).find((o) => String(o.OrderNumber ?? "").trim() === wanted);
+  if (!exact) return null;
+
+  return {
+    orderNumber: String(exact.OrderNumber),
+    status: exact.OrderStatus ?? null,
+    orderedAt: parseUnleashedDate(exact.OrderDate),
+    total: typeof exact.Total === "number" ? exact.Total : null,
+    lines: (exact.SalesOrderLines ?? []).map((l) => ({
+      name: l.Product?.ProductDescription ?? null,
+      code: l.Product?.ProductCode ?? null,
+      qty: l.OrderQuantity ?? 0,
+    })),
+    emails: emailsOn(exact),
+  };
+}
+
 /**
  * Every shipment recorded against one order number, newest first.
  *

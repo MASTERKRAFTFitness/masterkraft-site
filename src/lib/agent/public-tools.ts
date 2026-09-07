@@ -17,8 +17,7 @@
 // intended one.
 
 import type Anthropic from "@anthropic-ai/sdk";
-import { getOrder, ordersConfigured } from "@/lib/wc-admin";
-import { getShipmentsForOrder } from "@/lib/unleashed";
+import { getSalesOrder, getShipmentsForOrder } from "@/lib/unleashed";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { orderLookupBlocked, recordOrderMiss } from "@/lib/agent/rate-limit";
 import { toolByName, type AgentTool, type ToolInput } from "@/lib/agent/tools";
@@ -106,15 +105,18 @@ function redactFreight(output: unknown): unknown {
 
 // ------------------------------------------------------------- order status
 
-// Woo's internal status names mean nothing to a customer.
+// Unleashed's order statuses, which mean nothing to a customer. Website orders
+// are created as "Parked" (see buildSalesOrderPayload), so that is the one a
+// recent buyer is most likely to hit.
 const STATUS_PLAIN: Record<string, string> = {
-  pending: "Received, but payment has not come through yet.",
-  processing: "Paid and being prepared for despatch.",
-  "on-hold": "On hold. This usually means we are waiting on payment or confirming stock.",
-  completed: "Despatched.",
-  cancelled: "Cancelled.",
-  refunded: "Refunded.",
-  failed: "The payment did not complete, so the order has not been placed.",
+  Parked: "Received and waiting to be picked.",
+  Placed: "Confirmed and queued for picking.",
+  Backordered: "Confirmed, but waiting on stock to arrive.",
+  Picking: "Being picked in the warehouse now.",
+  Picked: "Picked and waiting to be packed.",
+  Packed: "Packed and waiting to go out.",
+  Completed: "Despatched.",
+  Deleted: "Cancelled.",
 };
 
 const orderStatusTool: PublicTool = {
@@ -133,10 +135,6 @@ const orderStatusTool: PublicTool = {
     },
   },
   run: async (input, ctx) => {
-    if (!ordersConfigured()) {
-      return { error: "Order lookup is unavailable at the moment. Use the contact form and the team will check for you." };
-    }
-
     const number = str(input.order_number).trim();
     const email = str(input.email).trim().toLowerCase();
     if (!number || !email) {
@@ -164,28 +162,29 @@ const orderStatusTool: PublicTool = {
       };
     };
 
-    const order = await getOrder(number).catch(() => null);
+    // The ERP is the only order store. WooCommerce stopped receiving orders on
+    // 2026-09-06 and WC_STORE_URL points at a host with no WooCommerce behind
+    // it, so reading it here would tell every customer their order does not
+    // exist. A thrown error is a miss too: an outage must not confirm anything.
+    const order = await getSalesOrder(number).catch(() => null);
     if (!order) return miss();
 
-    // getOrder falls back to the first search hit when nothing matches exactly,
-    // which is helpful for a staff member and dangerous here: it could hand back
-    // somebody else's order. Public callers get exact matches only.
-    if (String(order.number).trim() !== number) return miss();
-
-    const onOrder = (order.billing?.email ?? "").trim().toLowerCase();
-    if (!onOrder || onOrder !== email) return miss();
+    // The email lives in the free-text Comments block that buildComments
+    // writes, because a website order can sit under a shared ERP customer
+    // account. An order with no email recorded therefore cannot be unlocked at
+    // all, which is a worse experience than it sounds but the correct failure
+    // direction: it returns the same miss as everything else.
+    if (!order.emails.includes(email)) return miss();
 
     return {
       matched: true,
-      order_number: order.number,
+      order_number: order.orderNumber,
       status: order.status,
-      status_plain: STATUS_PLAIN[order.status] ?? "In progress.",
-      placed: order.date_created ?? null,
-      paid: Boolean(order.date_paid),
-      total: `${order.currency ?? "AUD"} ${order.total}`,
-      delivery_charged: order.shipping_total ?? null,
-      items: (order.line_items ?? []).map((l) => ({ name: l.name, sku: l.sku || null, qty: l.quantity })),
-      ...(await despatchFacts(number)),
+      status_plain: order.status ? STATUS_PLAIN[order.status] ?? "In progress." : "In progress.",
+      placed: order.orderedAt,
+      total: order.total === null ? null : `AUD ${order.total.toFixed(2)}`,
+      items: order.lines.map((l) => ({ name: l.name, sku: l.code, qty: l.qty })),
+      ...(await despatchFacts(order.orderNumber)),
     };
   },
 };
