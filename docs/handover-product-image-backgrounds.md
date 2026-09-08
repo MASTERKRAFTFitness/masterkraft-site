@@ -360,12 +360,35 @@ fetching the new default from the CDN and re-measuring its backdrop.
      the same black rubber, carrying only ~28 levels of shading. Erase-and-stamp
      would leave a flat number where the others have moulded depth.
 
-     WHAT WOULD WORK. The renders are pixel-aligned with identical lighting, so
-     the moulded "1" in the 15kg render is directly transplantable onto the 2.5kg
-     face — same relief, same shading, same canvas position. Only the horizontal
-     placement differs, because "15" is two glyphs and "2.5" is three. That is a
-     contained job and the honest one; it has NOT been done. Failing that, the
-     designer who owns the urethane renders regenerates 1.5 from source.
+     A GLYPH TRANSPLANT WAS ATTEMPTED AND ABANDONED. Recorded so nobody spends
+     the afternoon on it again. Three findings, in order:
+
+     1. THE NUMBER IS LEGIBLE WHERE IT MATTERS. Rendered at real display sizes
+        with no contrast tricks: illegible at a 160px grid thumbnail, faint on a
+        260px card, and plainly "2.5" TWICE at 420px product-page size. So the
+        mislabel is real on the page a buyer actually reads.
+
+     2. THERE IS NO INK TO LIFT. The numerals span greyscale 29-68; the bare
+        plate face beside them spans 31-65. They overlap almost entirely — the
+        moulding is perhaps 15-20 levels of shading, not a mark. (The crisp
+        relief you see when you open these crops is autocontrast, not the file.)
+        No threshold separates glyph from face.
+
+     3. THERE IS NO CLEAN BASE. The obvious trick — per-pixel MEDIAN across all
+        six renders, which are pixel-identical apart from their numerals — does
+        NOT erase them. All six numbers occupy the same zone and share strokes,
+        so the median still lands on ink and returns a ghosted mush. Verified;
+        see the diff counts, 1200-5378 px per render.
+
+     So a seam or a misplaced glyph would be as strong a signal as the glyph
+     itself. This needs the source scene, or a human retoucher with the layered
+     file — not a script.
+
+     ONE THING THAT CAN BE DONE CHEAPLY: `MWWPOU01` currently asserts a weight
+     its own photograph contradicts, live, on the shop and every catalogue that
+     resolves it. Detaching that image is one click and leaves it in the same
+     honest state as SWWPOU01. Not done — it needs Michael's call, because it
+     trades a wrong picture for no picture.
 
      Until then both records are better with no image than with a 2.5.
    - **3 are REVL "Freight & Delivery Allowance" line items** pointing at a
