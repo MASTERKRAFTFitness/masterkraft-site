@@ -25,6 +25,7 @@
     "recover:foreign": "node scripts/recover-foreign-photography.mjs",
     "stage:uploads": "node scripts/stage-unleashed-uploads.mjs",
     "archive:photography": "node scripts/archive-photography.mjs",
+    "create:snap": "node scripts/create-snap-products.mjs",
     "dedupe:images": "node scripts/dedupe-product-images.mjs",
     "compress:assets": "python3 scripts/compress-assets.py",
     "normalize:erp-bg": "python3 scripts/normalize-erp-bg.py",
