@@ -24,8 +24,11 @@ nearly shipped a no-op swap (see the first bug below).
 | `3a87937` | The Supabase gallery: `product_images` table, loader, read path, third image source |
 | `11d213b` | Clearance: the ERP's own `Clearance` group is listed beside the snapshot's |
 
-All four are on `main` and pushed. **`3a87937` is the last thing deployed**;
-`11d213b` (clearance) is merged but **not deployed**.
+All four are on `main` and pushed. **`11d213b` (clearance) went live on
+8 September** and is verified on the site: the six ERP clearance units are
+appended to `/equipment/clearance`, `/product/functional-trainer-clearance`
+exists so clearance did not take a live slug, and `/all-equipment` still
+excludes them.
 
 ### The swap, measured on the live site
 
@@ -58,7 +61,16 @@ photograph. **Weightlifting's 46 likely collapses the same way.**
 **THE NEXT USEFUL PIECE OF WORK is collapsing those 196 codes into distinct
 PRODUCTS**, by the range stem `getRange` already uses, so the output is a list of
 things to photograph rather than a list of SKUs. Nobody can plan a shoot from 196
-codes. This has not been built.
+codes. **Built on 8 September as `npm run report:shootlist` — the answer is 62
+products, not 196 codes. See `reports/photo-shoot-list.md`.**
+
+Two things that paragraph got wrong, both worth knowing before trusting it:
+**the range stem is NOT the key** — `MWBBFUR` holds both the straight and the
+curl barbell, so grouping on the stem reports one product where there are two;
+the key is brand plus the name before `" - "`. And **the separator alone reaches
+none of Apparel** — those names are `Sweatshirt (Unisex) (L)`, with no `" - "` in
+them, so the trailing garment size has to be stripped first. Splitting on the
+separator alone returned 142 products where there are 92.
 
 ### What is left in WooCommerce and not in Unleashed
 
@@ -164,14 +176,15 @@ npm run report:photoupload   stage missing size photographs for manual upload
 npm run load:images          DRY RUN — what product_images would change
 npm run load:images:write    apply it (upserts, prunes, skips human-edited rows)
 npm run report:clearance     where /equipment/clearance and Unleashed disagree
+npm run report:shootlist     the unphotographed codes, collapsed into products
 ```
 
 ## Open work, in the order it is worth doing
 
-1. **Collapse the 196 site codes into distinct products** so a shoot can be
-   planned. Not built. Biggest unlock and the reason this doc exists.
-2. **Deploy `11d213b`** — the clearance work is merged but not live.
-3. **Work the repaint queue.** Each `normalize-product-bg.py` batch makes more of
+1. ~~Collapse the 196 site codes into distinct products~~ **DONE** —
+   `npm run report:shootlist`, 62 products to photograph.
+2. ~~Deploy `11d213b`~~ **DONE** — live and verified on 8 September.
+3. **Work the repaint queue.** Now the top of the list. Each `normalize-product-bg.py` batch makes more of
    the 916 secondaries eligible; re-run `load:images:write` after each.
 4. **The Unleashed attribute import**, still aborted at row 12 of 328. Assembled
    size, Colour, Material and Warranty for 328 products. This is the last
