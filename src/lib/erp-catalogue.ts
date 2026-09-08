@@ -118,7 +118,7 @@ const EXCLUDED_GROUPS = new Set(["Other Costs", "Storage"]);
 // to FILL GAPS: where two brands offer the same name in the same group, the
 // earlier brand in this list wins and the other is dropped. Without that the
 // dumbbells get two cards at two prices.
-const BRAND_ORDER = ["MK", "CONCEPT 2", "NO BRAND"];
+export const BRAND_ORDER = ["MK", "CONCEPT 2", "NO BRAND"];
 const OUR_BRANDS = new Set(BRAND_ORDER);
 
 // HIDE WHAT CANNOT BE SHIPPED (Michael, 2026-09-06).
