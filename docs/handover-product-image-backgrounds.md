@@ -2,8 +2,16 @@
 
 ## The one thing to read first
 
-**The SNAP catalogue does not read images from Unleashed OR from WooCommerce.**
-It serves its own frozen copies, baked into its Vercel build:
+> **CORRECTED 2026-09-08 — read this before the paragraph below.** The claim
+> that the catalogue reads neither Unleashed nor WooCommerce is HALF WRONG, and
+> the wrong half is the one that matters. `brand-images.json` holds ~925
+> **Unleashed CDN URLs**, baked at build time and pinned to file GUIDs. Fixing a
+> photo in the ERP mints a NEW url and the old file keeps serving 200 forever, so
+> the fix reaches no catalogue until `npm run refresh:images` runs and the app is
+> redeployed. See "The catalogue app: what it ACTUALLY reads" below.
+
+**The SNAP catalogue serves frozen copies of the WooCommerce photography**,
+baked into its Vercel build:
 
 ```
 https://catalogues.masterkraft.com/woo-images/2023/11/MRSPFW01-1S-1.jpg?dpl=dpl_…
@@ -20,6 +28,86 @@ This was established late. A large amount of Unleashed work was done first on th
 assumption that the catalogue read the ERP live. That assumption was never
 verified until the image URL above was produced. The ERP work is real and correct
 — it just does not achieve the catalogue fix on its own.
+
+## Session summary — 2026-09-08
+
+What happened, in one place. Detail is in the sections below.
+
+### Unleashed: 91 products, every one verified through the API, never the UI
+
+| batch | done |
+|---|---|
+| Woo→ERP gap products (the set staged the day before) | 7 |
+| Gap fills from MasterKraft's own photography | 26 |
+| SNAP gap fills | 27 of 28 |
+| Secondary angles, as NON-default attachments | 17 |
+| Gold's backdrops repainted at source | 28 |
+| The last three ERP backdrops | 3 |
+
+Codes carrying a photograph: **1075 → 1108+**. Every upload that replaced a
+default kept the original as a non-default attachment, so each reverts in one
+click, and repaints are named `<CODE>-e6e6e6.jpg` so one can never be mistaken
+for the original beside it.
+
+### The catalogues: 38 off-tile → 0
+
+Gold's had 38 of 249 off-tile. Measured across all nine brands it was 24 DISTINCT
+IMAGES, not 62 items — the photography is shared, and `NBFATSY01` alone had five
+copies. All fixed; six commits, deployed, verified live.
+
+Root cause of why the ERP work was invisible: the baked GUID URLs above.
+`scripts/refresh-unleashed-images.py` (`npm run refresh:images`) exists now so
+that link is re-runnable rather than rediscovered. 108 entries were stale.
+
+### Corrections made during the session — all of these were WRONG first
+
+- "~1,070 secondary angles" — actually **54**. The first count summed
+  `images - 1` over snapshot products, sweeping in variable parents carrying
+  40-100 per-size photos whose sizes already had their own ERP pictures.
+- "The gap is now zero" — **57 remained**. The first count read only parent
+  product SKUs; WooCommerce VARIATION records carry their own images.
+- "174 products are rendering broken images in production" — overstated.
+  `legacy-redirects.json` 308s 172 of them; two are served.
+- "Vercel auth is broken, re-authenticate" — wrong, and it cost a
+  re-authentication that fixed nothing. `npx --yes vercel@latest` fetches a fresh
+  package that does NOT inherit the login; plain `npx vercel` works. The real
+  block was that Pro teams require the commit author to be a team member, and
+  this repo committed as a GitHub noreply address belonging to nobody.
+- "Suppress the image for FMDBUR20" — it is a RANGE CARD spanning 1-30kg, not a
+  1kg product, and all six Fernwood grouped cards show one size's photograph.
+  Suppressing would have left one card uniquely imageless.
+- "Shoot the 1.5kg plate" — they are RENDERS, not photographs. A photo would not
+  match the set, and restamping is the documented house method.
+
+### Stopped rather than shipped
+
+- **The 1.5kg plate restamp.** The marking is moulded relief spanning 15-20 grey
+  levels against a face at the same tone, and no clean base exists — a per-pixel
+  median across all six renders still lands on ink, because the numbers share a
+  zone. Wants the source scene or a retoucher.
+- **The three Snap gradient sweeps.** Four segmentation approaches failed; see
+  the catalogue repo's commit for which and why. Resolved by pointing at the
+  ERP's existing cutouts, on Michael's call — that also swaps RED renders for
+  the BLACK colourway, which is a product decision, not a background fix.
+
+### Deliberately left alone
+
+- **`SWWPOU01`** (1.5kg plate) and **`MWWPOU01`** — both now correctly hold NO
+  image. The only photograph available reads "2.5" in moulded text.
+- **20 `--drop-missing` entries** were held back; another session applied them.
+  Only two of the twenty are in a catalogue, and one, `FMDBUR20`, then fell
+  through to a 5KG render. Its own 1kg render now exists.
+
+### Working alongside another session
+
+Both repos had a second session committing throughout. Every commit here was
+staged file-by-file, and the last one used an isolated blob via `git hash-object`
+because that session had 25 entries pointing at PNGs still UNTRACKED — a plain
+`git add` would have shipped 25 references to files absent from the repo.
+
+`masterkraft-catalogues` now commits as `marketing@masterkraft.com`. That is what
+unblocked deploys, and any session in that repo inherits it silently.
+
 
 ## What the job was
 
