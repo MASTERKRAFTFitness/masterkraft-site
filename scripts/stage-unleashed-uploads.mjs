@@ -24,11 +24,34 @@
 //      ZERO. It is not zero;
 //   3. the product name, normalised.
 //
-// CHECK THE BRANDING BEFORE YOU UPLOAD. Some of these originals carry another
-// company's brand - the Trucker Hat's is literally
-// `fernwood-FITNESS-cool-greyred-1-拷贝.png` - and putting that on a MasterKraft
-// record would publish a competitor's garment as ours. Any source filename
-// naming another brand is flagged in the manifest. A human decides.
+// A MATCH ACROSS BRANDS IS ALMOST ALWAYS THE WRONG PICTURE, and this is the
+// rule that matters. The twin and name matches reach ANOTHER COMPANY'S SKU by
+// construction, and that company's photograph shows that company's logo:
+//
+//   MAAAU01  MK "Trucker Hat"        <- SAAAU01, a cap reading `snap fitness 24/7`
+//   MAAAU02  MK "Train Cap"          <- SAAAU02, another Snap-branded cap
+//   MWWPCNB07 MK "Pro Bumper Plates" <- SWWPCNB07, a plate moulded `REVL`
+//
+// So the check is a BRAND COMPARISON, not a filename one. The first cut of this
+// script scanned source filenames for competitor names and flagged 1 of the 14
+// cross-brand matches - it caught the Trucker Hat only because its file is
+// misleadingly called `fernwood-FITNESS-cool-greyred-1-拷贝.png` (the picture is
+// a Snap cap; the name is a leftover mockup), and it missed the Train Cap and
+// every REVL-moulded plate because those filenames are clean. Filenames do not
+// know what is in the photograph. The brands do.
+//
+// TWO CODES CLAIMING ONE FILE MEANS THE DATA IS WRONG, NOT THAT THEY MATCH.
+// WooCommerce variation data is not trustworthy per size: `SWWPOU01` is the
+// 1.5kg plate and its variation points at `SWWPOU02-1S.jpg`, the 2.5kg plate's
+// photograph, while `MWWPOU01` (also 1.5kg) points at `MWWPOU03-1S-3.jpg`, the
+// third size's. Commit cc38cf1 detached exactly that photograph from exactly
+// that code, and the first cut of this script staged it straight back. So a
+// source claimed by more than one target is QUARANTINED rather than guessed at,
+// which is the rule report:photoupload already follows.
+//
+// COST LINES ARE NOT PHOTOGRAPHABLE. `RFDAAS` is a freight allowance and its
+// snapshot image is a logistics clip-art; erp-catalogue already refuses the
+// Other Costs and Storage groups as categories, and they are refused here too.
 //
 // IT COMPLEMENTS report:photoupload RATHER THAN REPLACING IT. That one stages
 // per-SIZE photographs recovered from variation data, quarantining any source
@@ -60,7 +83,15 @@ for (const line of readFileSync(join(ROOT, ".env.local"), "utf8").split("\n")) {
 
 const ORIGIN_IP = process.env.LEGACY_MEDIA_IP ?? "103.26.237.235";
 const ORIGIN_HOST = process.env.LEGACY_MEDIA_HOST ?? "masterkraft.com";
-const OTHER_BRANDS = /fernwood|snap|revl|gold[s']?|hyper|airlocker|air-locker/i;
+// Where a SKU has no ERP record to read a brand from, the prefix is the brand.
+// Same letters lib/woocommerce and lib/erp-catalogue already use.
+const BRAND_BY_PREFIX = [
+  [/^SC/, "CONCEPT 2"],
+  [/^[MN]/, "MK"],
+  [/^S/, "SNAP"],
+  [/^F/, "FERNWOOD"],
+  [/^R/, "REVL"],
+];
 
 const sign = (q) => createHmac("sha256", env.UNLEASHED_API_KEY).update(q).digest("base64");
 
@@ -129,13 +160,17 @@ const variations = JSON.parse(readFileSync(join(ROOT, "src/data/variations.json"
 
 const bySku = new Map();
 const byName = new Map();
+const byNameSku = new Map();
 for (const p of products) {
   const imgs = (p.images ?? []).map((i) => i.src).filter(Boolean);
   if (!imgs.length) continue;
   const sku = (p.sku ?? "").trim().toUpperCase();
   if (sku && !bySku.has(sku)) bySku.set(sku, imgs);
   const n = norm(p.name);
-  if (n && !byName.has(n)) byName.set(n, imgs);
+  if (n && !byName.has(n)) {
+    byName.set(n, imgs);
+    byNameSku.set(n, sku);
+  }
 }
 for (const rows of Object.values(variations.byProductId ?? {})) {
   for (const v of rows) {
@@ -154,12 +189,36 @@ const twinsOf = (code) => {
 };
 
 const erp = await unleashedProducts();
+const byCode = new Map(erp.map((p) => [(p.ProductCode ?? "").trim().toUpperCase(), p]));
+const brandOf = (code) => {
+  const rec = byCode.get(code);
+  const named = rec?.ProductBrand?.BrandName?.trim();
+  if (named) return named.toUpperCase();
+  return BRAND_BY_PREFIX.find(([re]) => re.test(code))?.[1] ?? "";
+};
 const live = erp.filter((p) => p.IsSellable !== false && !p.Obsolete);
-const missing = live.filter((p) => !imageOf(p));
+// erp-catalogue's EXCLUDED_GROUPS. A freight allowance has nothing to photograph.
+const NOT_PHOTOGRAPHABLE = new Set(["Other Costs", "Storage"]);
+const missing = live.filter(
+  (p) => !imageOf(p) && !NOT_PHOTOGRAPHABLE.has((p.ProductGroup?.GroupName ?? "").trim())
+);
 console.log(`${live.length} live ERP codes, ${missing.length} with no photograph`);
+
+// HOW MANY SKUS IN THE SNAPSHOT POINT AT EACH FILE. Counted across the WHOLE
+// snapshot, not just the codes missing a photograph - the contest that matters
+// is with a code that ALREADY has the picture. `SWWPOU02-1S.jpg` is claimed by
+// SWWPOU01 (1.5kg, no image) and by SWWPOU02 (2.5kg, which owns it), and only
+// the second is outside the missing set. Counting within the missing set alone
+// finds no contest at all, which is how the first version of this check passed
+// the very case it was written for.
+const claim = new Map();
+for (const [, urls] of bySku) {
+  for (const u of urls) claim.set(u, (claim.get(u) ?? 0) + 1);
+}
 
 mkdirSync(OUT_DIR, { recursive: true });
 
+const quarantined = [];
 const staged = [];
 const unsourced = [];
 let got = 0,
@@ -168,10 +227,11 @@ let got = 0,
 
 for (const p of missing) {
   const code = (p.ProductCode ?? "").trim().toUpperCase();
-  let urls, how;
+  let urls, how, sourceSku;
   for (const t of twinsOf(code)) {
     if (bySku.has(t)) {
       urls = bySku.get(t);
+      sourceSku = t;
       how = t === code ? "exact code" : `twin ${t}`;
       break;
     }
@@ -180,11 +240,20 @@ for (const p of missing) {
     const n = norm(p.ProductDescription);
     if (byName.has(n)) {
       urls = byName.get(n);
-      how = "name";
+      sourceSku = byNameSku.get(n) ?? "";
+      how = sourceSku && sourceSku !== code ? `name (${sourceSku})` : "name";
     }
   }
   if (!urls) {
     unsourced.push({ code, name: p.ProductDescription ?? "" });
+    continue;
+  }
+  if ((claim.get(urls[0]) ?? 0) > 1) {
+    quarantined.push({
+      code,
+      name: p.ProductDescription ?? "",
+      source: decodeURIComponent(urls[0].split("/").pop() ?? ""),
+    });
     continue;
   }
 
@@ -204,8 +273,12 @@ for (const p of missing) {
     how,
     file: name,
     source: decodeURIComponent(file),
-    flagged: OTHER_BRANDS.test(decodeURIComponent(file)),
+    sourceSku: sourceSku ?? "",
+    targetBrand: brandOf(code),
+    sourceBrand: sourceSku ? brandOf(sourceSku) : "",
+    flagged: false,
   };
+  row.flagged = !!row.sourceBrand && row.sourceBrand !== row.targetBrand;
 
   if (existsSync(dest) && statSync(dest).size > 0) {
     already++;
@@ -242,6 +315,7 @@ const md = [
   "|---|---:|",
   `| ERP codes with no photograph | ${missing.length} |`,
   `| …a photograph exists and is staged | **${staged.length}** |`,
+  `| …quarantined, two codes claim one file | ${quarantined.length} |`,
   `| …nothing anywhere | ${unsourced.length} |`,
   "",
   `## Check the branding first (${flagged.length})`,
@@ -259,7 +333,18 @@ const md = [
   "|---|---|---|---|",
   ...clean.map((r) => `| \`${r.code}\` | ${r.name} | ${r.how} | \`${r.file}\` |`),
   "",
-  `## No photograph anywhere (${unsourced.length})`,
+  `## Quarantined — two codes claim one photograph (${quarantined.length})`,
+    "",
+    "Not staged, deliberately. WooCommerce variation data is not reliable per size:",
+    "`SWWPOU01` is the 1.5kg plate and points at the 2.5kg plate's photograph. Commit",
+    "`cc38cf1` detached exactly that picture from exactly that code. Guessing which of",
+    "the claimants is right re-introduces the bug, so neither is written.",
+    "",
+    "| ProductCode | product | contested file |",
+    "|---|---|---|",
+    ...quarantined.map((r) => `| \`${r.code}\` | ${r.name} | \`${r.source}\` |`),
+    "",
+    `## No photograph anywhere (${unsourced.length})`,
   "",
   "Neither Unleashed nor WooCommerce has one. These need a camera, not a search —",
   "`npm run report:shootlist` collapses the MasterKraft half into the products behind",
@@ -274,5 +359,7 @@ const md = [
 writeFileSync(MD, md.join("\n"));
 
 console.log(`\nstaged ${staged.length} (downloaded ${got}, already present ${already}, failed ${failed})`);
-console.log(`  branding to check ${flagged.length}, ready ${clean.length}, no source ${unsourced.length}`);
+console.log(
+  `  cross-brand ${flagged.length}, ready ${clean.length}, quarantined ${quarantined.length}, no source ${unsourced.length}`
+);
 console.log(`-> reports/unleashed-upload-images/  (manifest: reports/unleashed-uploads.md)`);
