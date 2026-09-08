@@ -48,7 +48,7 @@ rather than silently removed.
 | Sweatshirt (Unisex) | MK | 4 | S, M, L, XL |
 | Tank (Male) | MK | 4 | S, M, L, XL |
 | Tank (Woman) | MK | 4 | S, M, L, XL |
-| Training Shorts | MK | 4 | S, M, L, XL |
+| Training Shorts - 7" (Male) | MK | 4 | S, M, L, XL |
 | Socks | MK | 1 | — |
 | Sweat Towel | MK | 1 | — |
 | Train Cap | MK | 1 | — |
