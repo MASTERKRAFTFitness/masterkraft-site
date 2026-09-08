@@ -384,11 +384,25 @@ fetching the new default from the CDN and re-measuring its backdrop.
      itself. This needs the source scene, or a human retoucher with the layered
      file — not a script.
 
-     ONE THING THAT CAN BE DONE CHEAPLY: `MWWPOU01` currently asserts a weight
-     its own photograph contradicts, live, on the shop and every catalogue that
-     resolves it. Detaching that image is one click and leaves it in the same
-     honest state as SWWPOU01. Not done — it needs Michael's call, because it
-     trades a wrong picture for no picture.
+     **`MWWPOU01` IS NOW DETACHED (2026-09-08, on Michael's instruction).** It
+     was asserting a weight its own picture contradicted, live. The attachment
+     was named `MWWPOU02-1S.jpg` — the 2.5kg product's file — so the filename
+     recorded the error outright.
+
+     DETACH, NOT DELETE. The file itself is untouched and still resolves at its
+     CDN URL (verified HTTP 200 after detaching); only the link to this product
+     is gone. A byte-identical local copy and the URL are at
+     `~/Desktop/masterkraft-catalogue-ops/image-detach-backup-20260908/`, so
+     re-attaching is trivial if this is ever judged wrong.
+
+     Verified after: `MWWPOU01` 0 images, `SWWPOU01` 0 images, and `MWWPOU02`
+     still 1 image with its default intact — the 2.5kg product that legitimately
+     owns that photograph was not disturbed.
+
+     BOTH 1.5kg RECORDS NOW HAVE NO IMAGE, which is the honest state and the end
+     of this thread until someone renders or shoots the size. The shop falls back
+     per lib/unleashed.ts (no ERP photo means the snapshot's own image stands, or
+     none), so check what those two product pages actually show.
 
      Until then both records are better with no image than with a 2.5.
    - **3 are REVL "Freight & Delivery Allowance" line items** pointing at a
