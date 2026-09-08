@@ -13,12 +13,12 @@ the featured row emit when a WooCommerce page exists for the product.
 |---|---|
 | Snapshot products carrying a WordPress image | **512** |
 | …the ERP has a photograph for, by code | 366 (71.5%) |
-| …only via one of its WooCommerce variations | 54 (10.5%) |
-| …only via `getRange`, the picker's own answer | 46 (9.0%) |
-| **Replaceable** | **466 (91.0%)** |
-| **No ERP photograph — would go blank if swapped blind** | **46 (9.0%)** |
+| …only via one of its WooCommerce variations | 63 (12.3%) |
+| …only via `getRange`, the picker's own answer | 51 (10.0%) |
+| **Replaceable** | **480 (93.8%)** |
+| **No ERP photograph — would go blank if swapped blind** | **32 (6.3%)** |
 | — of those, already retired (404s anyway) | 20 |
-| — of those, still live | **26** |
+| — of those, still live | **12** |
 | Snapshot products with no WooCommerce photography at all | 0 |
 
 ## Where those pictures are served from TODAY
@@ -46,24 +46,24 @@ category page. Two are still served: `SRATTACC01` (404s) and `SAAAU01`
 
 | | Products |
 |---|---|
-| Broken today, FIXED by the ERP swap | **151** |
-| Broken today, and the ERP has no photograph either | **23** |
+| Broken today, FIXED by the ERP swap | **165** |
+| Broken today, and the ERP has no photograph either | **9** |
 
 The second row is the set that needs a picture put into Unleashed before it can
 have one at all. The mirrored group is not affected: those files are committed
 under `/public` and serve fine.
 
-ERP codes carrying a photograph: 1082 of 1484.
+ERP codes carrying a photograph: 1135 of 1484.
 
 ## The rule this implies
 
 Swap only where the ERP has a photograph, and leave the WordPress URL standing
-where it does not. A blind swap would strip 26 live products of
+where it does not. A blind swap would strip 12 live products of
 their only picture.
 
 ### READ THE GAP NUMBER CAREFULLY — it counts PAGES, not ERP records
 
-The 46 above are SNAPSHOT products, and most are `-GROUP` bundle
+The 32 above are SNAPSHOT products, and most are `-GROUP` bundle
 containers or variable parents — `SMDBRH-GROUP`, `SWWPCB` — which are not
 Unleashed product codes at all. There is no ERP record to attach a picture to,
 so they can never be closed by an upload; they close when the ERP is given
@@ -83,27 +83,13 @@ Re-derive it from the ERP side, not from this table.
 | `RBRPPOM-GROUP` | Micro Bands | `micro-bands-revl` | 1 |
 | `RFDA` | Logistics Allowance | `logistics-allowance` | 1 |
 | `SBASADJ-GROUP` | Group Fitness Step | `group-fitness-step-sf` | 1 |
-| `SFAFRR` | Acoustic Underlay | `acoustic-underlay-v-sf` | 1 |
 | `SFAFRR-GROUP` | Acoustic Underlay | `acoustic-underlay-sf` | 1 |
-| `SFRFRR` | Impact Lock Rubber Tiles | `impact-lock-rubber-tiles-v-sf` | 1 |
-| `SFRFRR-GROUP` | Impact Lock Rubber Tiles | `impact-lock-rubber-tiles-sf` | 1 |
 | `SMDBPRH` | Premium Rubber Hex Dumbbell | `premium-rubber-hex-dumbbell-v-sf` | 1 |
 | `SMDBPRH-GROUP` | Premium Rubber Hex Dumbbell | `premium-rubber-hex-dumbbell-3-sf` | 1 |
 | `SMDBRH` | Rubber Hex Dumbbells | `rubber-hex-dumbbell-v-sf` | 1 |
 | `SMDBRH-GROUP` | Rubber Hex Dumbbells | `rubber-hex-dumbbell-group-sf` | 1 |
 | `SMDBVR` | Virgin Rubber Fixed Dumbbells | `virgin-rubber-fixed-dumbbells-v-sf` | 104 |
 | `SMDBVR-GROUP` | Virgin Rubber Fixed Dumbbells | `virgin-rubber-fixed-dumbbells-sf` | 1 |
-| `SMWAARM-2` | Wall Balls | `wall-balls-sf` | 1 |
-| `SWBBFRU` | Rubber Fixed Barbells | `rubber-fixed-barbells-v-sf` | 1 |
-| `SWBBFRU-GROUP` | Rubber Fixed Barbells | `rubber-fixed-barbells-2-sf` | 1 |
-| `SWBBFRZ` | Rubber EZ Fixed Barbells | `rubber-ez-fixed-barbells-v-sf` | 1 |
-| `SWBBFRZ-GROUP` | Rubber EZ Fixed Barbells | `rubber-ez-fixed-barbells-2-sf` | 1 |
-| `SWWPCB` | Coloured Bumper Plates | `coloured-bumper-plates-v-sf` | 51 |
-| `SWWPCB-GROUP` | Coloured Bumper Plates | `coloured-bumper-plates-sf` | 1 |
-| `SWWPOPR` | Olympic Premium Rubber Weight Plates | `olympic-premium-rubber-weight-plates-v-sf` | 1 |
-| `SWWPOPR-GROUP` | Olympic Premium Rubber Weight Plates | `olympic-premium-rubber-weight-plates-2-sf` | 1 |
-| `SWWPOU` | Olympic Urethane Weight Plates | `olympic-urethane-weight-plates-sf` | 37 |
-| `SWWPOU-GROUP` | Olympic Urethane Weight Plates | `olympic-urethane-weight-plates-3-sf` | 1 |
 
 ## The gap — retired products (no action needed)
 
