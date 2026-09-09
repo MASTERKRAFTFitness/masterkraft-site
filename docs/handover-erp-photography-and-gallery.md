@@ -103,17 +103,29 @@ either source keeps what it has.
 
 ### Why it is only 67 photographs and not 916
 
-The loader takes only the repainted `/product-bg/` files. The raw
-`/product-images/` mirror files are the original white-box studio shots, and the
-ERP's photography sits on a grey tile; putting them back would stand two
-backdrops side by side in one gallery, on 136 pages at once, undoing exactly what
-the swap bought. **Only 83 of 510 mirrored files have been through
-`normalize-product-bg.py`.**
+The loader takes only the repainted `/product-bg/` files, on the reading that the
+raw `/product-images/` mirror files are the original white-box studio shots while
+the ERP's photography sits on a grey tile, so putting them back would stand two
+backdrops side by side.
 
-**So the repaint queue is the lever on the remaining ~126 photographs.** They are
-not refused permanently — re-run `npm run load:images:write` after each repaint
-batch and they arrive with no code change. The machinery is the deliverable here
-more than today's 67 photographs.
+**That reading is wrong, measured 9 September.** Every one of the 834
+`/product-images/` references was tested with the project's own `backdrop.py`:
+**834 are already on `#e6e6e6`, the ERP's tile grey, and none are off-shade.** Of
+the 510 files on disk, 496 already matched and the 14 that did not have since been
+repainted. The loader is refusing 823 photographs for a reason that does not hold
+for any of them.
+
+**The repaint queue is EMPTY, and is not the lever this section used to call it.**
+`normalize-product-bg.py` was run on 9 September: it repainted 30 SKUs and wrote
+byte-identical output — `git status` clean, `/product-bg/` still 83 files, no change
+to the override map. There is nothing left for it to do.
+
+**The actual unlock is the `isRepaint` prefix gate in `product-images.load.ts`.**
+Widening it to accept a `/product-images/` file whose backdrop already matches is a
+one-line change, but a brittle one: a future off-shade mirror file would slip into a
+gallery unnoticed. The better shape is a committed verified-backdrop manifest the
+loader consults, generated the way `build-erp-cartons.mjs` generates `ERP_CARTONS`.
+Neither is built.
 
 ### The 4 `sole` rows are inert
 
@@ -124,6 +136,17 @@ photographs via range resolution. The "products the ERP cannot hold" case turned
 out to be nearly solved already.
 
 ## Traps, all of which cost real time
+
+**`GET /Products` HIDES OBSOLETE RECORDS AND WILL MAKE YOU COUNT WRONG.** 1,511
+products come back from a plain fetch and 2,391 with `includeObsolete=true` — 880
+are invisible. `buildMap` omits the flag deliberately, because obsolescence is
+resolved from the committed list in `obsolete.ts`, and that is correct for the
+site. It is wrong for asking "does this ProductCode exist". On 9 September this
+produced a confident finding that three Snap dumbbell ranges — 67 codes — were
+absent from the ERP and needed creating. 65 of the 67 were already there,
+`Obsolete=true`, each carrying a price; only 2 were genuinely missing. A canary
+write caught it on the first POST. Use the flag whenever the question is
+existence; omit it whenever the question is what the site should sell.
 
 **The mirror hides the problem.** `isSnapshotImage` must match three forms —
 `/wp-content/uploads/`, `/product-images/`, `/product-bg/`. It originally matched
@@ -184,8 +207,11 @@ npm run report:shootlist     the unphotographed codes, collapsed into products
 1. ~~Collapse the 196 site codes into distinct products~~ **DONE** —
    `npm run report:shootlist`, 62 products to photograph.
 2. ~~Deploy `11d213b`~~ **DONE** — live and verified on 8 September.
-3. **Work the repaint queue.** Now the top of the list. Each `normalize-product-bg.py` batch makes more of
-   the 916 secondaries eligible; re-run `load:images:write` after each.
+3. ~~Work the repaint queue~~ **THERE IS NO QUEUE** — run 9 September, 30 SKUs
+   repainted, byte-identical output, nothing changed. The 823 refused photographs
+   are already on tile grey and are held back by the `isRepaint` prefix gate, not
+   by any repainting. See "Why it is only 67 photographs and not 916" above; the
+   fix is a verified-backdrop manifest and it is not built.
 4. **The Unleashed attribute import**, still aborted at row 12 of 328. Assembled
    size, Colour, Material and Warranty for 328 products. This is the last
    substantial piece of "get the Woo data into the ERP or Supabase" and has not
