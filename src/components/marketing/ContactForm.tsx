@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
 export default function ContactForm() {
+  const elapsed = useFillTimer();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function ContactForm() {
           company: f.get("company"),
           topic: f.get("topic"),
           message: f.get("message"),
+          ...guardValues(f, elapsed()),
         }),
       });
       const data = await res.json();
@@ -72,6 +75,7 @@ export default function ContactForm() {
         <option>Something else</option>
       </select>
       <textarea name="message" required rows={5} aria-label="How can we help?" placeholder="How can we help?" className={fieldClass} />
+      <HoneypotField />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <button type="submit" disabled={sending} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
         {sending ? "Sending…" : "Send Enquiry"} <span aria-hidden>→</span>

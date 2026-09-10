@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
+import { MIN_ELAPSED_MS_SHORT, RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 
 // Newsletter signups.
 //
@@ -57,6 +58,22 @@ export async function POST(request: Request) {
   const email = body.email;
   if (!email) {
     return NextResponse.json({ ok: false, error: "Email is required." }, { status: 400 });
+  }
+
+  // Bot filter. One field, so there is nothing here to judge on shape - the
+  // honeypot and the fill time are the whole defence, and the fill-time floor is
+  // the short one because pasting an address and hitting subscribe is genuinely
+  // quick.
+  const verdict = checkFormSubmission(request, body, {
+    form: "newsletter",
+    minElapsedMs: MIN_ELAPSED_MS_SHORT,
+  });
+  if (!verdict.ok) {
+    console.warn("[newsletter] blocked", { reason: verdict.reason, detail: verdict.detail });
+    if (verdict.reason === "rate_limit") {
+      return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
+    }
+    return NextResponse.json({ ok: true, hubspot: "skipped", fallback: "not_needed" });
   }
 
   const hubspot = await submitHubspotForm(

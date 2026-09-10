@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
+import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 
 export async function POST(request: Request) {
   let body: Record<string, string>;
@@ -12,6 +13,26 @@ export async function POST(request: Request) {
   const { firstName, lastName, email, phone, company, topic, message } = body;
   if (!email || !message) {
     return NextResponse.json({ ok: false, error: "Email and message are required." }, { status: 400 });
+  }
+
+  // Bot filter. Quieter than the warranty form only because this route does not
+  // email anyone - the junk lands in HubSpot instead, where it is someone's job
+  // to clear out rather than the MD's inbox.
+  const verdict = checkFormSubmission(request, body, {
+    form: "contact",
+    fields: {
+      firstName: firstName ?? "",
+      lastName: lastName ?? "",
+      company: company ?? "",
+      message: message ?? "",
+    },
+  });
+  if (!verdict.ok) {
+    console.warn("[contact] blocked", { reason: verdict.reason, detail: verdict.detail });
+    if (verdict.reason === "rate_limit") {
+      return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
+    }
+    return NextResponse.json({ ok: true, hubspot: "skipped" });
   }
 
   const hubspot = await submitHubspotForm(

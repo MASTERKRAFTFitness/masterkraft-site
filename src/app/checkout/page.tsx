@@ -7,6 +7,7 @@ import { trackBeginCheckout, trackLead } from "@/lib/analytics";
 import { cartSellableByCard } from "@/lib/cart-eligibility";
 import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout from "@/components/shop/StripeCheckout";
+import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const money = (n: number) => (n > 0 ? aud.format(n) : "Contact for pricing");
@@ -22,6 +23,7 @@ export default function CheckoutPage() {
   // rule lives in lib/cart-eligibility, which explains why it is now the ERP
   // ProductCode that decides it and no longer the WooCommerce product id.
   const canPay = paymentsConfigured && ready && cartSellableByCard(items);
+  const elapsed = useFillTimer();
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +63,7 @@ export default function CheckoutPage() {
           contact,
           items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
           subtotal,
+          ...guardValues(form, elapsed()),
         }),
       });
       const data = await res.json();
@@ -160,6 +163,7 @@ export default function CheckoutPage() {
               <input name="location" aria-label="Delivery suburb / postcode" placeholder="Delivery suburb / postcode" className={fieldClass} />
               <textarea name="notes" rows={4} aria-label="Anything else we should know?" placeholder="Anything else we should know?" className={fieldClass} />
 
+              <HoneypotField />
               {error && <p className="text-accent-600 text-sm">{error}</p>}
 
               <button type="submit" disabled={sending} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">

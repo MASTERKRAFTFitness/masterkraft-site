@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
+import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import {
   CONTACT_SOURCE,
   NETWORK_OPERATOR_OPTIONS,
@@ -118,6 +119,20 @@ export async function POST(request: Request) {
   // the HubSpot property remain in step.
   if (!SITE_COUNT_OPTIONS.includes(lead.siteCount) || !TIMEFRAME_OPTIONS.includes(lead.timeframe)) {
     return NextResponse.json({ ok: false, error: "Invalid selection." }, { status: 400 });
+  }
+
+  // Bot filter. The site count and timeframe are already pinned to the select
+  // options above, so only the typed fields are worth judging on shape.
+  const verdict = checkFormSubmission(request, body, {
+    form: "waitlist",
+    fields: { fullName: lead.fullName, company: lead.company },
+  });
+  if (!verdict.ok) {
+    console.warn("[waitlist] blocked", { reason: verdict.reason, detail: verdict.detail });
+    if (verdict.reason === "rate_limit") {
+      return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
+    }
+    return NextResponse.json({ ok: true, hubspot: "skipped", fallback: "not_needed", confirmed: "skipped" });
   }
 
   const { first, last } = splitName(lead.fullName);

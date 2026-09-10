@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
+import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 
 // Warranty claims.
 //
@@ -121,6 +122,32 @@ export async function POST(request: Request) {
       { ok: false, error: "Please complete your details, the product and the fault." },
       { status: 400 }
     );
+  }
+
+  // Bot filter. This is the form the spam actually arrived on, and this route
+  // emails a human on every submission by design, so an unfiltered form-filler
+  // lands straight in the MD's inbox. Checked after validation so a real person
+  // who left a field blank still gets told which, and before HubSpot and Resend
+  // so nothing blocked costs us a request or an email.
+  const verdict = checkFormSubmission(request, body, {
+    form: "warranty",
+    fields: {
+      fullName: claim.fullName,
+      company: claim.company,
+      product: claim.product,
+      sku: claim.sku,
+      orderRef: claim.orderRef,
+      fault: claim.fault,
+    },
+    dates: { purchaseDate: claim.purchaseDate },
+  });
+  if (!verdict.ok) {
+    console.warn("[warranty] blocked", { reason: verdict.reason, detail: verdict.detail });
+    if (verdict.reason === "rate_limit") {
+      return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
+    }
+    // The ordinary success shape, and nothing sent anywhere.
+    return NextResponse.json({ ok: true, hubspot: "skipped", confirmed: "skipped" });
   }
 
   const { first, last } = splitName(claim.fullName);

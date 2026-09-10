@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
+import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 
 // Quote request handler. Does two things when configured:
 //   1. Emails the team (via Resend) — needs RESEND_API_KEY + QUOTE_FROM_EMAIL.
@@ -46,6 +47,28 @@ export async function POST(request: Request) {
       { ok: false, error: "Name, email and at least one item are required." },
       { status: 400 }
     );
+  }
+
+  // Bot filter. The cart is the thing that makes this form awkward for a
+  // form-filler - it has to have items in it - but nothing stopped one posting
+  // straight at the endpoint, and this route emails the team AND can write to the
+  // order book. Item names and SKUs come from our own catalogue, not the visitor,
+  // so only what they typed is judged.
+  const verdict = checkFormSubmission(request, payload as Record<string, unknown>, {
+    form: "quote",
+    fields: {
+      name: contact.name ?? "",
+      company: contact.company ?? "",
+      location: contact.location ?? "",
+      notes: contact.notes ?? "",
+    },
+  });
+  if (!verdict.ok) {
+    console.warn("[quote] blocked", { reason: verdict.reason, detail: verdict.detail });
+    if (verdict.reason === "rate_limit") {
+      return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
+    }
+    return NextResponse.json({ ok: true, email: "skipped", order: "skipped", hubspot: "skipped" });
   }
 
   const [firstName, ...lastParts] = (contact.name ?? "").split(" ");

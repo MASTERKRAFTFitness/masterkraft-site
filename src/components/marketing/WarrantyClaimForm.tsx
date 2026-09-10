@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 // Matches ContactForm's field styling so the two read as one system.
 const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
 export default function WarrantyClaimForm() {
+  const elapsed = useFillTimer();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +32,7 @@ export default function WarrantyClaimForm() {
           orderRef: f.get("orderRef"),
           purchaseDate: f.get("purchaseDate"),
           fault: f.get("fault"),
+          ...guardValues(f, elapsed()),
         }),
       });
       const data = await res.json();
@@ -103,6 +106,7 @@ export default function WarrantyClaimForm() {
         once you receive it.
       </p>
 
+      <HoneypotField />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <button type="submit" disabled={sending} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
         {sending ? "Sending…" : "Lodge Warranty Claim"} <span aria-hidden>→</span>

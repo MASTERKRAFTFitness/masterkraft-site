@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 import {
   SITE_COUNT_OPTIONS,
   TIMEFRAME_OPTIONS,
@@ -15,20 +16,22 @@ const fieldCls =
   "text-[var(--color-ink)] focus:border-transparent focus:outline-2 focus:outline-[var(--color-accent-600)]";
 
 export default function WaitlistForm() {
+  const elapsed = useFillTimer();
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    const fields = new FormData(form);
+    const data = Object.fromEntries(fields) as Record<string, string>;
     setState("sending");
     setError("");
     try {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, ...guardValues(fields, elapsed()) }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Something went wrong.");
@@ -117,6 +120,8 @@ export default function WaitlistForm() {
           updates from MasterKraft.
         </span>
       </label>
+
+      <HoneypotField />
 
       {state === "error" && (
         <p className="mt-4 text-[0.9rem] text-[var(--color-accent-600)]" role="alert">
