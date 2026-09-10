@@ -89,6 +89,12 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
     // metres for a foam box. Rejecting the implausible carton rather than
     // reordering the sources fixes it whichever way round they are asked, and
     // keeps working if bad data ever appears in the other system instead.
+    //
+    // The same test now also runs in itemsToParcels, and the two are not
+    // redundant. Here it CHOOSES between sources, so a rejected candidate falls
+    // through to the next one and the line still quotes. There it is the last
+    // gate before a carrier, and it catches items built by callers that never
+    // came through this function at all.
     const candidates: { l: number; w: number; h: number }[] = [
       { l: num(variation?.dimensions?.length), w: num(variation?.dimensions?.width), h: num(variation?.dimensions?.height) },
       { l: num(product?.dimensions?.length), w: num(product?.dimensions?.width), h: num(product?.dimensions?.height) },

@@ -20,7 +20,7 @@ Units are **kilograms and centimetres**.
 
 ## Why the spread looks like this
 
-Of 179 fully quotable products: **64 are over 30kg**, **23 are over 100kg**,
+Of 176 fully quotable products: **64 are over 30kg**, **23 are over 100kg**,
 and **44 have a side longer than 150cm**. Median product weight is
 18kg and the heaviest is 450kg. A rate card priced only on small
 parcels would not cover most of what we sell, so the examples deliberately run
@@ -33,25 +33,25 @@ that spread is where rates actually differ.
 
 | Ref | To | Parcels | Each | Total | Contents |
 |---|---|---:|---|---:|---|
-| MK-01 | Sydney NSW 2000 (Metro) | 1 | 1kg, 20 x 22 x 10cm | 1kg | Exercise Glider Discs (Pair) x1 |
-| MK-02 | Melbourne VIC 3000 (Metro) | 2 | 3kg, 22 x 22 x 14cm | 6kg | Change Plates 2.5kg (White) x2 |
+| MK-01 | Sydney NSW 2000 (Metro) | 1 | 1kg, 33 x 14 x 14cm | 1kg | Foam Roller - 33cm (TPT) x1 |
+| MK-02 | Melbourne VIC 3000 (Metro) | 2 | 3kg, 43 x 8 x 8cm | 6kg | Drop In Core Trainer x2 |
 | MK-03 | Brisbane QLD 4000 (Metro) | 1 | 6kg, 23 x 23 x 9cm | 6kg | Suspension Trainer x1 |
-| MK-04 | Perth WA 6000 (Metro) | 1 | 11kg, 25 x 17 x 17cm | 11kg | Virgin Rubber Fixed Dumbbells x1 |
-| MK-05 | Adelaide SA 5000 (Metro) | 1 | 18kg, 45 x 45 x 37cm | 18kg | Group Fitness Step x1 |
-| MK-06 | Canberra ACT 2600 (Metro) | 4 | 18kg, 45 x 45 x 37cm | 72kg | Group Fitness Step x4 |
-| MK-07 | Hobart TAS 7000 (Metro (island)) | 1 | 33kg, 90 x 80 x 14cm | 33kg | Kettlebell Rack (2 Tier) 2.0 x1 |
-| MK-08 | Darwin NT 0800 (Remote) | 1 | 52kg, 127 x 28 x 89cm | 52kg | Air Bike Classic x1 |
-| MK-09 | Cairns QLD 4870 (Regional) | 3 | 52kg, 127 x 28 x 89cm | 156kg | Air Bike Classic x3 |
+| MK-04 | Perth WA 6000 (Metro) | 1 | 12kg, 200 x 28 x 10cm | 12kg | Fitness Ball Storage Rack (Wall Mounted) x1 |
+| MK-05 | Adelaide SA 5000 (Metro) | 1 | 18kg, 166 x 55 x 53cm | 18kg | Medicine Ball Rack - 10 Ball (Single Sided) x1 |
+| MK-06 | Canberra ACT 2600 (Metro) | 4 | 18kg, 166 x 55 x 53cm | 72kg | Medicine Ball Rack - 10 Ball (Single Sided) x4 |
+| MK-07 | Hobart TAS 7000 (Metro (island)) | 1 | 34kg, 146 x 71 x 19cm | 34kg | Group Fitness Barbell Set Rack x1 |
+| MK-08 | Darwin NT 0800 (Remote) | 1 | 53kg, 90 x 80 x 14cm | 53kg | Kettlebell Rack (2 Tier) 3.0 x1 |
+| MK-09 | Cairns QLD 4870 (Regional) | 3 | 53kg, 90 x 80 x 14cm | 159kg | Kettlebell Rack (2 Tier) 3.0 x3 |
 | MK-10 | Townsville QLD 4810 (Regional) | 1 | 87kg, 138 x 23 x 31cm | 87kg | Competition Kettlebells (Set of 5) - 80kg x1 |
 | MK-11 | Albury NSW 2640 (Regional) | 1 | 136kg, 250 x 50 x 30cm | 136kg | Horizontal Dumbbell Rack - 3 Tier (15 Pair) x1 |
 | MK-12 | Bendigo VIC 3550 (Regional) | 1 | 300kg, 63 x 42 x 56cm | 300kg | Competition Kettlebells (Set of 12) - 250kg & Rack x1 |
 | MK-13 | Coffs Harbour NSW 2450 (Regional) | 1 | 450kg, 240 x 85 x 55cm | 450kg | All-In-One Trainer x1 |
 | MK-14 | Mount Gambier SA 5290 (Regional) | 1 | 112kg, 268 x 84 x 30cm | 112kg | Horizontal Dumbbell Rack - 2 Tier (10 Pair) 2.0 x1 |
-| MK-15 | Kalgoorlie WA 6430 (Remote) | 6 | 24kg, 76 x 61 x 16cm | 144kg | Drop Pads (Pair) x6 |
+| MK-15 | Kalgoorlie WA 6430 (Remote) | 6 | 26kg, 182 x 13 x 23cm | 156kg | Farmers Walk Handles (Pair) x6 |
 
 ## Data caveats worth passing on
 
-**1 product has bad carton data and is excluded**: `ABPBSB04` (Plyometric Foam Stacker Box- 12") is recorded as 850 x 1000 x 305 cm, which is 259m3 — almost certainly millimetres typed into a centimetre field. Needs fixing in WooCommerce.
+**3 products have bad carton data and are excluded**: `MWWLACC01` (Barbell Squat Pad) is recorded as 4.5 x 1.1 x 1.1 cm, which at 1kg is 183,655 kg/m3, denser than any metal. Needs fixing in WooCommerce. `MBBSTR01` (Fitness &amp; Balance Trainer) is recorded as 6.6 x 6.6 x 0.9 cm, which at 8kg is 204,061 kg/m3, denser than any metal. Needs fixing in WooCommerce. `ABPBSB04` (Plyometric Foam Stacker Box- 12") is recorded as 850 x 1000 x 305 cm, which is 259m3 — almost certainly millimetres typed into a centimetre field. Needs fixing in WooCommerce.
 
 **7 products are excluded because their weight is disputed** between the two
 content sources in our catalogue, and we will not quote a rate against a number we

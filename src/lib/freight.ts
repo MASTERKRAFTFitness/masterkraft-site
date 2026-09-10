@@ -280,7 +280,42 @@ export function itemsToParcels(items: FreightItem[]): {
   for (const item of items) {
     const usable =
       item.weightKg > 0 && item.lengthCm > 0 && item.widthCm > 0 && item.heightCm > 0;
-    if (!usable) {
+
+    // THE LAST GATE BEFORE THE WIRE, and it belongs here rather than one layer
+    // up. refsToFreightItems runs isPlausibleCarton too, but only over the
+    // CANDIDATE SOURCES for a cart line - so it protects the checkout and
+    // nothing else. quoteFreight() accepts a FreightItem[] from anywhere: the
+    // report scripts, the tests, any caller added later. For those this function
+    // was the only thing between a recorded number and a carrier, and it asked
+    // one question - is it above zero - which 850 x 1000 x 305 passes.
+    //
+    // That is the millimetre-in-a-centimetre-field error described on
+    // isPlausibleCarton, and Easyship answers it with 422 "No shipping solutions
+    // available based on the information provided". Reproduced 2026-09-10: it is
+    // the same wrapper as a genuinely malformed body, so an impossible carton
+    // reads as a broken carrier, gets classified by freight-alert and logged
+    // against the wrong cause. Refusing it here costs one call and one wrong
+    // diagnosis, every time.
+    //
+    // CHECKED BEFORE THE ROUNDING BELOW, deliberately. Math.ceil turns
+    // SLLE2502's recorded 0.001cm height into 1cm, which clears the
+    // half-centimetre floor - so rounding first would launder exactly the
+    // decimal-point error the floor exists to catch.
+    //
+    // This is NOT the fall-through refsToFreightItems performs. There, an
+    // implausible candidate means "ask the next source"; here there is no next
+    // source, so the SKU joins `missing` and the whole cart goes to the quote
+    // flow - the same answer it already gets for a carton nobody measured.
+    const believable =
+      usable &&
+      isPlausibleCarton({
+        weight: item.weightKg,
+        length: item.lengthCm,
+        width: item.widthCm,
+        height: item.heightCm,
+      });
+
+    if (!believable) {
       missing.push(item.sku);
       continue;
     }

@@ -80,6 +80,48 @@ describe("cart to parcels", () => {
     expect(parcels).toHaveLength(1);
     expect(missing).toEqual(["SCRWAR04", "MMDBRH-GROUP"]);
   });
+
+  // The gate that used to live only in refsToFreightItems, so a caller building
+  // FreightItems by hand - a report script, a test, anything added later - put
+  // the raw number on the wire. Easyship answers 850 x 1000 x 305 with 422 "No
+  // shipping solutions available based on the information provided", which is
+  // indistinguishable from a malformed request and reads as a broken carrier.
+  it("refuses a carton nobody believes rather than quoting it", () => {
+    const { parcels, missing } = itemsToParcels([
+      item(),
+      // ABPBSB04, a 12-inch foam plyo box recorded in millimetres: 259 cubic metres.
+      item({ sku: "ABPBSB04", weightKg: 30, lengthCm: 850, widthCm: 1000, heightCm: 305 }),
+      // MWBBFRU02, a 14kg barbell in a box the size of a paperback: 500,000 kg/m3.
+      item({ sku: "MWBBFRU02", weightKg: 14, lengthCm: 10.54, widthCm: 1.63, heightCm: 1.63 }),
+    ]);
+    expect(parcels).toHaveLength(1);
+    expect(missing).toEqual(["ABPBSB04", "MWBBFRU02"]);
+  });
+
+  // Math.ceil would turn 0.001cm into 1cm and clear the half-centimetre floor,
+  // laundering the decimal-point error the floor exists to catch. So the carton
+  // is judged as RECORDED, and only then rounded for the API.
+  it("judges the carton before rounding it up", () => {
+    const { parcels, missing } = itemsToParcels([
+      item({ sku: "SLLE2502", weightKg: 2, lengthCm: 25, widthCm: 8.5, heightCm: 0.001 }),
+    ]);
+    expect(parcels).toEqual([]);
+    expect(missing).toEqual(["SLLE2502"]);
+  });
+
+  // The bounds are wide on purpose. A dense-but-real carton and a big-but-real
+  // one both still quote; this is looking for a misplaced decimal point, not
+  // judging how well a box is packed.
+  it("still carries a carton that is merely dense, or merely large", () => {
+    const { parcels, missing } = itemsToParcels([
+      // A 2kg ankle strap: dense, and perfectly real.
+      item({ sku: "MBSAAS01", weightKg: 2, lengthCm: 25, widthCm: 8.5, heightCm: 1 }),
+      // MEFRDB11, the longest thing on the books at 268cm.
+      item({ sku: "MEFRDB11", weightKg: 100, lengthCm: 268, widthCm: 60, heightCm: 60 }),
+    ]);
+    expect(parcels).toHaveLength(2);
+    expect(missing).toEqual([]);
+  });
 });
 
 // Two thirds of this catalogue is pallet freight. Recognising that BEFORE
@@ -204,6 +246,30 @@ describe("failing soft", () => {
     process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     const q = await quoteFreight([item(), item({ sku: "SCRWAR04", lengthCm: 0 })], delivery);
     expect(q).toMatchObject({ ok: false, reason: "incomplete_dimensions", missing: ["SCRWAR04"] });
+  });
+
+  // Same treatment as a carton nobody measured, and for the same reason: there
+  // is no number here anyone believes. Reaching a carrier with it costs a
+  // metered call and returns an error that names the wrong cause.
+  it("sends an impossible carton to the quote flow instead of to the API", async () => {
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    let called = false;
+    globalThis.fetch = (async () => {
+      called = true;
+      return new Response("{}");
+    }) as typeof fetch;
+    const q = await quoteFreight(
+      [item({ sku: "ABPBSB04", weightKg: 30, lengthCm: 850, widthCm: 1000, heightCm: 305 })],
+      delivery
+    );
+    expect(q).toMatchObject({
+      ok: false,
+      reason: "incomplete_dimensions",
+      missing: ["ABPBSB04"],
+    });
+    expect(called).toBe(false);
   });
 
   // Sent to the quote flow WITHOUT calling the API: PAC would only reject it.

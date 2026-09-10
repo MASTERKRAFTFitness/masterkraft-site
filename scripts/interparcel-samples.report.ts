@@ -17,7 +17,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
 import { allProducts, productsInCategory } from "@/lib/catalogue";
 import { filterBrandSku, filterListable, type WcProduct } from "@/lib/woocommerce";
-import { itemsToParcels, type FreightItem } from "@/lib/freight";
+import { isPlausibleCarton, itemsToParcels, type FreightItem } from "@/lib/freight";
 
 const CSV = "reports/interparcel-sample-shipments.csv";
 const MD = "reports/interparcel-sample-shipments.md";
@@ -47,11 +47,32 @@ const DESTINATIONS = [
   { suburb: "Kalgoorlie", state: "WA", postcode: "6430", kind: "Remote" },
 ];
 
-// A carton with a side over 3m, or over 3 cubic metres, is not a carton -- it is
-// a data-entry error (millimetres typed into a centimetre field). Excluded here
-// so a bad row cannot poison the rate card, and reported in the markdown.
-const implausible = (p: { l: number; w: number; h: number }) =>
-  Math.max(p.l, p.w, p.h) > 300 || (p.l * p.w * p.h) / 1e6 > 3;
+// A carton with a side over 3m, over 3 cubic metres, or denser than any metal is
+// not a carton -- it is a data-entry error. Excluded here so a bad row cannot
+// poison the rate card, and reported in the markdown.
+//
+// DEFERS TO isPlausibleCarton rather than restating its size bounds, which is
+// what this did until itemsToParcels started applying the same test. Two
+// definitions would now disagree in a way that matters: the local one judged
+// SIZE only, so the 42 barbells the snapshot records in a box the size of a
+// paperback passed it, reached itemsToParcels, came back with no parcels at all
+// and left the `parcels[0]` read below indexing an empty array.
+const implausible = (p: { kg: number; l: number; w: number; h: number }) =>
+  !isPlausibleCarton({ weight: p.kg, length: p.l, width: p.w, height: p.h });
+
+// Which bound a row broke, so the markdown names the real fault. A 259m3 foam
+// box and a barbell at 500,000 kg/m3 are both data entry, but they are not the
+// same mistake and "almost certainly millimetres" is wrong about the second.
+const whyImplausible = (p: { kg: number; l: number; w: number; h: number }): string => {
+  const m3 = (p.l * p.w * p.h) / 1e6;
+  if (Math.max(p.l, p.w, p.h) > 300 || m3 > 3) {
+    return `which is ${m3.toFixed(0)}m3 — almost certainly millimetres typed into a centimetre field`;
+  }
+  if (Math.min(p.l, p.w, p.h) < 0.5) {
+    return `which has a side under half a centimetre — a decimal point in the wrong place`;
+  }
+  return `which at ${p.kg}kg is ${Math.round(p.kg / m3).toLocaleString()} kg/m3, denser than any metal`;
+};
 
 const q = (s: string) => `"${String(s ?? "").replace(/"/g, '""')}"`;
 
@@ -204,10 +225,10 @@ it("writes the Interparcel sample shipments", () => {
         `${r.eachKg}kg, ${r.each}cm | ${r.totalKg}kg | ${r.name} x${r.qty} |`).join("\n") +
       `\n\n## Data caveats worth passing on\n\n` +
       (bad.length
-        ? `**${bad.length} product has bad carton data and is excluded**: ` +
+        ? `**${bad.length} product${bad.length === 1 ? " has" : "s have"} bad carton data and ` +
+          `${bad.length === 1 ? "is" : "are"} excluded**: ` +
           bad.map((b) => `\`${b.sku}\` (${b.name}) is recorded as ${b.l} x ${b.w} x ${b.h} cm, ` +
-            `which is ${((b.l * b.w * b.h) / 1e6).toFixed(0)}m3 — almost certainly millimetres typed into a ` +
-            `centimetre field. Needs fixing in WooCommerce.`).join(" ") + `\n\n`
+            `${whyImplausible(b)}. Needs fixing in WooCommerce.`).join(" ") + `\n\n`
         : "") +
       (excludedForWeight.length
         ? `**${excludedForWeight.length} products are excluded because their weight is disputed** between the two\n` +
