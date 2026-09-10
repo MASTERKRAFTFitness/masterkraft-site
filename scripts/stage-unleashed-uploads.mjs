@@ -65,7 +65,7 @@
 // `new URL()` are ALREADY percent-encoded and must not be re-encoded.
 //
 // Read-only against Unleashed. It stages files; it changes no record.
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync, unlinkSync } from "node:fs";
 import { dirname, join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHmac } from "node:crypto";
@@ -219,6 +219,7 @@ for (const [, urls] of bySku) {
 mkdirSync(OUT_DIR, { recursive: true });
 
 const quarantined = [];
+const crossBrand = [];
 const staged = [];
 const unsourced = [];
 let got = 0,
@@ -280,6 +281,17 @@ for (const p of missing) {
   };
   row.flagged = !!row.sourceBrand && row.sourceBrand !== row.targetBrand;
 
+  // A CROSS-BRAND MATCH IS NEVER STAGED. It was, at first, on the reasoning that
+  // a few might be right for an unbranded accessory and a human could judge them
+  // with the image open. That put 26 files carrying another company's logo into a
+  // directory whose whole purpose is "drag these into Unleashed". A queue is an
+  // instruction, and one needing 26 exceptions is a trap. They are reported and
+  // not written.
+  if (row.flagged) {
+    crossBrand.push(row);
+    continue;
+  }
+
   if (existsSync(dest) && statSync(dest).size > 0) {
     already++;
     staged.push(row);
@@ -295,8 +307,19 @@ for (const p of missing) {
   }
 }
 
-const flagged = staged.filter((r) => r.flagged);
-const clean = staged.filter((r) => !r.flagged);
+// Anything left from an earlier run that today's guards retire. A stale file in
+// an upload directory is an instruction to upload it.
+const keep = new Set(staged.map((r) => r.file));
+const pruned = [];
+for (const f of existsSync(OUT_DIR) ? readdirSync(OUT_DIR) : []) {
+  if (keep.has(f)) continue;
+  unlinkSync(join(OUT_DIR, f));
+  pruned.push(f);
+}
+if (pruned.length) console.log(`  pruned ${pruned.length} file(s) today's rules no longer stage`);
+
+const flagged = crossBrand;
+const clean = staged;
 
 const md = [
   "# Photographs to upload into Unleashed",
@@ -315,23 +338,40 @@ const md = [
   "|---|---:|",
   `| ERP codes with no photograph | ${missing.length} |`,
   `| …a photograph exists and is staged | **${staged.length}** |`,
+  `| …exists but is another brand's, NOT staged | ${crossBrand.length} |`,
+  `| Stale files pruned from the directory this run | ${pruned.length} |`,
   `| …quarantined, two codes claim one file | ${quarantined.length} |`,
   `| …nothing anywhere | ${unsourced.length} |`,
   "",
-  `## Check the branding first (${flagged.length})`,
+  `## Not staged — the photograph is another brand's (${flagged.length})`,
   "",
-  "The source filename names another company. Putting one of these on a MasterKraft",
-  "record would publish a competitor's product as ours. **Look before uploading.**",
+  "**Deliberately absent from the upload directory.** The match reached a different",
+  "company's SKU, so the picture carries a different company's logo. Verified by eye:",
+  "`MAAAU01` and `MAAAU02` are caps reading `snap fitness 24/7`, and `MWWPCNB07` is a",
+  "plate moulded `REVL`.",
   "",
-  "| ProductCode | product | matched by | source file |",
-  "|---|---|---|---|",
-  ...flagged.map((r) => `| \`${r.code}\` | ${r.name} | ${r.how} | \`${r.source}\` |`),
+  "This is a brand comparison, not a filename judgement. An earlier version scanned",
+  "source filenames for competitor names and caught 1 of these 26 — it spotted",
+  "`fernwood-FITNESS-...png` and missed every clean-named REVL plate. A filename does",
+  "not know what is in the picture.",
   "",
-  `## Ready to upload (${clean.length})`,
+  "| ProductCode | product | brand | photo is | matched by |",
+  "|---|---|---|---|---|",
+  ...flagged.map(
+    (r) => `| \`${r.code}\` | ${r.name} | ${r.targetBrand} | **${r.sourceBrand}** | ${r.how} |`
+  ),
   "",
-  "| ProductCode | product | matched by | file |",
-  "|---|---|---|---|",
-  ...clean.map((r) => `| \`${r.code}\` | ${r.name} | ${r.how} | \`${r.file}\` |`),
+  `## Ready to upload — same brand (${clean.length})`,
+  "",
+  "Every file in `reports/unleashed-upload-images/` is one of these. The photograph",
+  "came from a SKU of the same brand, so it shows the right product with the right",
+  "logo, and the filename is the ProductCode it belongs to.",
+  "",
+  "| ProductCode | product | brand | matched by | file |",
+  "|---|---|---|---|---|",
+  ...clean.map(
+    (r) => `| \`${r.code}\` | ${r.name} | ${r.targetBrand} | ${r.how} | \`${r.file}\` |`
+  ),
   "",
   `## Quarantined — two codes claim one photograph (${quarantined.length})`,
     "",
@@ -360,6 +400,6 @@ writeFileSync(MD, md.join("\n"));
 
 console.log(`\nstaged ${staged.length} (downloaded ${got}, already present ${already}, failed ${failed})`);
 console.log(
-  `  cross-brand ${flagged.length}, ready ${clean.length}, quarantined ${quarantined.length}, no source ${unsourced.length}`
+  `  cross-brand ${flagged.length} (not staged), ready ${clean.length}, quarantined ${quarantined.length}, no source ${unsourced.length}`
 );
 console.log(`-> reports/unleashed-upload-images/  (manifest: reports/unleashed-uploads.md)`);
