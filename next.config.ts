@@ -50,6 +50,14 @@ const nextConfig: NextConfig = {
       { source: "/about", destination: "/our-story", permanent: true },
       { source: "/sample-page", destination: "/", permanent: true },
 
+      // CREATED BY FIXING AN ERP TYPO, 2026-09-11. MAACU02-XL was described as
+      // "Oversided Hoodie (XL)", which spelled differently from its own S/M/L
+      // siblings and so grouped as a product of its own - a one-size hoodie page
+      // at /product/oversided-hoodie, in the sitemap and served for months.
+      // Correcting the spelling in Unleashed merged it into the S-XL range,
+      // which is the right outcome and leaves the old URL answering 404.
+      { source: "/product/oversided-hoodie", destination: "/product/oversized-hoodie", permanent: true },
+
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been
       // answering 404 ever since: 69 `/product-category/<slug>` archives (the

@@ -86,7 +86,9 @@ at source.
   Unleashed, not in our parser: `MAACU12M` exists, is priced identically to its
   siblings, and its `ProductDescription` reads "Sports Bra (Woman) **(S)**". So
   the medium is unbuyable under its own name and one of the two S entries is
-  unreachable in the picker.
+  unreachable in the picker. **Fixed 2026-09-11**: the range now resolves
+  `["S","M","L","XL"]`, and all nine of that record's wholesale tier prices were
+  verified byte-identical after the write.
 
 **Apparent duplicate products** — investigated in full in
 [`reports/erp-duplicates.md`](../reports/erp-duplicates.md), which supersedes the
@@ -109,13 +111,19 @@ None of them carries stock, so the risk is identity rather than inventory.
 Each duplicate is a separate indexable URL, so they work against the thing this
 copy was written to fix.
 
-**Name typos that reach the page, the `<h1>` and the `<title>`:**
+**Name typos that reach the page, the `<h1>` and the `<title>`** — two are now
+fixed in Unleashed, the other eight need a manual edit
+([`reports/erp-name-fixes-remaining.md`](../reports/erp-name-fixes-remaining.md)
+says why the API refuses them):
 
-- "4/5/8 Stack Multi-sation" → multi-station (three products)
-- "Oversided Hoodie" → Oversized
-- "Standing Hip Thurst" → Thrust (deliberately NOT auto-corrected — see the
-  duplicates report; fixing the spelling first would produce two identically
-  named plate-loaded records and hide the duplicate)
+- "4/5/8 Stack Multi-sation" → multi-station (three products) — *manual*
+- "Oversided Hoodie" → Oversized — **fixed 2026-09-11**. Correcting it merged
+  that record into the S–XL range, so the orphan one-size page at
+  `/product/oversided-hoodie` is gone and now redirects; three hoodie URLs
+  became two
+- "Standing Hip Thurst" → Thrust — deliberately NOT corrected; see the
+  duplicates report, since fixing the spelling first would produce two
+  identically named plate-loaded records and hide the duplicate
 - "Station Markets (Set of 20)" → Markers
 - "Vertical Dummbell Rack" → Dumbbell
 - "Chrome  Dumbbell Set" → double space

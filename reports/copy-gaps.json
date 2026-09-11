@@ -50,25 +50,6 @@
     "weightKg": null
   },
   {
-    "slug": "oversided-hoodie",
-    "name": "Oversided Hoodie",
-    "group": "Apparel",
-    "subgroup": "Unisex",
-    "brand": "MK",
-    "codes": [
-      "MAACU02-XL"
-    ],
-    "sizes": [
-      "XL"
-    ],
-    "isRange": false,
-    "price": 0,
-    "priceMax": 0,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "oversized-hoodie",
     "name": "Oversized Hoodie",
     "group": "Apparel",
@@ -77,12 +58,14 @@
     "codes": [
       "MAACU02-S",
       "MAACU02-M",
-      "MAACU02-L"
+      "MAACU02-L",
+      "MAACU02-XL"
     ],
     "sizes": [
       "S",
       "M",
-      "L"
+      "L",
+      "XL"
     ],
     "isRange": true,
     "price": 0,
@@ -240,14 +223,14 @@
     "subgroup": "Woman",
     "brand": "MK",
     "codes": [
-      "MAACU12M",
       "MAACU12S",
+      "MAACU12M",
       "MAACU12L",
       "MAACU12XL"
     ],
     "sizes": [
       "S",
-      "S",
+      "M",
       "L",
       "XL"
     ],

@@ -23,18 +23,16 @@
       "Sizes S to XL"
     ]
   },
-  "oversided-hoodie": {
-    "short": "The oversized MasterKraft hoodie in XL — a relaxed-fit layer for warm-ups, cool-downs and the trip home.",
-    "body": [
-      "A relaxed, oversized hoodie for either end of a session: pulled on over a tee for the warm-up, pulled back on before the walk to the car.",
-      "This listing is the XL. The full size run is on the Oversized Hoodie (Unisex) page."
-    ]
-  },
   "oversized-hoodie": {
-    "short": "A relaxed oversized hoodie for warm-ups, cool-downs and rest days, in S to L.",
+    "short": "The relaxed oversized MasterKraft hoodie — a layer for warm-ups, cool-downs and rest days. Sizes S to XL.",
     "body": [
       "Oversized through the body and shoulder, so it goes on over training kit without pulling — the layer for the twenty minutes before a session and the twenty after.",
-      "Sizes S to L in this run."
+      "Sizes S to XL."
+    ],
+    "features": [
+      "Relaxed oversized cut through body and shoulder",
+      "Layers over training kit without pulling",
+      "Sizes S to XL"
     ]
   },
   "oversized-hoodie-unisex": {

@@ -15,6 +15,37 @@
 // someone who knows the catalogue, because at least one apparent duplicate is
 // not one, and the rest carry prices on records that quote and invoice.
 //
+// ---------------------------------------------------------------------------
+// ONLY TWO OF THE TEN CAN BE WRITTEN THROUGH THIS API. Run 2026-09-11:
+// MAACU02-XL and MAACU12M went through and verified; the other eight were
+// rejected 400 "Product Sub Group is not a valid sub group of the selected
+// Product Group" - on records whose group and subgroup are perfectly consistent,
+// as served by Unleashed's own GET moments earlier.
+//
+// The discriminator is not the data. It is whether the SUBGROUP NAME is unique
+// in the ProductGroups list, and the correlation over the ten is exact:
+//
+//   Unisex                    x1 in 154   WROTE
+//   Woman                     x1          WROTE
+//   Chest & Shoulder Machines x2          rejected (four records)
+//   Speed & Agility           x2          rejected
+//   Cable Machines            x3          rejected
+//   Dumbbells                 x3          rejected (two records)
+//
+// Unleashed's POST resolves the subgroup by NAME rather than by the Guid the
+// record carries, so a name that exists under more than one parent cannot be
+// resolved and the write is refused. Every one of these records holds a
+// ProductSubGroup whose ParentGroupGuid IS its ProductGroup's Guid - they are
+// valid, and the API still will not take them back.
+//
+// There is no fix available from this side. Renaming the duplicated subgroups to
+// be unique would reshape the category taxonomy the whole site reads, which is a
+// far larger change than correcting eight spellings. So the remaining eight are
+// a manual edit in the Unleashed UI, where renaming a product changes one field
+// instead of round-tripping the object. They are listed in
+// reports/erp-name-fixes-remaining.md.
+// ---------------------------------------------------------------------------
+//
 // IT WRITES NOTHING BY DEFAULT, following archive-photography.mjs and the
 // *_WRITE=true convention the other loaders use. The default run prints the
 // before and after for every record and stops.
@@ -96,14 +127,80 @@ async function getProduct(code) {
   return (data.Items ?? []).find((p) => p.ProductCode === code) ?? null;
 }
 
+// POST, not PUT. Unleashed's ProductsController answers PUT /Products/{guid}
+// with 405 "The PUT verb is not allowed for this resource" - it takes the whole
+// object on POST to the guid URL, the same shape createUnleashedOrder uses for
+// SalesOrders. The first run of this script tried PUT and wrote nothing, which
+// is the read-modify-write guard doing its job rather than a near miss.
 async function putProduct(product) {
   const res = await fetch(`${BASE}/Products/${product.Guid}`, {
-    method: "PUT",
+    method: "POST",
     headers: headers(""),
     body: JSON.stringify(product),
   });
-  if (!res.ok) throw new Error(`PUT ${product.ProductCode} ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(`POST ${product.ProductCode} ${res.status}: ${(await res.text()).slice(0, 300)}`);
   return res.json();
+}
+
+// Unleashed SERIALISES DATES ONE WAY AND ACCEPTS THEM ANOTHER. A GET returns
+// "/Date(1653288509907)/" (the old .NET format, optionally with a "+1000"
+// display offset), and POSTing that same string straight back earns
+// 400 "/Date(1653288509907)/ is not a valid value for DateTime". So every date
+// on the record has to be rewritten as ISO 8601 before the object can go back.
+//
+// The millisecond value is epoch-relative UTC and the trailing offset is
+// presentation only, so the instant is preserved exactly; only the spelling
+// changes. Done recursively because the dates are nested inside ProductGroup,
+// ProductBrand and the attribute set as well as on the product itself.
+const DOTNET_DATE = /^\/Date\((-?\d+)([+-]\d{4})?\)\/$/;
+
+function normaliseDates(value) {
+  if (typeof value === "string") {
+    const m = DOTNET_DATE.exec(value);
+    return m ? new Date(Number(m[1])).toISOString() : value;
+  }
+  if (Array.isArray(value)) return value.map(normaliseDates);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, normaliseDates(v)]));
+  }
+  return value;
+}
+
+// WHOLESALE TIER PRICES ARE THE REASON THIS SCRIPT IS CAREFUL.
+//
+// A product carries SellPriceTier1..10, each {Name, Value}. Unleashed returns
+// the unset ones as {"Name":"T8-AGENT","Value":null} and then rejects that same
+// object on POST with 400 "Sell Price Tier values must be decimal" - so the null
+// ones have to come out of the payload.
+//
+// They are dropped ONLY where Value is null, never where it is set. Three of the
+// ten records here carry real tier pricing: MSCSPL09 has ten tiers from
+// $1,343.21 to $2,513.64, MBSADO03 has ten, and MAACU12M has nine with tier 8
+// unset. These are the prices that quote distributors and REVL franchisees.
+// Sending 0 in place of a null, or dropping a tier that has a value, would
+// silently reprice them - which is precisely the failure the snap dumbbell
+// CSV refused to risk. A null tier holds nothing, so omitting it loses nothing.
+function stripEmptyTiers(product) {
+  const out = {};
+  const dropped = [];
+  for (const [k, v] of Object.entries(product)) {
+    if (/^SellPriceTier\d+$/.test(k) && v && v.Value === null) {
+      dropped.push(k);
+      continue;
+    }
+    out[k] = v;
+  }
+  return { payload: out, dropped };
+}
+
+// What a tier map looks like, for comparing before against after.
+function tierFingerprint(product) {
+  return Object.entries(product)
+    .filter(([k]) => /^SellPriceTier\d+$/.test(k))
+    .filter(([, v]) => v && v.Value !== null)
+    .map(([k, v]) => `${k}=${v.Value}`)
+    .sort()
+    .join(",");
 }
 
 // Every key whose value differs between the fetched record and the payload.
@@ -115,7 +212,12 @@ function changedKeys(before, after) {
 
 const results = { applied: [], skipped: [], failed: [], alreadyCorrect: [] };
 
-for (const [code, [expected, corrected]] of Object.entries(FIXES)) {
+// Optional code arguments restrict the run, so the first live write can be one
+// record rather than ten.
+const only = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+const planned = Object.entries(FIXES).filter(([code]) => !only.length || only.includes(code));
+
+for (const [code, [expected, corrected]] of planned) {
   let product;
   try {
     product = await getProduct(code);
@@ -138,23 +240,53 @@ for (const [code, [expected, corrected]] of Object.entries(FIXES)) {
     continue;
   }
 
-  const payload = { ...product, ProductDescription: corrected };
-  const diff = changedKeys(product, payload);
+  // The guard compares the payload against the NORMALISED record, not the raw
+  // one, so it still means "this request changes exactly the description" - the
+  // date rewriting above is not a change to the record, only to its spelling on
+  // the wire.
+  const { payload: base, dropped } = stripEmptyTiers(normaliseDates(product));
+  const payload = { ...base, ProductDescription: corrected };
+  const diff = changedKeys(base, payload);
   if (diff.length !== 1 || diff[0] !== "ProductDescription") {
     results.failed.push([code, `payload would change ${diff.join(", ") || "nothing"}`]);
     continue;
   }
 
+  const tiersBefore = tierFingerprint(product);
   if (!WRITE) {
-    results.applied.push([code, current, corrected, "(dry run)"]);
+    results.applied.push([code, current, corrected, `(dry run${dropped.length ? `, ${dropped.length} empty tiers omitted` : ""})`]);
     continue;
   }
   try {
     await putProduct(payload);
-    results.applied.push([code, current, corrected, "written"]);
   } catch (e) {
     results.failed.push([code, String(e.message)]);
+    continue;
   }
+
+  // READ IT BACK. The payload guard proves what was SENT; only a re-read proves
+  // what was stored. Three of these records carry wholesale tier pricing and the
+  // round trip has already surprised us twice - PUT answered 405 and the .NET
+  // dates answered 400 - so the description is confirmed changed and the tier
+  // prices confirmed identical before this counts as a success.
+  const after = await getProduct(code).catch(() => null);
+  if (!after) {
+    results.failed.push([code, "written, but could not be re-read to verify"]);
+    continue;
+  }
+  if (after.ProductDescription !== corrected) {
+    results.failed.push([code, `written, but reads back as ${JSON.stringify(after.ProductDescription)}`]);
+    continue;
+  }
+  const tiersAfter = tierFingerprint(after);
+  if (tiersAfter !== tiersBefore) {
+    results.failed.push([
+      code,
+      `TIER PRICES CHANGED. before[${tiersBefore}] after[${tiersAfter}] - restore from reports/erp-name-fixes-before.json`,
+    ]);
+    continue;
+  }
+  results.applied.push([code, current, corrected, `written, verified (tiers intact: ${tiersBefore ? tiersBefore.split(",").length : 0})`]);
 }
 
 const line = (s) => console.log(s);
