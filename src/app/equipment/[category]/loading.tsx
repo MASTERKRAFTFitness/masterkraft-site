@@ -1,12 +1,5 @@
-import BrandSpinner from "@/components/ui/BrandSpinner";
+import ListingSkeleton from "@/components/shop/ListingSkeleton";
 
 export default function Loading() {
-  return (
-    <>
-      <div className="bg-carbon h-56" />
-      <div className="container-mk py-28 flex justify-center">
-        <BrandSpinner size={56} />
-      </div>
-    </>
-  );
+  return <ListingSkeleton crumbs toolbar />;
 }
