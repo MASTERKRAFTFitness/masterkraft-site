@@ -100,10 +100,11 @@ The barbell has never had an online price. It does now.
    now joins both, because a rate call that fails while Australia Post succeeds
    is otherwise completely invisible - which is how the missing `category` went
    unnoticed until a cart had no second carrier to fall back on.
-3. ~~**Easyship takes roughly 4 seconds per call.**~~ **Wrong — measured while
+3. ~~**Easyship takes roughly 4 seconds per call.**~~ ~~**Wrong — measured while
    calls were failing.** Re-measured 2026-09-06 against a working allowance:
-   **693ms and 1136ms**. Fine for a checkout, and it is asked concurrently with
-   Australia Post anyway, so it does not add to the other.
+   **693ms and 1136ms**. Fine for a checkout.~~ **The first figure was right and
+   the correction was wrong.** A novel quote takes **5.5 seconds at the median**;
+   693ms was a cache hit. Properly measured 2026-09-11 in the section below.
 
 ## ✅ Rates are STABLE across two identical calls (2026-09-06)
 
@@ -115,6 +116,11 @@ call 1 (1136ms): TNT Road Express $162.81 | UPS Express Saver $163.69 | TNT Over
 call 2  (693ms): TNT Road Express $162.81 | UPS Express Saver $163.69 | TNT Overnight $268.62 | ...
 ```
 
+**Read the PRICES here, not the TIMINGS.** Being identical is exactly what makes
+these two useless as a latency measurement: call 2 is a repeat of call 1, so it
+was served from Easyship's own result cache. The next section measures it
+properly.
+
 All six services, identical. So the display-then-charge pair does not drift, and
 the 409-after-the-card-is-captured failure this was feared to cause does not
 happen for these inputs. `src/lib/freight-cache.ts` remains the belt to that
@@ -124,6 +130,57 @@ carrier behaves.
 **Two calls is not a guarantee**, only evidence. Nothing was measured across a
 day boundary, a fuel-surcharge revision or a rate-card change, and `order/route.ts`
 reading freight from PaymentIntent metadata is still the last line of defence.
+
+## ⏱️ A novel quote takes 5.5 seconds, not 700ms (2026-09-11)
+
+**Every sub-2-second figure recorded above is a cache hit.** Easyship serves a
+body it has already seen from its own result cache; a destination it has not seen
+costs several seconds. Since our own `freight-cache.ts` absorbs the repeats, the
+number that reaches a customer is always the slow one.
+
+Three runs against `/2024-09/rates`, same origin and same 1kg carton throughout,
+phase-timed with `curl` so connection setup is separated from carrier time.
+Destinations were varied per call so Easyship's cache could not flatter them.
+
+| | n | min | median | mean | max |
+|---|---:|---:|---:|---:|---:|
+| Novel quote, cold connection | 6 | 2.96s | **5.47s** | 4.89s | 6.22s |
+| Novel quote, warm connection | 6 | 2.82s | **5.52s** | 5.45s | 7.67s |
+| **All novel quotes** | 12 | 2.82s | **5.52s** | 5.17s | **7.67s** |
+| Repeated identical body | 5 | 1.14s | 1.43s | 1.62s | 2.20s |
+| DNS + TCP + TLS setup | 6 | 0.06s | 0.17s | 0.25s | 0.54s |
+
+**It is not our connection.** Setup is 0.17s at the median and 0.54s at worst,
+and reusing the socket does not help - the warm run was marginally SLOWER than
+the cold one. The time is Easyship computing the quote.
+
+**The third run is what settles it.** A warm connection carrying six destinations
+never sent before came back in 2.8-7.7s, while the same connection re-sending
+bodies already seen came back in 1.1-2.2s. So the speed belongs to the cache, not
+to the connection.
+
+### What that means for the checkout
+
+- **Concurrency does not rescue it.** The router already asks both carriers at
+  once, so the request costs `max(AusPost, Easyship)` - and Easyship is the slow
+  one. A cache miss is a 5.5-second checkout step.
+- **No route sets `maxDuration`.** `api/freight/quote/route.ts` declares only
+  `runtime = "nodejs"`, and there is no `vercel.json`, so the platform default
+  applies. A 7.7s carrier call fits inside it, but `refsToFreightItems()` fetches
+  the ERP first and a cold lambda pays start-up on top.
+- **Neither carrier fetch has a timeout.** There is no `AbortSignal` anywhere in
+  `freight.ts`. A carrier that HANGS rather than merely being slow takes the
+  whole quote with it, and the fail-soft path that drops one carrier and lets the
+  other answer never runs.
+
+**Caveats.** n=12, one origin, one carton shape, one account, all inside a few
+minutes on a Thursday lunchtime AEST. Nothing here covers time of day or a
+rate-card change. One hypothesis NOT established: the 1kg parcel returns 11 rates
+and the 601kg rig returns 5, and the rig answered in 1.5s - so breadth of courier
+coverage may be what costs the time, which would make parcels the slow case and
+bulky the fast one.
+
+Cost **18 metered Rates calls**.
 
 ## ⚠️ The trial's Rates allowance was exhausted, and has since reset
 
