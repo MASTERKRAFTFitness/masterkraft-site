@@ -79,30 +79,43 @@ recreates the original problem in a longer form:
 Not fixed here — this is the ERP's data, and the site reads it. Worth correcting
 at source.
 
-**A real bug:**
+**A real bug — confirmed against the live ERP and fixed by
+`scripts/erp-name-fixes.mjs`:**
 
-- `sports-bra-woman` lists sizes `["S", "S", "L", "XL"]`. The second "S" is
-  almost certainly an "M", so the medium is unsellable and one of the two S
-  entries is unreachable in the picker.
+- `sports-bra-woman` lists sizes `["S", "S", "L", "XL"]`. The cause is in
+  Unleashed, not in our parser: `MAACU12M` exists, is priced identically to its
+  siblings, and its `ProductDescription` reads "Sports Bra (Woman) **(S)**". So
+  the medium is unbuyable under its own name and one of the two S entries is
+  unreachable in the picker.
 
-**Duplicate products:**
+**Apparent duplicate products** — investigated in full in
+[`reports/erp-duplicates.md`](../reports/erp-duplicates.md), which supersedes the
+list that was here. Two corrections to what this note first said:
 
-- `multi-dead-lift` and `multi-deadlift` — same product, two records, two URLs
-- `standing-hip-thrust` and `standing-hip-thurst` — the second is a misspelling
-- `standing-abductor` and `standing-hip-abductor` — probably the same machine
-- `oversized-hoodie`, `oversized-hoodie-unisex` and `oversided-hoodie` — three
-  records for one garment, one of them misspelled, with inconsistent size runs
-  (S–L, S–XL, and a bare XL at $0)
+- **`MSLBSE07` "Standing Hip Thrust" is not a duplicate of `MSLBPL28`.** The
+  Strength codes encode the loading mechanism at characters 5-6 — `PL`
+  plate-loaded (42 codes), `SE` selectorised (21) — so those are the
+  selectorised and plate-loaded versions of the same machine, at $3,427.27 and
+  $0. Merging them would delete a real product. They need disambiguating names.
+- The rest (`multi-dead-lift`/`multi-deadlift`,
+  `standing-abductor`/`standing-hip-abductor`, the plate-loaded hip thrust pair,
+  and the two hoodie code series) are **genuine candidates that cannot be
+  resolved from the data** — each pair has one priced record and one at $0, or
+  two different prices, so the wrong choice puts a wrong sell price on a record
+  that quotes and invoices.
+
+None of them carries stock, so the risk is identity rather than inventory.
 
 Each duplicate is a separate indexable URL, so they work against the thing this
-copy was written to fix. Merging them in the ERP is the fix; the copy notes the
-overlap where it could not be avoided.
+copy was written to fix.
 
 **Name typos that reach the page, the `<h1>` and the `<title>`:**
 
 - "4/5/8 Stack Multi-sation" → multi-station (three products)
 - "Oversided Hoodie" → Oversized
-- "Standing Hip Thurst" → Thrust
+- "Standing Hip Thurst" → Thrust (deliberately NOT auto-corrected — see the
+  duplicates report; fixing the spelling first would produce two identically
+  named plate-loaded records and hide the duplicate)
 - "Station Markets (Set of 20)" → Markers
 - "Vertical Dummbell Rack" → Dumbbell
 - "Chrome  Dumbbell Set" → double space
