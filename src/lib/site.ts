@@ -27,6 +27,27 @@ export function absoluteUrl(src: string | undefined | null): string {
   return `${SITE_URL}/${src.replace(/^\/+/, "")}`;
 }
 
+/**
+ * The `priceValidUntil` for an Offer in Product structured data: a rolling date
+ * one year out.
+ *
+ * A ROLLING DATE, NOT A FIXED ONE. Google treats a missing priceValidUntil as a
+ * merchant-listing warning and a PAST one as an expired offer, so a date written
+ * into the source is the worst of the three - it silently invalidates every
+ * offer on the site the day it goes by, and nothing on the page changes to say
+ * so. Recomputed per render (the product page is ISR, revalidate 600), it claims
+ * only that the price is not scheduled to change, which is what is true of a
+ * catalogue repriced from the ERP on every render.
+ *
+ * A FUNCTION, and not a module constant, because a constant would be evaluated
+ * once when the server started and then held for the life of the process. It
+ * lives here rather than inline in the page because reading the clock during
+ * render is impure and react-hooks/purity rejects it there.
+ */
+export function priceValidUntil(now: number = Date.now()): string {
+  return new Date(now + 365 * 86_400_000).toISOString().slice(0, 10);
+}
+
 // Search-engine indexing is OFF by default so the Vercel preview and any staging
 // subdomain are never indexed. Set NEXT_PUBLIC_ALLOW_INDEX=true only on the final
 // production domain at launch.

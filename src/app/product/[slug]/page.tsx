@@ -23,7 +23,7 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
-import { erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
+import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
 // old store never listed have no WooCommerce variation id, and the cart keys on
@@ -36,7 +36,7 @@ function hashCode(code: string): number {
 import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { SITE_URL, absoluteUrl, priceValidUntil } from "@/lib/site";
 
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
@@ -200,18 +200,45 @@ export default async function ProductPage({
     if (v.image && !galleryLabels[v.image]) galleryLabels[v.image] = { label: v.label, code: v.code };
   }
 
+  // THE BRAND IN THE STRUCTURED DATA, which was hardcoded "MasterKraft" for
+  // every product on the site - including another manufacturer's ergs and the
+  // third-party clearance stock. The ERP is asked instead, so a snapshot-backed
+  // page and an ERP-only one answer identically, and brandDisplayName returns
+  // undefined for NO BRAND so the schema makes no claim rather than a false one.
+  //
+  // THREE SOURCES, because a range has no SKU of its own to look up: the
+  // catalogue gives it a synthetic "<base>-GROUP" code, which resolves to
+  // nothing. `unit` covers the ranges the ERP catalogue owns; the first
+  // variant's code covers the ones it does not - clearance ranges get no
+  // ErpUnit at all, and MFRFRR-GROUP (Impact Lock Rubber Tiles) lost an
+  // accurate MasterKraft the first time this was written without it.
+  const schemaBrand = brandDisplayName(
+    lookupBySku(unleashed, product.sku)?.brand ??
+      unit?.brand ??
+      lookupBySku(unleashed, variants[0]?.code)?.brand
+  );
+
+  const validUntil = priceValidUntil();
+  const offerUrl = `${SITE_URL}/product/${product.slug}`;
+
   const offers = usesVariants
     ? variantPrices.length > 0
       ? {
           offers: {
             "@type": "AggregateOffer",
+            // url and itemCondition were on the single-Offer branch and missing
+            // here, so a ranged product - every dumbbell and barbell on the site
+            // - published a less complete offer than a one-size one.
+            url: offerUrl,
             priceCurrency: "AUD",
             lowPrice: Math.min(...variantPrices).toFixed(2),
             highPrice: Math.max(...variantPrices).toFixed(2),
             offerCount: variants.length,
+            priceValidUntil: validUntil,
             availability: variants.some((v) => v.inStock)
               ? "https://schema.org/InStock"
               : "https://schema.org/PreOrder",
+            itemCondition: "https://schema.org/NewCondition",
           },
         }
       : {}
@@ -219,9 +246,10 @@ export default async function ProductPage({
       ? {
           offers: {
             "@type": "Offer",
-            url: `${SITE_URL}/product/${product.slug}`,
+            url: offerUrl,
             priceCurrency: "AUD",
             price: enriched.priceValue.toFixed(2),
+            priceValidUntil: validUntil,
             availability: inStock
               ? "https://schema.org/InStock"
               : "https://schema.org/PreOrder",
@@ -239,7 +267,10 @@ export default async function ProductPage({
     image: (product.images ?? []).map((i) => absoluteUrl(i.src)).filter(Boolean).slice(0, 5),
     description: plainText(product.short_description) || undefined,
     sku: product.sku || undefined,
-    brand: { "@type": "Brand", name: "MasterKraft" },
+    // The ERP's own code is the manufacturer part number for the ranges we
+    // make; there are no GTINs in Unleashed to offer alongside it.
+    mpn: product.sku || undefined,
+    ...(schemaBrand ? { brand: { "@type": "Brand", name: schemaBrand } } : {}),
     ...offers,
   };
 

@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ERP_GROUPS,
+  brandDisplayName,
   erpSubgroups,
   erpUnits,
   pageCodes,
@@ -402,5 +403,44 @@ describe("what the site still sells", () => {
     const map = clearance();
     const page = allProducts().find((p) => p.sku === "ABPBMS-01-1")!;
     expect(pageCodes(page, map)).toEqual([]);
+  });
+});
+
+// brandDisplayName, added 2026-09-11. The Product schema used to claim
+// "MasterKraft" for every product on the site, including another
+// manufacturer's ergs and third-party clearance stock.
+describe("brandDisplayName", () => {
+  it("names MasterKraft's own brand", () => {
+    expect(brandDisplayName("MK")).toBe("MasterKraft");
+  });
+
+  // The company spells itself Concept2; the ERP shouts "CONCEPT 2".
+  it("spells the distributed brand the way the manufacturer does", () => {
+    expect(brandDisplayName("CONCEPT 2")).toBe("Concept2");
+  });
+
+  // NO BRAND is the ERP's label for unbranded stock, not a brand. The caller
+  // drops the field, so the product makes no brand claim rather than a false one.
+  // OLD and CLEARANCE are status markers the clearance pages run on, not
+  // manufacturers. Title-casing them invents a product branded "Old", which is
+  // a worse claim than the hardcoded "MasterKraft" this replaced - production
+  // served exactly that for one sampled product before this case existed.
+  it("returns nothing for the ERP's non-brand markers", () => {
+    expect(brandDisplayName("OLD")).toBeUndefined();
+    expect(brandDisplayName("CLEARANCE")).toBeUndefined();
+  });
+
+  it("returns nothing for unbranded stock", () => {
+    expect(brandDisplayName("NO BRAND")).toBeUndefined();
+    expect(brandDisplayName("")).toBeUndefined();
+    expect(brandDisplayName(undefined)).toBeUndefined();
+    expect(brandDisplayName(null)).toBeUndefined();
+  });
+
+  // Clearance carries brands the allowlist never sees, so they are title-cased
+  // out of the ERP's shouting rather than mapped one by one.
+  it("title-cases a third-party clearance brand", () => {
+    expect(brandDisplayName("AIR LOCKER")).toBe("Air Locker");
+    expect(brandDisplayName("  snap  ")).toBe("Snap");
   });
 });
