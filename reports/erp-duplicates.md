@@ -79,18 +79,44 @@ Suggested end state:
 - `MSLBSE07` → "Standing Hip Thrust (Selectorised)"
 - `MSLBPL28` → retired
 
-### 3. Multi Deadlift — the rule does not decide this one
+### 3. Multi Deadlift — decided, and it is an exception
 
-| Code | Description | Price | Mechanism |
+| Code | Description | Price | Action |
 |---|---|---|---|
-| `MSLBPL08` | Multi Dead Lift | $2,418.18 | plate-loaded |
-| `MSLBPL21` | Multi Deadlift | $2,772.73 | plate-loaded |
+| `MSLBPL08` | Multi Dead Lift | $2,418.18 | **retire** |
+| `MSLBPL21` | Multi Deadlift | $2,772.73 | **keep** |
 
-**Both are priced**, $354.55 apart, same mechanism and same subgroup. "Keep the
-priced record" does not separate them, and nothing in the ERP does either — no
-stock, no attributes, no notes.
+Both records are priced, so "keep the priced record" does not separate them.
+Michael, 2026-09-11: **the higher price is the current one.**
 
-Either they are two models that both need clearer names, or one superseded the
-other and the wrong choice under- or over-quotes by $354.55 on every sale. This
-one needs a decision from someone who knows the catalogue; it has been left
-untouched.
+That makes this the only pair where a record carrying a live sell price is
+retired, so the script will not do it on the strength of the rule alone — the
+entry carries an explicit `retirePricedBecause` note, without which a priced
+record is refused. The reason is printed beside the write.
+
+The API refuses it for the subgroup reason above, so it is a manual edit like
+the other two.
+
+**Follow-up, and the order matters.** `/product/multi-dead-lift` is served
+today, so its redirect must not be added until the ERP record is actually
+retired — `next.config.ts` matches redirects *before* routing, so a redirect
+whose source still serves deletes a working page.
+
+1. Tick **Obsolete** on `MSLBPL08` in Unleashed.
+2. `npm run build:obsolete` and commit `src/lib/obsolete-skus.json`.
+3. Re-run the copy-gaps report. It now reports orphaned copy, and will name
+   `multi-dead-lift`:
+   ```
+   npx vitest run --config vitest.reports.config.mts scripts/copy-gaps.report.ts
+   ```
+4. Remove the `multi-dead-lift` entry from `src/data/product-copy.json`, and
+   drop the line in the `multi-deadlift` copy that points at it ("Note this
+   product and the Multi Dead Lift are listed separately in our ERP…"), which
+   stops being true at step 1.
+5. Add the redirect, now that the source no longer serves:
+   ```ts
+   { source: "/product/multi-dead-lift", destination: "/product/multi-deadlift", permanent: true },
+   ```
+
+The same five steps apply to `MSLBPL28` and `MSLBPL27`, against
+`/product/standing-hip-thrust` and `/product/standing-hip-abductor`.

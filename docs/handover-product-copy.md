@@ -102,9 +102,11 @@ list that was here. Two corrections to what this note first said:
 - The rest were resolved on 2026-09-11 by Michael's rule, **keep the priced
   record**. The hoodies are done — the four unpriced `MAACU02-*` records are
   retired and three hoodie URLs became one. Two lower-body pairs are decided but
-  cannot be written through the API and need a manual edit, and
-  `multi-dead-lift`/`multi-deadlift` is still open because *both* records are
-  priced, $354.55 apart, so the rule does not separate them.
+  cannot be written through the API and need a manual edit.
+  `multi-dead-lift`/`multi-deadlift` needed a second decision because *both*
+  records are priced, $354.55 apart — Michael, 2026-09-11: the higher price is
+  current, so `MSLBPL21` is kept. It is the one case where a priced record is
+  retired, and the script requires an explicit note to allow it.
 
 None of them carries stock, so the risk is identity rather than inventory.
 
@@ -149,4 +151,7 @@ moved since the sitemap was built. All 170 are written, so newly-served products
 arrive with copy rather than with the generated fallback.
 
 Re-run `npx vitest run --config vitest.reports.config.mts scripts/copy-gaps.report.ts`
-to find products added since.
+to find products added since. It also reports **orphaned copy** — entries whose
+product the ERP has renamed or retired — which is how a stale key gets noticed
+now rather than by hand. Two appeared within a day of starting to fix ERP names,
+and the check exists so the next one does not have to be spotted.

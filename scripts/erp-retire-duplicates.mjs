@@ -24,6 +24,15 @@
 // against the ERP before either is touched: the survivor must still be priced,
 // and the record being retired must still be at zero. If a price has moved since
 // this was written, nothing is sent.
+//
+// ONE PAIR IS AN EXPLICIT EXCEPTION, and it has to be explicit because the
+// guard is the only thing standing between this script and retiring a live
+// priced product. Multi Dead Lift and Multi Deadlift are BOTH priced, $354.55
+// apart, so "keep the priced record" does not separate them. Michael decided on
+// 2026-09-11 that the higher price is the current one, which means retiring a
+// record that carries $2,418.18. `retirePricedBecause` is how that decision is
+// carried: without it a priced record is refused, with it the reason is printed
+// beside the write. A pair cannot acquire the exception by accident.
 import crypto from "node:crypto";
 import { readFileSync } from "node:fs";
 
@@ -46,6 +55,13 @@ const PAIRS = [
   { retire: "MAACU02-M", keep: "MAACU02M" },
   { retire: "MAACU02-L", keep: "MAACU02L" },
   { retire: "MAACU02-XL", keep: "MAACU02XL" },
+  {
+    retire: "MSLBPL08", // Multi Dead Lift, $2,418.18
+    keep: "MSLBPL21", // Multi Deadlift, $2,772.73
+    retirePricedBecause:
+      "both records are priced, so the rule does not separate them; Michael, " +
+      "2026-09-11: the higher price is the current one",
+  },
 ];
 
 function headers(query = "") {
@@ -94,7 +110,7 @@ function stripEmptyTiers(product) {
 const price = (p) => Number(p?.DefaultSellPrice ?? 0);
 const results = { retired: [], skipped: [], failed: [] };
 
-for (const { retire, keep } of PAIRS) {
+for (const { retire, keep, retirePricedBecause } of PAIRS) {
   const [victim, survivor] = await Promise.all([
     getProduct(retire, { includeObsolete: true }),
     getProduct(keep),
@@ -108,7 +124,7 @@ for (const { retire, keep } of PAIRS) {
     continue;
   }
   // The rule, enforced rather than trusted.
-  if (price(victim) !== 0) {
+  if (price(victim) !== 0 && !retirePricedBecause) {
     results.failed.push([retire, `REFUSED: carries a sell price of $${price(victim)} — the rule keeps priced records`]);
     continue;
   }
@@ -127,8 +143,9 @@ for (const { retire, keep } of PAIRS) {
     continue;
   }
 
+  const note = retirePricedBecause ? ` [EXCEPTION: retiring $${price(victim)} — ${retirePricedBecause}]` : "";
   if (!WRITE) {
-    results.retired.push([retire, keep, price(survivor), "(dry run)"]);
+    results.retired.push([retire, keep, price(survivor), `(dry run)${note}`, price(victim)]);
     continue;
   }
   const res = await fetch(`${BASE}/Products/${victim.Guid}`, {
@@ -151,14 +168,14 @@ for (const { retire, keep } of PAIRS) {
     results.failed.push([retire, `SURVIVOR ${keep} CHANGED — restore from reports/erp-retire-before.json`]);
     continue;
   }
-  results.retired.push([retire, keep, price(survivor), "retired, survivor verified"]);
+  results.retired.push([retire, keep, price(survivor), `retired, survivor verified${note}`, price(victim)]);
 }
 
 console.log("");
 console.log(WRITE ? "RETIRE DUPLICATES — WRITING" : "RETIRE DUPLICATES — DRY RUN (nothing sent)");
 console.log("");
-for (const [r, k, p, how] of results.retired) {
-  console.log(`  retire ${r.padEnd(12)} ($0)  ->  keep ${k.padEnd(12)} ($${p})   ${how}`);
+for (const [r, k, p, how, vp] of results.retired) {
+  console.log(`  retire ${r.padEnd(12)} ($${vp})  ->  keep ${k.padEnd(12)} ($${p})   ${how}`);
 }
 for (const [c, why] of results.skipped) console.log(`  skip   ${c.padEnd(12)} ${why}`);
 if (results.failed.length) {

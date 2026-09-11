@@ -35,6 +35,7 @@ vi.mock("next/cache", () => ({
 import { getUnleashedMap } from "@/lib/unleashed";
 import { erpUnits } from "@/lib/erp-catalogue";
 import catalogue from "@/data/catalogue.json";
+import copyJson from "@/data/product-copy.json";
 
 // The ERP credentials, the way the other report scripts reach them: vitest does
 // not load .env.local the way Next does, and lib/unleashed reads process.env at
@@ -98,6 +99,34 @@ describe("copy gaps", () => {
     console.log(`\nproducts with no copy: ${rows.length} of ${units.length} units\n`);
     for (const [g, n] of Object.entries(byGroup).sort((a, b) => b[1] - a[1])) {
       console.log(`  ${String(n).padStart(3)}  ${g}`);
+    }
+
+    // COPY THAT NO LONGER HAS A PRODUCT, and copy that is missing one.
+    //
+    // Retiring or renaming a record in the ERP silently invalidates the authored
+    // copy keyed to its slug, and nothing else notices: product-copy.test.ts runs
+    // offline so it cannot know what the ERP holds, and a stale key is inert
+    // rather than broken. Three of them appeared within a day of starting to fix
+    // ERP names - "oversided-hoodie" when a spelling fix merged that record into
+    // its range, then "oversized-hoodie" when the unpriced hoodie series was
+    // retired - and both were caught by hand. This is the check that stops the
+    // next one needing to be.
+    const slugs = new Set(units.map((u) => u.slug));
+    const authored = Object.keys(copyJson as Record<string, unknown>);
+    const orphaned = authored.filter((slug) => !slugs.has(slug));
+    const uncovered = rows.filter((r) => !(copyJson as Record<string, unknown>)[r.slug]);
+
+    if (orphaned.length) {
+      console.log(`\n  ${orphaned.length} authored entr${orphaned.length === 1 ? "y" : "ies"} match no product — the ERP has renamed or retired these:`);
+      for (const s of orphaned) console.log(`    ${s}`);
+      console.log("    Remove from src/data/product-copy.json, and redirect the dead URL if it was served.");
+    }
+    if (uncovered.length) {
+      console.log(`\n  ${uncovered.length} product${uncovered.length === 1 ? "" : "s"} with no authored copy:`);
+      for (const r of uncovered.slice(0, 20)) console.log(`    ${r.slug}`);
+    }
+    if (!orphaned.length && !uncovered.length) {
+      console.log("\n  copy coverage: every product has copy, and every entry has a product.");
     }
   });
 });
