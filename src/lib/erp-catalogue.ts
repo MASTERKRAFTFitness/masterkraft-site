@@ -25,6 +25,7 @@ import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
 import { anchorCodes, compareSizeLabels, getRange } from "@/lib/ranges";
 import { defaultCartonFor } from "@/lib/freight";
+import { productCopy, productCopyHtml } from "@/lib/product-copy";
 import { filterListable, formatPrice, isBrandSku, type WcProduct } from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
 
@@ -481,7 +482,7 @@ export function erpUnitBySlug(map: UnleashedMap, slug: string): ErpUnit | undefi
  * A unit rendered as the WooCommerce-shaped product the listing components
  * already take, so ProductCard, sorting and the grids are untouched.
  */
-export function unitAsProduct(unit: ErpUnit): WcProduct {
+export function unitAsProduct(unit: ErpUnit, opts?: { withCopy?: boolean }): WcProduct {
   return {
     id: unit.wooId ?? -hash(unit.slug),
     name: unit.name,
@@ -496,6 +497,26 @@ export function unitAsProduct(unit: ErpUnit): WcProduct {
     stock_status: unit.inStock ? "instock" : "onbackorder",
     images: unit.image ? [{ src: unit.image, alt: unit.name }] : [],
     categories: [{ id: 0, name: unit.group, slug: slugify(unit.group) }],
+    // THE WORDS, for the half of the catalogue WooCommerce never held. Filled
+    // here rather than at each call site so the product page picks it up
+    // unchanged: the meta description and the JSON-LD both read
+    // short_description, and the Product Overview falls through to `description`
+    // when there is no WooCommerce meta_data to parse - which is every unit.
+    // Absent for a product nobody has written yet, and unitDescription() stays
+    // the fallback for those. See lib/product-copy.ts.
+    //
+    // OFF BY DEFAULT, because unitCard() builds every listing card through this
+    // function and ProductCard renders neither field. Attaching them by default
+    // shipped the full body HTML for 24 products in the RSC payload of every
+    // listing page - measured at ~10 KB of markup nothing rendered, on pages
+    // whose loading behaviour we had just spent effort fixing. The product page
+    // asks for it; the grids do not.
+    ...(opts?.withCopy
+      ? {
+          short_description: productCopy(unit.slug)?.short ?? "",
+          description: productCopyHtml(unit.slug) ?? "",
+        }
+      : {}),
   } as WcProduct;
 }
 

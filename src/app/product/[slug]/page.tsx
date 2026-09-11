@@ -65,7 +65,7 @@ export async function generateMetadata({
   const unit = wooProduct ? undefined : erpUnitBySlug(unleashed, slug);
   const p = wooProduct
     ? withErpImages(wooProduct, unleashed, gallery)
-    : unit && unitAsProduct(unit);
+    : unit && unitAsProduct(unit, { withCopy: true });
   if (!p) return { title: "Product" };
   return {
     title: `${p.name}`,
@@ -121,7 +121,7 @@ export default async function ProductPage({
   // products the ERP has no photograph of. See withErpImages.
   const product = wooProduct
     ? withErpImages(wooProduct, unleashed, gallery)
-    : withErpImages(unitAsProduct(unit!), unleashed, gallery);
+    : withErpImages(unitAsProduct(unit!, { withCopy: true }), unleashed, gallery);
 
   const cat = product.categories?.[0];
 
