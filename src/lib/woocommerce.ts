@@ -415,17 +415,75 @@ export type WcCategoryChild = { id: number; slug: string; name: string; count: n
 
 // WooCommerce returns category names HTML-encoded (e.g. "Chest &amp; Shoulder").
 // Rendering them directly double-encodes in React (shows a literal "&amp;"), so
-// decode the handful of entities WC emits back to their characters first.
+// decode the entities WC emits back to their characters first.
+//
+// NUMERIC ENTITIES ARE DECODED GENERICALLY, not from a list. The list version
+// covered the four entities the category names happened to use, and the product
+// copy uses more: across the snapshot's descriptions there are 113 &#8211;,
+// 34 &#8217;, 32 &amp;, 7 &#8243; (the inch mark, in dimensions), 5 &#038;,
+// 4 &#8230; and 1 &nbsp;. The three it missed shipped straight into meta
+// descriptions and Product JSON-LD, where a raw "&#8243;" is what a search
+// result shows a person. A codepoint range cannot fall behind the copy the way
+// a list of seven can.
+//
+// &amp; is decoded LAST, so "&amp;#8211;" resolves to the literal text
+// "&#8211;" rather than being turned into an en dash by the numeric pass. No
+// double-encoded text exists in the snapshot today; the ordering is what keeps
+// that true if any arrives.
 export function decodeEntities(s: string): string {
-  return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;|&#x27;|&apos;/g, "'")
-    .replace(/&#8211;|&ndash;/g, "-")
-    .replace(/&#8217;|&rsquo;/g, "'")
-    .replace(/&nbsp;/g, " ");
+  return (
+    s
+      // The original list, UNCHANGED and still first, because these mappings are
+      // what the site already renders. &#8211; folds to an ASCII hyphen and
+      // &#8217; to a straight apostrophe; decoding them faithfully instead would
+      // silently re-typeset every product and category name on the site, which
+      // is not this function's job to decide.
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#0?39;|&#x27;|&apos;/g, "'")
+      .replace(/&#8211;|&ndash;/g, "-")
+      .replace(/&#8217;|&rsquo;/g, "'")
+      .replace(/&nbsp;/g, " ")
+      // ANYTHING ELSE NUMERIC, decoded generically rather than added to the list
+      // above one at a time. The list covered the four entities the category
+      // names happened to use; the product copy uses more. Across the snapshot's
+      // descriptions: 7 &#8243; (the inch mark, in dimensions), 5 &#038; and
+      // 4 &#8230;. All three reached production intact inside meta descriptions
+      // and Product JSON-LD, where a raw "&#8243;" is what a search result shows
+      // a person. A codepoint range cannot fall behind the copy the way a list
+      // of seven can.
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+      .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+      // LAST, so "&amp;#8211;" resolves to the literal text "&#8211;" rather
+      // than being turned into a dash by the passes above. No double-encoded
+      // text exists in the snapshot today; this ordering is what keeps that
+      // true if any arrives.
+      .replace(/&amp;/g, "&")
+  );
+}
+
+/**
+ * WooCommerce rich-text (short_description / description) as plain text, for
+ * the places that need words rather than markup: meta descriptions and the
+ * `description` field of Product structured data.
+ *
+ * THE DECODE IS THE POINT. Both callers used to strip tags and stop, which left
+ * every entity in the copy intact - production served
+ * `<meta name="description" content="...Modular Storage Rack Dual Pipe &#8211;
+ * the versatile solution...">` and the same string inside the JSON-LD. 163 of
+ * the snapshot's 512 descriptions carry at least one entity, so this was most
+ * of the product copy the site has, rendered wrong in exactly the two places
+ * only a search engine reads.
+ *
+ * Order matters: strip first, then decode, so an encoded "&lt;b&gt;" in the
+ * copy becomes visible text instead of being decoded into a tag and then
+ * stripped. Whitespace is collapsed last because stripping block tags leaves
+ * behind the newlines that separated them.
+ */
+export function plainText(html: string | undefined | null): string {
+  if (!html) return "";
+  return decodeEntities(html.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
 }
 
 // The category's own description (rich HTML) from WooCommerce — the SEO copy the

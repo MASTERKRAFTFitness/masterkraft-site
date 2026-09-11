@@ -13,6 +13,7 @@ import {
   filterBrandSku,
   getBundleFromPrice,
   formatPrice,
+  plainText,
   type WcProduct,
 } from "@/lib/woocommerce";
 import { getUnleashedMap, enrich, enrichCard, lookupBySku, withErpImages, type EnrichedProduct } from "@/lib/unleashed";
@@ -71,7 +72,7 @@ export async function generateMetadata({
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
     // the sizes and price its card carries rather than going out bare.
     description:
-      p.short_description?.replace(/<[^>]*>/g, "").slice(0, 155) ||
+      plainText(p.short_description).slice(0, 155) ||
       (unit ? unitDescription(unit) : undefined),
     alternates: { canonical: `/product/${slug}` },
     openGraph: {
@@ -236,7 +237,7 @@ export default async function ProductPage({
     // Absolute, because the mirror serves these as bare /product-images paths
     // and Google rejects a relative URL in structured data. See absoluteUrl.
     image: (product.images ?? []).map((i) => absoluteUrl(i.src)).filter(Boolean).slice(0, 5),
-    description: product.short_description?.replace(/<[^>]*>/g, "").trim() || undefined,
+    description: plainText(product.short_description) || undefined,
     sku: product.sku || undefined,
     brand: { "@type": "Brand", name: "MasterKraft" },
     ...offers,
