@@ -50,13 +50,22 @@ const nextConfig: NextConfig = {
       { source: "/about", destination: "/our-story", permanent: true },
       { source: "/sample-page", destination: "/", permanent: true },
 
-      // CREATED BY FIXING AN ERP TYPO, 2026-09-11. MAACU02-XL was described as
-      // "Oversided Hoodie (XL)", which spelled differently from its own S/M/L
-      // siblings and so grouped as a product of its own - a one-size hoodie page
-      // at /product/oversided-hoodie, in the sitemap and served for months.
-      // Correcting the spelling in Unleashed merged it into the S-XL range,
-      // which is the right outcome and leaves the old URL answering 404.
-      { source: "/product/oversided-hoodie", destination: "/product/oversized-hoodie", permanent: true },
+      // THREE HOODIE URLS BECAME ONE, 2026-09-11, and both of the dead ones
+      // point at the survivor rather than at each other.
+      //
+      // The ERP held one garment as two complete code series - MAACU02-S/M/L/XL
+      // unpriced and MAACU02S/M/L/XL at $81.82 - plus a spelling, "Oversided
+      // Hoodie (XL)", that differed from its own siblings and so grouped as a
+      // third product: a one-size hoodie page, in the sitemap, served for
+      // months. Correcting the spelling merged it into its range, and retiring
+      // the unpriced series (Michael's rule: keep the priced record) left
+      // /product/oversized-hoodie-unisex as the only one.
+      //
+      // Both sources are pointed straight at the survivor. Chaining
+      // /oversided- -> /oversized- -> /oversized-hoodie-unisex would cost every
+      // visitor a second round trip and dilute the signal across two hops.
+      { source: "/product/oversided-hoodie", destination: "/product/oversized-hoodie-unisex", permanent: true },
+      { source: "/product/oversized-hoodie", destination: "/product/oversized-hoodie-unisex", permanent: true },
 
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been

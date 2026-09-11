@@ -1,122 +1,96 @@
-# The apparent duplicate products, and which are actually duplicates
+# Duplicate products: what was retired, and what is left to do by hand
 
-Generated 2026-09-11, from live Unleashed records. **Nothing here has been
-changed.** The ten misspellings alongside these are handled by
-`scripts/erp-name-fixes.mjs`; these are not, and the reason is below.
+Rule, from Michael on 2026-09-11: **keep the priced record.** Applied below.
+Status as of that date.
 
-None of the records listed here carries stock — `StockOnHand` returns zero
-across all fifteen — so the risk is not inventory. It is identity: deciding
-which record is the product, and that is a catalogue question, not a data one.
+`reports/erp-retire-before.json` holds all fifteen records involved exactly as
+they were before anything moved.
 
-## First, a correction
+---
 
-An earlier note of mine listed `standing-hip-thrust` / `standing-hip-thurst` and
-`standing-abductor` / `standing-hip-abductor` as duplicates. **At least one of
-those is not a duplicate,** and the code structure says so.
+## Done — the hoodies
 
-The Strength codes encode the loading mechanism in characters 5-6:
+One garment existed as two complete code series. The unpriced one is retired
+(`Obsolete = true`; nothing deleted, and the flag is reversible in the UI).
 
-| Segment | Count | Meaning |
-|---|---|---|
-| `PL` | 42 | plate-loaded |
-| `SE` | 21 | selectorised |
-
-Every `MSLB**` code follows it — 22 plate-loaded lower-body machines and 5
-selectorised ones, and the selectorised five are exactly the machines you would
-expect to be selectorised (leg curl, leg extension, leg press).
-
-So:
-
-- `MSLBPL28` **Standing Hip Thrust** — plate-loaded
-- `MSLBSE07` **Standing Hip Thrust** — selectorised
-
-are two different machines that share a name, at $0 and $3,427.27. Merging them
-would delete a real product. **They need disambiguating, not merging** — the site
-renders ProductDescription as the `<h1>`, so as things stand two different
-machines are advertised under one name at two prices.
-
-## The four cases
-
-### 1. Standing Hip Thrust — three records, two problems
-
-| Code | Description | Price | Mechanism |
+| Code | Description | Price | Now |
 |---|---|---|---|
-| `MSLBPL04` | Standing Hip Thurst | $1,918.18 | plate-loaded |
-| `MSLBPL28` | Standing Hip Thrust | $0 | plate-loaded |
-| `MSLBSE07` | Standing Hip Thrust | $3,427.27 | selectorised |
+| `MAACU02-S` | Oversized Hoodie (S) | $0 | **retired** |
+| `MAACU02-M` | Oversized Hoodie (M) | $0 | **retired** |
+| `MAACU02-L` | Oversized Hoodie (L) | $0 | **retired** |
+| `MAACU02-XL` | Oversized Hoodie (XL) | $0 | **retired** |
+| `MAACU02S` | Oversized Hoodie (Unisex) (S) | $81.82 | kept |
+| `MAACU02M` | Oversized Hoodie (Unisex) (M) | $81.82 | kept |
+| `MAACU02L` | Oversized Hoodie (Unisex) (L) | $81.82 | kept |
+| `MAACU02XL` | Oversized Hoodie (Unisex) (XL) | $81.82 | kept |
 
-`MSLBSE07` is a separate machine (above). The question is `MSLBPL04` vs
-`MSLBPL28`: same mechanism, same subgroup, one misspelled and priced, one
-correctly spelled and at $0.
+**Three hoodie URLs became one.** `/product/oversided-hoodie` and
+`/product/oversized-hoodie` both now redirect straight to
+`/product/oversized-hoodie-unisex` — pointed at the survivor rather than chained
+through each other. `src/lib/obsolete-skus.json` has been resynced, and the
+authored copy went from 170 entries to 168.
 
-**Most likely:** one record superseded the other and the old one kept the price.
-Which survives determines whether the plate-loaded machine sells at $1,918.18 or
-needs pricing.
+---
 
-> Note: `erp-name-fixes.mjs` does **not** touch `MSLBPL04`'s spelling. Correcting
-> it would produce two identically-named plate-loaded records and make the
-> duplicate harder to see, not easier.
+## Cannot be done from here — three pairs under "Lower Body Machines"
 
-**Suggested:** decide which of `MSLBPL04` / `MSLBPL28` is current, obsolete the
-other, and rename `MSLBSE07` to "Standing Hip Thrust (Selectorised)" —
-or rename both survivors to carry their mechanism.
+All six records below sit under the subgroup **Lower Body Machines**, which
+occurs **twice** in the 154-entry ProductGroups list. `POST /Products` resolves
+a subgroup by name, so an ambiguous name cannot be resolved and every write is
+refused — see
+[`erp-name-fixes-remaining.md`](erp-name-fixes-remaining.md). This is a property
+of the API, not of these records.
 
-### 2. Multi Dead Lift / Multi Deadlift
+They need the same edit by hand in the Unleashed UI: open the product, tick
+**Obsolete**, save. Then run `npm run build:obsolete` and commit the result, or
+`check:obsolete` will fail at predeploy.
+
+### 1. Standing Abductor — straightforward
+
+| Code | Description | Price | Action |
+|---|---|---|---|
+| `MSLBPL05` | Standing Abductor | $2,336.36 | **keep** |
+| `MSLBPL27` | Standing Hip Abductor | $0 | **retire** |
+
+### 2. Standing Hip Thrust — needs a rename as well as a retirement
+
+| Code | Description | Price | Mechanism | Action |
+|---|---|---|---|---|
+| `MSLBPL04` | Standing Hip **Thurst** | $1,918.18 | plate-loaded | **keep**, and fix the spelling |
+| `MSLBPL28` | Standing Hip Thrust | $0 | plate-loaded | **retire** |
+| `MSLBSE07` | Standing Hip Thrust | $3,427.27 | **selectorised** | keep — *not a duplicate* |
+
+Two things to be careful of here:
+
+- The record the rule keeps is the misspelled one. Correcting `MSLBPL04` to
+  "Standing Hip Thrust" is right, but it then reads identically to `MSLBSE07`.
+- `MSLBSE07` is the **selectorised** version of the machine, not a duplicate —
+  the Strength codes carry the mechanism at characters 5-6 (`PL` plate-loaded
+  across 42 codes, `SE` selectorised across 21).
+
+**Right now the site groups `MSLBPL28` and `MSLBSE07` into a single product
+page** at `/product/standing-hip-thrust`, because they share a name — presenting
+a $0 plate-loaded machine and a $3,427.27 selectorised one as two options of one
+product. Retiring `MSLBPL28` fixes that on its own.
+
+Suggested end state:
+
+- `MSLBPL04` → "Standing Hip Thrust (Plate Loaded)"
+- `MSLBSE07` → "Standing Hip Thrust (Selectorised)"
+- `MSLBPL28` → retired
+
+### 3. Multi Deadlift — the rule does not decide this one
 
 | Code | Description | Price | Mechanism |
 |---|---|---|---|
 | `MSLBPL08` | Multi Dead Lift | $2,418.18 | plate-loaded |
 | `MSLBPL21` | Multi Deadlift | $2,772.73 | plate-loaded |
 
-Same mechanism, same subgroup, a $354.55 difference. Either two models, or one
-product whose price was revised on a new record.
+**Both are priced**, $354.55 apart, same mechanism and same subgroup. "Keep the
+priced record" does not separate them, and nothing in the ERP does either — no
+stock, no attributes, no notes.
 
-**Cannot be resolved from the data.** If they are one product, the price gap
-means the wrong choice under-quotes by $354.55 on every sale.
-
-### 3. Standing Abductor / Standing Hip Abductor
-
-| Code | Description | Price | Mechanism |
-|---|---|---|---|
-| `MSLBPL05` | Standing Abductor | $2,336.36 | plate-loaded |
-| `MSLBPL27` | Standing Hip Abductor | $0 | plate-loaded |
-
-Same shape as case 1: same mechanism, one priced and one at $0. The names are
-plausibly the same machine, but "Standing Abductor" and "Standing Hip Abductor"
-are also both real product names in this category.
-
-### 4. Oversized Hoodie — two code series, one garment
-
-| Code | Description | Price |
-|---|---|---|
-| `MAACU02-S` | Oversized Hoodie (S) | $0 |
-| `MAACU02-M` | Oversized Hoodie (M) | $0 |
-| `MAACU02-L` | Oversized Hoodie (L) | $0 |
-| `MAACU02-XL` | Oversided Hoodie (XL) | $0 |
-| `MAACU02S` | Oversized Hoodie (Unisex) (S) | $81.82 |
-| `MAACU02M` | Oversized Hoodie (Unisex) (M) | $81.82 |
-| `MAACU02L` | Oversized Hoodie (Unisex) (L) | $81.82 |
-| `MAACU02XL` | Oversized Hoodie (Unisex) (XL) | $81.82 |
-
-**The clearest case here.** Two complete size runs of the same garment under the
-same base code, differing only by a hyphen. The hyphenated series is unpriced
-throughout; the unhyphenated series is priced throughout and matches the naming
-of every other apparel range (`MAACU04S` Long Sleeve Tee, `MAACU09S` Leggings —
-all unhyphenated).
-
-**Suggested:** obsolete the four `MAACU02-*` records. That also removes two of
-the three hoodie URLs the site currently serves.
-
-> `erp-name-fixes.mjs` **does** correct `MAACU02-XL`'s "Oversided" spelling,
-> because that record is live and serving a page today. If the series is
-> obsoleted the correction becomes moot, which costs nothing.
-
-## What this is worth fixing for
-
-Each duplicate is a separate indexable URL carrying its own copy, which works
-directly against the thin-content problem the product copy was written to solve.
-Three hoodie pages for one hoodie is three pages competing with each other.
-
-But every one of these decisions changes what a record quotes at, and the
-[CSV-not-live-writes precedent](../docs/handover-product-copy.md) applies: a
-wrong guess here puts a wrong sell price on a record that invoices.
+Either they are two models that both need clearer names, or one superseded the
+other and the wrong choice under- or over-quotes by $354.55 on every sale. This
+one needs a decision from someone who knows the catalogue; it has been left
+untouched.

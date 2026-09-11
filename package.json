@@ -21,6 +21,7 @@
     "check:cartons": "CHECK=1 node scripts/build-erp-cartons.mjs",
     "check:auspost": "node scripts/auspost-check.mjs",
     "fix:erp-names": "node scripts/erp-name-fixes.mjs",
+    "retire:erp-dupes": "node scripts/erp-retire-duplicates.mjs",
     "mirror:images": "node scripts/mirror-product-images.mjs",
     "mirror:remaining": "node scripts/mirror-remaining-images.mjs",
     "recover:foreign": "node scripts/recover-foreign-photography.mjs",

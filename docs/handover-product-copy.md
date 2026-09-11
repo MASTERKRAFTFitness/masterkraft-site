@@ -99,12 +99,12 @@ list that was here. Two corrections to what this note first said:
   plate-loaded (42 codes), `SE` selectorised (21) — so those are the
   selectorised and plate-loaded versions of the same machine, at $3,427.27 and
   $0. Merging them would delete a real product. They need disambiguating names.
-- The rest (`multi-dead-lift`/`multi-deadlift`,
-  `standing-abductor`/`standing-hip-abductor`, the plate-loaded hip thrust pair,
-  and the two hoodie code series) are **genuine candidates that cannot be
-  resolved from the data** — each pair has one priced record and one at $0, or
-  two different prices, so the wrong choice puts a wrong sell price on a record
-  that quotes and invoices.
+- The rest were resolved on 2026-09-11 by Michael's rule, **keep the priced
+  record**. The hoodies are done — the four unpriced `MAACU02-*` records are
+  retired and three hoodie URLs became one. Two lower-body pairs are decided but
+  cannot be written through the API and need a manual edit, and
+  `multi-dead-lift`/`multi-deadlift` is still open because *both* records are
+  priced, $354.55 apart, so the rule does not separate them.
 
 None of them carries stock, so the risk is identity rather than inventory.
 

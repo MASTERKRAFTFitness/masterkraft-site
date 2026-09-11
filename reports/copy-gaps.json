@@ -50,31 +50,6 @@
     "weightKg": null
   },
   {
-    "slug": "oversized-hoodie",
-    "name": "Oversized Hoodie",
-    "group": "Apparel",
-    "subgroup": "Unisex",
-    "brand": "MK",
-    "codes": [
-      "MAACU02-S",
-      "MAACU02-M",
-      "MAACU02-L",
-      "MAACU02-XL"
-    ],
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "isRange": true,
-    "price": 0,
-    "priceMax": 0,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "oversized-hoodie-unisex",
     "name": "Oversized Hoodie (Unisex)",
     "group": "Apparel",
