@@ -14,7 +14,14 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/cart", "/checkout", "/api/", "/wholesale-login", "/portal", "/admin"],
+      // /portal is NOT here, deliberately. Its pages duplicate the public
+      // content pages, so they carry `robots: noindex` (see portal/layout.tsx)
+      // - and a Disallow would stop Google fetching them, which means never
+      // reading that noindex. A blocked URL can still be indexed from links
+      // alone; the only way to get a page OUT is to let the crawler in to be
+      // told to leave. The same applies to anything else added here that has a
+      // noindex: block crawling OR ask for removal, never both.
+      disallow: ["/cart", "/checkout", "/api/", "/wholesale-login", "/admin"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
