@@ -76,6 +76,15 @@ export const MAX_PARCEL_VOLUME_M3 = 0.25;
 const MAX_DISTINCT_PARCELS = 8;
 const MAX_TOTAL_PARCELS = 30;
 
+// HOW MANY SEPARATE CONSIGNMENTS one cart may be split into. See
+// partitionConsignments: an over-limit carton is quoted on its own, because the
+// carriers that take bulky goods will not quote a consignment holding anything
+// else. Each group costs one metered Easyship call, so this is the ceiling on
+// what a single checkout can spend of the allowance. Past it the order goes to
+// the quote flow, where a trolley of racks was always going to be priced by a
+// person.
+const MAX_CONSIGNMENTS = 6;
+
 export type FreightAddress = {
   city: string;
   state?: string;
@@ -747,10 +756,7 @@ async function quoteEasyship(
  * street, this is the line that has to change.
  */
 function cacheKey(parcels: Parcel[], collection: FreightAddress, delivery: FreightAddress): string {
-  const boxes = parcels
-    .map((p) => `${p.weight}x${p.length}x${p.width}x${p.height}`)
-    .sort()
-    .join(",");
+  const boxes = boxSignature(parcels);
   const to = [delivery.postcode, delivery.city, delivery.state ?? "", delivery.country]
     .map((v) => v.trim().toLowerCase())
     .join("|");
@@ -779,46 +785,94 @@ function cacheableFor(quote: FreightQuote): number {
 }
 
 /**
- * Price a consignment with every carrier that can carry it, and return the best
- * of the pooled options.
+ * The cartons of a consignment, in a canonical order.
  *
- * The two carriers are asked CONCURRENTLY, so having a second one costs no extra
- * latency - the request takes as long as the slower carrier, not the sum. A
- * carrier that fails is dropped and the other one still answers; only an empty
- * pool is a failure.
+ * Shared by the cache key and the splitter so "the same boxes" means one thing.
+ * A `function` rather than a `const` because cacheKey above is declared first
+ * and relies on hoisting.
  */
-export async function quoteFreight(
-  items: FreightItem[],
+function boxSignature(parcels: Parcel[]): string {
+  return parcels
+    .map((p) => `${p.weight}x${p.length}x${p.width}x${p.height}`)
+    .sort()
+    .join(",");
+}
+
+/**
+ * Split a cart into the consignments it will actually be quoted as.
+ *
+ * WHY A CART IS NOT ONE CONSIGNMENT. Measured against the live Easyship account
+ * on 2026-09-11, Thomastown to Melbourne:
+ *
+ *   1 x 224cm barbell               6 rates, cheapest TNT Road Express $168.37
+ *   2 x 224cm barbell               1 rate,  UPS Express Saver        $394.20
+ *   1 x barbell + 1 x 1kg satchel   1 rate,  UPS Express Saver        $232.74
+ *   2 x 21kg carton                 3 rates, CouriersPlease Multi Box  $48.21
+ *
+ * TNT - the ONLY carrier on this account that takes the bulky half of the
+ * catalogue - quotes SINGLE-PARCEL consignments and nothing else. A second
+ * carton of any size removes it, and that is not about mixing bulky with small:
+ * two barbells and no parcels at all lose it just as completely. What is left is
+ * UPS Express, the dearest service in the pool, and it was being shown to the
+ * customer as their only choice - $450.00 for a cart whose parts quote at
+ * $249.07 when asked separately.
+ *
+ * So each over-limit carton is quoted ALONE, and everything parcel-sized is
+ * quoted together, because CouriersPlease's Multi Box services take a stack of
+ * cartons happily and cost far less per box than sending each one on its own.
+ * Splitting all the way down would cost MORE, not less: the same cart as five
+ * single-carton consignments comes to $278.09 against $249.07.
+ *
+ * A cart with nothing over the parcel limits returns ONE group and is quoted
+ * exactly as it was before this existed. That is the common case and it must
+ * stay a single metered call.
+ */
+export function partitionConsignments(parcels: Parcel[]): Parcel[][] {
+  const bulky = parcels.filter((p) => isOversize(p));
+  if (bulky.length === 0) return [parcels];
+  const rest = parcels.filter((p) => !isOversize(p));
+  return [...bulky.map((p) => [p]), ...(rest.length > 0 ? [rest] : [])];
+}
+
+type ConsignmentResult =
+  | { ok: true; options: FreightOption[] }
+  | { ok: false; reason: "oversize" | "error" | "no_services"; detail?: string };
+
+/**
+ * Price ONE consignment with every carrier that can carry it.
+ *
+ * This is what quoteFreight used to be, lifted out whole so that a split cart
+ * asks the same question once per group and the answers can be added up.
+ *
+ * IT KEEPS ITS OWN CACHE ENTRY, keyed on its own cartons, and that is what makes
+ * splitting affordable against a metered allowance: a barbell priced in one cart
+ * is free in the next, and the parcel group of a five-line order is one entry
+ * however many times the customer edits their address.
+ *
+ * Returns the RAW pooled options rather than a selection. The ceiling and
+ * selectOptions are applied once to the COMBINED answer, because "the cheapest
+ * option" is only meaningful across the whole order.
+ */
+async function quoteConsignment(
+  parcels: Parcel[],
+  collection: FreightAddress,
   delivery: FreightAddress
-): Promise<FreightQuote> {
-  const auspostKey = process.env.AUSPOST_API_KEY;
-  const easyshipToken = process.env.EASYSHIP_API_TOKEN;
-  const collection = collectionAddress();
-  if (!collection || !freightConfigured()) return { ok: false, reason: "not_configured" };
-
-  const { parcels, missing } = itemsToParcels(items);
-  // Fail the WHOLE cart, not just the line: quoting part of an order and
-  // silently shipping the rest for nothing is worse than quoting none of it.
-  if (missing.length > 0 || parcels.length === 0) {
-    return { ok: false, reason: "incomplete_dimensions", missing };
-  }
-
-  if (parcels.length > MAX_TOTAL_PARCELS) {
-    return { ok: false, reason: "too_many_parcels", detail: `${parcels.length} cartons` };
-  }
-
-  // Checked AFTER the local validations, so a key is only ever built for a cart
-  // that would actually reach a carrier.
+): Promise<ConsignmentResult> {
   const key = cacheKey(parcels, collection, delivery);
-  const cached = getCached<FreightQuote>(key);
+  const cached = getCached<ConsignmentResult>(key);
   if (cached) return cached;
 
-  // An over-limit carton does not fail the cart any more - it just rules
-  // Australia Post out. PAC would reject the request, so asking is a wasted call
-  // and a slower checkout.
-  const oversize = oversizeSkus(items);
+  const auspostKey = process.env.AUSPOST_API_KEY;
+  const easyshipToken = process.env.EASYSHIP_API_TOKEN;
   const on = enabledCarriers();
-  const askAusPost = on.has("auspost") && Boolean(auspostKey) && oversize.length === 0;
+
+  // An over-limit carton does not fail the consignment any more - it just rules
+  // Australia Post out. PAC would reject the request, so asking is a wasted call
+  // and a slower checkout. Note this is now decided PER GROUP, which is the
+  // quiet win in the split: the parcel-sized group of a cart carrying a rack is
+  // no longer denied Australia Post because of the rack.
+  const oversize = parcels.some((p) => isOversize(p));
+  const askAusPost = on.has("auspost") && Boolean(auspostKey) && !oversize;
   const askEasyship = on.has("easyship") && Boolean(easyshipToken);
 
   const [ap, es] = await Promise.all([
@@ -852,30 +906,189 @@ export async function quoteFreight(
   // consignment with no carrier for it is "oversize", which the checkout turns
   // into the honest "ships as freight" message. A carrier that broke is an
   // error. Everything else genuinely had no service to offer.
-  const failure = (): FreightQuote => {
-    if (oversize.length > 0 && !askEasyship) return { ok: false, reason: "oversize", oversize };
-    if (errors.length > 0) return { ok: false, reason: "error", detail: errors.join("; ") };
-    if (oversize.length > 0) return { ok: false, reason: "oversize", oversize };
-    return { ok: false, reason: "no_services" };
+  const result: ConsignmentResult =
+    options.length > 0
+      ? { ok: true, options }
+      : oversize && !askEasyship
+        ? { ok: false, reason: "oversize" }
+        : errors.length > 0
+          ? { ok: false, reason: "error", detail: errors.join("; ") }
+          : oversize
+            ? { ok: false, reason: "oversize" }
+            : { ok: false, reason: "no_services" };
+
+  setCached(key, result, result.ok ? cacheTtlSeconds() : cacheErrorTtlSeconds());
+  return result;
+}
+
+/**
+ * Fold one chosen option per consignment into the single line the customer sees.
+ *
+ * The customer buys ONE delivery, not a basket of them, so a split cart has to
+ * come back looking like everything else in the checkout: a price, a carrier and
+ * a transit time. What they are not shown is the routing, which is ours to worry
+ * about - the same principle selectOptions already applies to two carriers.
+ */
+function composite(chosen: FreightOption[]): FreightOption {
+  const price = Math.round(chosen.reduce((s, o) => s + o.price, 0) * 100) / 100;
+  const carriers = [...new Set(chosen.map((o) => o.carrier))];
+  const levels = [...new Set(chosen.map((o) => o.serviceLevel))];
+
+  // THE ORDER IS NOT DELIVERED UNTIL ITS LAST CONSIGNMENT ARRIVES, so the
+  // transit time is the SLOWEST leg - never the sum, and never the quickest.
+  // Unknown anywhere means unknown overall, which sorts last in selectOptions
+  // and is the safe direction: it can only lose a race it might have won.
+  const slowest = (get: (o: FreightOption) => number | undefined): number | undefined => {
+    const vs = chosen.map(get);
+    return vs.every((v) => typeof v === "number") ? Math.max(...(vs as number[])) : undefined;
   };
 
-  // Applied BEFORE selectOptions, so an over-ceiling express service is never
-  // offered as the "faster" second option either. The cheapest is what decides
-  // whether this cart can be sold online at all.
-  const cap = maxAutoQuote();
-  const affordable = cap > 0 ? options.filter((o) => o.price <= cap) : options;
-  const cheapest = Math.min(...options.map((o) => o.price));
+  return {
+    // Composite and deterministic, because payment-intent re-quotes and matches
+    // on this id to decide what to charge. The groups are in canonical order
+    // before this is built, so an identical cart yields an identical id.
+    id: `split:${chosen.map((o) => o.id).join("+")}`,
+    carrier:
+      carriers.length === 1
+        ? carriers[0]
+        : carriers.length === 2
+          ? carriers.join(" + ")
+          : "Multiple carriers",
+    service: `${chosen.length} consignments`,
+    serviceLevel: levels.length === 1 ? levels[0] : "standard",
+    price,
+    daysFrom: slowest((o) => o.daysFrom),
+    daysTo: slowest((o) => o.daysTo),
+  };
+}
 
-  const quote: FreightQuote =
-    affordable.length > 0
-      ? { ok: true, options: selectOptions(affordable) }
-      : options.length > 0
-        ? {
-            ok: false,
-            reason: "too_expensive",
-            detail: `cheapest $${cheapest.toFixed(2)} over the $${cap.toFixed(2)} cap`,
-          }
-        : failure();
+/**
+ * Build the whole-order options from each consignment's own options.
+ *
+ * ONE GROUP IS RETURNED UNTOUCHED, ids and all. A cart with nothing over the
+ * parcel limits must behave exactly as it did before splitting existed, down to
+ * the option ids that payment-intent matches on.
+ *
+ * With more than one group there is no honest way to offer the customer every
+ * combination - two groups of six services is thirty-six lines - so the same two
+ * questions selectOptions asks of one carrier are asked of each group: what is
+ * the cheapest way to send this, and what is the fastest. Those give a cheapest
+ * whole order and a fastest whole order, and selectOptions then does its usual
+ * job of dropping the second when it is not actually faster.
+ */
+function combineConsignments(groups: FreightOption[][]): FreightOption[] {
+  if (groups.length === 1) return groups[0];
+
+  const speed = (o: FreightOption) => o.daysTo ?? o.daysFrom ?? Number.MAX_SAFE_INTEGER;
+  const cheapestOf = (opts: FreightOption[]) =>
+    [...opts].sort((a, b) => a.price - b.price || speed(a) - speed(b))[0];
+  const fastestOf = (opts: FreightOption[]) =>
+    [...opts].sort((a, b) => speed(a) - speed(b) || a.price - b.price)[0];
+
+  const cheapest = composite(groups.map(cheapestOf));
+  const fastest = composite(groups.map(fastestOf));
+  return cheapest.id === fastest.id ? [cheapest] : [cheapest, fastest];
+}
+
+/**
+ * Price a cart with every carrier that can carry it, and return the best of the
+ * pooled options.
+ *
+ * The cart is first split into consignments (see partitionConsignments), and
+ * every consignment is priced CONCURRENTLY, each asking both carriers
+ * concurrently in turn - so neither a second carrier nor a second consignment
+ * costs extra latency. The request takes as long as the slowest single call.
+ *
+ * A carrier that fails is dropped and the other one still answers. A
+ * CONSIGNMENT that cannot be carried, though, fails the whole cart: quoting part
+ * of an order and silently shipping the rest for nothing is the one outcome
+ * worse than sending the customer to the quote flow.
+ */
+export async function quoteFreight(
+  items: FreightItem[],
+  delivery: FreightAddress
+): Promise<FreightQuote> {
+  const collection = collectionAddress();
+  if (!collection || !freightConfigured()) return { ok: false, reason: "not_configured" };
+
+  const { parcels, missing } = itemsToParcels(items);
+  // Fail the WHOLE cart, not just the line: quoting part of an order and
+  // silently shipping the rest for nothing is worse than quoting none of it.
+  if (missing.length > 0 || parcels.length === 0) {
+    return { ok: false, reason: "incomplete_dimensions", missing };
+  }
+
+  if (parcels.length > MAX_TOTAL_PARCELS) {
+    return { ok: false, reason: "too_many_parcels", detail: `${parcels.length} cartons` };
+  }
+
+  // Checked AFTER the local validations, so a key is only ever built for a cart
+  // that would actually reach a carrier. This is the WHOLE-CART entry; each
+  // consignment caches itself separately inside quoteConsignment.
+  const key = cacheKey(parcels, collection, delivery);
+  const cached = getCached<FreightQuote>(key);
+  if (cached) return cached;
+
+  // Canonical order, so the composite option id below is stable for identical
+  // carts however the lines happened to be added.
+  const groups = partitionConsignments(parcels).sort((a, b) =>
+    boxSignature(a).localeCompare(boxSignature(b))
+  );
+  if (groups.length > MAX_CONSIGNMENTS) {
+    return { ok: false, reason: "too_many_parcels", detail: `${groups.length} consignments` };
+  }
+
+  // PRE-FLIGHT, AND IT MUST STAY BEFORE THE FIRST CALL. If nothing on the
+  // account can carry an over-limit carton, this cart is going to the quote flow
+  // whatever the other consignments come back with - so asking is a wasted call
+  // and a slower checkout. Splitting made this worth stating explicitly: without
+  // it the parcel-sized group of a cart carrying an unshippable rack would go to
+  // a carrier on its own, and with Easyship enabled that is a METERED call spent
+  // on an answer that cannot be used.
+  const carriesOversize = enabledCarriers().has("easyship") && Boolean(process.env.EASYSHIP_API_TOKEN);
+  if (!carriesOversize && groups.some((g) => g.some((p) => isOversize(p)))) {
+    return { ok: false, reason: "oversize", oversize: oversizeSkus(items) };
+  }
+
+  const results = await Promise.all(
+    groups.map((g) => quoteConsignment(g, collection, delivery))
+  );
+
+  const failures = results.filter((r): r is Extract<ConsignmentResult, { ok: false }> => !r.ok);
+
+  let quote: FreightQuote;
+  if (failures.length > 0) {
+    // One unshippable consignment is an unshippable cart. Report the most
+    // explanatory reason rather than the first: "oversize" tells the customer
+    // this is freight and a person will price it, which is both true and
+    // actionable, where "error" tells them nothing.
+    const oversize = oversizeSkus(items);
+    const errors = failures.filter((f) => f.reason === "error").map((f) => f.detail ?? "");
+    quote = failures.some((f) => f.reason === "oversize")
+      ? { ok: false, reason: "oversize", oversize }
+      : errors.length > 0
+        ? { ok: false, reason: "error", detail: errors.join("; ") }
+        : { ok: false, reason: "no_services" };
+  } else {
+    const options = combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options));
+    // Applied BEFORE selectOptions, so an over-ceiling express service is never
+    // offered as the "faster" second option either. The cheapest is what decides
+    // whether this cart can be sold online at all.
+    const cap = maxAutoQuote();
+    const affordable = cap > 0 ? options.filter((o) => o.price <= cap) : options;
+    const cheapest = options.length > 0 ? Math.min(...options.map((o) => o.price)) : 0;
+
+    quote =
+      affordable.length > 0
+        ? { ok: true, options: selectOptions(affordable) }
+        : options.length > 0
+          ? {
+              ok: false,
+              reason: "too_expensive",
+              detail: `cheapest $${cheapest.toFixed(2)} over the $${cap.toFixed(2)} cap`,
+            }
+          : { ok: false, reason: "no_services" };
+  }
 
   setCached(key, quote, cacheableFor(quote));
   return quote;

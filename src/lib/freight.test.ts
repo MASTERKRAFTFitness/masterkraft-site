@@ -9,11 +9,13 @@ import {
   marginPercent,
   maxAutoQuote,
   oversizeSkus,
+  partitionConsignments,
   pricesIncludeGst,
   quoteFreight,
   selectOptions,
   type FreightItem,
   type FreightOption,
+  type Parcel,
 } from "@/lib/freight";
 
 // A carton Australia Post will actually carry: under 22kg, under 105cm, under
@@ -951,5 +953,220 @@ describe("cartons that could not be real", () => {
     expect(isPlausibleCarton({ weight: 0, length: 10.54, width: 1.63, height: 1.63 })).toBe(true);
     // The size rule still applies without a weight.
     expect(isPlausibleCarton({ weight: 0, length: 850, width: 1000, height: 305 })).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Splitting a cart into consignments.
+//
+// The behaviour under test was measured against the live Easyship account on
+// 2026-09-11: TNT, the only carrier on it that takes this catalogue's bulky
+// half, quotes SINGLE-PARCEL consignments and nothing else. A second carton of
+// any size drops it and leaves UPS Express - the dearest service in the pool -
+// as the customer's only choice. See partitionConsignments for the figures.
+// ---------------------------------------------------------------------------
+
+describe("splitting a cart into consignments", () => {
+  const box = (over: Partial<Parcel> = {}): Parcel => ({
+    weight: 18,
+    length: 45,
+    width: 45,
+    height: 37,
+    ...over,
+  });
+  const longBox = (over: Partial<Parcel> = {}): Parcel => box({ length: 224, width: 8, height: 8, ...over });
+
+  it("leaves a cart of ordinary parcels as ONE consignment", () => {
+    const groups = partitionConsignments([box(), box(), box()]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toHaveLength(3);
+  });
+
+  // Each over-limit carton alone, because a second carton of any size costs us
+  // every carrier that would have taken it.
+  it("gives each over-limit carton a consignment of its own", () => {
+    const groups = partitionConsignments([longBox(), longBox()]);
+    expect(groups).toHaveLength(2);
+    expect(groups.every((g) => g.length === 1)).toBe(true);
+  });
+
+  // The parcels stay together: CouriersPlease's Multi Box services take a stack
+  // happily and cost far less per box than sending each one separately.
+  it("keeps the parcel-sized cartons together alongside the bulky ones", () => {
+    const groups = partitionConsignments([box(), longBox(), box()]);
+    expect(groups).toHaveLength(2);
+    expect(groups.find((g) => g.length === 2)).toBeDefined();
+    expect(groups.find((g) => g.length === 1 && g[0].length === 224)).toBeDefined();
+  });
+});
+
+describe("a split cart, priced", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let hits: { url: string; parcels: number; longest: number }[] = [];
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.AUSPOST_API_KEY = "test-key";
+    process.env.EASYSHIP_API_TOKEN = "test-token";
+    process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
+    process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
+    process.env.FREIGHT_COLLECTION_STATE = "VIC";
+    process.env.FREIGHT_MARGIN_PERCENT = "0";
+    hits = [];
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+  });
+
+  /**
+   * Route the mock by WHAT IS IN THE CONSIGNMENT, not just by carrier, because
+   * a split cart asks each carrier more than once and the whole point is that
+   * the answers differ per group.
+   */
+  const carriers = (reply: (c: { easyship: boolean; parcels: number; longest: number }) => unknown) => {
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      const u = String(url);
+      const easyship = u.includes("easyship");
+      let parcels = 1;
+      let longest = 0;
+      if (easyship) {
+        const body = JSON.parse(String(init?.body ?? "{}")) as {
+          parcels?: { box: { length: number; width: number; height: number } }[];
+        };
+        parcels = body.parcels?.length ?? 0;
+        longest = Math.max(...(body.parcels ?? []).map((p) => Math.max(p.box.length, p.box.width, p.box.height)), 0);
+      } else {
+        longest = Number(new URL(u).searchParams.get("length") ?? 0);
+      }
+      hits.push({ url: u, parcels, longest });
+      return new Response(JSON.stringify(reply({ easyship, parcels, longest })), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+  };
+
+  const pac = (price: string) => ({
+    services: { service: [{ code: "AUS_PARCEL_REGULAR", name: "Parcel Post", price }] },
+  });
+  const es = (charge: number, id: string, name: string, days = [1, 3]) => ({
+    rates: [
+      {
+        total_charge: charge,
+        courier_service: { id, name },
+        min_delivery_time: days[0],
+        max_delivery_time: days[1],
+      },
+    ],
+  });
+
+  const bulky = (c: { longest: number }) => c.longest > 105;
+
+  // THE REGRESSION THIS WHOLE CHANGE EXISTS FOR. Whole-cart, the barbell drags
+  // the parcels into a consignment only UPS Express will take. Split, the
+  // barbell keeps TNT and the parcels keep their own cheap carrier, and the
+  // customer is charged the sum rather than the penalty.
+  it("prices a bulky item and a parcel as two consignments and adds them up", async () => {
+    carriers((c) =>
+      c.easyship
+        ? bulky(c)
+          ? es(200, "uuid-tnt", "TNT - Road Express")
+          : es(50, "uuid-cp", "CouriersPlease - Multi Box STD")
+        : pac("30.00")
+    );
+    const q = await quoteFreight([barbell(), item()], delivery);
+    expect(q.ok).toBe(true);
+    // The barbell can only go by TNT at 200; the parcel goes cheapest at 30.
+    if (q.ok) expect(q.options[0].price).toBe(230);
+  });
+
+  // The quiet win. Australia Post used to be refused the WHOLE cart because one
+  // line of it was over the parcel limits; now it is only refused the group that
+  // actually is.
+  it("still asks Australia Post for the parcel group of a bulky cart", async () => {
+    carriers((c) => (c.easyship ? (bulky(c) ? es(200, "uuid-tnt", "TNT - Road Express") : es(50, "uuid-cp", "CouriersPlease")) : pac("30.00")));
+    await quoteFreight([barbell(), item()], delivery);
+    const pacCalls = hits.filter((h) => !h.url.includes("easyship"));
+    expect(pacCalls).toHaveLength(1);
+    // ...and never for the barbell, which PAC would only reject.
+    expect(pacCalls[0].longest).toBe(45);
+  });
+
+  // Each over-limit carton is asked for on its own, which is the only shape TNT
+  // will quote.
+  it("asks for each bulky carton separately", async () => {
+    carriers((c) => (c.easyship ? es(200, "uuid-tnt", "TNT - Road Express") : pac("30.00")));
+    await quoteFreight([barbell({ quantity: 2 })], delivery);
+    const esCalls = hits.filter((h) => h.url.includes("easyship"));
+    expect(esCalls).toHaveLength(2);
+    expect(esCalls.every((h) => h.parcels === 1)).toBe(true);
+  });
+
+  // The browser sends only the option id, and payment-intent re-quotes to decide
+  // what to charge. A composite id that moved between those two calls would
+  // refuse the order AFTER the card was captured.
+  it("gives a split cart a stable, composite option id", async () => {
+    carriers((c) =>
+      c.easyship ? (bulky(c) ? es(200, "uuid-tnt", "TNT - Road Express") : es(50, "uuid-cp", "CouriersPlease")) : pac("30.00")
+    );
+    const first = await quoteFreight([barbell(), item()], delivery);
+    clearFreightCache();
+    const second = await quoteFreight([item(), barbell()], delivery);
+    expect(first.ok && second.ok).toBe(true);
+    if (first.ok && second.ok) {
+      expect(first.options[0].id).toMatch(/^split:/);
+      // Same cart, lines added in the other order: the id must not move.
+      expect(second.options[0].id).toBe(first.options[0].id);
+    }
+  });
+
+  // The order is not delivered until its last consignment arrives.
+  it("reports the SLOWEST leg as the transit time, not the sum", async () => {
+    carriers((c) =>
+      c.easyship
+        ? bulky(c)
+          ? es(200, "uuid-tnt", "TNT - Road Express", [2, 6])
+          : es(50, "uuid-cp", "CouriersPlease", [1, 2])
+        : pac("300.00")
+    );
+    const q = await quoteFreight([barbell(), item()], delivery);
+    if (q.ok) {
+      expect(q.options[0].daysTo).toBe(6);
+      expect(q.options[0].daysFrom).toBe(2);
+    }
+  });
+
+  // One unshippable consignment is an unshippable cart. Quoting part of an order
+  // and silently shipping the rest for nothing is the outcome to avoid.
+  it("fails the whole cart when one consignment has no carrier", async () => {
+    carriers((c) => (c.easyship ? (bulky(c) ? { rates: [] } : es(50, "uuid-cp", "CouriersPlease")) : pac("30.00")));
+    const q = await quoteFreight([barbell(), item()], delivery);
+    expect(q.ok).toBe(false);
+    if (!q.ok) expect(q.reason).toBe("oversize");
+  });
+
+  // A trolley of racks was always going to be priced by a person, and each group
+  // costs a metered call.
+  it("sends a cart of too many consignments to the quote flow without calling anyone", async () => {
+    carriers(() => ({ rates: [] }));
+    const q = await quoteFreight([barbell({ quantity: 7 })], delivery);
+    expect(q).toMatchObject({ ok: false, reason: "too_many_parcels" });
+    expect(hits).toHaveLength(0);
+  });
+
+  // The common case must not have changed at all: one call, and the carrier's
+  // own option id rather than a composite.
+  it("leaves an ordinary parcel cart exactly as it was", async () => {
+    carriers((c) => (c.easyship ? es(50, "uuid-cp", "CouriersPlease - Multi Box STD") : pac("30.00")));
+    const q = await quoteFreight([item({ quantity: 2 })], delivery);
+    const esCalls = hits.filter((h) => h.url.includes("easyship"));
+    expect(esCalls).toHaveLength(1);
+    expect(esCalls[0].parcels).toBe(2);
+    if (q.ok) {
+      expect(q.options[0].id).not.toMatch(/^split:/);
+      expect(q.options[0].price).toBe(50);
+    }
   });
 });

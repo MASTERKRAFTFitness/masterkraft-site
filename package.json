@@ -35,6 +35,7 @@
     "report:bulky": "vitest run --config vitest.reports.config.mts scripts/bulky-freight-profile.report.ts",
     "report:carriers": "vitest run --config vitest.reports.config.mts scripts/freight-compare.report.ts",
     "check:carriers": "vitest run --config vitest.reports.config.mts scripts/freight-router.report.ts",
+    "check:split": "vitest run --config vitest.reports.config.mts scripts/freight-split.report.ts",
     "report:openorders": "vitest run --config vitest.reports.config.mts scripts/open-orders.report.ts",
     "report:erponly": "vitest run --config vitest.reports.config.mts scripts/erp-only.report.ts",
     "report:coverage": "vitest run --config vitest.reports.config.mts scripts/carton-coverage.report.ts",
