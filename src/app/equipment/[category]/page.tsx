@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
+import JsonLd from "@/components/seo/JsonLd";
 import ProductListing from "@/components/shop/ProductListing";
 import SortSelect from "@/components/shop/SortSelect";
 import PriceRangeFilter from "@/components/shop/PriceRangeFilter";
 import { categories, getCategory } from "@/lib/categories";
+import { SITE_URL } from "@/lib/site";
 import {
   getAllProductsByCategory,
   getCategoryDescription,
@@ -21,16 +23,32 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; sub?: string; min?: string; max?: string }>;
 }): Promise<Metadata> {
   const { category } = await params;
   const c = getCategory(category);
   if (!c) return { title: "Equipment" };
+
+  // PAGE 2 IS NOT PAGE 1, and used to say it was. This canonical was hardcoded
+  // to the bare category URL, so every paginated view declared itself a
+  // duplicate of the first page — the pattern Google's own pagination guidance
+  // names as the way to get paginated content dropped. The products stayed
+  // discoverable only because the sitemap lists every one of them directly.
+  //
+  // THE FACETS STILL COLLAPSE, deliberately. sort, sub, min and max reorder or
+  // filter the same set of products; page shows a DIFFERENT set. Only the one
+  // that changes which products are on the page gets to be its own URL.
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const canonical = page > 1 ? `/equipment/${c.slug}?page=${page}` : `/equipment/${c.slug}`;
+
   return {
-    title: `${c.label}`,
-    description: c.blurb,
-    alternates: { canonical: `/equipment/${c.slug}` },
+    title: page > 1 ? `${c.label} — Page ${page}` : `${c.label}`,
+    description: c.meta,
+    alternates: { canonical },
   };
 }
 
@@ -153,6 +171,31 @@ export default async function CategoryPage({
     failed = true;
   }
 
+  // THE PRODUCTS ON THIS PAGE, AS STRUCTURED DATA. A category page had only a
+  // BreadcrumbList, so the one thing it is actually for — being a list of
+  // products — was the one thing it did not say. ItemList is how a listing
+  // declares its members and their order.
+  //
+  // It describes THIS page and no other: the slice, in the order rendered, with
+  // positions offset by the page number, so page 2 starts at 25 rather than
+  // claiming to be the first 24 products again. Names and URLs only; the prices
+  // and availability live on each product's own Product schema, and repeating
+  // them here would be two places to disagree.
+  const itemListSchema = cards.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: `${c.label} — MasterKraft`,
+        numberOfItems: total,
+        itemListElement: cards.map(({ product }, i) => ({
+          "@type": "ListItem",
+          position: (page - 1) * PER_PAGE + i + 1,
+          name: product.name,
+          url: `${SITE_URL}/product/${product.slug}`,
+        })),
+      }
+    : null;
+
   const buildHref = (patch: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
     const sub = patch.sub === undefined ? subSlug : patch.sub || undefined;
@@ -169,6 +212,7 @@ export default async function CategoryPage({
 
   return (
     <>
+      {itemListSchema && <JsonLd data={itemListSchema} />}
       <PageHero
         eyebrow="Equipment"
         title={c.label}
@@ -245,12 +289,15 @@ export default async function CategoryPage({
               </>
             )}
 
-            {categoryDescription && (
+            {/* `about` covers the two categories the snapshot has no WooCommerce
+                description for — Apparel and Lighting — which otherwise ended
+                at the product grid with no prose at all. See lib/categories.ts. */}
+            {(categoryDescription || c.about) && (
               <div className="mt-16 pt-10 border-t border-line max-w-3xl">
                 <h2 className="text-xl font-bold mb-5">About {c.label}</h2>
                 <div
                   className="text-ash leading-relaxed [&_p]:mb-4 [&_strong]:text-ink [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_a]:text-accent-600 [&_a]:underline"
-                  dangerouslySetInnerHTML={{ __html: categoryDescription }}
+                  dangerouslySetInnerHTML={{ __html: categoryDescription || c.about! }}
                 />
               </div>
             )}

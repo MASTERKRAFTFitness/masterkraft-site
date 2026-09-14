@@ -64,3 +64,40 @@ describe("siteCategoryFor", () => {
     expect(unresolved).toEqual([]);
   });
 });
+
+// Category page metadata, added 2026-09-15. The meta description used to be the
+// same field as the on-page subtitle, so every category advertised itself in
+// 46-57 characters where Google shows about 155.
+describe("category meta descriptions", () => {
+  it("gives every category one", () => {
+    expect(categories.filter((c) => !c.meta?.trim()).map((c) => c.slug)).toEqual([]);
+  });
+
+  // Under 120 wastes the space that caused this; over 160 is truncated.
+  it("keeps them in the range a search result will show", () => {
+    const bad = categories.filter((c) => c.meta.length < 120 || c.meta.length > 160);
+    expect(bad.map((c) => `${c.slug} (${c.meta.length})`)).toEqual([]);
+  });
+
+  it("never repeats one", () => {
+    expect(categories.length).toBe(new Set(categories.map((c) => c.meta)).size);
+  });
+
+  // The meta and the blurb do different jobs; if they are identical the split
+  // has been undone.
+  it("keeps the meta distinct from the subtitle", () => {
+    expect(categories.filter((c) => c.meta === c.blurb).map((c) => c.slug)).toEqual([]);
+  });
+
+  // Apparel and Lighting have no WooCommerce description in the snapshot, so
+  // they carry their own long-form copy instead. Any future category the
+  // snapshot cannot cover needs the same.
+  it("gives long-form copy to the categories the snapshot cannot", () => {
+    const noSnapshotCopy = ["apparel", "lighting"];
+    for (const slug of noSnapshotCopy) {
+      const c = categories.find((x) => x.slug === slug)!;
+      expect(c.about, `${slug} has no about copy`).toBeTruthy();
+      expect(c.about!.length).toBeGreaterThan(200);
+    }
+  });
+});
