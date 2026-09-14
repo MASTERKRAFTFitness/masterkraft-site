@@ -25,6 +25,7 @@ import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
 import { anchorCodes, compareSizeLabels, getRange } from "@/lib/ranges";
 import { defaultCartonFor } from "@/lib/freight";
+import { productCopy, productCopyHtml } from "@/lib/product-copy";
 import { filterListable, formatPrice, isBrandSku, type WcProduct } from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
 
@@ -120,6 +121,42 @@ const EXCLUDED_GROUPS = new Set(["Other Costs", "Storage"]);
 // dumbbells get two cards at two prices.
 export const BRAND_ORDER = ["MK", "CONCEPT 2", "NO BRAND"];
 const OUR_BRANDS = new Set(BRAND_ORDER);
+
+/**
+ * An ERP brand code as a manufacturer name, for the `brand` of Product
+ * structured data.
+ *
+ * THE SCHEMA USED TO SAY "MasterKraft" FOR EVERYTHING. It is hardcoded no
+ * longer, because it is not true of everything this site sells: the CONCEPT 2
+ * ergs are another manufacturer's, and clearance is ex-display third-party
+ * stock served with the brand filter off (see the erpUnits comment below), so
+ * it carries whatever brand the ERP holds. `brand` is a merchant claim Google
+ * shows next to the product, and attributing someone else's erg to MasterKraft
+ * is the kind of wrong that is worse than absent.
+ *
+ * NOT EVERY VALUE IN THE ERP'S BRAND FIELD IS A BRAND. NO BRAND labels
+ * unbranded stock, and OLD and CLEARANCE are status markers the clearance
+ * pages run on - four of the six clearance units carry "OLD" and one
+ * "CLEARANCE" (see erpUnits below). Title-casing those produces a product
+ * whose manufacturer is "Old", which is a worse claim than the hardcoded one
+ * this replaced. They return undefined and the caller drops the field.
+ *
+ * The other-company brands are left alone: SNAP, REVL, FERNWOOD, AIR LOCKER
+ * and HYPER HEALTH are real manufacturers and title-case correctly.
+ */
+// Values the ERP keeps in its brand field that do not name a manufacturer.
+const NOT_A_BRAND = new Set(["NO BRAND", "OLD", "CLEARANCE"]);
+
+export function brandDisplayName(brand: string | undefined | null): string | undefined {
+  const b = (brand ?? "").trim().toUpperCase();
+  if (!b || NOT_A_BRAND.has(b)) return undefined;
+  if (b === "MK") return "MasterKraft";
+  // The company spells itself Concept2; the ERP spells it "CONCEPT 2".
+  if (b === "CONCEPT 2") return "Concept2";
+  // Clearance brands the allowlist never sees, title-cased out of the ERP's
+  // shouting: "AIR LOCKER" -> "Air Locker".
+  return b.replace(/\S+/g, (w) => w[0] + w.slice(1).toLowerCase());
+}
 
 // HIDE WHAT CANNOT BE SHIPPED (Michael, 2026-09-06).
 //
@@ -445,7 +482,7 @@ export function erpUnitBySlug(map: UnleashedMap, slug: string): ErpUnit | undefi
  * A unit rendered as the WooCommerce-shaped product the listing components
  * already take, so ProductCard, sorting and the grids are untouched.
  */
-export function unitAsProduct(unit: ErpUnit): WcProduct {
+export function unitAsProduct(unit: ErpUnit, opts?: { withCopy?: boolean }): WcProduct {
   return {
     id: unit.wooId ?? -hash(unit.slug),
     name: unit.name,
@@ -460,6 +497,26 @@ export function unitAsProduct(unit: ErpUnit): WcProduct {
     stock_status: unit.inStock ? "instock" : "onbackorder",
     images: unit.image ? [{ src: unit.image, alt: unit.name }] : [],
     categories: [{ id: 0, name: unit.group, slug: slugify(unit.group) }],
+    // THE WORDS, for the half of the catalogue WooCommerce never held. Filled
+    // here rather than at each call site so the product page picks it up
+    // unchanged: the meta description and the JSON-LD both read
+    // short_description, and the Product Overview falls through to `description`
+    // when there is no WooCommerce meta_data to parse - which is every unit.
+    // Absent for a product nobody has written yet, and unitDescription() stays
+    // the fallback for those. See lib/product-copy.ts.
+    //
+    // OFF BY DEFAULT, because unitCard() builds every listing card through this
+    // function and ProductCard renders neither field. Attaching them by default
+    // shipped the full body HTML for 24 products in the RSC payload of every
+    // listing page - measured at ~10 KB of markup nothing rendered, on pages
+    // whose loading behaviour we had just spent effort fixing. The product page
+    // asks for it; the grids do not.
+    ...(opts?.withCopy
+      ? {
+          short_description: productCopy(unit.slug)?.short ?? "",
+          description: productCopyHtml(unit.slug) ?? "",
+        }
+      : {}),
   } as WcProduct;
 }
 

@@ -94,3 +94,30 @@ describe("isIndexableHost", () => {
     expect(bad.isIndexableHost("masterkraft.com")).toBe(false);
   });
 });
+
+// priceValidUntil, added 2026-09-11 for the Offer in Product structured data.
+// Imported inside the block, the way the rest of this file reaches the module:
+// its exports are read at import time and the suite resets modules between
+// cases. priceValidUntil reads no env, so any instance of the module will do.
+describe("priceValidUntil", () => {
+  it("is a plain ISO date one year on from the instant given", async () => {
+    const { priceValidUntil } = await import("@/lib/site");
+    expect(priceValidUntil(Date.UTC(2026, 8, 11))).toBe("2027-09-11");
+  });
+
+  // The whole point of the field: a date already past marks the offer expired,
+  // so it has to move with the clock rather than sit in the source.
+  it("moves with the clock", async () => {
+    const { priceValidUntil } = await import("@/lib/site");
+    const a = priceValidUntil(Date.UTC(2026, 0, 1));
+    const b = priceValidUntil(Date.UTC(2027, 0, 1));
+    expect(a).not.toBe(b);
+    expect(new Date(b).getTime()).toBeGreaterThan(new Date(a).getTime());
+  });
+
+  it("is always in the future of its own input", async () => {
+    const { priceValidUntil } = await import("@/lib/site");
+    const now = Date.now();
+    expect(new Date(priceValidUntil(now)).getTime()).toBeGreaterThan(now);
+  });
+});

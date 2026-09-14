@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { filterListable } from "@/lib/woocommerce";
+import { decodeEntities, filterListable, plainText } from "@/lib/woocommerce";
 // Hiding unshippable products, added 2026-09-06. Freight needs a weight and all
 // three dimensions; without them the WHOLE cart is unquotable, not just the line.
 describe("hiding what cannot be shipped", () => {
@@ -88,5 +88,50 @@ describe("hiding what cannot be shipped", () => {
     // 403703 is AMDBRH, a `variable` product with 21 sizes and not a carton
     // among them - so the branch opens and then rejects, which is the point.
     expect(filterListable([{ sku: "AMDBRH", id: 403703, weight: "11", dimensions: {} }])).toHaveLength(0);
+  });
+});
+
+// Entities in the product copy, added 2026-09-11. 163 of the snapshot's 512
+// descriptions carry at least one; before plainText existed they reached
+// production intact inside meta descriptions and Product JSON-LD.
+describe("decoding WooCommerce copy", () => {
+  // These four are what the site already renders, so they are pinned: the
+  // generic numeric pass added alongside them must not re-typeset the names.
+  it("keeps the existing mappings exactly", () => {
+    expect(decodeEntities("Chest &amp; Shoulder")).toBe("Chest & Shoulder");
+    expect(decodeEntities("a &#8211; b")).toBe("a - b");
+    expect(decodeEntities("it&#8217;s")).toBe("it's");
+    expect(decodeEntities("6&nbsp;kg")).toBe("6 kg");
+  });
+
+  // The three the hand-written list missed. &#8243; is the inch mark and turns
+  // up in dimensions, which is exactly the copy a search result shows.
+  it("decodes numeric entities that were never on the list", () => {
+    expect(decodeEntities("7&#8243; shorts")).toBe("7\u2033 shorts");
+    expect(decodeEntities("rigs &#038; racks")).toBe("rigs & racks");
+    expect(decodeEntities("and more&#8230;")).toBe("and more\u2026");
+    expect(decodeEntities("&#x27;quoted&#x27;")).toBe("'quoted'");
+  });
+
+  // Decoding &amp; last is what keeps an already-encoded entity literal instead
+  // of resolving it a second time.
+  it("does not decode a double-encoded entity twice", () => {
+    expect(decodeEntities("a &amp;#8211; b")).toBe("a &#8211; b");
+  });
+
+  it("strips tags, decodes, and collapses the whitespace left behind", () => {
+    expect(plainText("<p>Dual Pipe &#8211; the\n  versatile</p>\n<p>solution</p>")).toBe(
+      "Dual Pipe - the versatile solution"
+    );
+  });
+
+  // Stripping before decoding, so encoded markup in the copy stays text.
+  it("does not turn encoded markup into tags it then strips", () => {
+    expect(plainText("a &lt;b&gt;bold&lt;/b&gt; claim")).toBe("a <b>bold</b> claim");
+  });
+
+  it("is empty for missing copy, so the caller's fallback still fires", () => {
+    expect(plainText(undefined)).toBe("");
+    expect(plainText("<p></p>")).toBe("");
   });
 });
