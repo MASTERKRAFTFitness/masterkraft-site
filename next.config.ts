@@ -95,6 +95,29 @@ const nextConfig: NextConfig = {
       { source: "/product/multi-dead-lift", destination: "/product/multi-deadlift", permanent: true },
       { source: "/product/standing-hip-abductor", destination: "/product/standing-abductor", permanent: true },
 
+      // THE WORDPRESS SUBCATEGORY URLS, found in Semrush on 2026-09-15 rather
+      // than in the 404 log — because nobody is clicking them, Google is just
+      // still ranking them.
+      //
+      // The old store nested a subcategory under its category:
+      // /equipment/body-weight/gymnastics/. This site routes /equipment/[category]
+      // as ONE segment and expresses the subgroup as ?sub=, so every one of those
+      // URLs has answered 404 since the cutover. That one is ranked 45 for
+      // "wooden gymnastic rings" and 44 for "wooden gym rings" — 160 searches a
+      // month between them, both climbing — and it points at nothing. The
+      // products are still on the site and ?sub=gymnastics still lists them.
+      //
+      // A PARAMETER RATHER THAN A LIST, because the old subcategory slugs are
+      // not enumerated anywhere in this repo and a list would only cover the
+      // ones we happened to think of. An unknown :sub is safe: the category page
+      // ignores a filter it does not recognise and shows the whole category, so
+      // the worst outcome is the right category page instead of a 404.
+      {
+        source: "/equipment/:category/:sub",
+        destination: "/equipment/:category?sub=:sub",
+        permanent: true,
+      },
+
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been
       // answering 404 ever since: 69 `/product-category/<slug>` archives (the
