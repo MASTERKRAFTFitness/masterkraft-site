@@ -4,6 +4,7 @@ import {
   collectionAddress,
   enabledCarriers,
   isOversize,
+  cartonsContradict,
   isPlausibleCarton,
   itemsToParcels,
   marginPercent,
@@ -953,6 +954,62 @@ describe("cartons that could not be real", () => {
     expect(isPlausibleCarton({ weight: 0, length: 10.54, width: 1.63, height: 1.63 })).toBe(true);
     // The size rule still applies without a weight.
     expect(isPlausibleCarton({ weight: 0, length: 850, width: 1000, height: 305 })).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Two sources, one box. isPlausibleCarton judges a carton on its own; this asks
+// whether a SECOND record of the same carton can be reconciled with the first.
+// ---------------------------------------------------------------------------
+
+describe("two records of the same carton", () => {
+  // MWBBFUR03 and MWBBFUR05, the pair density could not catch. One axis short by
+  // a factor of ten leaves a box of perfectly ordinary weight for its size.
+  it("catches the axis that slipped by ten", () => {
+    expect(
+      cartonsContradict(
+        { weight: 16, length: 11.6, width: 18.3, height: 18.3 },
+        { weight: 16, length: 116, width: 18.3, height: 18.3 }
+      )
+    ).toBe(true);
+    // Both of them are believable cartons taken on their own. That is the point.
+    expect(isPlausibleCarton({ weight: 16, length: 11.6, width: 18.3, height: 18.3 })).toBe(true);
+    expect(isPlausibleCarton({ weight: 16, length: 116, width: 18.3, height: 18.3 })).toBe(true);
+  });
+
+  // 562 of the 631 codes recorded in both systems agree inside 5%, and not one
+  // sits between 1.05x and 5.76x. A centimetre of disagreement is two people
+  // measuring, not a mistake.
+  it("does not call a centimetre a contradiction", () => {
+    expect(
+      cartonsContradict(
+        { weight: 10, length: 40, width: 30, height: 20 },
+        { weight: 10, length: 41, width: 31, height: 19 }
+      )
+    ).toBe(false);
+  });
+
+  // The two systems order their axes differently, so the same box arrives
+  // written two ways. 77/52/62 and 77/62/52 are one carton.
+  it("compares size, not which side is which", () => {
+    expect(
+      cartonsContradict(
+        { weight: 35, length: 77, width: 52, height: 62 },
+        { weight: 35, length: 77, width: 62, height: 52 }
+      )
+    ).toBe(false);
+  });
+
+  // Half a record is not a disagreement. A carton with a missing side has
+  // nothing to say about the other one, and saying otherwise would hand every
+  // unmeasured line to whichever source answered second.
+  it("has no opinion when either carton is incomplete", () => {
+    expect(
+      cartonsContradict(
+        { weight: 16, length: 0, width: 0, height: 0 },
+        { weight: 16, length: 116, width: 18.3, height: 18.3 }
+      )
+    ).toBe(false);
   });
 });
 

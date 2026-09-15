@@ -320,6 +320,16 @@ export const MIN_PLAUSIBLE_SIDE_CM = 0.5;
 export const MIN_PLAUSIBLE_DENSITY_KG_M3 = 5;
 export const MAX_PLAUSIBLE_DENSITY_KG_M3 = 50_000;
 
+// WHEN TWO SOURCES HOLD THE SAME CARTON AND DISAGREE, how far apart do they have
+// to be before one of them is wrong rather than merely rounded? Measured across
+// the 631 codes carrying a complete carton in BOTH the frozen WooCommerce
+// snapshot and Unleashed: 562 agree inside 5%, 69 disagree, and every one of the
+// 69 is a factor-of-ten slip. NOTHING SITS BETWEEN 1.05x AND 5.76x. So the
+// threshold has an empty margin either side of it and its exact value changes
+// nothing today; 1.5 is chosen because half again is past any packing or
+// rounding difference two people measuring the same box could produce.
+export const CONTRADICTION_RATIO = 1.5;
+
 /**
  * True when a carton could exist.
  *
@@ -372,6 +382,29 @@ export function isPlausibleCarton(p: Parcel): boolean {
     if (density < MIN_PLAUSIBLE_DENSITY_KG_M3 || density > MAX_PLAUSIBLE_DENSITY_KG_M3) return false;
   }
   return true;
+}
+
+/**
+ * True when two records of the same carton cannot both be right.
+ *
+ * THE FAULT isPlausibleCarton CANNOT SEE. Density catches a slip of ten in every
+ * axis at once, because a barbell in a matchbox is denser than any metal. It
+ * cannot catch a slip in ONE axis: `MWBBFUR03` is a 16kg fixed barbell recorded
+ * in the snapshot as 11.6 x 18.3 x 18.3cm, which is 4,100 kg/m3 - denser than
+ * steel is not, and perfectly believable. The bar is 116cm long. Every side is in
+ * bounds, the density is ordinary, and the carton is a tenth of the real one.
+ *
+ * Nothing about the carton ITSELF gives it away, so the only thing that can is
+ * the second source holding the same box. Sides are sorted before they are
+ * compared because the two systems order their axes differently - see the axis
+ * mapping in lib/freight-server - and this asks about SIZE, not which side is
+ * which.
+ */
+export function cartonsContradict(a: Parcel, b: Parcel): boolean {
+  const sa = [a.length, a.width, a.height].sort((x, y) => y - x);
+  const sb = [b.length, b.width, b.height].sort((x, y) => y - x);
+  if ([...sa, ...sb].some((s) => !(s > 0))) return false;
+  return sa.some((s, i) => Math.max(s / sb[i], sb[i] / s) >= CONTRADICTION_RATIO);
 }
 
 // A DEFAULT CARTON, FOR THE ONE CASE WHERE GUESSING IS HONEST.

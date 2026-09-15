@@ -881,6 +881,46 @@ The snapshot itself is still wrong. Nothing reads those values now, but a
 `build:catalogue` re-run will not fix them either - the bad numbers are in
 WooCommerce.
 
+### The two the density rule could not catch (2026-09-15)
+
+Density catches a slip of ten in EVERY axis at once, because a barbell in a
+matchbox is denser than any metal. **It cannot catch a slip in one axis.**
+`MWBBFUR03` is a 16kg fixed barbell recorded in the snapshot as **11.6 x 18.3 x
+18.3cm**: every side in bounds, 0.0039 cubic metres, 4,100 kg/m3 - denser than
+water, nowhere near steel, and an entirely ordinary box. The bar is **116cm**
+long. `MWBBFUR05` is the same fault at 11.7 against 117.
+
+**That is not a price difference, it is a different kind of shipment.** 11.6cm
+sits inside every Australia Post parcel limit; 116cm is past the 105cm one, so
+the real carton is oversize freight that `partitionConsignments` puts on its own
+consignment and Australia Post is refused. The site was quoting a 116cm barbell
+as a parcel.
+
+**Both codes were corrected in Unleashed and neither can be corrected in
+WooCommerce** - the store has been frozen since the cutover and the writer is
+gone (see the note on `createWooOrder`'s removal). So `freight-server.ts` now
+breaks the tie on PROVENANCE: where the ERP holds a plausible carton that
+CONTRADICTS the snapshot's, the ERP wins. `cartonsContradict` in `freight.ts` is
+the predicate; half again on any axis, sides sorted first because the two systems
+order them differently.
+
+**The blast radius was measured before the rule was written, not after.** Of the
+**631** codes carrying a complete carton in both systems:
+
+| | |
+|---|---|
+| agree inside 5% | 562 |
+| disagree ~10x, snapshot already rejected as implausible | 67 |
+| disagree 5.8-6.3x, snapshot perfectly plausible | **2** |
+| anything between 1.05x and 5.76x | **none** |
+
+So the threshold has an empty margin either side and its exact value changes
+nothing today. Weights are untouched and need no rule: of the 632 codes holding a
+weight in both, **not one differs by so much as half again**.
+
+`npm run check:cartons` confirms `src/lib/erp-cartons.json` matches the live ERP,
+116 and 117 included.
+
 ### A size container is a structure, not a `-GROUP` suffix
 
 `npm run report:orphans` decided "this WooCommerce record exists only to group

@@ -33,6 +33,34 @@ const snapshot = [
     weight: "14",
     dimensions: { length: "10.54", width: "1.63", height: "1.63" },
   },
+  // The fault DENSITY cannot see either, because only ONE axis slipped. 16kg in
+  // 11.6 x 18.3 x 18.3 is 4,100 kg/m3 - denser than water, nowhere near metal,
+  // and an entirely ordinary box. The bar is 116cm long and is not a parcel.
+  {
+    id: 505,
+    name: "Fixed PU Barbell 16kg",
+    sku: "MWBBFUR03",
+    weight: "16",
+    dimensions: { length: "11.6", width: "18.3", height: "18.3" },
+  },
+  // Two sources measuring the same box slightly differently. 562 of the 631
+  // codes held in both look like this and none of them may move.
+  {
+    id: 606,
+    name: "Measured Twice",
+    sku: "MROUNDED1",
+    weight: "10",
+    dimensions: { length: "40", width: "30", height: "20" },
+  },
+  // The contradiction the other way round: the snapshot is right and the ERP
+  // holds the millimetre slip.
+  {
+    id: 707,
+    name: "Urethane Fixed Barbell 41kg",
+    sku: "MBADERP01",
+    weight: "41",
+    dimensions: { length: "105.4", width: "16.3", height: "16.3" },
+  },
 ];
 
 const variations = {
@@ -61,6 +89,19 @@ const erp: UnleashedMap = {
   MWBBFRU02: {
     price: 100, stock: 1, name: "Urethane Fixed Barbell 12.5kg",
     widthCm: 105.4, heightCm: 16.3, depthCm: 16.3, weightKg: 14,
+  },
+  // Corrected in Unleashed on 2026-09-15, where the snapshot cannot be.
+  MWBBFUR03: {
+    price: 200, stock: 1, name: "Fixed PU Barbell 16kg",
+    widthCm: 116, heightCm: 18.3, depthCm: 18.3, weightKg: 16,
+  },
+  MROUNDED1: {
+    price: 50, stock: 1, name: "Measured Twice",
+    widthCm: 41, heightCm: 19, depthCm: 31, weightKg: 10,
+  },
+  MBADERP01: {
+    price: 100, stock: 1, name: "Urethane Fixed Barbell 41kg",
+    widthCm: 10.54, heightCm: 1.63, depthCm: 1.63, weightKg: 41,
   },
 };
 
@@ -184,6 +225,33 @@ describe("a carton that could not be real is not used", () => {
     // 105.4 x 16.3 x 16.3 from the ERP, in the site's axis order.
     expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([105.4, 16.3, 16.3]);
     expect(item.weightKg).toBe(14);
+  });
+
+  // ONE AXIS IS THE CASE DENSITY MISSES, and it cost real money: quoted as an
+  // 11.6cm parcel this bar sits inside every Australia Post limit, where the
+  // 116cm it actually measures is oversize freight on its own consignment.
+  it("prefers the ERP when it contradicts a perfectly believable snapshot", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 505, sku: "MWBBFUR03", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([116, 18.3, 18.3]);
+    expect(item.weightKg).toBe(16);
+  });
+
+  // The preference is for a CONTRADICTION, not for the ERP. Two people measuring
+  // the same box disagree by a centimetre and the snapshot still leads.
+  it("leaves the snapshot alone when the ERP merely measured it differently", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 606, sku: "MROUNDED1", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([40, 30, 20]);
+  });
+
+  // And a contradiction from an impossible carton is not a contradiction. The
+  // ERP can hold the millimetre slip too, and winning on provenance must never
+  // mean winning with a number nobody believes.
+  it("ignores an ERP carton that could not be real", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 707, sku: "MBADERP01", quantity: 1 }]);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([105.4, 16.3, 16.3]);
   });
 
   // With no plausible carton anywhere the line is unquotable, which fails the

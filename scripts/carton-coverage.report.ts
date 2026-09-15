@@ -24,8 +24,13 @@
 // 1,345, because the catalogue is served from the ERP now and 220 is no longer
 // the denominator.
 //
-// Carton resolution mirrors freight-server.ts: the snapshot leads, the ERP fills
-// per axis, and the ERP's Width/Depth/Height map to length/width/height.
+// CARTON RESOLUTION HERE IS NOT THE QUOTE'S, and the difference is deliberate.
+// The snapshot leads and the ERP fills PER AXIS, where freight-server.ts takes
+// whole cartons, skips implausible ones and lets a contradicting ERP overrule
+// the snapshot. This is a census of whether a measurement EXISTS anywhere, not a
+// ruling on which one is right, so filling per axis is the more honest count -
+// a product with a length here and a width there has been measured. Both agree
+// on the ERP's Width/Depth/Height mapping to length/width/height.
 //
 // Read-only.
 import { createHmac } from "node:crypto";

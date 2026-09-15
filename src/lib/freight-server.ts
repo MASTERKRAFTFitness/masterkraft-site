@@ -8,6 +8,7 @@ import { productById, variationsFor } from "@/lib/catalogue";
 import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
 import {
   quoteFreight,
+  cartonsContradict,
   defaultCartonFor,
   freightConfigured,
   isPlausibleCarton,
@@ -54,6 +55,10 @@ const num = (v: unknown): number => {
  * mapping below is length=Width, width=Depth, height=Height, and it is the whole
  * reason this translation lives in one place: reading them positionally would
  * scramble every carton it filled in.
+ *
+ * SNAPSHOT FIRST IS A PREFERENCE, NOT A RULE. It leads where the two merely
+ * differ; it loses where the ERP flatly contradicts it. See the note on that
+ * below - it is what stopped a 116cm barbell being quoted as an 11.6cm parcel.
  */
 export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightItem[]> {
   const erp = await getUnleashedMap().catch(() => ({}));
@@ -89,15 +94,49 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
     // metres for a foam box. Rejecting the implausible carton rather than
     // reordering the sources fixes it whichever way round they are asked, and
     // keeps working if bad data ever appears in the other system instead.
+    // The ERP's own axis order, mapped once, here.
+    const erpCarton = { l: num(unit?.widthCm), w: num(unit?.depthCm), h: num(unit?.heightCm) };
     const candidates: { l: number; w: number; h: number }[] = [
       { l: num(variation?.dimensions?.length), w: num(variation?.dimensions?.width), h: num(variation?.dimensions?.height) },
       { l: num(product?.dimensions?.length), w: num(product?.dimensions?.width), h: num(product?.dimensions?.height) },
-      // The ERP's own axis order, mapped once, here.
-      { l: num(unit?.widthCm), w: num(unit?.depthCm), h: num(unit?.heightCm) },
+      erpCarton,
     ];
-    const found = candidates.find(
-      (c) => c.l > 0 && c.w > 0 && c.h > 0 && isPlausibleCarton({ weight: weightKg, length: c.l, width: c.w, height: c.h })
-    );
+    const usable = (c: { l: number; w: number; h: number }) =>
+      c.l > 0 && c.w > 0 && c.h > 0 &&
+      isPlausibleCarton({ weight: weightKg, length: c.l, width: c.w, height: c.h });
+    const first = candidates.find(usable);
+
+    // AND WHEN THE ERP CONTRADICTS WHAT THE SNAPSHOT SAYS, THE ERP WINS.
+    //
+    // Skipping the impossible carton above is only half the guard, because a
+    // slip in ONE axis leaves a carton that is entirely possible. MWBBFUR03 is
+    // a 16kg fixed barbell recorded in the snapshot as 11.6 x 18.3 x 18.3 -
+    // ordinary density, every side in bounds, and a tenth of the real box. The
+    // bar is 116cm long, which is not a parcel at all. It was quoted as one.
+    //
+    // The tie is broken on PROVENANCE, not on the numbers. WooCommerce has been
+    // frozen since the 27 August cutover and there is no longer a writer that
+    // could correct it - see the note on `createWooOrder`'s removal. Unleashed
+    // is the system still being corrected, and these two cartons were corrected
+    // in it. So the live record overrules the frozen one, and the alternative -
+    // a hand-maintained list of codes the snapshot gets wrong - would need an
+    // entry for every future slip and would silently rot the day WooCommerce
+    // became writable again.
+    //
+    // THE BLAST RADIUS WAS MEASURED BEFORE THIS WAS WRITTEN, not after: of the
+    // 631 codes holding a complete carton in both systems, this changes exactly
+    // the two the density guard cannot see. The other 67 disagreements are
+    // already rejected as implausible and never reach here, and the remaining
+    // 562 agree inside 5%. Weights are untouched: none of the 632 codes holding
+    // one in both differ by so much as half again.
+    const found =
+      first && first !== erpCarton && usable(erpCarton) &&
+      cartonsContradict(
+        { weight: weightKg, length: first.l, width: first.w, height: first.h },
+        { weight: weightKg, length: erpCarton.l, width: erpCarton.w, height: erpCarton.h }
+      )
+        ? erpCarton
+        : first;
 
     // Nothing measured, but some groups have one honest shape. Apparel goes in a
     // satchel; see defaultCartonFor. The default supplies the WEIGHT as well,
