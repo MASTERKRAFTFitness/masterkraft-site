@@ -100,10 +100,11 @@ The barbell has never had an online price. It does now.
    now joins both, because a rate call that fails while Australia Post succeeds
    is otherwise completely invisible - which is how the missing `category` went
    unnoticed until a cart had no second carrier to fall back on.
-3. ~~**Easyship takes roughly 4 seconds per call.**~~ **Wrong — measured while
+3. ~~**Easyship takes roughly 4 seconds per call.**~~ ~~**Wrong — measured while
    calls were failing.** Re-measured 2026-09-06 against a working allowance:
-   **693ms and 1136ms**. Fine for a checkout, and it is asked concurrently with
-   Australia Post anyway, so it does not add to the other.
+   **693ms and 1136ms**. Fine for a checkout.~~ **The first figure was right and
+   the correction was wrong.** A novel quote takes **5.5 seconds at the median**;
+   693ms was a cache hit. Properly measured 2026-09-11 in the section below.
 
 ## ✅ Rates are STABLE across two identical calls (2026-09-06)
 
@@ -115,6 +116,11 @@ call 1 (1136ms): TNT Road Express $162.81 | UPS Express Saver $163.69 | TNT Over
 call 2  (693ms): TNT Road Express $162.81 | UPS Express Saver $163.69 | TNT Overnight $268.62 | ...
 ```
 
+**Read the PRICES here, not the TIMINGS.** Being identical is exactly what makes
+these two useless as a latency measurement: call 2 is a repeat of call 1, so it
+was served from Easyship's own result cache. The next section measures it
+properly.
+
 All six services, identical. So the display-then-charge pair does not drift, and
 the 409-after-the-card-is-captured failure this was feared to cause does not
 happen for these inputs. `src/lib/freight-cache.ts` remains the belt to that
@@ -124,6 +130,57 @@ carrier behaves.
 **Two calls is not a guarantee**, only evidence. Nothing was measured across a
 day boundary, a fuel-surcharge revision or a rate-card change, and `order/route.ts`
 reading freight from PaymentIntent metadata is still the last line of defence.
+
+## ⏱️ A novel quote takes 5.5 seconds, not 700ms (2026-09-11)
+
+**Every sub-2-second figure recorded above is a cache hit.** Easyship serves a
+body it has already seen from its own result cache; a destination it has not seen
+costs several seconds. Since our own `freight-cache.ts` absorbs the repeats, the
+number that reaches a customer is always the slow one.
+
+Three runs against `/2024-09/rates`, same origin and same 1kg carton throughout,
+phase-timed with `curl` so connection setup is separated from carrier time.
+Destinations were varied per call so Easyship's cache could not flatter them.
+
+| | n | min | median | mean | max |
+|---|---:|---:|---:|---:|---:|
+| Novel quote, cold connection | 6 | 2.96s | **5.47s** | 4.89s | 6.22s |
+| Novel quote, warm connection | 6 | 2.82s | **5.52s** | 5.45s | 7.67s |
+| **All novel quotes** | 12 | 2.82s | **5.52s** | 5.17s | **7.67s** |
+| Repeated identical body | 5 | 1.14s | 1.43s | 1.62s | 2.20s |
+| DNS + TCP + TLS setup | 6 | 0.06s | 0.17s | 0.25s | 0.54s |
+
+**It is not our connection.** Setup is 0.17s at the median and 0.54s at worst,
+and reusing the socket does not help - the warm run was marginally SLOWER than
+the cold one. The time is Easyship computing the quote.
+
+**The third run is what settles it.** A warm connection carrying six destinations
+never sent before came back in 2.8-7.7s, while the same connection re-sending
+bodies already seen came back in 1.1-2.2s. So the speed belongs to the cache, not
+to the connection.
+
+### What that means for the checkout
+
+- **Concurrency does not rescue it.** The router already asks both carriers at
+  once, so the request costs `max(AusPost, Easyship)` - and Easyship is the slow
+  one. A cache miss is a 5.5-second checkout step.
+- **No route sets `maxDuration`.** `api/freight/quote/route.ts` declares only
+  `runtime = "nodejs"`, and there is no `vercel.json`, so the platform default
+  applies. A 7.7s carrier call fits inside it, but `refsToFreightItems()` fetches
+  the ERP first and a cold lambda pays start-up on top.
+- **Neither carrier fetch has a timeout.** There is no `AbortSignal` anywhere in
+  `freight.ts`. A carrier that HANGS rather than merely being slow takes the
+  whole quote with it, and the fail-soft path that drops one carrier and lets the
+  other answer never runs.
+
+**Caveats.** n=12, one origin, one carton shape, one account, all inside a few
+minutes on a Thursday lunchtime AEST. Nothing here covers time of day or a
+rate-card change. One hypothesis NOT established: the 1kg parcel returns 11 rates
+and the 601kg rig returns 5, and the rig answered in 1.5s - so breadth of courier
+coverage may be what costs the time, which would make parcels the slow case and
+bulky the fast one.
+
+Cost **18 metered Rates calls**.
 
 ## ⚠️ The trial's Rates allowance was exhausted, and has since reset
 
@@ -259,9 +316,11 @@ therefore the DIVISOR, not the rate.
    but its quote screen offers only a Residential toggle. A 601kg rig to a
    suburban gym with no dock is a real order and the rate above does not include
    anyone to unload it.
-5. **Single-carrier concentration.** TNT returned the only rate on every bulky
-   quote; Allied, Toll and CouriersPlease returned nothing at those sizes. "Easyship
-   carries bulky" currently means "TNT carries bulky".
+5. ~~**Single-carrier concentration.**~~ **ANSWERED 2026-09-11, and it was worse
+   than this recorded.** TNT returned the only rate on every bulky quote; Allied,
+   Toll and CouriersPlease returned nothing at those sizes. So "Easyship carries
+   bulky" means "TNT carries bulky" - and TNT quotes **single-parcel consignments
+   ONLY**. See the section below.
 
 **The cheapest way to answer 2 and 3 is one real bulky consignment**, ideally to a
 non-dock address, with the invoice checked against the quote.
@@ -293,3 +352,65 @@ it the report still runs and gives the Australia Post baseline, marking every
 Easyship column as unavailable. Sample size is capped deliberately because the
 rates endpoint is metered; widen with `COMPARE_PARCEL_SAMPLE` and
 `COMPARE_BULKY_SAMPLE`.
+
+
+## TNT is single-parcel only, and it was costing 1.81x (2026-09-11)
+
+**The finding.** Measured through `quoteFreight()` and confirmed by raw calls to
+`/2024-09/rates`, Thomastown to Melbourne:
+
+| consignment | rates returned | cheapest |
+|---|---|---|
+| 1 x 224cm barbell | **6** | TNT Road Express $168.37 |
+| 2 x 224cm barbell | 1 | UPS Express Saver $394.20 |
+| 1 x barbell + 1 x 1kg satchel | 1 | UPS Express Saver $232.74 |
+| 2 x 21kg carton | 3 | CouriersPlease Multi Box $48.21 |
+
+A second carton of **any size** removes TNT. This is not about mixing bulky with
+small - two barbells and no parcels at all lose it just as completely. What is
+left is UPS Express, the dearest service in the pool, and the customer was being
+shown that as their **only** option: one line, no cheaper alternative, because
+`selectOptions` cannot offer a "faster" second when the only rate is already the
+fastest.
+
+**What it cost.** A real cart - 2 station markers, 2 heavy bags, 1 barbell - to
+Melbourne:
+
+| | |
+|---|---|
+| quoted as ONE consignment | **$450.00** |
+| the same goods as separate consignments | **$249.07** |
+| difference | **$200.93, or 1.81x** |
+
+Every such order overcharged the customer by that much, or lost the sale.
+
+**The fix: `partitionConsignments()` in `src/lib/freight.ts`.** Each over-limit
+carton is quoted alone, and everything parcel-sized is quoted together. Measured
+after the change:
+
+| cart | before | after |
+|---|---|---|
+| 2 markers + 2 bags + 1 barbell | $450.00 UPS only | **$249.07** CouriersPlease + TNT |
+| 1 marker + 1 barbell | $267.65 UPS only | **$203.73** Aramex + TNT |
+| 2 barbells | $453.83 UPS only | **$387.26** TNT x2 |
+| 2 markers + 2 bags (no bulky) | $55.44 | **$55.44, unchanged** |
+
+**Why not split further.** Splitting all the way down to one consignment per
+carton costs MORE, not less - the same mixed cart comes to $278.09 that way,
+because CouriersPlease's Multi Box services take a stack of cartons far more
+cheaply than sending each on its own. The parcels stay together on purpose.
+
+**Three things to know about the shape of the fix:**
+
+1. **A cart with nothing over the parcel limits is untouched** - one group, one
+   metered call, the carrier's own option id. That is the common case and the
+   split must never make it more expensive to quote.
+2. **Australia Post is now refused only the group that is actually oversize**,
+   not the whole cart. A rack in the cart no longer denies PAC to the socks.
+3. **Each group caches separately**, so a barbell priced in one cart is free in
+   the next. Splitting would otherwise multiply a metered allowance that has been
+   exhausted before. `MAX_CONSIGNMENTS = 6` caps what one checkout can spend;
+   past it the order goes to the quote flow, and a cart that cannot ship at all
+   is refused **before** the first call rather than after.
+
+Verify with `npm run check:split` (~8 metered calls).
