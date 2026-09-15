@@ -36,12 +36,29 @@ import copy from "@/data/product-copy.json";
  * the specifics should land.
  *
  * KEYED BY SLUG, because that is what the page has and what the URL shows.
+ *
+ * IT ALSO OVERRIDES SNAPSHOT COPY, not just fills its absence. Some WooCommerce
+ * products share a short_description with a sibling - the Core Trainer
+ * (Landmine) pair and the Rope & Band Rack pair each ship one description
+ * across two products - so two pages go to Google describing themselves
+ * identically. An entry here wins over the snapshot for whichever fields it
+ * sets, which is how those get separated without editing the frozen mirror
+ * (which `check:snapshot` verifies against the live store, so an edit there
+ * would read as drift).
  */
 export type ProductCopy = {
   /** One sentence, <= 155 chars: the meta description and the JSON-LD description. */
   short: string;
-  /** Body paragraphs, rendered as the Product Overview. */
-  body: string[];
+  /**
+   * Body paragraphs, rendered as the Product Overview.
+   *
+   * OPTIONAL, because an override entry may only need to fix the meta. The Core
+   * Trainer pair share a short_description but have genuinely different bodies
+   * (486 and 436 characters), so replacing their bodies would throw away good
+   * copy to fix a different problem. An entry with no `body` leaves the
+   * snapshot's own description rendering.
+   */
+  body?: string[];
   /** Optional bullets, rendered under the paragraphs. */
   features?: string[];
 };
@@ -60,7 +77,7 @@ export function productCopy(slug: string): ProductCopy | undefined {
  */
 export function productCopyHtml(slug: string): string | undefined {
   const c = COPY[slug];
-  if (!c) return undefined;
+  if (!c?.body?.length) return undefined;
   const paras = c.body.map((p) => `<p>${p}</p>`).join("");
   const features = c.features?.length
     ? `<h3>Features</h3><ul>${c.features.map((f) => `<li>${f}</li>`).join("")}</ul>`

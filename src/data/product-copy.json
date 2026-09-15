@@ -1926,5 +1926,17 @@
       "Instant load changes, no loose plates",
       "Standing, weight-bearing hip extension"
     ]
+  },
+  "core-trainer-landmine-with-t-bar-handle": {
+    "short": "The freestanding Core Trainer (Landmine) with T bar handle — rotational and pressing work from a floor unit, with no rig required."
+  },
+  "rig-core-trainer-landmine": {
+    "short": "The rig-mounted Core Trainer (Landmine) — the same rotational and pressing work, bolted to your rig rather than standing on the floor."
+  },
+  "rope-band-rack-wall-mounted-small": {
+    "short": "The small wall-mounted rope and band rack — one addressed home for ropes and bands, sized for a narrower wall, a studio or a PT room."
+  },
+  "rope-band-rack-wall-mounted": {
+    "short": "The full-width wall-mounted rope and band rack — one addressed home for the ropes and bands a commercial floor gets through."
   }
 }

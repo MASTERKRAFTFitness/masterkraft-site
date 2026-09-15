@@ -8,9 +8,10 @@
 // assumed.
 import { describe, expect, it } from "vitest";
 import copy from "@/data/product-copy.json";
+import catalogue from "@/data/catalogue.json";
 import { productCopy, productCopyHtml } from "@/lib/product-copy";
 
-const entries = Object.entries(copy as Record<string, { short: string; body: string[]; features?: string[] }>);
+const entries = Object.entries(copy as Record<string, { short: string; body?: string[]; features?: string[] }>);
 
 describe("authored product copy", () => {
   it("has entries to check", () => {
@@ -26,11 +27,35 @@ describe("authored product copy", () => {
   // Total substance, not per-paragraph length: a closing "Women's sizing from S
   // to XL." is a legitimate short paragraph, and a rule that banned it would
   // push the copy toward padding, which is the thing being guarded against.
+  //
+  // A BODY IS REQUIRED ONLY WHERE THIS FILE IS THE WHOLE SOURCE. An entry that
+  // overrides a snapshot product may legitimately set `short` alone: the Core
+  // Trainer (Landmine) pair share a meta description but have genuinely
+  // different bodies, so replacing those would discard good copy to fix a
+  // different fault. Snapshot-backed slugs are exempt; everything else is not.
   it("gives every product a body with real substance", () => {
-    const bad = entries.filter(
-      ([, c]) => !c.body?.length || c.body.join(" ").trim().length < 120
+    const snapshotSlugs = new Set(
+      (catalogue.products as { slug: string }[]).map((p) => p.slug)
     );
-    expect(bad.map(([k, c]) => `${k} (${c.body.join(" ").length})`)).toEqual([]);
+    const bad = entries.filter(
+      ([slug, c]) =>
+        !snapshotSlugs.has(slug) && (!c.body?.length || c.body.join(" ").trim().length < 120)
+    );
+    expect(bad.map(([k, c]) => `${k} (${c.body?.join(" ").length ?? 0})`)).toEqual([]);
+  });
+
+  // The override entries earn their place only by being different from what
+  // they replace. If one ever matches the snapshot copy it was added to
+  // separate, it is doing nothing and should go.
+  it("never repeats the snapshot copy it overrides", () => {
+    const bySlug = new Map(
+      (catalogue.products as { slug: string; short_description?: string }[]).map((p) => [
+        p.slug,
+        (p.short_description ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim(),
+      ])
+    );
+    const same = entries.filter(([slug, c]) => bySlug.get(slug) && bySlug.get(slug) === c.short);
+    expect(same.map(([k]) => k)).toEqual([]);
   });
 
   // THE POINT OF THE EXERCISE. Two products sharing a description are two thin
@@ -51,7 +76,7 @@ describe("authored product copy", () => {
       for (let i = 0; i < w.length - 2; i++) s.add(`${w[i]} ${w[i + 1]} ${w[i + 2]}`);
       return s;
     };
-    const docs = entries.map(([k, c]) => [k, shingle(`${c.short} ${c.body.join(" ")}`)] as const);
+    const docs = entries.map(([k, c]) => [k, shingle(`${c.short} ${(c.body ?? []).join(" ")}`)] as const);
     const tooSimilar: string[] = [];
     for (let i = 0; i < docs.length; i++) {
       for (let j = i + 1; j < docs.length; j++) {
@@ -72,7 +97,7 @@ describe("authored product copy", () => {
   it("states no fabricated physical specifications", () => {
     const banned = /\b\d+\s?(mm|cm|gauge|ga)\b|\b\d+\s?(year|yr)s?\b\s*warranty|\bwarrant(y|ed)\b|\b\d+\s?mm\s*steel\b/i;
     const offenders = entries
-      .filter(([, c]) => banned.test(`${c.short} ${c.body.join(" ")} ${(c.features ?? []).join(" ")}`))
+      .filter(([, c]) => banned.test(`${c.short} ${(c.body ?? []).join(" ")} ${(c.features ?? []).join(" ")}`))
       .map(([k]) => k);
     // Figures taken from the unit's OWN record are not fabrications. These are
     // the products whose ERP size list or product name literally states the

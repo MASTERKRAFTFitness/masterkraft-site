@@ -24,6 +24,7 @@ import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
+import { productCopy, productCopyHtml } from "@/lib/product-copy";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
 // old store never listed have no WooCommerce variation id, and the cart keys on
@@ -67,11 +68,19 @@ export async function generateMetadata({
     ? withErpImages(wooProduct, unleashed, gallery)
     : unit && unitAsProduct(unit, { withCopy: true });
   if (!p) return { title: "Product" };
+  // Authored copy wins over the snapshot's. A WooCommerce short_description is
+  // not always unique - the Core Trainer (Landmine) pair and the Rope & Band
+  // Rack pair each ship ONE description across two products, so two pages tell
+  // Google the same thing about different equipment. An entry in
+  // product-copy.json separates them without editing the frozen snapshot, which
+  // check:snapshot compares against the live store.
+  const authored = productCopy(slug);
   return {
     title: `${p.name}`,
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
     // the sizes and price its card carries rather than going out bare.
     description:
+      authored?.short ||
       plainText(p.short_description).slice(0, 155) ||
       (unit ? unitDescription(unit) : undefined),
     alternates: { canonical: `/product/${slug}` },
@@ -119,9 +128,27 @@ export default async function ProductPage({
   // The ERP's photography, in place of the snapshot's WordPress URLs. A no-op
   // for a unit — unitAsProduct is ERP-sourced already — and a no-op for the
   // products the ERP has no photograph of. See withErpImages.
-  const product = wooProduct
+  const base = wooProduct
     ? withErpImages(wooProduct, unleashed, gallery)
     : withErpImages(unitAsProduct(unit!, { withCopy: true }), unleashed, gallery);
+
+  // The same override as in generateMetadata, field by field: `short` replaces
+  // the meta description and the JSON-LD description, `body` replaces the
+  // Product Overview. An entry may set only `short` - the Core Trainer pair
+  // share a description but have genuinely different bodies, and replacing
+  // those would discard good copy to fix a different fault. For an ERP-only
+  // unit these are the values unitAsProduct already put there, so this is a
+  // no-op on that path.
+  const authoredCopy = productCopy(slug);
+  const authoredHtml = productCopyHtml(slug);
+  const product =
+    authoredCopy || authoredHtml
+      ? {
+          ...base,
+          ...(authoredCopy ? { short_description: authoredCopy.short } : {}),
+          ...(authoredHtml ? { description: authoredHtml } : {}),
+        }
+      : base;
 
   const cat = product.categories?.[0];
 

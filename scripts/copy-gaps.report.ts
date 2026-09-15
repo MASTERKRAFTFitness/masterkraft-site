@@ -111,9 +111,16 @@ describe("copy gaps", () => {
     // its range, then "oversized-hoodie" when the unpriced hoodie series was
     // retired - and both were caught by hand. This is the check that stops the
     // next one needing to be.
+    // A key is valid if it names an ERP unit OR a snapshot product. Authored
+    // copy is not only for units any more: it also OVERRIDES a snapshot
+    // description where WooCommerce shipped one across two products, so a
+    // snapshot-only slug here is deliberate rather than stale.
     const slugs = new Set(units.map((u) => u.slug));
+    const snapshotSlugs = new Set(
+      (catalogue.products as { slug: string }[]).map((p) => p.slug)
+    );
     const authored = Object.keys(copyJson as Record<string, unknown>);
-    const orphaned = authored.filter((slug) => !slugs.has(slug));
+    const orphaned = authored.filter((slug) => !slugs.has(slug) && !snapshotSlugs.has(slug));
     const uncovered = rows.filter((r) => !(copyJson as Record<string, unknown>)[r.slug]);
 
     if (orphaned.length) {
