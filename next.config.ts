@@ -129,28 +129,21 @@ const nextConfig: NextConfig = {
       // the one that has to redirect.
       { source: "/product/urethane-fixed-barbells", destination: "/product/urethane-fixed-barbells-2", permanent: true },
 
-      // THE WORDPRESS SUBCATEGORY URLS, found in Semrush on 2026-09-15 rather
-      // than in the 404 log — because nobody is clicking them, Google is just
-      // still ranking them.
+      // THE WORDPRESS SUBCATEGORY URLS WERE REDIRECTED FROM HERE, and are now
+      // SERVED. Found in Semrush on 2026-09-15 rather than in the 404 log —
+      // because nobody clicks them, Google is just still ranking them. The old
+      // store nested a subcategory under its category
+      // (/equipment/body-weight/gymnastics/), this site had only
+      // /equipment/[category] with the subgroup as ?sub=, and that URL — ranked
+      // 45 for "wooden gymnastic rings" and 44 for "wooden gym rings" — answered
+      // 404 from the cutover until a redirect was added here that morning.
       //
-      // The old store nested a subcategory under its category:
-      // /equipment/body-weight/gymnastics/. This site routes /equipment/[category]
-      // as ONE segment and expresses the subgroup as ?sub=, so every one of those
-      // URLs has answered 404 since the cutover. That one is ranked 45 for
-      // "wooden gymnastic rings" and 44 for "wooden gym rings" — 160 searches a
-      // month between them, both climbing — and it points at nothing. The
-      // products are still on the site and ?sub=gymnastics still lists them.
-      //
-      // A PARAMETER RATHER THAN A LIST, because the old subcategory slugs are
-      // not enumerated anywhere in this repo and a list would only cover the
-      // ones we happened to think of. An unknown :sub is safe: the category page
-      // ignores a filter it does not recognise and shows the whole category, so
-      // the worst outcome is the right category page instead of a 404.
-      {
-        source: "/equipment/:category/:sub",
-        destination: "/equipment/:category?sub=:sub",
-        permanent: true,
-      },
+      // The redirect is gone because the page is real: /equipment/[category]/[sub]
+      // now renders the subcategories in lib/subcategories.ts, and sends every
+      // OTHER :sub to the `?sub=` filter itself. A redirect here would shadow the
+      // route entirely — next.config redirects are matched before routing — and
+      // the config cannot know which subcategories have been written without
+      // being edited in step with the registry. One list, in one place.
 
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been

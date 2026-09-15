@@ -1249,6 +1249,78 @@ once repricing resolves an ERP-only line from the ERP - same fix, and it is wort
 
 ---
 
+## 4z. Equipment subcategories got URLs (2026-09-15)
+
+**The site had 11 category pages and nothing between them and 500 products.** A
+ProductSubGroup — "Plyometric Boxes", "Squat & Power Racks", "Kettlebells" — was
+expressible only as `?sub=` on the category page, and that page canonicalises
+every facet away on purpose. So the term a buyer actually searches for had no URL
+to answer with, and the site competed for "body weight equipment" with nothing
+pointed at "plyometric boxes".
+
+**The old store did have them, and Google still remembers.** WordPress nested
+`/equipment/<category>/<sub>`, and Semrush found `/equipment/body-weight/gymnastics`
+at **44-45 for "wooden gymnastic rings" and "wooden gym rings"** — 160 searches a
+month, both climbing — on a URL that answered 404 from the cutover until the
+morning of the 15th and a redirect to a collapsing facet after it. The structure
+is not a new idea; it is one this domain has already been given credit for.
+
+**29 pages, from data that already existed.** `/equipment/[category]/[sub]`
+renders `lib/subcategories.ts`, they are in the sitemap at their parent's weight,
+and the category's facet bar links the ones that have a page. No ERP entry and no
+photography was needed for any of it.
+
+### The list is hand-written, and that is the point
+
+`npm run report:subgroups` counts **57 subgroups, 31 with three cards or more**.
+Generating a page for each is how a catalogue grows fifty pages that list what
+their category page already lists, which is the definition of a doorway page. So
+a subgroup gets a URL when somebody has written a reason for it to exist —
+`about` — and not before. `subcategories.test.ts` holds that copy to the rule
+`lib/product-copy` is held to: **no weight, dimension, gauge or warranty term the
+system cannot check**, a 60-word floor, meta descriptions between 70 and 165
+characters, and a trigram-overlap ceiling so thirty pages cannot be one template.
+
+Deliberately left out: Apparel's Unisex / Male / Woman, which qualify on count
+and are merchandising facets rather than things anyone searches for. And every
+Packages subgroup whose name Mixed Implements already owns — **six subgroup names
+sit under two categories**, and writing both halves is the duplication these
+pages exist to remove. The report lists all six; the test refuses a second one.
+
+**Gymnastics has two cards and a page anyway.** It is the URL the whole structure
+was found through. A page with two products and a real reason to exist is not a
+doorway page — thin copy is what makes one.
+
+### The redirect had to move into `proxy.ts`
+
+An unwritten `:sub` still goes to the category's `?sub=` filter, and the first
+attempt did that with `permanentRedirect()` in the page. **It served a meta
+refresh under a 200.** The `[category]` segment has a `loading.tsx`, so the body
+is already streaming by the time the page runs — the same trap `[category]/layout.tsx`
+documents for `notFound()`, and Next's own loading docs name the fix: run the
+check in `proxy`. Two Map lookups, no await. Verified against a running server:
+
+| URL | |
+|---|---|
+| `/equipment/body-weight/gymnastics` | **200** |
+| `/equipment/body-weight/not-a-real-sub` | **308** → `?sub=not-a-real-sub` |
+| `/equipment/packages/dumbbells` (name written elsewhere) | **308** → `?sub=dumbbells` |
+| `/equipment/nonsense/foo` | **404**, untouched |
+| `/admin` | **307** → login, untouched |
+
+The `next.config.ts` catch-all is gone: redirects are matched before routing, so
+it would have shadowed the route completely.
+
+### One implementation, two routes
+
+`components/shop/CategoryBrowser.tsx` is the listing — filters, grid, pagination,
+ItemList, prose — and both routes render it. Two copies would have started
+disagreeing about sort order or page size within a month. The hero and the
+BreadcrumbList stay in the pages, because a subcategory has one more crumb and
+its own H1 and that is genuinely all that differs.
+
+---
+
 ## 5. Freight (Australia Post + Easyship, priced against each other)
 
 ### The second carrier arrived 2026-09-05
