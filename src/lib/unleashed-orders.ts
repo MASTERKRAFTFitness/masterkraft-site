@@ -20,15 +20,17 @@
 // matter of turning it on rather than writing it.
 import { createHmac, randomUUID } from "node:crypto";
 import { getUnleashedMap, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
-import type { OrderLine } from "@/lib/woo-orders";
+import type { OrderLine } from "@/lib/order-lines";
 
 const BASE = "https://api.unleashedsoftware.com";
 
 // Unleashed stores and reconciles ex-GST and applies TaxRate on top, exactly as
 // WooCommerce did. Our line prices are GST-INCLUSIVE all the way from the map
 // (unleashed.ts multiplies by 1.1 at build time), so they divide back out here.
-// This is the same conversion woo-orders.ts makes and the same one that, when it
-// was missing, recorded order 490118 at $90.48 against an $86.80 card charge.
+// This is the same conversion the deleted WooCommerce writer made (in what is
+// now lib/order-lines.ts) and the same one that, when it was missing, recorded
+// order 490118 at $90.48 against an $86.80 card charge. This is the only copy
+// of it left, so it is the only place that fault can come back.
 const GST = 1.1;
 const TAX_RATE = 0.1;
 const XERO_TAX_CODE = "G.S.T.";
@@ -83,7 +85,7 @@ export type CustomerStrategy = "generic" | "per-order" | "match-email";
 export type CustomerRef = { CustomerCode: string } | { Guid: string };
 
 /**
- * Deliberately the same shape as woo-orders' OrderAddress, and deliberately not
+ * Deliberately the same shape as order-lines' OrderAddress, and deliberately not
  * imported from it: an OrderAddress satisfies this structurally, so the caller
  * hands the same object to either backend with no mapping, and this module keeps
  * no dependency on the one it is meant to replace.

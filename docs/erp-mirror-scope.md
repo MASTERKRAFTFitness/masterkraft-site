@@ -21,6 +21,10 @@ The scars are real. `woo-orders.ts` overrides "WooCommerce's distorted price
 field". The order path carries reconciliation guards. A frozen snapshot has spent
 twelve days disagreeing with the ERP about which products exist.
 
+> **Since written (2026-09-15):** that particular scar closed. The WooCommerce
+> order writer was deleted and `woo-orders.ts` renamed to `order-lines.ts`; the
+> order path reads and writes the ERP only. The snapshot still backs browsing.
+
 **This proposal does not contradict that, provided the rule above holds.** The
 moment somebody edits a price in Supabase, it stops being a cache and becomes the
 second system that note warns about. That is the failure mode; everything below

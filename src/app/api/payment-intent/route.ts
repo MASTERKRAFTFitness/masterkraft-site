@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { quoteOnly } from "@/lib/checkout-mode";
-import { resolveOrderLines, type CartRef } from "@/lib/woo-orders";
+import { resolveOrderLines, type CartRef } from "@/lib/order-lines";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 import { freightMessage } from "@/lib/freight-message";
 

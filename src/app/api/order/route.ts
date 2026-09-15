@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { quoteOnly } from "@/lib/checkout-mode";
-import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/woo-orders";
+import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/order-lines";
 import { placeOrder, orderingEnabled, orderMetadata, existingOrderOn } from "@/lib/orders";
 
 // Called after the customer pays. Verifies the PaymentIntent succeeded and that

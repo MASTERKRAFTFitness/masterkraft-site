@@ -10,9 +10,9 @@ const erp: UnleashedMap = {
   MPOA0001: { price: 0, stock: 0, name: "Custom Rig", sellable: true },
 };
 
-// The WooCommerce half is stubbed so these run offline: the point of the change
-// is that a coded line never reaches it, and a test that needed the live store
-// could not assert that.
+// The WooCommerce half is stubbed so these run offline. Since the fallback was
+// deleted (2026-09-15) nothing here should call it at all, so these stubs exist
+// to be asserted AGAINST — `not.toHaveBeenCalled()` is the point of them now.
 const getProductById = vi.fn();
 const getVariation = vi.fn();
 
@@ -20,15 +20,15 @@ vi.mock("@/lib/unleashed", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed")>()),
   getUnleashedMap: async () => erp,
 }));
-// Spread the real module: `enrich` imports formatPrice from here, so replacing
-// the whole thing breaks the legacy path this file is meant to be testing.
+// Spread the real module rather than replacing it: other exports are pulled in
+// transitively, and stubbing the whole module breaks them.
 vi.mock("@/lib/woocommerce", async (orig) => ({
   ...(await orig<typeof import("@/lib/woocommerce")>()),
   getProductById: (...a: unknown[]) => getProductById(...a),
   getVariation: (...a: unknown[]) => getVariation(...a),
 }));
 
-const { resolveOrderLines } = await import("@/lib/woo-orders");
+const { resolveOrderLines } = await import("@/lib/order-lines");
 
 beforeEach(() => {
   getProductById.mockReset();
@@ -91,21 +91,41 @@ describe("it fails closed rather than charging the wrong number", () => {
   });
 
   it("never silently drops a line", async () => {
-    getProductById.mockResolvedValue(null);
     await expect(resolveOrderLines([{ productId: 999, quantity: 1 }])).rejects.toThrow(
       /Unresolvable line item/
     );
   });
 });
 
-describe("carts saved before this shipped still check out", () => {
-  it("falls back to WooCommerce when the ref carries no code", async () => {
-    // localStorage outlives a deploy. A cart mid-checkout must not start failing
-    // because we changed the lookup key.
-    getProductById.mockResolvedValue({ id: 12, name: "Olympic Bench", sku: "MBCTMA01" });
-    const { lines, total } = await resolveOrderLines([{ productId: 12, quantity: 1 }]);
-    expect(getProductById).toHaveBeenCalledWith(12);
-    expect(lines[0].name).toBe("Olympic Bench");
-    expect(total).toBe(900); // still priced from the ERP, via the SKU on the WC product
+describe("a line with no ERP code is refused, not re-priced elsewhere", () => {
+  // REPLACES "carts saved before this shipped still check out" (deleted
+  // 2026-09-15 with the WooCommerce fallback it covered). That test asserted a
+  // codeless line was priced via getProductById. It could only ever have passed
+  // against a mock: WC_STORE_URL points at the storefront, so the real call
+  // 404s. CartProvider also drops codeless lines at hydration, so one cannot
+  // reach here from the UI. The rule now is that it is refused outright.
+  it("throws, naming the missing code rather than the dead store", async () => {
+    await expect(resolveOrderLines([{ productId: 12, quantity: 1 }])).rejects.toThrow(
+      /product 12 has no ERP code/
+    );
+  });
+
+  it("does not call WooCommerce on the way to failing", async () => {
+    // The failure must be immediate, not 2.5s of timing out against a host that
+    // cannot answer.
+    await expect(resolveOrderLines([{ productId: 12, quantity: 1 }])).rejects.toThrow();
+    expect(getProductById).not.toHaveBeenCalled();
+    expect(getVariation).not.toHaveBeenCalled();
+  });
+
+  it("refuses the whole cart, not just the bad line", async () => {
+    // A cart that is part-priced is the dangerous outcome: it charges for a
+    // subset of what the customer thinks they are buying.
+    await expect(
+      resolveOrderLines([
+        { productId: 0, quantity: 1, sku: "MMDBRH12" },
+        { productId: 12, quantity: 1 },
+      ])
+    ).rejects.toThrow(/no ERP code/);
   });
 });

@@ -1,30 +1,26 @@
-// Which system an order lands in, and the bookkeeping that stops one card
-// charge becoming two orders. The switch itself is the risk here: a wrong
-// answer writes a real order into the wrong system, or none at all.
+// Where an order lands, and the bookkeeping that stops one card charge becoming
+// two orders. The risk here is an order that reports success and is written
+// nowhere — so the gate, and what happens when it is off, is most of this file.
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import type { CreateOrderInput } from "@/lib/woo-orders";
+import type { CreateOrderInput } from "@/lib/order-lines";
 
-const createWooOrder = vi.fn();
 const createUnleashedOrder = vi.fn();
 
-vi.mock("@/lib/woo-orders", async (orig) => ({
-  ...(await orig<typeof import("@/lib/woo-orders")>()),
-  createWooOrder: (...a: unknown[]) => createWooOrder(...a),
-}));
 vi.mock("@/lib/unleashed-orders", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed-orders")>()),
   createUnleashedOrder: (...a: unknown[]) => createUnleashedOrder(...a),
 }));
 
-const { placeOrder, placeQuote, orderBackend, orderingEnabled, quoteOrdersEnabled, orderMetadata, existingOrderOn } =
+const { placeOrder, placeQuote, orderingEnabled, quoteOrdersEnabled, orderMetadata, existingOrderOn } =
   await import("@/lib/orders");
 
 const env = { ...process.env };
 beforeEach(() => {
-  createWooOrder.mockReset();
   createUnleashedOrder.mockReset();
   delete process.env.UNLEASHED_WRITE_ENABLED;
   delete process.env.UNLEASHED_QUOTE_ORDERS;
+  // Set, and deliberately left set, in the tests that prove the WooCommerce
+  // flags no longer switch anything on.
   delete process.env.WC_WRITE_ENABLED;
   process.env.WC_STORE_URL = "https://store.example";
 });
@@ -34,49 +30,42 @@ afterEach(() => {
 
 const input = { billing: { email: "a@b.c" }, lines: [] } as unknown as CreateOrderInput;
 
-describe("exactly one backend is live", () => {
-  it("writes to WooCommerce by default, so nothing changes until it is switched", () => {
-    expect(orderBackend()).toBe("woocommerce");
-  });
-
-  it("writes to the ERP once the flag is on", () => {
-    process.env.UNLEASHED_WRITE_ENABLED = "true";
-    expect(orderBackend()).toBe("unleashed");
-  });
-
-  it("asks the ACTIVE backend whether ordering is on, not the other one", () => {
-    // WooCommerce off, ERP on: ordering is on. Reading the wrong gate here would
-    // 503 a checkout that is perfectly able to place an order.
-    process.env.UNLEASHED_WRITE_ENABLED = "true";
-    expect(orderingEnabled()).toBe(true);
-    delete process.env.UNLEASHED_WRITE_ENABLED;
+describe("the ERP is the only backend, and the gate fails closed", () => {
+  // REPLACES "exactly one backend is live". The WooCommerce writer was deleted
+  // on 2026-09-15 along with the default that selected it. These lock the two
+  // properties that replaced it: the flag is the only thing that enables
+  // ordering, and with it off nothing is written at all.
+  it("is off until the ERP flag is set", () => {
     expect(orderingEnabled()).toBe(false);
-    process.env.WC_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
     expect(orderingEnabled()).toBe(true);
   });
 
-  it("never falls back from one to the other", async () => {
-    // An order written to the system nobody is looking at is worse than an
-    // error: it reports success and then cannot be found.
+  it("is NOT switched on by the old WooCommerce flags", () => {
+    // The whole point of the change. Previously WC_WRITE_ENABLED=true made
+    // orderingEnabled() true, routing orders to a store that 404s — after the
+    // card had been charged.
+    process.env.WC_WRITE_ENABLED = "true";
+    process.env.WC_STORE_URL = "https://store.example";
+    expect(orderingEnabled()).toBe(false);
+  });
+
+  it("throws rather than writing an order anywhere when the flag is off", async () => {
+    // Fail closed. Reaching placeOrder with the flag off means the config moved
+    // mid-checkout; an order reported as placed and held by no system is worse
+    // than an error the customer can see.
+    await expect(placeOrder(input)).rejects.toThrow(/UNLEASHED_WRITE_ENABLED/);
+    expect(createUnleashedOrder).not.toHaveBeenCalled();
+  });
+
+  it("never invents a second destination when the ERP write fails", async () => {
     process.env.UNLEASHED_WRITE_ENABLED = "true";
     createUnleashedOrder.mockRejectedValue(new Error("no write scope"));
     await expect(placeOrder(input)).rejects.toThrow(/no write scope/);
-    expect(createWooOrder).not.toHaveBeenCalled();
   });
 });
 
-describe("both backends return one shape", () => {
-  it("normalises a WooCommerce order", async () => {
-    createWooOrder.mockResolvedValue({ id: 4711, number: "4711", status: "processing", total: "241.39" });
-    await expect(placeOrder(input)).resolves.toEqual({
-      id: "4711",
-      orderNumber: "4711",
-      status: "processing",
-      total: 241.39,
-      backend: "woocommerce",
-    });
-  });
-
+describe("an order comes back in one shape", () => {
   it("normalises an Unleashed order, keeping the Guid as a string", async () => {
     process.env.UNLEASHED_WRITE_ENABLED = "true";
     createUnleashedOrder.mockResolvedValue({
@@ -151,7 +140,15 @@ describe("a quote is not a sale", () => {
 
   it("does nothing at all when no order system is switched on", async () => {
     await expect(placeQuote(contact, items)).resolves.toBe("skipped");
-    expect(createWooOrder).not.toHaveBeenCalled();
+    expect(createUnleashedOrder).not.toHaveBeenCalled();
+  });
+
+  it("is not switched on by the old WooCommerce flags either", async () => {
+    // quoteOrdersEnabled used to fall through to wooOrdersEnabled, which would
+    // have posted a pending order to a store that 404s.
+    process.env.WC_WRITE_ENABLED = "true";
+    expect(quoteOrdersEnabled()).toBe(false);
+    await expect(placeQuote(contact, items)).resolves.toBe("skipped");
     expect(createUnleashedOrder).not.toHaveBeenCalled();
   });
 

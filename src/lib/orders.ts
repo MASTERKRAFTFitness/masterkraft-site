@@ -1,39 +1,35 @@
-// Which system an order is written into, and the one shape the route sees.
+// Where an order is written, and the one shape the route sees. The route does
+// not know which system that is — it verifies the payment, reprices the cart,
+// and places the order.
 //
-// There are two backends during the move off WooCommerce, and exactly one of
-// them is live at a time. The route should not know which — it verifies the
-// payment, reprices the cart, and places the order. So the choice, the two
-// result shapes and the PaymentIntent bookkeeping all collapse to here.
+// THERE IS ONLY THE ERP NOW, 2026-09-15. This chose between two backends while
+// the move off WooCommerce was in progress, and defaulted to WooCommerce when
+// UNLEASHED_WRITE_ENABLED was absent. That default was the hazard: production
+// has UNLEASHED_WRITE_ENABLED=true and WC_WRITE_ENABLED=false, so the fallback
+// could only have fired by losing the flag — and it would then have POSTed to
+// WC_STORE_URL, which is this storefront, returning 404 AFTER the card was
+// charged. An order written nowhere while the customer is told it succeeded is
+// the worst outcome available, because nobody goes looking for it.
 //
-// DEFAULT IS UNCHANGED. Without UNLEASHED_WRITE_ENABLED this is WooCommerce
-// doing exactly what it did before, through one more function call. The ERP path
-// cannot switch on by accident: it needs that flag, a write-scoped API key, and
-// a customer account, and it throws rather than improvising any of them.
-import {
-  createWooOrder,
-  ordersEnabled as wooOrdersEnabled,
-  type CreateOrderInput,
-} from "@/lib/woo-orders";
+// So the choice is gone and the gate fails closed: no flag, no order, and no
+// charge taken first. Turning the ERP path off is now a decision someone has to
+// make, not something a missing variable does quietly.
+import { type CreateOrderInput } from "@/lib/order-lines";
 import {
   createUnleashedOrder,
   ordersEnabled as unleashedOrdersEnabled,
 } from "@/lib/unleashed-orders";
-import { productBySku } from "@/lib/catalogue";
 import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
 
+/**
+ * Kept as a union rather than narrowed to "unleashed": PaymentIntents written
+ * before the cutover still carry `order_backend: "woocommerce"` and
+ * existingOrderOn has to keep reading them. Nothing PRODUCES that value now.
+ */
 export type OrderBackend = "woocommerce" | "unleashed";
 
-/**
- * The ERP wins when it is switched on. Not a fallback chain in either
- * direction: writing an order to the wrong system is worse than not writing it,
- * because nobody goes looking for an order that reported success.
- */
-export function orderBackend(): OrderBackend {
-  return unleashedOrdersEnabled() ? "unleashed" : "woocommerce";
-}
-
 export function orderingEnabled(): boolean {
-  return orderBackend() === "unleashed" ? unleashedOrdersEnabled() : wooOrdersEnabled();
+  return unleashedOrdersEnabled();
 }
 
 export type PlacedOrder = {
@@ -51,26 +47,23 @@ export type PlacedOrder = {
 };
 
 export async function placeOrder(input: CreateOrderInput): Promise<PlacedOrder> {
-  if (orderBackend() === "unleashed") {
-    const o = await createUnleashedOrder(input);
-    return {
-      id: o.guid,
-      // Unleashed assigns SO-000000nn on create. Falling back to the Guid keeps
-      // the customer's confirmation from being blank if it ever does not.
-      orderNumber: o.orderNumber || o.guid,
-      status: o.status,
-      total: o.total,
-      backend: "unleashed",
-    };
+  // FAIL CLOSED. The route checks orderingEnabled() before charging, so reaching
+  // here with the flag off means the config changed mid-checkout. Throwing is
+  // then the only honest answer: the alternative is telling a customer their
+  // order exists when no system holds it.
+  if (!unleashedOrdersEnabled()) {
+    throw new Error("Order creation is disabled (UNLEASHED_WRITE_ENABLED)");
   }
 
-  const o = await createWooOrder(input);
+  const o = await createUnleashedOrder(input);
   return {
-    id: String(o.id),
-    orderNumber: String(o.number),
+    id: o.guid,
+    // Unleashed assigns SO-000000nn on create. Falling back to the Guid keeps
+    // the customer's confirmation from being blank if it ever does not.
+    orderNumber: o.orderNumber || o.guid,
     status: o.status,
-    total: parseFloat(o.total),
-    backend: "woocommerce",
+    total: o.total,
+    backend: "unleashed",
   };
 }
 
@@ -149,13 +142,11 @@ export type QuoteContactInput = {
 };
 
 export function quoteOrdersEnabled(): boolean {
-  return orderBackend() === "unleashed"
-    ? process.env.UNLEASHED_QUOTE_ORDERS === "true" && unleashedOrdersEnabled()
-    : wooOrdersEnabled();
+  return process.env.UNLEASHED_QUOTE_ORDERS === "true" && unleashedOrdersEnabled();
 }
 
 /**
- * Record a quote request in whichever order system is live, if either is.
+ * Record a quote request in the ERP, if that is switched on.
  *
  * Returns "skipped" rather than throwing when it is switched off: the customer's
  * submission must never fail because a side effect is unconfigured. The caller
@@ -167,86 +158,37 @@ export async function placeQuote(
 ): Promise<"created" | "skipped"> {
   if (!quoteOrdersEnabled()) return "skipped";
 
-  if (orderBackend() === "unleashed") {
-    const erp = await getUnleashedMap().catch(() => ({}));
-    const lines = items
-      .filter((i) => !!i.sku)
-      .map((i) => {
-        const entry = lookupBySku(erp, i.sku);
-        return {
-          productId: 0,
-          sku: i.sku,
-          quantity: Math.max(1, Math.floor(i.qty || 1)),
-          // The ERP's price, never the client's. A quote carrying a number the
-          // customer's browser supplied is a number nobody can stand behind.
-          unitPrice: entry?.price ?? 0,
-          name: entry?.name ?? i.name,
-        };
-      });
-    if (lines.length === 0) return "skipped";
-
-    const [first, ...rest] = (contact.name ?? "").split(" ");
-    await createUnleashedOrder({
-      billing: {
-        first_name: first,
-        last_name: rest.join(" "),
-        email: contact.email,
-        phone: contact.phone,
-        company: contact.company,
-      },
-      lines,
-      customerNote:
-        `QUOTE REQUEST — not a sale.` +
-        `${contact.location ? ` Delivery: ${contact.location}.` : ""}` +
-        `${contact.notes ? ` Notes: ${contact.notes}` : ""}`,
-    });
-    return "created";
-  }
-
-  return createWooQuoteOrder(contact, items);
-}
-
-async function createWooQuoteOrder(
-  contact: QuoteContactInput,
-  items: QuoteItemInput[]
-): Promise<"created" | "skipped"> {
-  const key = process.env.WC_CONSUMER_KEY;
-  const secret = process.env.WC_CONSUMER_SECRET;
-  const store = process.env.WC_STORE_URL;
-  if (!key || !secret || !store) return "skipped";
-
-  // THE ID SENT HERE WAS WRONG. It was the CART KEY, which for a variant is the
-  // variation id and for a size the old store never listed is a NEGATIVE hash —
-  // neither of which is a product_id WooCommerce can attach a line to. Resolve
-  // it from the ERP code against the snapshot instead, and drop a line we cannot
-  // identify rather than posting a number that means something else.
-  const line_items = items
+  const erp = await getUnleashedMap().catch(() => ({}));
+  const lines = items
+    .filter((i) => !!i.sku)
     .map((i) => {
-      const id = (i.sku ? productBySku(i.sku)?.id : undefined) ?? (i.id && i.id > 0 ? i.id : undefined);
-      return id ? { product_id: id, quantity: Math.max(1, Math.floor(i.qty || 1)) } : null;
-    })
-    .filter((l): l is { product_id: number; quantity: number } => l !== null);
-  if (line_items.length === 0) return "skipped";
+      const entry = lookupBySku(erp, i.sku);
+      return {
+        productId: 0,
+        sku: i.sku,
+        quantity: Math.max(1, Math.floor(i.qty || 1)),
+        // The ERP's price, never the client's. A quote carrying a number the
+        // customer's browser supplied is a number nobody can stand behind.
+        unitPrice: entry?.price ?? 0,
+        name: entry?.name ?? i.name,
+      };
+    });
+  if (lines.length === 0) return "skipped";
 
-  const [firstName, ...rest] = (contact.name ?? "").split(" ");
-  const auth = "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
-  const res = await fetch(`${store}/wp-json/wc/v3/orders`, {
-    method: "POST",
-    headers: { Authorization: auth, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      status: "pending",
-      set_paid: false,
-      billing: {
-        first_name: firstName || contact.name,
-        last_name: rest.join(" "),
-        email: contact.email,
-        phone: contact.phone,
-        company: contact.company,
-      },
-      line_items,
-      customer_note: `Website quote request.${contact.location ? ` Delivery: ${contact.location}.` : ""}${contact.notes ? ` Notes: ${contact.notes}` : ""}`,
-    }),
+  const [first, ...rest] = (contact.name ?? "").split(" ");
+  await createUnleashedOrder({
+    billing: {
+      first_name: first,
+      last_name: rest.join(" "),
+      email: contact.email,
+      phone: contact.phone,
+      company: contact.company,
+    },
+    lines,
+    customerNote:
+      `QUOTE REQUEST — not a sale.` +
+      `${contact.location ? ` Delivery: ${contact.location}.` : ""}` +
+      `${contact.notes ? ` Notes: ${contact.notes}` : ""}`,
   });
-  if (!res.ok) throw new Error(`WC orders ${res.status}`);
   return "created";
 }
