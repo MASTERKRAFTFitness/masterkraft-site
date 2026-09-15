@@ -95,6 +95,19 @@ const nextConfig: NextConfig = {
       { source: "/product/multi-dead-lift", destination: "/product/multi-deadlift", permanent: true },
       { source: "/product/standing-hip-abductor", destination: "/product/standing-abductor", permanent: true },
 
+      // BOTH HIP THRUST MACHINES WERE RENAMED with their loading mechanism on
+      // 2026-09-15, which moved both slugs. MSLBPL04 was misspelled "Thurst" and
+      // could not be corrected on its own: spelling it properly would have made
+      // it read identically to MSLBSE07 and regrouped the two into a single
+      // product page, which is the fault that retiring MSLBPL28 had just fixed.
+      // Naming both by mechanism fixes the typo and the collision at once.
+      //
+      // /product/standing-hip-thrust goes to the SELECTORISED machine because
+      // that is what it was serving: MSLBPL28 shared the name until it was
+      // retired, leaving MSLBSE07 alone on the page.
+      { source: "/product/standing-hip-thurst", destination: "/product/standing-hip-thrust-plate-loaded", permanent: true },
+      { source: "/product/standing-hip-thrust", destination: "/product/standing-hip-thrust-selectorised", permanent: true },
+
       // THE WORDPRESS SUBCATEGORY URLS, found in Semrush on 2026-09-15 rather
       // than in the 404 log — because nobody is clicking them, Google is just
       // still ranking them.

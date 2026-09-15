@@ -2582,25 +2582,8 @@
     "weightKg": null
   },
   {
-    "slug": "standing-hip-thrust",
-    "name": "Standing Hip Thrust",
-    "group": "Strength",
-    "subgroup": "Lower Body Machines",
-    "brand": "MK",
-    "codes": [
-      "MSLBSE07"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 3770,
-    "priceMax": 3770,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "standing-hip-thurst",
-    "name": "Standing Hip Thurst",
+    "slug": "standing-hip-thrust-plate-loaded",
+    "name": "Standing Hip Thrust (Plate Loaded)",
     "group": "Strength",
     "subgroup": "Lower Body Machines",
     "brand": "MK",
@@ -2611,6 +2594,23 @@
     "isRange": false,
     "price": 2110,
     "priceMax": 2110,
+    "inStock": false,
+    "hasImage": true,
+    "weightKg": null
+  },
+  {
+    "slug": "standing-hip-thrust-selectorised",
+    "name": "Standing Hip Thrust (Selectorised)",
+    "group": "Strength",
+    "subgroup": "Lower Body Machines",
+    "brand": "MK",
+    "codes": [
+      "MSLBSE07"
+    ],
+    "sizes": [],
+    "isRange": false,
+    "price": 3770,
+    "priceMax": 3770,
     "inStock": false,
     "hasImage": true,
     "weightKg": null

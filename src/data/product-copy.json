@@ -1829,29 +1829,6 @@
       "Transfers to gait and single-leg stability"
     ]
   },
-  "standing-hip-thrust": {
-    "short": "A standing hip thrust machine — loaded hip extension from a standing position.",
-    "body": [
-      "Hip extension loaded from standing, which trains the glutes in an upright, weight-bearing position rather than lying on a bench.",
-      "Useful where a floor wants the hip thrust stimulus without the bench setup, and where the standing pattern transfers better to what the member actually does."
-    ],
-    "features": [
-      "Standing loaded hip extension",
-      "Glute strength in a weight-bearing position",
-      "No bench setup required"
-    ]
-  },
-  "standing-hip-thurst": {
-    "short": "A standing hip thrust station — upright loaded hip extension for glute strength.",
-    "body": [
-      "An upright station for loaded hip extension, training the glutes through a standing hinge.",
-      "This is the plate-loaded machine. A selectorised version is listed separately under Standing Hip Thrust, at a different price — tell us which you want and we will confirm the configuration."
-    ],
-    "features": [
-      "Standing loaded hip extension",
-      "Glute and posterior chain strength"
-    ]
-  },
   "standing-multi-flight": {
     "short": "A standing multi flight machine — multi-angle standing cable work for chest, shoulders and arms.",
     "body": [
@@ -1922,6 +1899,32 @@
       "Vertical knee raise and dip combined",
       "Bodyweight — no stack to maintain",
       "Absorbs peak-time traffic"
+    ]
+  },
+  "standing-hip-thrust-plate-loaded": {
+    "short": "The plate-loaded standing hip thrust — loaded hip extension from an upright position, using the plates already on your floor.",
+    "body": [
+      "Hip extension loaded from standing, which trains the glutes in an upright, weight-bearing position rather than lying back on a bench. No barbell to roll into place and no pad to arrange.",
+      "This is the plate-loaded version: it takes the Olympic plates already on the floor, so the load goes as high as the plate rack does and the machine costs less than its selectorised twin. The trade is the time spent changing plates between sets, which matters more in a class than in a strength session.",
+      "A selectorised version of the same movement is listed separately."
+    ],
+    "features": [
+      "Plate-loaded — takes standard Olympic plates",
+      "Standing, weight-bearing hip extension",
+      "No bench or barbell setup"
+    ]
+  },
+  "standing-hip-thrust-selectorised": {
+    "short": "The selectorised standing hip thrust — upright loaded hip extension with a weight stack and a pin.",
+    "body": [
+      "The same standing hip extension, loaded from a selectorised stack instead of plates. A pin changes the weight, so a member moves between loads in seconds and nothing is left on the floor.",
+      "That is what makes it the right choice for a busy floor or a circuit: the changeover is instant, the load is legible to a beginner, and there are no loose plates around a station people queue for. It costs more than the plate-loaded version and its top end is whatever the stack holds.",
+      "A plate-loaded version of the same movement is listed separately."
+    ],
+    "features": [
+      "Selectorised weight stack — pin-loaded",
+      "Instant load changes, no loose plates",
+      "Standing, weight-bearing hip extension"
     ]
   }
 }
