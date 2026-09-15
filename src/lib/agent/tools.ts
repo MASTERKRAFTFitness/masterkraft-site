@@ -6,12 +6,19 @@
 // src/app/api/admin/agent/route.ts.
 
 import type Anthropic from "@anthropic-ai/sdk";
-import { allProducts, productBySlug, searchCatalogue } from "@/lib/catalogue";
+import {
+  allProducts,
+  productBySku,
+  productBySlug,
+  searchCatalogue,
+  variationBySku,
+} from "@/lib/catalogue";
 import { formatPrice, isPortalOnlyBrand, type WcProduct } from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
 import { parseProductDetail } from "@/lib/spec";
 import { enrich, getLiveEntries, getShipmentsForOrder, getUnleashedMap } from "@/lib/unleashed";
-import { collectionAddress, quoteFreight, type FreightItem } from "@/lib/freight";
+import { collectionAddress, quoteFreight } from "@/lib/freight";
+import { refsToFreightItems, type CartRefLike } from "@/lib/freight-server";
 import { getOrder, listRecentOrders, ordersConfigured, summariseOrder } from "@/lib/wc-admin";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { stripe, stripeEnabled } from "@/lib/stripe";
@@ -405,33 +412,47 @@ const freightTool: AgentTool = {
       additionalProperties: false,
     },
   },
+  // THE CARTON IS RESOLVED BY THE CHECKOUT'S OWN RESOLVER, not read off the
+  // snapshot here. This tool promises "the same prices the website checkout
+  // would show" and, reading product.dimensions directly, it did not keep that
+  // promise for any product the snapshot measures wrongly. refsToFreightItems
+  // skips a carton that could not be real, lets a contradicting ERP record
+  // overrule a believable but wrong one, and maps the ERP's axis order - so
+  // MWBBFUR03 was quoted here as an 11.6cm parcel while the checkout consigned
+  // the 116cm bar it actually is. One resolver, one answer.
+  //
+  // It also reaches VARIATIONS, which is what a range's sizes are. Matching SKUs
+  // against allProducts() alone could not price a single size of a range: every
+  // one of them came back as a code we do not sell.
   run: async (input) => {
     if (!collectionAddress()) return { error: "Freight is not configured (no collection address)." };
     const rawItems = Array.isArray(input.items) ? (input.items as ToolInput[]) : [];
     if (!rawItems.length) return { error: "Provide at least one item." };
 
-    const products = allProducts();
-    const items: FreightItem[] = [];
+    const refs: CartRefLike[] = [];
     const unknown: string[] = [];
     for (const raw of rawItems) {
       const sku = str(raw.sku);
       const quantity = Math.max(1, Math.floor(num(raw.qty, 1)));
-      const product = products.find((p) => (p.sku ?? "").toUpperCase() === sku.toUpperCase());
-      if (!product) {
-        unknown.push(sku);
+      const product = productBySku(sku);
+      if (product) {
+        refs.push({ productId: product.id, quantity, sku: product.sku ?? sku });
         continue;
       }
-      items.push({
-        sku: product.sku ?? sku,
-        name: product.name,
-        quantity,
-        weightKg: dim(product.weight),
-        lengthCm: dim(product.dimensions?.length),
-        widthCm: dim(product.dimensions?.width),
-        heightCm: dim(product.dimensions?.height),
-      });
+      const sized = variationBySku(sku);
+      if (sized) {
+        refs.push({
+          productId: sized.productId,
+          variationId: sized.variation.id,
+          quantity,
+          sku: sized.variation.sku || sku,
+        });
+        continue;
+      }
+      unknown.push(sku);
     }
-    if (!items.length) return { error: "None of those SKUs are in the catalogue.", unknown };
+    if (!refs.length) return { error: "None of those SKUs are in the catalogue.", unknown };
+    const items = await refsToFreightItems(refs);
 
     const quote = await quoteFreight(items, {
       city: str(input.suburb),

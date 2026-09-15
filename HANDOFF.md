@@ -921,6 +921,24 @@ weight in both, **not one differs by so much as half again**.
 `npm run check:cartons` confirms `src/lib/erp-cartons.json` matches the live ERP,
 116 and 117 included.
 
+### The agent had a second carton resolver, and a second answer (2026-09-15)
+
+Found while checking what else reads a carton. `quote_freight` in
+`src/lib/agent/tools.ts` says it "returns the same prices the website checkout
+would show" and then read `product.dimensions` straight off the snapshot - no
+plausibility guard, no ERP, no axis remap. **It is not an internal tool:**
+`public-tools.ts` reuses the implementation, so the customer-facing chat quoted
+from it too. Every carton the checkout skips or overrules, it answered from
+anyway - the 42 above included.
+
+**And it could not price a single size of any range.** It matched SKUs against
+`allProducts()`, where a range's sizes are VARIATIONS - so `MWBBFUR03`, the bar
+this whole section is about, came back as a code we do not sell.
+
+Both go through `refsToFreightItems()` now, resolved by `productBySku` and a new
+`variationBySku` in `lib/catalogue`. One resolver, one answer.
+`src/lib/agent/freight-tool.test.ts` pins it against the real snapshot.
+
 ### A size container is a structure, not a `-GROUP` suffix
 
 `npm run report:orphans` decided "this WooCommerce record exists only to group

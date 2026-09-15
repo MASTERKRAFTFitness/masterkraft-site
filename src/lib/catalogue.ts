@@ -161,3 +161,25 @@ const BY_SKU = new Map(
 export function productBySku(sku: string): WcProduct | undefined {
   return BY_SKU.get(sku.trim().toUpperCase());
 }
+
+// THE SIZES OF A RANGE ARE VARIATIONS, NOT PRODUCTS, so productBySku cannot see
+// them - and a variation's code is the one a customer reads off a bar, a sales
+// order names, and the ERP holds. MWBBFUR03 is a variation of 403708, so asking
+// the products for it comes back empty and the line looks like a SKU we do not
+// sell. First writing wins, matching BY_SKU above.
+const VARIATION_BY_SKU = new Map<string, { productId: number; variation: WcVariation }>();
+for (const [productId, list] of Object.entries(VARIATIONS)) {
+  for (const variation of list) {
+    const sku = (variation.sku ?? "").trim().toUpperCase();
+    if (sku && !VARIATION_BY_SKU.has(sku)) {
+      VARIATION_BY_SKU.set(sku, { productId: Number(productId), variation });
+    }
+  }
+}
+
+/** A variation and the product that holds it, by the variation's own SKU. */
+export function variationBySku(
+  sku: string
+): { productId: number; variation: WcVariation } | undefined {
+  return VARIATION_BY_SKU.get(sku.trim().toUpperCase());
+}
