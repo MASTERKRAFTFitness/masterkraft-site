@@ -1,6 +1,6 @@
 # What each visibility rule withholds
 
-Generated 2026-09-08 · `npm run report:unshippable`
+Generated 2026-09-15 · `npm run report:unshippable`
 
 **Two rules hide products and they are not the same rule.** Freight needs a weight
 and all three carton dimensions or the whole cart is unquotable, not just the line,
@@ -15,7 +15,7 @@ rule serves the page.
 | | |
 |---|---:|
 | ERP units withheld entirely | 35 |
-| ERP units that lost sizes but kept their page | 22 |
+| ERP units that lost sizes but kept their page | 21 |
 | Snapshot pages withheld with no ERP twin | 18 |
 | …whose URL the ERP unit adopted, so the page is live anyway | 11 |
 | …that are a second URL for equipment already sold elsewhere | 3 |
@@ -46,7 +46,7 @@ does not save them.
 | Olympic Dumbbell Handles (Pair) | Mixed Implements | $109.00 | `MMDBOH01` |
 | Cable Pulley System | Strength | $95.00 | `MSCMATT02` |
 | Squat Wedge Block | Weightlifting | $85.00 | `MWWLRR01` |
-| Station Markets (Set of 20) | Body Weight | $80.00 | `MBSADO03` |
+| Station Markers (Set of 20) | Body Weight | $80.00 | `MBSADO03` |
 | Storage Pin with Shoulder | Rigs & Racks | $75.00 | `MRATTACC01` |
 | Wall Mounted-Rope & Band Rack | Equipment Storage | $70.00 | `MEWMRO 02` |
 | Impact-Lock Rubber Tiles | Flooring | $65.00 | `NBFRFRR01` `NBFRFRR02` `NBFRFRR03` `NBFRFRR04` |
@@ -68,7 +68,7 @@ does not save them.
 | Rubber Hex Dumbbell | Mixed Implements | $5.00 | `MMDBRH01` `MMDBRH02` `MMDBRH03` `MMDBRH04` `MMDBRH05` `MMDBRH06` `MMDBRH07` `MMDBRH08` `MMDBRH09` `MMDBRH10` `MMDBRH11` `MMDBRH12` `MMDBRH13` `MMDBRH14` `MMDBRH15` `MMDBRH16` `MMDBRH17` `MMDBRH18` `MMDBRH19` `MMDBRH20` `MMDBRH21` `MMDBRH22` `MMDBRH23` `MMDBRH24` `MMDBRH25` `MMDBRH26` |
 | Cotton Inners | Mixed Implements | $1.00 | `MMBXG01` |
 
-### Kept, but missing sizes (22)
+### Kept, but missing sizes (21)
 
 **The page looks perfectly fine and one size cannot be bought.** `erpUnits` drops the
 individual code rather than the range, by design - a rack measured in three sizes and
@@ -89,11 +89,10 @@ The old report could not see this category at all.
 | Power Bands (Pack of 8) | Body Weight | $195.00 | 1 of 2 kept, missing `MBRPBA03` |
 | PU Dumbbells (Pair) | Mixed Implements | $176.00 | 19 of 28 kept, missing `MMDBUR20` `MMDBUR21` `MMDBUR22` `MMDBUR23` `MMDBUR18` `MMDBUR25` `MMDBUR26` `MMDBUR27` `MMDBUR28` |
 | Power Bands (Pack of 4) | Body Weight | $120.00 | 1 of 2 kept, missing `MBRPBA02` |
-| Fixed PU Straight Barbell | Weightlifting | $90.00 | 7 of 14 kept, missing `MWBBFUR13` `MWBBFUR14` `MWBBFUR15` `MWBBFUR16` `MWBBFUR17` `MWBBFUR18` `MWBBFUR19` |
 | Urethane Competition Kettlebell | Mixed Implements | $80.00 | 6 of 10 kept, missing `MMKBUR07` `MMKBUR08` `MMKBUR09` `MMKBUR10` |
 | Power Bag | Mixed Implements | $70.00 | 4 of 6 kept, missing `MMPWPBG06` `MMPWPBG07` |
 | Rope & Band Rack (Wall Mounted) | Equipment Storage | $70.00 | 1 of 2 kept, missing `MEWMRO02` |
-| Urethane Fixed Barbells | Weightlifting | $67.50 | 4 of 5 kept, missing `MWBBFUR11` |
+| Urethane Fixed Barbells | Weightlifting | $67.50 | 11 of 19 kept, missing `MWBBFUR11` `MWBBFUR13` `MWBBFUR14` `MWBBFUR15` `MWBBFUR16` `MWBBFUR17` `MWBBFUR18` `MWBBFUR19` |
 | Medicine Ball | Mixed Implements | $44.00 | 5 of 6 kept, missing `MMMBPR 03` |
 | High Grip Dead Ball | Mixed Implements | $40.00 | 12 of 16 kept, missing `MMDEHG09` `MMDEHG11` `MMDEHG16` `MMDEHG17` |
 | Foam Roller | Body Weight | $33.00 | 3 of 4 kept, missing `MBRMRL04` |

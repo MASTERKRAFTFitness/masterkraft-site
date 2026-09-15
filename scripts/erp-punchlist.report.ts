@@ -30,7 +30,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import crypto from "node:crypto";
 import { readFileSync } from "node:fs";
 import { it } from "vitest";
-import { ERP_GROUPS, erpUnits, slugify, splitUnitName, type ErpUnit } from "@/lib/erp-catalogue";
+import { codeIsShippable, ERP_GROUPS, erpUnits, slugify, splitUnitName, type ErpUnit } from "@/lib/erp-catalogue";
 import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedMap, UnleashedEntry } from "@/lib/unleashed";
 
@@ -74,6 +74,10 @@ type RawProduct = {
   ProductGroup?: { GroupName?: string };
   ProductSubGroup?: { GroupName?: string };
   IsSellable?: boolean;
+  Width?: number;
+  Height?: number;
+  Depth?: number;
+  Weight?: number;
 };
 
 // One row of work. `field` names what to change in Unleashed so the list can be
@@ -166,6 +170,12 @@ it("writes the ERP punch list", async () => {
       group: p.ProductGroup?.GroupName?.trim() || undefined,
       subgroup: p.ProductSubGroup?.GroupName?.trim() || undefined,
       sellable: p.IsSellable !== false,
+      // Carton, for the MISSING CARTON rows. Same four fields buildMap reads,
+      // in the ERP's own axis order.
+      widthCm: p.Width || undefined,
+      heightCm: p.Height || undefined,
+      depthCm: p.Depth || undefined,
+      weightKg: p.Weight || undefined,
     } satisfies UnleashedEntry;
   }
 
@@ -264,6 +274,40 @@ it("writes the ERP punch list", async () => {
         field: "Product > Product Group",
         detail: `Sub-group "${u.subgroup}" otherwise lives under ${mainHome.get(u.subgroup)}; this card sits alone under ${u.group}`,
       });
+    }
+
+    // MISSING CARTON, which costs more than any other row here. Freight needs a
+    // weight AND all three dimensions; without them production's
+    // HIDE_UNSHIPPABLE drops the code before it can reach a page, so the size -
+    // or the whole card, if no size has one - is not merely imperfect, it is
+    // absent. Nobody reports it because nobody can click it.
+    //
+    // The exemption is the app's, not this report's: an unmeasured product at $0
+    // or at/above $500 stays on the site as an enquiry, so listing it here would
+    // be listing work that does not need doing.
+    const unshippable = members.filter(
+      (m) => !codeIsShippable(m.code, m.entry) && !(m.entry.price === 0 || (m.entry.price ?? 0) >= 500)
+    );
+    if (unshippable.length === members.length && members.length > 0) {
+      push(u, {
+        level: "card",
+        code: u.codes[0],
+        product: map[u.codes[0]]?.name ?? u.name,
+        problem: "MISSING CARTON — NOT ON THE SITE",
+        field: "Product > Width / Height / Depth / Weight",
+        detail: `No size has a freight carton, so the whole card is withheld from /equipment/${u.group.toLowerCase().replace(/[^a-z0-9]+/g, "-")} and from the sitemap`,
+      });
+    } else {
+      for (const m of unshippable) {
+        push(u, {
+          level: "size",
+          code: m.code,
+          product: m.entry.name ?? "",
+          problem: "SIZE MISSING CARTON",
+          field: "Product > Width / Height / Depth / Weight",
+          detail: `This size is missing from the picker on /product/${u.slug}; the rest of the range still sells`,
+        });
+      }
     }
 
     // SIZE-LEVEL: what a shopper sees after picking a size. Only for ranges, and

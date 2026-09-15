@@ -197,8 +197,18 @@ const plausible = (l: number, w: number, h: number) =>
   [l, w, h].every((x) => x >= 0.5 && x <= 300) &&
   (l * w * h) / 1e6 <= 3;
 
-/** Can this ERP code be freight-quoted, from either source? */
-function codeIsShippable(code: string, entry: UnleashedEntry): boolean {
+/**
+ * Can this ERP code be freight-quoted, from either source?
+ *
+ * EXPORTED FOR THE PUNCH LIST. An unmeasured product is withheld from the site
+ * entirely under HIDE_UNSHIPPABLE, which makes it the most consequential thing
+ * the ERP can be missing - more so than a photo or a price, because the card
+ * never appears at all. scripts/erp-punchlist.report.ts reports that, and its
+ * own header is explicit that a report reimplementing the app's rules "would
+ * eventually list work that is already done, or miss work that is not". So it
+ * calls this rather than approximating it.
+ */
+export function codeIsShippable(code: string, entry: UnleashedEntry): boolean {
   // Some groups have one honest shape and no measurements at all. Apparel is 95
   // products with zero weights and zero dimensions, and every one goes in the
   // same satchel - lib/freight's defaultCartonFor supplies it to the quote, so
