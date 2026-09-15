@@ -1589,23 +1589,11 @@
       "Heavy leg work with no axial loading"
     ]
   },
-  "multi-dead-lift": {
-    "short": "A multi deadlift machine — guided deadlift patterns across several positions, loaded without a barbell.",
-    "body": [
-      "Deadlift patterns on a guided path, with more than one working position — conventional-style pulls, partial ranges and rack-pull heights, without a barbell to load and strip.",
-      "A guided deadlift is how a general membership gets the pattern safely. It removes the two things that make a free-weight deadlift risky for an unsupervised member: bar path and position under fatigue."
-    ],
-    "features": [
-      "Guided deadlift path",
-      "Multiple working positions and heights",
-      "Safe pulling for unsupervised members"
-    ]
-  },
   "multi-deadlift": {
     "short": "A multi deadlift station — hip hinge and pulling patterns on a guided path, at a range of working heights.",
     "body": [
       "A pulling station covering the hinge across several heights, so a lifter can work a full pull or a shortened range on the same frame.",
-      "Note this product and the Multi Dead Lift are listed separately in our ERP; if you are specifying a floor, ask us to confirm which configuration you are quoting."
+      "A guided path is how a general membership gets the deadlift safely. It removes the two things that make a free-weight pull risky for an unsupervised member: bar path, and position under fatigue."
     ],
     "features": [
       "Guided hip hinge and pulling patterns",
@@ -1841,18 +1829,6 @@
       "Transfers to gait and single-leg stability"
     ]
   },
-  "standing-hip-abductor": {
-    "short": "A standing hip abductor machine — loaded abduction for the glute medius and lateral hip.",
-    "body": [
-      "A standing station for loaded hip abduction, working the glute medius and the lateral hip through their stabilising range.",
-      "Listed separately from the Standing Abductor in our ERP; if you are specifying a floor, ask us to confirm which unit you are quoting."
-    ],
-    "features": [
-      "Standing loaded abduction",
-      "Glute medius and lateral hip",
-      "Single-leg stability and gait"
-    ]
-  },
   "standing-hip-thrust": {
     "short": "A standing hip thrust machine — loaded hip extension from a standing position.",
     "body": [
@@ -1869,7 +1845,7 @@
     "short": "A standing hip thrust station — upright loaded hip extension for glute strength.",
     "body": [
       "An upright station for loaded hip extension, training the glutes through a standing hinge.",
-      "This listing duplicates the Standing Hip Thrust in our ERP under a misspelled name. Both refer to standing hip extension equipment; contact us to confirm the unit before ordering."
+      "This is the plate-loaded machine. A selectorised version is listed separately under Standing Hip Thrust, at a different price — tell us which you want and we will confirm the configuration."
     ],
     "features": [
       "Standing loaded hip extension",

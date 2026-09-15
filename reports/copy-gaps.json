@@ -2240,23 +2240,6 @@
     "weightKg": null
   },
   {
-    "slug": "multi-dead-lift",
-    "name": "Multi Dead Lift",
-    "group": "Strength",
-    "subgroup": "Lower Body Machines",
-    "brand": "MK",
-    "codes": [
-      "MSLBPL08"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 2660,
-    "priceMax": 2660,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "multi-deadlift",
     "name": "Multi Deadlift",
     "group": "Strength",
@@ -2599,30 +2582,12 @@
     "weightKg": null
   },
   {
-    "slug": "standing-hip-abductor",
-    "name": "Standing Hip Abductor",
-    "group": "Strength",
-    "subgroup": "Lower Body Machines",
-    "brand": "MK",
-    "codes": [
-      "MSLBPL27"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 0,
-    "priceMax": 0,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "standing-hip-thrust",
     "name": "Standing Hip Thrust",
     "group": "Strength",
     "subgroup": "Lower Body Machines",
     "brand": "MK",
     "codes": [
-      "MSLBPL28",
       "MSLBSE07"
     ],
     "sizes": [],

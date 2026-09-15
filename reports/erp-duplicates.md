@@ -1,4 +1,4 @@
-# Duplicate products: what was retired, and what is left to do by hand
+# Duplicate products — ALL RETIRED as of 2026-09-15
 
 Rule, from Michael on 2026-09-11: **keep the priced record.** Applied below.
 Status as of that date.
@@ -32,7 +32,48 @@ authored copy went from 170 entries to 168.
 
 ---
 
-## Cannot be done from here — three pairs under "Lower Body Machines"
+## Done — the three machine pairs, retired via Sellable rather than Obsolete
+
+Unleashed refuses `Obsolete` on these with **"Cannot set product with open
+transactions as Obsolete."** No stock transactions, no open sales or purchase
+orders in any active status, and no Bill of Materials membership — so whatever
+holds them is not visible from the API. Rather than go hunting, Michael's call
+on 2026-09-15 was to switch **Sellable** off instead.
+
+That reaches the same place for every consumer that matters here:
+`build-obsolete-skus.mjs` filters on `Obsolete === true || IsSellable === false`,
+so all three landed in the committed obsolete list, and `erpUnits` already skips
+`sellable === false`. The pages are gone and the redirects are in.
+
+| Retired | Was | Survivor |
+|---|---|---|
+| `MSLBPL28` | Standing Hip Thrust, $0 | — see note |
+| `MSLBPL27` | Standing Hip Abductor, $0 | `MSLBPL05` Standing Abductor, $2,336.36 |
+| `MSLBPL08` | Multi Dead Lift, $2,418.18 | `MSLBPL21` Multi Deadlift, $2,772.73 |
+
+**`/product/standing-hip-thrust` still serves, deliberately.** `MSLBPL28` was
+only half of that page: `MSLBSE07`, the selectorised machine at $3,427.27, still
+carries the name. So the URL survives and now shows **one** machine instead of
+presenting a $0 plate-loaded unit and a $3,427 selectorised one as two size
+options of the same product. That was the real fault and retiring `MSLBPL28`
+fixed it.
+
+## The one thing still outstanding
+
+`MSLBPL04` is still **"Standing Hip Thurst"** — misspelled, live, and its
+spelling is the page's `<h1>`. It was left alone on purpose and still must be:
+correcting it to "Standing Hip Thrust" would make it read identically to
+`MSLBSE07`, and the two would group into one product page again — the exact
+fault just fixed.
+
+Fixing it needs both records renamed together, e.g.
+
+- `MSLBPL04` → "Standing Hip Thrust (Plate Loaded)" — $1,918.18
+- `MSLBSE07` → "Standing Hip Thrust (Selectorised)" — $3,427.27
+
+That is a naming decision rather than a typo fix, which is why it is still here.
+
+## For the record — why the API could not do any of this
 
 All six records below sit under the subgroup **Lower Body Machines**, which
 occurs **twice** in the 154-entry ProductGroups list. `POST /Products` resolves

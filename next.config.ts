@@ -83,6 +83,18 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
+      // THE DUPLICATE MACHINES, retired 2026-09-15 by switching Sellable off
+      // (Unleashed refuses Obsolete on a product with open transactions, and
+      // the site excludes an unsellable product either way). Each points at the
+      // record that survived it — Michael's rule: keep the priced one.
+      //
+      // /product/standing-hip-thrust is NOT here and must not be: MSLBPL28 was
+      // only half of that page. MSLBSE07, the selectorised machine at
+      // $3,427.27, still carries the name, so the URL still serves — and now
+      // serves one machine instead of presenting two as size options of one.
+      { source: "/product/multi-dead-lift", destination: "/product/multi-deadlift", permanent: true },
+      { source: "/product/standing-hip-abductor", destination: "/product/standing-abductor", permanent: true },
+
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been
       // answering 404 ever since: 69 `/product-category/<slug>` archives (the
