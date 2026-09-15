@@ -648,7 +648,7 @@
   },
   {
     "slug": "functional-trainer-clearance",
-    "name": "Functional Trainer",
+    "name": "Functional Trainer (Clearance)",
     "group": "Clearance",
     "subgroup": "Cable Machines",
     "brand": "OLD",
@@ -3040,33 +3040,6 @@
     "priceMax": 25,
     "inStock": false,
     "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "urethane-fixed-barbells",
-    "name": "Urethane Fixed Barbells",
-    "group": "Weightlifting",
-    "subgroup": "Barbells",
-    "brand": "MK",
-    "codes": [
-      "MWBBFUR11",
-      "MWBBFUR12",
-      "MWBBFUR02",
-      "MWBBFUR04",
-      "MWBBFUR06"
-    ],
-    "sizes": [
-      "5kg",
-      "7.5kg",
-      "12.5kg",
-      "17.5kg",
-      "22.5kg"
-    ],
-    "isRange": true,
-    "price": 45,
-    "priceMax": 190,
-    "inStock": false,
-    "hasImage": true,
     "weightKg": null
   }
 ]

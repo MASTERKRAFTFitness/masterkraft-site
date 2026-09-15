@@ -1109,18 +1109,6 @@
       "Coached weightlifting programmes"
     ]
   },
-  "urethane-fixed-barbells": {
-    "short": "Urethane fixed barbells in 5kg, 7.5kg, 12.5kg, 17.5kg and 22.5kg — the half-increment bars for a fixed-bar range.",
-    "body": [
-      "Urethane fixed barbells covering 5kg, 7.5kg, 12.5kg, 17.5kg and 22.5kg — the intermediate steps that fill out a fixed-bar rack.",
-      "Urethane is the finish for bars that are picked up and put down all day: it survives the rack and keeps its printed weight legible, which is what stops a member guessing."
-    ],
-    "features": [
-      "5kg, 7.5kg, 12.5kg, 17.5kg and 22.5kg",
-      "Urethane finish",
-      "Fills the half-increments in a fixed-bar range"
-    ]
-  },
   "3d-seated-abduction": {
     "short": "A 3D seated abduction machine — glute and hip abductor work through multiple planes from a supported seated position.",
     "body": [
@@ -1938,5 +1926,8 @@
   },
   "rope-band-rack-wall-mounted": {
     "short": "The full-width wall-mounted rope and band rack — one addressed home for the ropes and bands a commercial floor gets through."
+  },
+  "urethane-fixed-barbells-2": {
+    "short": "Urethane fixed barbells from 5kg to 50kg in 2.5kg steps — a steel core in urethane, nineteen bars covering the whole range."
   }
 }

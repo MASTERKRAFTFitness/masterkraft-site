@@ -223,7 +223,13 @@ async function buildMap(): Promise<UnleashedMap> {
 // as a correctness fix and assume a rename always needs one. It does not. A
 // bump costs every instance a ~16s catalogue rebuild on its first request, so
 // it is worth it when a stale map would be WRONG, not merely old.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v9"], {
+// v10 (2026-09-15): the 5kg-50kg urethane barbell range was held under two
+// names and is now under one, merging two units into a single 19-size unit.
+// That RETIRES the /product/urethane-fixed-barbells slug, and next.config.ts
+// redirects it - so this is the v8 case again, not the v9 one: a warm map keeps
+// that page alive while the redirect in front of it sends visitors elsewhere,
+// and the two disagree until the cache expires.
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v10"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });

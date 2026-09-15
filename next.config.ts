@@ -116,6 +116,19 @@ const nextConfig: NextConfig = {
       { source: "/product/standing-hip-thurst", destination: "/product/standing-hip-thrust-plate-loaded", permanent: true },
       { source: "/product/standing-hip-thrust", destination: "/product/standing-hip-thrust-selectorised", permanent: true },
 
+      // ONE BARBELL RANGE, ONE PAGE, 2026-09-15. The ERP held a single 5kg-50kg
+      // urethane fixed barbell line under TWO names - "Urethane Fixed Barbells"
+      // on five codes and "Fixed PU Straight Barbell" on fourteen - so the
+      // catalogue built two units and two pages, each showing alternate weights
+      // of the same range and both titled "Urethane Fixed Barbells". Renaming
+      // all fourteen merged them into one unit with all nineteen sizes.
+      //
+      // The survivor is the -2 slug, not the prettier one, because a range is
+      // routed to the snapshot bundle page it has always been reachable at
+      // (MWBBFUR-GROUP) - see the note in erp-catalogue.ts. So the clean URL is
+      // the one that has to redirect.
+      { source: "/product/urethane-fixed-barbells", destination: "/product/urethane-fixed-barbells-2", permanent: true },
+
       // THE WORDPRESS SUBCATEGORY URLS, found in Semrush on 2026-09-15 rather
       // than in the 404 log — because nobody is clicking them, Google is just
       // still ranking them.
