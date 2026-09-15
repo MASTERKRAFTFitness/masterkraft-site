@@ -209,13 +209,21 @@ async function buildMap(): Promise<UnleashedMap> {
 // backdrops for the full hour and the fix looks like it did not deploy.
 // v8 (2026-09-15): eleven products were renamed or retired in Unleashed, which
 // moved seven SLUGS. A warm v7 cache keeps serving the old names for up to an
-// hour, and that hour is not cosmetic here - next.config.ts now redirects the
-// old URLs to the new ones, so a stale map means a permanent redirect pointing
-// at a 404 until the cache expires. Bumping the key rebuilds on the first
-// request after deploy and closes that window, at the cost of one ~16s build.
-// This is the case the note above describes: the entries are shaped the same,
-// but their values changed under a key that would otherwise stay warm.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v8"], {
+// hour, and that hour was not cosmetic - next.config.ts redirects those old
+// URLs to the new ones, so a stale map meant a permanent redirect pointing at a
+// 404 until the cache expired. Bumping the key rebuilds on the first request
+// after deploy and closed that window.
+//
+// v9 (2026-09-15): OSCMDU01 renamed to "Functional Trainer (Clearance)", so it
+// stops sharing a <title> with MSCMS02. NOTHING MOVED - the slug stays
+// functional-trainer-clearance, because the clearance dedupe below would have
+// appended exactly that suffix anyway - so unlike v8 this bump buys nothing but
+// speed: the title would have corrected itself within the hour regardless.
+// Bumped on request, and recorded as such so the next person does not read it
+// as a correctness fix and assume a rename always needs one. It does not. A
+// bump costs every instance a ~16s catalogue rebuild on its first request, so
+// it is worth it when a stale map would be WRONG, not merely old.
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v9"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });
