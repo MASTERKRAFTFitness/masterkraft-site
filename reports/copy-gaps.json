@@ -494,8 +494,8 @@
     "weightKg": null
   },
   {
-    "slug": "station-markets-set-of-20",
-    "name": "Station Markets (Set of 20)",
+    "slug": "station-markers-set-of-20",
+    "name": "Station Markers (Set of 20)",
     "group": "Body Weight",
     "subgroup": "Speed & Agility",
     "brand": "MK",
@@ -648,7 +648,7 @@
   },
   {
     "slug": "functional-trainer-clearance",
-    "name": "Functional trainer",
+    "name": "Functional Trainer",
     "group": "Clearance",
     "subgroup": "Cable Machines",
     "brand": "OLD",
@@ -1024,23 +1024,6 @@
     "weightKg": null
   },
   {
-    "slug": "chrome-dumbbell-set-1kg-10kg-pairs",
-    "name": "Chrome  Dumbbell Set (1kg-10kg Pairs)",
-    "group": "Mixed Implements",
-    "subgroup": "Dumbbells",
-    "brand": "MK",
-    "codes": [
-      "MMDBCE01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 825,
-    "priceMax": 825,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
     "slug": "chrome-110-dumbbells-1kg-7kg-pairs",
     "name": "Chrome 110 Dumbbells (1kg-7kg Pairs)",
     "group": "Mixed Implements",
@@ -1055,6 +1038,23 @@
     "priceMax": 431.2,
     "inStock": false,
     "hasImage": true,
+    "weightKg": null
+  },
+  {
+    "slug": "chrome-dumbbell-set-1kg-10kg-pairs",
+    "name": "Chrome Dumbbell Set (1kg-10kg Pairs)",
+    "group": "Mixed Implements",
+    "subgroup": "Dumbbells",
+    "brand": "MK",
+    "codes": [
+      "MMDBCE01"
+    ],
+    "sizes": [],
+    "isRange": false,
+    "price": 825,
+    "priceMax": 825,
+    "inStock": false,
+    "hasImage": false,
     "weightKg": null
   },
   {
@@ -1301,8 +1301,8 @@
     "weightKg": null
   },
   {
-    "slug": "urethane-fixed-dumbbells-set-1-10kg-pairs-and-vertical-dummbell-rack",
-    "name": "Urethane Fixed Dumbbells Set (1-10kg Pairs) & Vertical Dummbell Rack",
+    "slug": "urethane-fixed-dumbbells-set-1-10kg-pairs-and-vertical-dumbbell-rack",
+    "name": "Urethane Fixed Dumbbells Set (1-10kg Pairs) & Vertical Dumbbell Rack",
     "group": "Packages",
     "subgroup": "Dumbbells",
     "brand": "MK",
@@ -1594,8 +1594,8 @@
     "weightKg": null
   },
   {
-    "slug": "4-stack-multi-sation",
-    "name": "4 Stack Multi-sation",
+    "slug": "4-stack-multi-station",
+    "name": "4 Stack Multi-station",
     "group": "Strength",
     "subgroup": "Chest & Shoulder Machines",
     "brand": "MK",
@@ -1628,8 +1628,8 @@
     "weightKg": null
   },
   {
-    "slug": "5-stack-multi-sation",
-    "name": "5 Stack Multi-sation",
+    "slug": "5-stack-multi-station",
+    "name": "5 Stack Multi-station",
     "group": "Strength",
     "subgroup": "Chest & Shoulder Machines",
     "brand": "MK",
@@ -1645,8 +1645,8 @@
     "weightKg": null
   },
   {
-    "slug": "8-stack-multi-sation",
-    "name": "8 Stack Multi-sation",
+    "slug": "8-stack-multi-station",
+    "name": "8 Stack Multi-station",
     "group": "Strength",
     "subgroup": "Chest & Shoulder Machines",
     "brand": "MK",
@@ -2549,7 +2549,7 @@
   },
   {
     "slug": "shoulder-press",
-    "name": "Shoulder press",
+    "name": "Shoulder Press",
     "group": "Strength",
     "subgroup": "Chest & Shoulder Machines",
     "brand": "MK",

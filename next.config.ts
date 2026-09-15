@@ -67,6 +67,22 @@ const nextConfig: NextConfig = {
       { source: "/product/oversided-hoodie", destination: "/product/oversized-hoodie-unisex", permanent: true },
       { source: "/product/oversized-hoodie", destination: "/product/oversized-hoodie-unisex", permanent: true },
 
+      // FIVE MORE SLUGS MOVED BY FIXING ERP SPELLINGS, 2026-09-15. A product's
+      // URL is derived from its ProductDescription, so correcting "Multi-sation"
+      // to "Multi-station" in Unleashed renames the page as well as the heading.
+      // All five old URLs were in the sitemap and served, so all five are
+      // redirected rather than left to 404 - the same lesson the hoodie taught
+      // four days earlier, applied before it could bite this time.
+      { source: "/product/4-stack-multi-sation", destination: "/product/4-stack-multi-station", permanent: true },
+      { source: "/product/5-stack-multi-sation", destination: "/product/5-stack-multi-station", permanent: true },
+      { source: "/product/8-stack-multi-sation", destination: "/product/8-stack-multi-station", permanent: true },
+      { source: "/product/station-markets-set-of-20", destination: "/product/station-markers-set-of-20", permanent: true },
+      {
+        source: "/product/urethane-fixed-dumbbells-set-1-10kg-pairs-and-vertical-dummbell-rack",
+        destination: "/product/urethane-fixed-dumbbells-set-1-10kg-pairs-and-vertical-dumbbell-rack",
+        permanent: true,
+      },
+
       // THE WORDPRESS ERA. The cutover on 27 August moved the apex to this site,
       // and everything the old store served that this one does not has been
       // answering 404 ever since: 69 `/product-category/<slug>` archives (the
