@@ -76,7 +76,15 @@ const nextConfig: NextConfig = {
       { source: "/product/4-stack-multi-sation", destination: "/product/4-stack-multi-station", permanent: true },
       { source: "/product/5-stack-multi-sation", destination: "/product/5-stack-multi-station", permanent: true },
       { source: "/product/8-stack-multi-sation", destination: "/product/8-stack-multi-station", permanent: true },
-      { source: "/product/station-markets-set-of-20", destination: "/product/station-markers-set-of-20", permanent: true },
+      // NO REDIRECT FOR STATION MARKERS, deliberately. Renaming MBSADO03 moved
+      // its slug from station-markets- to station-markers-, but BOTH answer 404
+      // in production and always have: the product has no carton in
+      // erp-cartons.json, and production runs HIDE_UNSHIPPABLE=true, so it is
+      // filtered out of erpUnits before it can have a page at either name. A
+      // redirect here would point one 404 at another and burn crawl budget
+      // doing it. If a carton is ever recorded for MBSADO03 the product appears
+      // at station-markers-set-of-20 on its own, and the authored copy is
+      // already keyed to that slug waiting for it.
       {
         source: "/product/urethane-fixed-dumbbells-set-1-10kg-pairs-and-vertical-dummbell-rack",
         destination: "/product/urethane-fixed-dumbbells-set-1-10kg-pairs-and-vertical-dumbbell-rack",
