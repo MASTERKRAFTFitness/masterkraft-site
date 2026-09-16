@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { equipmentCategories, fitoutLinks, footerLinks } from "@/lib/nav";
+import { blogEnabled, BLOG_PREFIX } from "@/lib/opinly-content";
 
 export default function Footer() {
   return (
@@ -81,6 +82,24 @@ export default function Footer() {
         <div>
           <h4 className="text-sm tracking-widest text-white/50">Company</h4>
           <ul className="mt-4 space-y-2.5">
+            {/* THE JOURNAL IS CONDITIONAL, and not in `footerLinks`, because
+                unlike every other link in that list it can be unbuilt. /blog is
+                served by Opinly and 404s until OPINLY_CDN_NAMESPACE is set in
+                next.config.ts — so a static entry would put a dead link in the
+                footer of every page on the site, which is both a bad visit and
+                something Search Console reports as a crawl error. Gated on the
+                same check the route itself uses, so the link exists exactly when
+                the page does. */}
+            {blogEnabled() && (
+              <li>
+                <Link
+                  href={BLOG_PREFIX}
+                  className="text-sm text-white/80 hover:text-accent transition-colors"
+                >
+                  Journal
+                </Link>
+              </li>
+            )}
             {footerLinks.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className="text-sm text-white/80 hover:text-accent transition-colors">

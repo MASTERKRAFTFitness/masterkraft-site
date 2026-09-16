@@ -8,6 +8,8 @@ import { locations } from "@/lib/locations";
 import { getAllProductSlugs } from "@/lib/woocommerce";
 import { erpUnits } from "@/lib/erp-catalogue";
 import { getUnleashedMap } from "@/lib/unleashed";
+import { buildSitemapEntries } from "@opinly/shared";
+import { blogConfig, blogEnabled, getOpinly } from "@/lib/opinly-content";
 
 export const revalidate = 86400; // rebuild sitemap daily
 
@@ -81,6 +83,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch {
     // products are best-effort — skip if the store is unreachable at build
+  }
+
+  // THE BLOG, from Opinly's own route list rather than from a list kept here.
+  //
+  // `routes()` returns every addressable content route — home, posts,
+  // categories, authors, tags — and buildSitemapEntries applies the same
+  // prefixes lib/blog-route matches on, so what this file ADVERTISES and what
+  // /blog ANSWERS cannot drift apart. Writing them out by hand is how a sitemap
+  // ends up submitting tag URLs that 404.
+  //
+  // Best-effort like the products above, and for a sharper reason: this file is
+  // the sitemap for the whole site. An Opinly outage at build time must cost the
+  // blog's URLs, not every product URL on masterkraft.com.
+  if (blogEnabled()) {
+    try {
+      const routes = await getOpinly().routes();
+      for (const entry of buildSitemapEntries(routes, blogConfig)) {
+        entries.push({
+          url: entry.url,
+          lastModified: new Date(entry.lastModified),
+          changeFrequency: "weekly",
+          priority: 0.6,
+        });
+      }
+    } catch (e) {
+      console.warn("[opinly] blog routes missing from sitemap", e);
+    }
   }
 
   return entries;

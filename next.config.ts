@@ -1,5 +1,21 @@
 import type { NextConfig } from "next";
+import { withOpinlyConfig } from "@opinly/next";
 import legacyRedirects from "./src/data/legacy-redirects.json";
+
+// The Opinly workspace's CDN namespace - a 21-character id, taken from the
+// Next.js setup snippet in the Opinly dashboard. It is a public path segment,
+// not a secret: it is the folder the blog's images are served from, and it ends
+// up in the HTML of every post. Hence a literal here rather than an env var,
+// the same as @opinly/next's own documented setup.
+//
+// UNSET IS A WORKING STATE, and a deliberate one. Empty means the wrapper below
+// is skipped entirely, `opinlyConfig.blogPrefix` stays undefined, and
+// lib/blog-route reads that as "the blog is not configured" and 404s /blog.
+// Everything else on the site is untouched. The alternative - a placeholder
+// namespace that satisfies the 21-character check - would build clean and serve
+// a blog whose every image 404s from a CDN folder that does not exist, which is
+// the failure you only find in Search Console six weeks later.
+const OPINLY_CDN_NAMESPACE = process.env.OPINLY_CDN_NAMESPACE ?? "";
 
 const nextConfig: NextConfig = {
   images: {
@@ -163,4 +179,46 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// OPINLY POWERS /blog. The wrapper does exactly two things, both of which the
+// blog route depends on: it rewrites `imagesPath` to the Opinly CDN, and it
+// injects OPINLY_SITE_URL / OPINLY_BLOG_PREFIX / OPINLY_IMAGES_PREFIX into the
+// build. @opinly/backend 1.6+ reads the first two and reports them as headers on
+// the content calls this app already makes, which is what tells Opinly the live
+// URL of each post it publishes - and therefore what joins a post to its search
+// and traffic data. There is no separate wiring for that; without the wrapper
+// Opinly holds no live URL for these posts at all.
+//
+// `unoptimizedImages: true` IS THE LINE THAT KEEPS THE IMAGES ON THE PAGE.
+// Read the `images.unoptimized` note above first: this site blanked sitewide
+// once already when Vercel's optimiser hit its quota and started answering 402
+// on every transformation. Blog images arrive from Opinly's CDN through the
+// /blog-images rewrite, which makes them same-origin paths that next/image
+// would happily feed to that same optimiser - a fresh set of billable
+// transformations, on content that is published continuously rather than
+// mirrored once. This flag is what lib/blog reads to keep them out of it, and
+// it must survive any future attempt to turn optimisation back on: the sitewide
+// switch above and this one are two locks on the same door, not a duplicate.
+//
+// `imagesPath` is `/blog-images` rather than `/images`. `public/images` does not
+// exist today, so `/images` would work - but a rewrite is invisible from the
+// filesystem, and the day someone adds `public/images` (this repo mirrors
+// catalogue photography into /public on a script) Next would serve those static
+// files in preference and every blog image would 404 with nothing in the diff to
+// explain it. A prefix that names what it carries cannot collide.
+export default OPINLY_CDN_NAMESPACE
+  ? withOpinlyConfig({
+      blogPath: "/blog",
+      imagesPath: "/blog-images",
+      companyName: "MASTERKRAFT",
+      cdnNamespace: OPINLY_CDN_NAMESPACE,
+      // THE APEX, LITERALLY, and not lib/site's SITE_URL. That constant falls
+      // back to the vercel.app hostname whenever NEXT_PUBLIC_SITE_URL is unset,
+      // which is every preview deployment - and this value is not cosmetic:
+      // it is reported to Opinly as the live address of every post, so a
+      // preview build would overwrite the real URLs with its own throwaway
+      // ones and detach each post from its search data. A post has one
+      // canonical home; www redirects to the apex, so this is it.
+      siteUrl: "https://masterkraft.com",
+      unoptimizedImages: true,
+    })(nextConfig)
+  : nextConfig;
