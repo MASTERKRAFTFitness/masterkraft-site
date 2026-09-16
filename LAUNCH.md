@@ -89,7 +89,11 @@ missing var fails **silently** — that's why each must be checked deliberately.
   setup under Goals > Conversions. Two actions are wired: a paid card order
   (purchase) and a submitted quote (lead) — keep them separate, a quote is a lead
   and not revenue. Values are read at build time, so setting them needs a redeploy.
-- ⚙️ `OPINLY_API_KEY` — **not set, and until it is, only the browser reports sales.**
+- ✅ `OPINLY_API_KEY` — **set and live** (added 15 Sep 2026, in place before the
+  16 Sep deploy, so server-side reporting has worked from its first request).
+  It is a **Team-level Shared** variable, not a project one: `vercel env ls` does NOT
+  list shared vars, so it looks absent there. `vercel env pull --environment=production`
+  is the check that tells the truth — it resolves. Don't "fix" a phantom missing key.
   Opinly's pixel key is publishable and already compiled in, so page views, add-to-cart,
   sign-ups and leads work with no config. Note the Opinly pixel loads on EVERY page and
   is **not** gated on the cookie banner, unlike GA4/Ads/HubSpot — a deliberate exception
@@ -98,7 +102,7 @@ missing var fails **silently** — that's why each must be checked deliberately.
   `/api/order` uses to report a paid order from the back end — the copy that survives a
   customer closing the tab on the confirmation screen, an ad-blocker, or a declined
   cookie banner. Both ends send the order number as `externalEventId`, so the two
-  collapse into one sale rather than double-counting revenue. Secret: set it in Vercel,
+  collapse into one sale rather than double-counting revenue. Secret: it lives in Vercel,
   never in the repo. Optional companion `NEXT_PUBLIC_OPINLY_KEY` overrides the built-in
   publishable key if the property is ever swapped.
 
