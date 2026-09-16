@@ -67,6 +67,31 @@ const HERO_ALT: Record<string, string> = {
     "REVL studio fitted out by MasterKraft — Concept2 RowErgs, benches, dumbbells and a rig",
   "/revl/wide-studio.jpg":
     "REVL studio floor with a rig, benches, dumbbell and kettlebell racks and wall balls",
+
+  // The club-page banners. These are REVL studios, but the file names are not
+  // the clubs' — shot-3.png and raffles-place.jpg are the same file, as are
+  // shot-6.jpg and rowers-bw.jpg — so none of these names a city it might not
+  // be standing in.
+  "/revl/gallery/shot-1.jpg":
+    "Athlete working on an air bike in a blacked-out training studio",
+  "/revl/gallery/shot-2.png":
+    "Lifter setting up over a loaded barbell on a gym floor",
+  "/revl/gallery/shot-3.png":
+    "Class training on Concept2 rowers and SkiErgs under a rig in a REVL studio",
+  "/revl/gallery/raffles-place.jpg":
+    "Class training on Concept2 rowers and SkiErgs under a rig in a REVL studio",
+  "/revl/gallery/shot-4.jpg":
+    "REVL studio floor with rigs, Concept2 RowErgs, air bikes and wall-ball storage",
+  "/revl/gallery/shot-6.jpg":
+    "Concept2 RowErgs in front of a REVL Training wall graphic and neon sign",
+  "/revl/gallery/rowers-bw.jpg":
+    "Concept2 RowErgs in front of a REVL Training wall graphic and neon sign",
+  "/revl/gallery/skierg.jpg":
+    "Athlete on a Concept2 SkiErg beside dumbbell racks and wall balls in a REVL studio",
+  "/revl/gallery/cityhall.jpg":
+    "REVL studio off a mall concourse — reception desk, rig, benches, plate storage and a row of kettlebells",
+  "/revl/gallery/lower-pierce.jpg":
+    "Rig, benches, kettlebells and plate storage on the floor of a blacked-out training studio",
 };
 
 /** The description of a photograph, or undefined if nobody has written one. */

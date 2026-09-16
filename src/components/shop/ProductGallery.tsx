@@ -104,7 +104,21 @@ export default function ProductGallery({
                 }`}
               >
                 <span className="relative block aspect-square">
-                  <Image src={img.src} alt="" fill className="object-contain p-2" sizes="15vw" />
+                  {/* NOT READ ALOUD — the button carries the aria-label, which
+                      overrides everything inside it — so this is here for image
+                      search and for a thumbnail that fails to load. It was
+                      alt="" on the reasoning that a screen reader does not need
+                      it twice, which is true and is not the same as nothing
+                      needing it: the Opinly audit counted these on 60 product
+                      pages on 2026-09-16. A captioned thumbnail IS a size, so
+                      it names one. */}
+                  <Image
+                    src={img.src}
+                    alt={img.alt || (label ? `${name} — ${label}` : name)}
+                    fill
+                    className="object-contain p-2"
+                    sizes="15vw"
+                  />
                 </span>
                 {label && (
                   <span

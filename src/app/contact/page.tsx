@@ -6,6 +6,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import StatsBand from "@/components/marketing/StatsBand";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FitoutBriefForm from "@/components/marketing/FitoutBriefForm";
+import { heroAlt } from "@/lib/image-alt";
 import { fitouts } from "@/lib/fitouts";
 import { SITE_URL, portalLoginHref } from "@/lib/site";
 
@@ -155,7 +156,7 @@ export default function ContactPage() {
       <section id="brief" className="relative bg-carbon text-white overflow-hidden">
         <Image
           src="/revl/wide-studio.jpg"
-          alt=""
+          alt={heroAlt("/revl/wide-studio.jpg") ?? ""}
           fill
           className="object-cover opacity-25"
           style={{ objectPosition: "center 40%" }}

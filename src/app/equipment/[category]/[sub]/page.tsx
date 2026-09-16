@@ -42,7 +42,9 @@ export async function generateMetadata({
   const path = `/equipment/${s.category}/${s.slug}`;
 
   return {
-    title: page > 1 ? `${s.label} — Page ${page}` : s.label,
+    // `seoTitle` where the label is a single noun — same split, and the same
+    // page-2 carve-out, as the category above it.
+    title: page > 1 ? `${s.label} — Page ${page}` : s.seoTitle ?? s.label,
     description: s.meta,
     alternates: { canonical: page > 1 ? `${path}?page=${page}` : path },
   };

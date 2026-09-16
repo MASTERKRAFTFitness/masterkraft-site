@@ -59,6 +59,20 @@ export type Subcategory = {
   blurb: string;
   /** The meta description. Written for a search result with no page around it. */
   meta: string;
+  /**
+   * The `<title>`, where the label is too short to be one.
+   *
+   * Fifteen of these pages are a single noun — "Barbells", "Dumbbells",
+   * "Gymnastics" — which the template in app/layout.tsx turns into twenty-odd
+   * characters where a search result shows about sixty. It is the same fault
+   * the Opinly audit raised against thirty-five other pages on 2026-09-16, on
+   * pages it had not crawled yet: these only went live on 15 September.
+   *
+   * Drawn from `blurb` and `meta` below rather than invented, so it is held to
+   * the same no-unverifiable-specs rule as the rest of this file. Unset where
+   * the label already fills the line.
+   */
+  seoTitle?: string;
   /** Long-form copy, rendered under the grid. Plain HTML. */
   about: string;
 };
@@ -95,6 +109,7 @@ export const subcategories: Subcategory[] = [
     category: "strength",
     slug: "back-machines",
     erpSubgroup: "Back Machines",
+    seoTitle: "Back Machines | Rows, Pulldowns & Pull-Up Assist",
     label: "Back Machines",
     blurb: "Rows, pulldowns and pull-up assist stations.",
     meta:
@@ -134,6 +149,7 @@ export const subcategories: Subcategory[] = [
     category: "strength",
     slug: "cable-machines",
     erpSubgroup: "Cable Machines",
+    seoTitle: "Cable Machines | Functional Trainers & Pulleys",
     label: "Cable Machines",
     blurb: "Functional trainers, dual pulleys and multi-stations.",
     meta:
@@ -147,6 +163,7 @@ export const subcategories: Subcategory[] = [
     category: "strength",
     slug: "weight-benches",
     erpSubgroup: "Weight Benches",
+    seoTitle: "Weight Benches | Flat, Incline & Adjustable",
     label: "Weight Benches",
     blurb: "Flat, incline, decline and adjustable benches.",
     meta:
@@ -162,6 +179,7 @@ export const subcategories: Subcategory[] = [
     category: "weightlifting",
     slug: "barbells",
     erpSubgroup: "Barbells",
+    seoTitle: "Barbells | Olympic, Powerlifting & Fixed Bars",
     label: "Barbells",
     blurb: "Olympic, powerlifting, fixed and specialty bars.",
     meta:
@@ -175,6 +193,7 @@ export const subcategories: Subcategory[] = [
     category: "weightlifting",
     slug: "weight-plates",
     erpSubgroup: "Weight Plates",
+    seoTitle: "Weight Plates | Bumper, Urethane & Competition",
     label: "Weight Plates",
     blurb: "Bumper, rubber, urethane and competition plates.",
     meta:
@@ -231,6 +250,7 @@ export const subcategories: Subcategory[] = [
     category: "cardio",
     slug: "bikes",
     erpSubgroup: "Bikes",
+    seoTitle: "Exercise Bikes | Air, Magnetic & Studio Bikes",
     label: "Exercise Bikes",
     blurb: "Air, magnetic and studio bikes.",
     meta:
@@ -244,6 +264,7 @@ export const subcategories: Subcategory[] = [
     category: "cardio",
     slug: "rowers",
     erpSubgroup: "Rowers",
+    seoTitle: "Rowing Machines | Air & Water Rowers for Gyms",
     label: "Rowing Machines",
     blurb: "Air and water rowers for studios and gym floors.",
     meta:
@@ -257,6 +278,7 @@ export const subcategories: Subcategory[] = [
     category: "cardio",
     slug: "ski-trainer",
     erpSubgroup: "Ski Trainer",
+    seoTitle: "Ski Trainers | Upper-Body Conditioning Machines",
     label: "Ski Trainers",
     blurb: "Upper-body conditioning machines.",
     meta:
@@ -272,6 +294,7 @@ export const subcategories: Subcategory[] = [
     category: "mixed-implements",
     slug: "dumbbells",
     erpSubgroup: "Dumbbells",
+    seoTitle: "Dumbbells | Rubber Hex, Urethane & Studio Sets",
     label: "Dumbbells",
     blurb: "Rubber hex, urethane and studio dumbbell ranges.",
     meta:
@@ -285,6 +308,7 @@ export const subcategories: Subcategory[] = [
     category: "mixed-implements",
     slug: "kettlebells",
     erpSubgroup: "Kettlebells",
+    seoTitle: "Kettlebells | Cast, Competition & Coated",
     label: "Kettlebells",
     blurb: "Cast, competition and coated kettlebell ranges.",
     meta:
@@ -298,6 +322,7 @@ export const subcategories: Subcategory[] = [
     category: "mixed-implements",
     slug: "dead-balls",
     erpSubgroup: "Dead Balls",
+    seoTitle: "Dead Balls | Non-Bouncing Slam & Carry Balls",
     label: "Dead Balls",
     blurb: "Non-bouncing slam and carry balls.",
     meta:
@@ -311,6 +336,7 @@ export const subcategories: Subcategory[] = [
     category: "mixed-implements",
     slug: "wall-balls",
     erpSubgroup: "Wall Balls",
+    seoTitle: "Wall Balls | Soft-Shell Balls for Throws",
     label: "Wall Balls",
     blurb: "Soft-shell balls for throws and targets.",
     meta:
@@ -365,6 +391,7 @@ export const subcategories: Subcategory[] = [
     category: "body-weight",
     slug: "speed-and-agility",
     erpSubgroup: "Speed & Agility",
+    seoTitle: "Speed & Agility | Ladders, Hurdles, Cones & Sleds",
     label: "Speed & Agility",
     blurb: "Ladders, hurdles, cones, sleds and markers.",
     meta:
@@ -378,6 +405,7 @@ export const subcategories: Subcategory[] = [
     category: "body-weight",
     slug: "core-training",
     erpSubgroup: "Core Training",
+    seoTitle: "Core Training | Ab Wheels, Mats & Core Benches",
     label: "Core Training",
     blurb: "Ab wheels, mats, benches and core kit.",
     meta:
@@ -410,6 +438,7 @@ export const subcategories: Subcategory[] = [
     category: "body-weight",
     slug: "gymnastics",
     erpSubgroup: "Gymnastics",
+    seoTitle: "Gymnastics | Rings, Bars & Suspension Training",
     label: "Gymnastics",
     blurb: "Rings, bars and suspension for bodyweight training.",
     meta:

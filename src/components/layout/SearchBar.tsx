@@ -105,6 +105,9 @@ export default function SearchBar({ solid }: { solid: boolean }) {
                     className="w-full flex items-center gap-3 py-2.5 text-left hover:text-accent-600 transition-colors"
                   >
                     <span className="relative h-10 w-10 shrink-0 bg-smoke border border-line">
+                      {/* alt="" ON PURPOSE, and it is not one the site audit found:
+                          the product's name is the next node in the same button,
+                          so a described thumbnail would announce it twice. */}
                       {s.image && <Image src={s.image} alt="" fill className="object-contain p-1" sizes="40px" />}
                     </span>
                     <span className="text-sm line-clamp-1">{s.name}</span>
