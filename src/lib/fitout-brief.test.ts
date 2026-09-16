@@ -11,7 +11,7 @@ import {
   humanBytes,
   type FitoutBrief,
 } from "@/lib/fitout-brief";
-import { ENQUIRY_TYPE } from "@/lib/enquiry-type";
+import { ENQUIRY_KIND, portalEnquiryType } from "@/lib/enquiry-type";
 
 const full: FitoutBrief = {
   ...emptyBrief,
@@ -109,7 +109,7 @@ describe("briefHubspotFields", () => {
   // option list is pinned once, in enquiry-type.test.ts.
   it("files the lead against the fitout funnel", () => {
     const type = briefHubspotFields(full).find((f) => f.name === "enquiry_type")!.value;
-    expect(type).toBe(ENQUIRY_TYPE.fitout);
+    expect(type).toBe(portalEnquiryType(ENQUIRY_KIND.fitout));
   });
 });
 

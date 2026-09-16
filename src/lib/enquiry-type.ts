@@ -1,76 +1,116 @@
-// The `enquiry_type` values this site sends to HubSpot.
+// What this site tells HubSpot about WHY someone got in touch.
 //
-// THESE ARE CRM VALUES, NOT PROSE. `enquiry_type` is an ENUMERATION in the
-// portal, and HubSpot's Forms API does not reject a value outside the option
-// list - it accepts the submission, returns 2xx, and silently leaves the
-// property EMPTY. So a wrong value here is invisible from every direction: the
-// visitor sees the thank-you, lib/hubspot.ts sees a 200, the route logs
-// "submitted", and the lead lands in the CRM uncategorised.
+// THE CONSTRAINT: `enquiry_type` is an ENUMERATION in the portal, and it defines
+// exactly four options - Commercial Equipment Enquiry, Franchise Opportunity,
+// General Enquiry, Support Enquiry. HubSpot does not reject a value outside that
+// list. It accepts the submission, returns 2xx, and leaves the property EMPTY.
 //
-// That is not hypothetical. Before this file existed, every form on the site
-// sent a value the portal did not define - "A fit-out solution", "Warranty
-// claim", "Equipment purchase" - and every lead ever captured has a blank
-// enquiry_type as a result. It was found by reading the property definition out
-// of HubSpot, which is the only place the truth lives.
+// So a wrong value is invisible from every direction: the visitor sees the
+// thank-you, lib/hubspot.ts sees a 200, the route logs "submitted", and the lead
+// files as uncategorised. Every form on this site used to send a value the portal
+// did not define - "A fit-out solution", "Warranty claim", "Equipment purchase" -
+// which is why every lead captured before this file has a blank enquiry_type.
 //
-// RULES FOR CHANGING THIS FILE:
-//   1. Add the option in HubSpot FIRST (Settings > Properties > Contact >
-//      Enquiry Type). Code shipped ahead of the portal silently discards again.
-//   2. Match the option's value EXACTLY, including case.
-//   3. Never let a copy sweep near these strings. They look like labels.
+// TWO LAYERS, ON PURPOSE:
 //
-// enquiry-type.test.ts pins every value, and every place that sends one.
+//   EnquiryKind is OURS. Six of them, because the site genuinely has six front
+//   doors and the fitout wizard exists precisely to tell them apart.
+//
+//   PortalEnquiryType is HUBSPOT'S. Four values, and the only thing that may be
+//   sent on the wire.
+//
+// Mapping between them happens here and nowhere else. That is the whole point:
+// the day someone adds "Fitout Enquiry" to the portal, this file changes by one
+// line and every form follows. Without the split, sharpening the taxonomy later
+// would mean touching five routes and a form again.
+//
+// WHAT IS LOST TODAY, stated plainly: fitout briefs and one-off equipment
+// enquiries both file as Commercial Equipment Enquiry, so the CRM cannot filter
+// between them. The brief is still fully readable in `message` (it leads with
+// "Fitout type:"), so nothing is lost to a human - only to a filter.
+
+/** The four values the portal actually defines. Verified by reading the property. */
+export const PORTAL_ENQUIRY_TYPES = [
+  "Commercial Equipment Enquiry",
+  "Franchise Opportunity",
+  "General Enquiry",
+  "Support Enquiry",
+] as const;
+
+export type PortalEnquiryType = (typeof PORTAL_ENQUIRY_TYPES)[number];
 
 /**
- * The canonical set. Keys are ours; values are HubSpot's, verified against the
- * portal's `enquiry_type` option list.
+ * Our own kinds - finer-grained than the portal's four, and what travels on the
+ * wire from the forms. Slugs rather than prose so a copy sweep has nothing to
+ * catch: these are identifiers, and they look like identifiers.
  */
-export const ENQUIRY_TYPE = {
-  /** The fitout brief wizard on /contact. */
-  fitout: "Fitout Enquiry",
-  /** Someone buying equipment rather than a whole floor. */
-  equipment: "Commercial Equipment Enquiry",
-  /** Wants to distribute MasterKraft. Distinct from the portal's "Franchise Opportunity". */
-  distributor: "Distributor Enquiry",
-  /** An existing or prospective trade account. */
-  wholesale: "Wholesale Enquiry",
-  /** Warranty claims and anything else post-sale. */
-  support: "Support Enquiry",
-  /** The fallback. Anything that does not sort into the above. */
-  general: "General Enquiry",
+export const ENQUIRY_KIND = {
+  fitout: "fitout",
+  equipment: "equipment",
+  distributor: "distributor",
+  wholesale: "wholesale",
+  support: "support",
+  general: "general",
 } as const;
 
-export type EnquiryType = (typeof ENQUIRY_TYPE)[keyof typeof ENQUIRY_TYPE];
+export type EnquiryKind = (typeof ENQUIRY_KIND)[keyof typeof ENQUIRY_KIND];
+
+export const ALL_ENQUIRY_KINDS: EnquiryKind[] = Object.values(ENQUIRY_KIND);
 
 /**
- * The /contact/enquiry topic select.
+ * Which portal option each kind files under.
  *
- * `label` is what a visitor reads and is free to be reworded. `value` is the
- * CRM value and is not - which is exactly why they are separate fields here.
- * The <option> elements carry the value explicitly rather than relying on their
- * text content, so a copy change cannot silently become a data change.
+ * `wholesale` lands on General rather than Commercial Equipment because a trade
+ * account request is not a purchase enquiry and would pollute the sales queue.
+ * `distributor` lands on Franchise Opportunity as the closest available fit -
+ * distributing is not franchising, but it is nearer than the other three.
+ *
+ * THIS IS THE ONE TABLE TO EDIT if the portal ever gains better options.
  */
-export const ENQUIRY_TOPICS: { label: string; value: EnquiryType }[] = [
-  { label: "Equipment purchase", value: ENQUIRY_TYPE.equipment },
-  { label: "A fitout solution", value: ENQUIRY_TYPE.fitout },
-  { label: "Becoming a distributor", value: ENQUIRY_TYPE.distributor },
-  { label: "Wholesale / portal access", value: ENQUIRY_TYPE.wholesale },
-  { label: "Something else", value: ENQUIRY_TYPE.general },
+const TO_PORTAL: Record<EnquiryKind, PortalEnquiryType> = {
+  fitout: "Commercial Equipment Enquiry",
+  equipment: "Commercial Equipment Enquiry",
+  distributor: "Franchise Opportunity",
+  wholesale: "General Enquiry",
+  support: "Support Enquiry",
+  general: "General Enquiry",
+};
+
+/**
+ * The topic select on /contact/enquiry.
+ *
+ * `label` is prose and free to be reworded. `value` is an EnquiryKind slug, and
+ * is carried on the <option> explicitly rather than inferred from the text - so
+ * a copy change cannot become a data change, which is exactly how the previous
+ * bug survived a rename sweep unnoticed.
+ */
+export const ENQUIRY_TOPICS: { label: string; value: EnquiryKind }[] = [
+  { label: "Equipment purchase", value: ENQUIRY_KIND.equipment },
+  { label: "A fitout solution", value: ENQUIRY_KIND.fitout },
+  { label: "Becoming a distributor", value: ENQUIRY_KIND.distributor },
+  { label: "Wholesale / portal access", value: ENQUIRY_KIND.wholesale },
+  { label: "Something else", value: ENQUIRY_KIND.general },
 ];
 
-/** Every value the portal must define for this site to file leads correctly. */
-export const ALL_ENQUIRY_TYPES: EnquiryType[] = Object.values(ENQUIRY_TYPE);
-
 /**
- * Coerce whatever arrived on the wire to a value HubSpot will store.
+ * Coerce whatever arrived on the wire to one of our kinds.
  *
- * A submission can carry an old cached bundle's topic, or nothing at all, and an
- * unrecognised string would be discarded silently. Falling back to `general`
- * keeps the lead categorised as *something*, which is recoverable; a blank
- * property is not distinguishable from a lead nobody ever classified.
+ * Anything unrecognised becomes `general` rather than being passed through. A
+ * visitor on a cached bundle can still post the old prose values, and those
+ * would be discarded silently by HubSpot - filed imprecisely is recoverable,
+ * filed nowhere is not.
  */
-export function toEnquiryType(raw: string | null | undefined): EnquiryType {
-  const value = (raw ?? "").trim();
-  const match = ALL_ENQUIRY_TYPES.find((t) => t.toLowerCase() === value.toLowerCase());
-  return match ?? ENQUIRY_TYPE.general;
+export function toEnquiryKind(raw: string | null | undefined): EnquiryKind {
+  const value = (raw ?? "").trim().toLowerCase();
+  return ALL_ENQUIRY_KINDS.find((k) => k === value) ?? ENQUIRY_KIND.general;
+}
+
+/** The value to put on the wire for a kind. Always one HubSpot will store. */
+export function portalEnquiryType(kind: EnquiryKind): PortalEnquiryType {
+  return TO_PORTAL[kind];
+}
+
+/** Wire value straight through to a portal value, for routes that forward a topic. */
+export function hubspotEnquiryType(raw: string | null | undefined): PortalEnquiryType {
+  return portalEnquiryType(toEnquiryKind(raw));
 }

@@ -1,86 +1,103 @@
 // Guards the values HubSpot will actually STORE.
 //
-// This replaces an earlier version of this test that pinned the strings the
-// forms used to send - "A fit-out solution", "Equipment purchase" and so on.
-// Those were never valid: `enquiry_type` is an enumeration in the portal whose
-// options are Commercial Equipment Enquiry / Franchise Opportunity / General
-// Enquiry / Support Enquiry, and HubSpot answers an unknown value with a 2xx
-// and an EMPTY property rather than an error. So the old test locked in the bug
-// it was written to prevent, and every lead the site ever captured has a blank
-// enquiry_type.
+// The failure this exists to prevent has already happened once. `enquiry_type`
+// is an enumeration with four options, and HubSpot answers a value outside that
+// list with a 2xx and an EMPTY property rather than an error - so every form on
+// this site silently filed uncategorised leads for as long as it existed.
 //
-// The lesson worth keeping: a value that has to match an external system cannot
-// be verified by reading our own source. It was found by reading the property
-// definition out of HubSpot. If these ever change again, check there first.
+// An earlier version of this test pinned the strings the forms were sending, by
+// reading them out of our own source. It passed. It was wrong. A value that has
+// to match an external system cannot be verified from inside the repo: the
+// option list came from reading the property definition out of HubSpot, and that
+// is where to check it again if these ever change.
 import { describe, expect, it } from "vitest";
 import {
-  ALL_ENQUIRY_TYPES,
+  ALL_ENQUIRY_KINDS,
+  ENQUIRY_KIND,
   ENQUIRY_TOPICS,
-  ENQUIRY_TYPE,
-  toEnquiryType,
+  PORTAL_ENQUIRY_TYPES,
+  hubspotEnquiryType,
+  portalEnquiryType,
+  toEnquiryKind,
 } from "@/lib/enquiry-type";
 import { briefHubspotFields, emptyBrief } from "@/lib/fitout-brief";
 
-// Verified against the portal. Two of these (Fitout, Distributor, Wholesale)
-// had to be ADDED to HubSpot; the rest already existed.
-const EXPECTED = [
-  "Fitout Enquiry",
+// Read from the portal's property definition. If HubSpot gains options, update
+// this list and the TO_PORTAL table together.
+const PORTAL_OPTIONS = [
   "Commercial Equipment Enquiry",
-  "Distributor Enquiry",
-  "Wholesale Enquiry",
-  "Support Enquiry",
+  "Franchise Opportunity",
   "General Enquiry",
+  "Support Enquiry",
 ];
 
-describe("ENQUIRY_TYPE", () => {
-  it("is exactly the set HubSpot defines", () => {
-    expect(ALL_ENQUIRY_TYPES).toEqual(EXPECTED);
+describe("the portal contract", () => {
+  it("matches the option list HubSpot defines", () => {
+    expect([...PORTAL_ENQUIRY_TYPES]).toEqual(PORTAL_OPTIONS);
   });
 
-  // Case matters to HubSpot's option matching, and these read like labels, so a
-  // sentence-casing pass over "prose" would silently unfile every lead.
-  it("keeps each value verbatim", () => {
-    expect(ENQUIRY_TYPE.fitout).toBe("Fitout Enquiry");
-    expect(ENQUIRY_TYPE.equipment).toBe("Commercial Equipment Enquiry");
-    expect(ENQUIRY_TYPE.distributor).toBe("Distributor Enquiry");
-    expect(ENQUIRY_TYPE.wholesale).toBe("Wholesale Enquiry");
-    expect(ENQUIRY_TYPE.support).toBe("Support Enquiry");
-    expect(ENQUIRY_TYPE.general).toBe("General Enquiry");
+  // The single most important assertion here: whatever we map, the result must
+  // be storable. Anything else is discarded in silence.
+  it("maps every kind to a storable value", () => {
+    for (const kind of ALL_ENQUIRY_KINDS) {
+      expect(PORTAL_OPTIONS).toContain(portalEnquiryType(kind));
+    }
+  });
+});
+
+describe("the mapping", () => {
+  it("files each kind where intended", () => {
+    expect(portalEnquiryType(ENQUIRY_KIND.fitout)).toBe("Commercial Equipment Enquiry");
+    expect(portalEnquiryType(ENQUIRY_KIND.equipment)).toBe("Commercial Equipment Enquiry");
+    expect(portalEnquiryType(ENQUIRY_KIND.distributor)).toBe("Franchise Opportunity");
+    expect(portalEnquiryType(ENQUIRY_KIND.wholesale)).toBe("General Enquiry");
+    expect(portalEnquiryType(ENQUIRY_KIND.support)).toBe("Support Enquiry");
+    expect(portalEnquiryType(ENQUIRY_KIND.general)).toBe("General Enquiry");
   });
 
-  // The whole point of the label/value split: prose can move, data cannot.
-  it("gives every contact-form topic a real CRM value", () => {
+  // Documenting the known cost of option B rather than letting someone discover
+  // it from a CRM report. Delete this test the day the portal gains its own
+  // Fitout option and the two stop colliding.
+  it("cannot yet distinguish a fitout brief from an equipment enquiry", () => {
+    expect(portalEnquiryType(ENQUIRY_KIND.fitout)).toBe(
+      portalEnquiryType(ENQUIRY_KIND.equipment)
+    );
+  });
+});
+
+describe("toEnquiryKind", () => {
+  it("accepts our own slugs", () => {
+    expect(toEnquiryKind("fitout")).toBe(ENQUIRY_KIND.fitout);
+    expect(toEnquiryKind("WHOLESALE")).toBe(ENQUIRY_KIND.wholesale);
+  });
+
+  // A visitor on a cached bundle still posts the old prose. Those values are not
+  // storable, so they must not be forwarded.
+  it("falls back instead of forwarding a value HubSpot would discard", () => {
+    for (const legacy of ["A fit-out solution", "Warranty claim", "Equipment purchase", "", null]) {
+      const result = hubspotEnquiryType(legacy);
+      expect(PORTAL_OPTIONS).toContain(result);
+    }
+    expect(toEnquiryKind("A fit-out solution")).toBe(ENQUIRY_KIND.general);
+  });
+});
+
+describe("the contact form topics", () => {
+  // The label/value split is the structural fix: prose can move, data cannot.
+  it("carries a real kind on every option, and maps to something storable", () => {
     expect(ENQUIRY_TOPICS.length).toBeGreaterThan(0);
     for (const topic of ENQUIRY_TOPICS) {
-      expect(ALL_ENQUIRY_TYPES).toContain(topic.value);
+      expect(ALL_ENQUIRY_KINDS).toContain(topic.value);
+      expect(PORTAL_OPTIONS).toContain(portalEnquiryType(topic.value));
       expect(topic.label.trim()).not.toBe("");
     }
   });
 });
 
-describe("toEnquiryType", () => {
-  it("passes through a value the portal knows", () => {
-    expect(toEnquiryType("Fitout Enquiry")).toBe(ENQUIRY_TYPE.fitout);
-  });
-
-  it("matches case-insensitively, since the wire is not trusted", () => {
-    expect(toEnquiryType("fitout enquiry")).toBe(ENQUIRY_TYPE.fitout);
-  });
-
-  // An old cached bundle can still post the pre-fix strings. Better filed as
-  // General than discarded into a blank property nobody can query.
-  it("falls back rather than letting an unknown value be discarded", () => {
-    expect(toEnquiryType("A fit-out solution")).toBe(ENQUIRY_TYPE.general);
-    expect(toEnquiryType("Warranty claim")).toBe(ENQUIRY_TYPE.general);
-    expect(toEnquiryType("")).toBe(ENQUIRY_TYPE.general);
-    expect(toEnquiryType(undefined)).toBe(ENQUIRY_TYPE.general);
-  });
-});
-
-describe("the brief files itself under a value HubSpot stores", () => {
-  it("sends Fitout Enquiry", () => {
+describe("the fitout brief", () => {
+  it("sends a value HubSpot will store", () => {
     const value = briefHubspotFields(emptyBrief).find((f) => f.name === "enquiry_type")!.value;
-    expect(value).toBe(ENQUIRY_TYPE.fitout);
-    expect(ALL_ENQUIRY_TYPES).toContain(value);
+    expect(PORTAL_OPTIONS).toContain(value);
+    expect(value).toBe("Commercial Equipment Enquiry");
   });
 });

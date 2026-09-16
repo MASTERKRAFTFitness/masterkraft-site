@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
-import { toEnquiryType } from "@/lib/enquiry-type";
+import { hubspotEnquiryType } from "@/lib/enquiry-type";
 
 export async function POST(request: Request) {
   let body: Record<string, string>;
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       { name: "email", value: email },
       { name: "phone", value: phone ?? "" },
       { name: "company", value: company ?? "" },
-      { name: "enquiry_type", value: toEnquiryType(topic) },
+      { name: "enquiry_type", value: hubspotEnquiryType(topic) },
       { name: "message", value: message },
     ],
     { pageName: "Contact" }
