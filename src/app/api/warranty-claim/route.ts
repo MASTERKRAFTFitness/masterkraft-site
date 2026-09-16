@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients } from "@/lib/notify-recipients";
+import { ENQUIRY_TYPE } from "@/lib/enquiry-type";
 
 // Warranty claims.
 //
@@ -161,7 +162,7 @@ export async function POST(request: Request) {
       { name: "email", value: claim.email },
       { name: "phone", value: claim.phone },
       { name: "company", value: claim.company },
-      { name: "enquiry_type", value: "Warranty claim" },
+      { name: "enquiry_type", value: ENQUIRY_TYPE.support },
       {
         name: "message",
         value:

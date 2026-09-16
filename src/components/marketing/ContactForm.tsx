@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import { ENQUIRY_TOPICS } from "@/lib/enquiry-type";
 import { trackEnquiry } from "@/lib/analytics";
 
 const fieldClass =
@@ -70,11 +71,14 @@ export default function ContactForm() {
         <option value="" disabled>
           I&apos;m enquiring about…
         </option>
-        <option>Equipment purchase</option>
-        <option>A fit-out solution</option>
-        <option>Becoming a distributor</option>
-        <option>Wholesale / portal access</option>
-        <option>Something else</option>
+        {/* value is the HubSpot enum, label is prose. Separate on purpose -
+            see lib/enquiry-type.ts for why a reworded label must not be able
+            to become a data change. */}
+        {ENQUIRY_TOPICS.map((t) => (
+          <option key={t.value} value={t.value}>
+            {t.label}
+          </option>
+        ))}
       </select>
       <textarea name="message" required rows={5} aria-label="How can we help?" placeholder="How can we help?" className={fieldClass} />
       <HoneypotField />

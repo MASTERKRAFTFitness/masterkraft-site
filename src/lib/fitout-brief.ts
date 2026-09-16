@@ -16,6 +16,8 @@
 // and no risk of a lead bouncing. Promoting them to real properties later is a
 // HubSpot-side job plus a line each in `briefHubspotFields`.
 
+import { ENQUIRY_TYPE } from "@/lib/enquiry-type";
+
 export type Choice = {
   value: string;
   /** Shown on the tap-card. */
@@ -293,7 +295,7 @@ export function briefHubspotFields(
     { name: "email", value: brief.email },
     { name: "phone", value: brief.phone },
     { name: "company", value: brief.company },
-    { name: "enquiry_type", value: "A fit-out solution" },
+    { name: "enquiry_type", value: ENQUIRY_TYPE.fitout },
     { name: "message", value: briefSummary(brief, attachments) },
   ];
 }

@@ -11,6 +11,7 @@ import {
   humanBytes,
   type FitoutBrief,
 } from "@/lib/fitout-brief";
+import { ENQUIRY_TYPE } from "@/lib/enquiry-type";
 
 const full: FitoutBrief = {
   ...emptyBrief,
@@ -101,9 +102,14 @@ describe("briefHubspotFields", () => {
     expect(message).toContain("Timeline: 1-3 months");
   });
 
+  // Asserted against the shared constant, NOT a literal copy. This test used to
+  // hardcode "A fit-out solution" and passed happily for as long as it existed,
+  // while HubSpot silently discarded that value on every submission - a literal
+  // duplicated into a test proves the duplication, not the correctness. The real
+  // option list is pinned once, in enquiry-type.test.ts.
   it("files the lead against the fitout funnel", () => {
     const type = briefHubspotFields(full).find((f) => f.name === "enquiry_type")!.value;
-    expect(type).toBe("A fit-out solution");
+    expect(type).toBe(ENQUIRY_TYPE.fitout);
   });
 });
 
