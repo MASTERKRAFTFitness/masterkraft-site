@@ -15,6 +15,7 @@ const staticPaths = [
   "",
   "/our-story",
   "/contact",
+  "/contact/enquiry",
   "/resources",
   "/distributor",
   "/fitout",

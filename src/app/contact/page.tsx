@@ -327,6 +327,14 @@ export default function ContactPage() {
         <div className="max-w-2xl mb-12">
           <Eyebrow className="mb-4">Other Enquiries</Eyebrow>
           <h2 className="text-3xl lg:text-4xl font-bold">Not a fitout?</h2>
+          <p className="mt-4 text-ash leading-relaxed">
+            The brief above is built for one job. Anything else - a single piece of
+            equipment, an order already in flight, a question we have not thought of -
+            goes through the general form, and a person answers it.
+          </p>
+          <Link href="/contact/enquiry" className="btn btn-accent mt-8">
+            Send a general enquiry <span aria-hidden>&rarr;</span>
+          </Link>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line">
           <div className="bg-white p-8">
