@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
+import { internalRecipients } from "@/lib/notify-recipients";
 
 // Warranty claims.
 //
@@ -39,7 +40,7 @@ function splitName(full: string): { first: string; last: string } {
 async function sendEmail(
   subject: string,
   html: string,
-  to: string,
+  to: string | string[],
   replyTo?: string
 ): Promise<"sent" | "skipped" | "error"> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -49,7 +50,7 @@ async function sendEmail(
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
+      body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
     });
     if (!res.ok) throw new Error(`Resend ${res.status}`);
     return "sent";
@@ -174,7 +175,7 @@ export async function POST(request: Request) {
     return "error" as const;
   });
 
-  const to = process.env.QUOTE_TO_EMAIL || "hello@masterkraft.com";
+  const to = internalRecipients();
   const fallback =
     hubspot === "submitted"
       ? "not_needed"

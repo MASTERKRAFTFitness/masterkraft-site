@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
+import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import {
   MAX_FILES,
   MAX_FILE_BYTES,
@@ -107,7 +108,7 @@ async function readPlans(files: File[]): Promise<{ kept: Attachment[]; dropped: 
 async function sendEmail(
   subject: string,
   html: string,
-  to: string,
+  to: string | string[],
   opts: { replyTo?: string; attachments?: Attachment[] } = {}
 ): Promise<"sent" | "skipped" | "error"> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -119,7 +120,7 @@ async function sendEmail(
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from,
-        to: [to],
+        to: Array.isArray(to) ? to : [to],
         subject,
         html,
         ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
@@ -260,7 +261,7 @@ export async function POST(request: Request) {
     return "error" as const;
   });
 
-  const to = process.env.QUOTE_TO_EMAIL || "hello@masterkraft.com";
+  const to = internalRecipients();
   const subject =
     `Fitout brief: ${brief.projectType || "enquiry"}` +
     `${brief.company ? ` — ${brief.company}` : ""}` +
@@ -279,7 +280,10 @@ export async function POST(request: Request) {
     "We have your fitout brief",
     confirmation(brief, kept),
     brief.email,
-    { replyTo: to }
+    // One inbox, not the whole notification list: a Reply-To naming everyone
+    // turns the customer's reply into a group thread and leaks the internal
+    // addresses to them. See lib/notify-recipients.ts.
+    { replyTo: primaryRecipient() }
   );
 
   console.log("[fitout-brief] received", {

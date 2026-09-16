@@ -51,7 +51,7 @@ const fieldClass =
 
 /** Shared tap-card chrome. `has-[:checked]` is what paints the selected state. */
 const cardClass =
-  "group relative flex flex-col gap-2 border border-line bg-white p-4 text-left cursor-pointer transition-all duration-200 " +
+  "group relative flex flex-col gap-1.5 border border-line bg-white p-3 text-left cursor-pointer transition-all duration-200 " +
   "hover:border-ash hover:-translate-y-0.5 " +
   "has-[:checked]:border-accent has-[:checked]:bg-accent/5 has-[:checked]:-translate-y-0.5 " +
   "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
@@ -83,7 +83,7 @@ function TapCard({
         {choice.icon ? (
           <BriefIcon
             name={choice.icon}
-            className="h-7 w-7 shrink-0 text-ash transition-colors group-has-[:checked]:text-accent-600"
+            className="h-6 w-6 shrink-0 text-ash transition-colors group-has-[:checked]:text-accent-600"
           />
         ) : (
           <span />
@@ -110,9 +110,9 @@ function TapCard({
 /** A heading + helper line, repeated at the top of each step. */
 function StepHeading({ title, help }: { title: string; help: string }) {
   return (
-    <div className="mb-6">
-      <h3 className="text-2xl lg:text-3xl font-bold leading-tight">{title}</h3>
-      <p className="mt-2 text-ash leading-relaxed">{help}</p>
+    <div className="mb-5">
+      <h3 className="text-xl lg:text-2xl font-bold leading-tight">{title}</h3>
+      <p className="mt-1.5 text-ash text-sm leading-relaxed">{help}</p>
     </div>
   );
 }
@@ -287,11 +287,17 @@ export default function FitoutBriefForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="@container bg-white border border-line shadow-[0_1px_0_rgba(0,0,0,0.04)]"
+      // Bounded to the viewport on desktop and laid out as a flex column: the
+      // progress header and the controls are pinned, and only the step's own
+      // content scrolls. Before this the panel was 1046px tall in a 768px
+      // viewport, which put Continue ~350px below the fold on EVERY step - a
+      // scroll-hunt between each answer and the button that accepts it.
+      // Left unbounded under lg, where page scrolling is the native idiom.
+      className="@container bg-white border border-line shadow-[0_1px_0_rgba(0,0,0,0.04)] lg:flex lg:flex-col lg:max-h-[calc(100dvh-10rem)]"
       noValidate
     >
       {/* Progress */}
-      <div className="border-b border-line px-6 lg:px-8 pt-6 pb-5">
+      <div className="border-b border-line px-6 lg:px-8 pt-5 pb-4 lg:shrink-0">
         <div className="flex items-baseline justify-between gap-4">
           <p className="font-mono text-[11px] tracking-widest uppercase text-accent-600">
             Step {step + 1} of {STEPS.length} — {STEPS[step]}
@@ -315,7 +321,7 @@ export default function FitoutBriefForm() {
         </div>
       </div>
 
-      <div ref={headingRef} className="px-6 lg:px-8 py-8">
+      <div ref={headingRef} className="px-6 lg:px-8 py-6 lg:flex-1 lg:overflow-y-auto">
         {/* STEP 1 - project type + stage */}
         {step === 0 && (
           <div className="mk-step-in">
@@ -706,7 +712,7 @@ export default function FitoutBriefForm() {
       </div>
 
       {/* Controls */}
-      <div className="border-t border-line px-6 lg:px-8 py-5 flex flex-wrap items-center gap-3">
+      <div className="border-t border-line px-6 lg:px-8 py-4 flex flex-wrap items-center gap-3 lg:shrink-0">
         {step > 0 && (
           <button type="button" onClick={() => goTo(step - 1)} className="btn btn-out !text-ink">
             <span aria-hidden>←</span> Back

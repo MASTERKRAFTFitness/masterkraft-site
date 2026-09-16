@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
+import { internalRecipients } from "@/lib/notify-recipients";
 
 // Quote request handler. Does two things when configured:
 //   1. Emails the team (via Resend) — needs RESEND_API_KEY + QUOTE_FROM_EMAIL.
@@ -109,7 +110,7 @@ async function sendEmail(
 ): Promise<"sent" | "skipped"> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.QUOTE_FROM_EMAIL; // e.g. "MasterKraft <quotes@masterkraft.com>"
-  const to = process.env.QUOTE_TO_EMAIL || "hello@masterkraft.com";
+  const to = internalRecipients();
   if (!apiKey || !from) return "skipped";
 
   const rows = items
@@ -135,7 +136,7 @@ async function sendEmail(
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from,
-      to: [to],
+      to: Array.isArray(to) ? to : [to],
       reply_to: contact.email,
       subject: `Quote request: ${contact.name}${contact.company ? ` (${contact.company})` : ""}`,
       html,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { MIN_ELAPSED_MS_SHORT, RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
+import { internalRecipients } from "@/lib/notify-recipients";
 
 // Newsletter signups.
 //
@@ -21,7 +22,7 @@ const escape = (s: string) =>
 async function emailFallback(email: string, why: string): Promise<"sent" | "skipped" | "error"> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.QUOTE_FROM_EMAIL;
-  const to = process.env.QUOTE_TO_EMAIL || "hello@masterkraft.com";
+  const to = internalRecipients();
   if (!apiKey || !from) return "skipped";
 
   try {
@@ -30,7 +31,7 @@ async function emailFallback(email: string, why: string): Promise<"sent" | "skip
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from,
-        to: [to],
+        to: Array.isArray(to) ? to : [to],
         subject: `Newsletter signup: ${email}`,
         html: `<h2>Newsletter signup</h2>
           <p><strong>${escape(email)}</strong></p>

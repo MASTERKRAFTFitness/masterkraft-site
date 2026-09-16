@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
+import { internalRecipients } from "@/lib/notify-recipients";
 import {
   CONTACT_SOURCE,
   NETWORK_OPERATOR_OPTIONS,
@@ -41,7 +42,7 @@ function splitName(full: string): { first: string; last: string } {
   return { first: parts.slice(0, -1).join(" "), last: parts[parts.length - 1] };
 }
 
-async function sendEmail(subject: string, html: string, to: string): Promise<"sent" | "skipped" | "error"> {
+async function sendEmail(subject: string, html: string, to: string | string[]): Promise<"sent" | "skipped" | "error"> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.QUOTE_FROM_EMAIL;
   if (!apiKey || !from) return "skipped";
@@ -49,7 +50,7 @@ async function sendEmail(subject: string, html: string, to: string): Promise<"se
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [to], subject, html }),
+      body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], subject, html }),
     });
     if (!res.ok) throw new Error(`Resend ${res.status}`);
     return "sent";
@@ -157,7 +158,7 @@ export async function POST(request: Request) {
     return "error" as const;
   });
 
-  const to = process.env.QUOTE_TO_EMAIL || "hello@masterkraft.com";
+  const to = internalRecipients();
   const fallback =
     hubspot === "submitted"
       ? "not_needed"
