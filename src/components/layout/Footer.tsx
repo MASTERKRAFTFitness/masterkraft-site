@@ -62,6 +62,18 @@ export default function Footer() {
                 </Link>
               </li>
             ))}
+            {/* The brief wizard, named the same as the header button so the two
+                read as one thing. NOT in `fitoutLinks` — that list is shared with
+                the header's mega panel, which already has the button two
+                centimetres away. */}
+            <li>
+              <Link
+                href="/contact#brief"
+                className="text-sm text-white/80 hover:text-accent transition-colors"
+              >
+                Fitout Solution
+              </Link>
+            </li>
           </ul>
         </div>
 

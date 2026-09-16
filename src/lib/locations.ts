@@ -53,7 +53,7 @@ export const locations: Location[] = [
         a: "REVL Collingwood is one of our Melbourne fitouts, delivered floor to ceiling. We also produce the custom-branded equipment used across Fernwood's Victorian clubs.",
       },
       {
-        q: "How quickly can you fit out a Melbourne gym?",
+        q: "How quickly can you complete a Melbourne gym fitout?",
         a: "Because we ship each project as a single coordinated container, most Melbourne fitouts move from sign-off to installed floor in weeks, not months.",
       },
     ],
@@ -77,7 +77,7 @@ export const locations: Location[] = [
     },
     faqs: [
       {
-        q: "Do you fit out gyms in Sydney?",
+        q: "Do you deliver gym fitouts in Sydney?",
         a: "Yes. We design, supply and install complete fitouts across Sydney and New South Wales, from boutique studios to full commercial floors.",
       },
       {
@@ -131,7 +131,7 @@ export const locations: Location[] = [
       "Your whole fitout ships to the Gold Coast as a single coordinated container and is installed on schedule, so nothing holds up your opening.",
     faqs: [
       {
-        q: "Do you fit out gyms on the Gold Coast?",
+        q: "Do you deliver gym fitouts on the Gold Coast?",
         a: "Yes. We design, supply and install complete fitouts across the Gold Coast, from Southport to Coolangatta.",
       },
       {
@@ -185,7 +185,7 @@ export const locations: Location[] = [
       "One container, one delivery, one install, coordinated from our end so a Perth build runs as smoothly as a metro one.",
     faqs: [
       {
-        q: "Can you fit out a gym in Perth?",
+        q: "Can you deliver a gym fitout in Perth?",
         a: "Yes. We design, supply and install complete fitouts in Perth and across Western Australia.",
       },
       {
@@ -221,7 +221,7 @@ export const locations: Location[] = [
         a: "Yes. We design, supply and install complete fitouts across Adelaide and South Australia.",
       },
       {
-        q: "Do you fit out boutique and PT studios in Adelaide?",
+        q: "Do you deliver boutique and PT studio fitouts in Adelaide?",
         a: "We do. Boutique studios, PT studios and full commercial floors are all delivered as complete, coordinated fitouts.",
       },
       {
@@ -243,7 +243,7 @@ export const locations: Location[] = [
     delivery:
       "Your whole floor ships to Canberra as a single coordinated container and is installed on schedule.",
     faqs: [
-      { q: "Do you fit out gyms in Canberra?", a: "Yes. We design, supply and install complete fitouts across Canberra and the ACT." },
+      { q: "Do you deliver gym fitouts in Canberra?", a: "Yes. We design, supply and install complete fitouts across Canberra and the ACT." },
       { q: "Do you build performance and functional gyms?", a: "We do. Rigs, platforms, strength and conditioning are core to what we deliver." },
       { q: "Do you supply only, or install as well?", a: "Both, from supply-only through to a full turnkey fitout." },
     ],
@@ -261,7 +261,7 @@ export const locations: Location[] = [
     delivery:
       "One coordinated container, delivered and installed across Newcastle and the Hunter on schedule.",
     faqs: [
-      { q: "Do you fit out gyms in Newcastle?", a: "Yes, across Newcastle and the wider Hunter region." },
+      { q: "Do you deliver gym fitouts in Newcastle?", a: "Yes, across Newcastle and the wider Hunter region." },
       { q: "Do you cover the Hunter Valley?", a: "We do. The single-container model reaches right across the Hunter." },
       { q: "Can you brand the equipment?", a: "Yes, custom-branded to your studio's identity." },
     ],
@@ -280,7 +280,7 @@ export const locations: Location[] = [
       "Your fitout ships to Wollongong as a single coordinated container and is installed on schedule.",
     faqs: [
       { q: "Do you deliver to Wollongong?", a: "Yes, across Wollongong and the Illawarra." },
-      { q: "Do you fit out boutique studios?", a: "We do, alongside full commercial floors." },
+      { q: "Do you deliver boutique studio fitouts?", a: "We do, alongside full commercial floors." },
       { q: "Do you design as well as supply?", a: "Yes, from layout through to install." },
     ],
   },
@@ -297,7 +297,7 @@ export const locations: Location[] = [
     delivery:
       "One coordinated container, delivered and installed across Geelong and the Surf Coast on schedule. As a Victorian team, we are close by.",
     faqs: [
-      { q: "Do you fit out gyms in Geelong?", a: "Yes. As a Victorian team we deliver and install complete fitouts across Geelong and the Surf Coast." },
+      { q: "Do you deliver gym fitouts in Geelong?", a: "Yes. As a Victorian team we deliver and install complete fitouts across Geelong and the Surf Coast." },
       { q: "Do you cover the Surf Coast and Bellarine?", a: "We do, right across the region." },
       { q: "Supply only, or install too?", a: "Both, up to a full turnkey fitout." },
     ],
@@ -315,7 +315,7 @@ export const locations: Location[] = [
     delivery:
       "One container across Bass Strait, one delivery, one install, coordinated end to end.",
     faqs: [
-      { q: "Can you fit out a gym in Hobart?", a: "Yes, in Hobart and across Tasmania." },
+      { q: "Can you deliver a gym fitout in Hobart?", a: "Yes, in Hobart and across Tasmania." },
       { q: "How do you handle freight to Tasmania?", a: "Your whole floor is specified once and shipped as a single coordinated container across Bass Strait." },
       { q: "Is the range the same in Tasmania?", a: "Exactly the same range, spec and custom branding." },
     ],

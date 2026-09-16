@@ -138,7 +138,12 @@ export default function Header() {
           <Link href={portalLoginHref} className="btn btn-out hidden lg:inline-flex">
             Portal
           </Link>
-          <Link href="/contact" className="btn btn-accent hidden md:inline-flex whitespace-nowrap">
+          {/* THE WIZARD, NOT THE TOP OF THE PAGE. /contact opens with the brief
+              and closes with "Not a fitout?"; this button is the one entry point
+              that exists to start the brief, so it lands on it. The footer's
+              "Contact us" deliberately does not — that one is for everything
+              else on the page. */}
+          <Link href="/contact#brief" className="btn btn-accent hidden md:inline-flex whitespace-nowrap">
             Fitout Solution&nbsp;<span aria-hidden>→</span>
           </Link>
 
@@ -216,7 +221,7 @@ export default function Header() {
               <Link href={portalLoginHref} onClick={() => setMobileOpen(false)} className="btn btn-out">
                 Portal
               </Link>
-              <Link href="/contact" onClick={() => setMobileOpen(false)} className="btn btn-accent">
+              <Link href="/contact#brief" onClick={() => setMobileOpen(false)} className="btn btn-accent">
                 Fitout Solution →
               </Link>
             </li>
