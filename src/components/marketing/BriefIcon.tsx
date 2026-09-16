@@ -1,4 +1,4 @@
-// Icons for the fit-out brief's tap-cards, keyed by the `icon` strings in
+// Icons for the fitout brief's tap-cards, keyed by the `icon` strings in
 // lib/fitout-brief.ts.
 //
 // Inline SVG rather than an icon package: nineteen glyphs is not worth a

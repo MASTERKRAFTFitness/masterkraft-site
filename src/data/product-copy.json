@@ -313,18 +313,18 @@
     "short": "A Pilates reformer specified for commercial studios — the performance model, built for a full class timetable.",
     "body": [
       "A reformer for a studio running a full timetable: carriage, springs and footbar built to take continuous class use rather than occasional home sessions.",
-      "MasterKraft supplies reformers as part of studio fit-outs, so a floor of them arrives matched and at the same time. See our fit-out service if you are building a studio rather than replacing a machine."
+      "MasterKraft supplies reformers as part of studio fitouts, so a floor of them arrives matched and at the same time. See our fitout service if you are building a studio rather than replacing a machine."
     ],
     "features": [
       "Specified for commercial studio timetables",
-      "Available as part of a matched studio fit-out"
+      "Available as part of a matched studio fitout"
     ]
   },
   "studio-reformer": {
     "short": "A studio Pilates reformer built for continuous class use, available matched across a full studio floor.",
     "body": [
       "The studio reformer: built for the repetition a class timetable puts through a carriage and a spring set, and specified so a room of them stays consistent.",
-      "Reformers are commonly bought a floor at a time rather than one at a time. We supply and install them as a matched set — see our fit-out service."
+      "Reformers are commonly bought a floor at a time rather than one at a time. We supply and install them as a matched set — see our fitout service."
     ],
     "features": [
       "Built for continuous class use",
@@ -511,19 +511,19 @@
     "short": "An LED dimmer for the Linear LED Lighting System — class lighting that changes with the session.",
     "body": [
       "The dimmer control for the Linear LED Lighting System. Lighting that comes down for a cool-down and up for a working set is standard in boutique studios, and it is a control problem before it is a lighting one.",
-      "Specified alongside the linear system as part of a fit-out."
+      "Specified alongside the linear system as part of a fitout."
     ]
   },
   "linear-led-lighting-system": {
-    "short": "A linear LED lighting system for gym and studio fit-outs — the overhead run that finishes a room.",
+    "short": "A linear LED lighting system for gym and studio fitouts — the overhead run that finishes a room.",
     "body": [
       "Linear LED lighting for gym and studio ceilings: continuous runs that light a floor evenly rather than dropping pools of light between fittings, which is what makes a rig line look deliberate.",
-      "Supplied as part of MasterKraft fit-outs, with the matching dimmer where a room needs class lighting that changes through a session."
+      "Supplied as part of MasterKraft fitouts, with the matching dimmer where a room needs class lighting that changes through a session."
     ],
     "features": [
       "Continuous linear runs for even floor lighting",
       "Pairs with the LED Dimmer for class lighting",
-      "Specified as part of a gym or studio fit-out"
+      "Specified as part of a gym or studio fitout"
     ]
   },
   "aerobic-weighted-exercise-bars": {
@@ -589,7 +589,7 @@
     "short": "A climbing rope for rigs and functional zones — vertical pulling that no machine substitutes for.",
     "body": [
       "A climbing rope for a rig or a ceiling anchor. Rope climbs load the grip, the arms and the trunk together in a way no machine reproduces, which is why they stay in functional programming.",
-      "Fixing matters as much as the rope: talk to us about anchor points if this is going into an existing rig rather than a planned fit-out."
+      "Fixing matters as much as the rope: talk to us about anchor points if this is going into an existing rig rather than a planned fitout."
     ],
     "features": [
       "Vertical rope climbing",
@@ -817,7 +817,7 @@
     "short": "Functional Training System 4.0 — a large configuration, for floors running functional classes at volume.",
     "body": [
       "A large configuration, for rooms where functional training is a timetabled class rather than a corner of the gym — enough stations to run a group through without queueing.",
-      "At this size the decision is as much about floor plan and traffic flow as it is about the system. We plan these as part of a fit-out."
+      "At this size the decision is as much about floor plan and traffic flow as it is about the system. We plan these as part of a fitout."
     ],
     "features": [
       "Large configuration for class-volume use",
@@ -829,12 +829,12 @@
     "short": "Functional Training System 5.0 — the largest configuration, for full functional floors and performance facilities.",
     "body": [
       "The top of the range: the configuration specified for a full functional floor or a performance facility, where the system is the room rather than a zone in it.",
-      "A 5.0 is a fit-out decision, not a purchase decision — layout, ceiling height, flooring and traffic flow all come into it. Talk to us before it goes into a plan."
+      "A 5.0 is a fitout decision, not a purchase decision — layout, ceiling height, flooring and traffic flow all come into it. Talk to us before it goes into a plan."
     ],
     "features": [
       "Largest configuration in the range",
       "Full functional floors and performance facilities",
-      "Specified as a fit-out"
+      "Specified as a fitout"
     ]
   },
   "olympic-half-rack-wall-mounted": {
@@ -1693,7 +1693,7 @@
     "short": "A five-piece power grip cable attachment set — the handles that make a cable station worth having.",
     "body": [
       "Five cable attachments, which is what turns one pulley into a dozen exercises: different grips, different angles, different muscles.",
-      "Attachments are the most commonly under-ordered item in a fit-out. A functional trainer with one handle is a fraction of the machine it was bought as."
+      "Attachments are the most commonly under-ordered item in a fitout. A functional trainer with one handle is a fraction of the machine it was bought as."
     ],
     "features": [
       "Five attachments",

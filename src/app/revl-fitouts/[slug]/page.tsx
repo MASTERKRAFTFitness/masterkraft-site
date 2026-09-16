@@ -21,7 +21,7 @@ export async function generateMetadata({
   const s = getRevlSite(slug);
   if (!s) return { title: "REVL Fitouts" };
   return {
-    title: `${s.name} | REVL Fit-Out`,
+    title: `${s.name} | REVL Fitout`,
     description: s.blurb,
     alternates: { canonical: `/revl-fitouts/${s.slug}` },
   };
@@ -69,7 +69,7 @@ export default async function RevlSitePage({
             ← All REVL Fitouts
           </Link>
           <Link href="/contact" className="btn btn-accent">
-            Start Your Fit-Out
+            Start Your Fitout
           </Link>
         </div>
       </section>
@@ -98,7 +98,7 @@ export default async function RevlSitePage({
                 >
                   <Image
                     src={src}
-                    alt={`${s.name} fit-out by MasterKraft`}
+                    alt={`${s.name} fitout by MasterKraft`}
                     fill
                     className="object-cover transition-transform duration-500 hover:scale-105"
                     sizes="(max-width: 768px) 50vw, 33vw"

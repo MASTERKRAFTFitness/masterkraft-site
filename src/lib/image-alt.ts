@@ -4,7 +4,7 @@
 // reasoning that a photograph sitting at 40% opacity behind an H1 is
 // decorative. The Opinly site audit counted them on all 100 pages on
 // 2026-09-16, and the audit is right: these are the only photographs of the
-// work on most of these pages, and a gym fit-out business has a real stake in
+// work on most of these pages, and a gym fitout business has a real stake in
 // image search.
 //
 // WHY NOT DERIVED FROM THE PAGE EITHER — and this is the part worth knowing
@@ -20,7 +20,7 @@
 // image is worse than none. So each file is described once, from the file, and
 // the pages that share a photograph share its description — /category/
 // body-weight.jpg and /fitout/home-gym.jpg are byte-identical, and Cardio,
-// Rigs & Racks and Strength each double as a fit-out type banner.
+// Rigs & Racks and Strength each double as a fitout type banner.
 //
 // A path with no entry gets `alt=""`, which is what everything had before.
 const HERO_ALT: Record<string, string> = {

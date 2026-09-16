@@ -38,7 +38,7 @@ describe("briefLines", () => {
   it("renders every answered field with its label", () => {
     const lines = briefLines(full, [{ filename: "plan.pdf", size: 2_100_000 }]);
     expect(lines).toEqual([
-      ["Fit-out type", "Commercial Gym"],
+      ["Fitout type", "Commercial Gym"],
       ["Project stage", "Ready to quote"],
       ["Floor area", "420 m²"],
       ["Ceiling height", "3.6 m"],
@@ -59,7 +59,7 @@ describe("briefLines", () => {
   it("drops skipped answers instead of padding them", () => {
     const lines = briefLines({ ...emptyBrief, projectType: "Home Gym", stage: "Gathering concepts" });
     expect(lines).toEqual([
-      ["Fit-out type", "Home Gym"],
+      ["Fitout type", "Home Gym"],
       ["Project stage", "Gathering concepts"],
     ]);
   });
@@ -74,7 +74,7 @@ describe("briefLines", () => {
 describe("briefSummary", () => {
   it("is plain text, one labelled answer per line", () => {
     const summary = briefSummary({ ...emptyBrief, projectType: "PT Studio", budget: "Under $10k" });
-    expect(summary).toBe("Fit-out type: PT Studio\nBudget: Under $10k");
+    expect(summary).toBe("Fitout type: PT Studio\nBudget: Under $10k");
   });
 });
 
@@ -101,7 +101,7 @@ describe("briefHubspotFields", () => {
     expect(message).toContain("Timeline: 1-3 months");
   });
 
-  it("files the lead against the fit-out funnel", () => {
+  it("files the lead against the fitout funnel", () => {
     const type = briefHubspotFields(full).find((f) => f.name === "enquiry_type")!.value;
     expect(type).toBe("A fit-out solution");
   });

@@ -60,7 +60,7 @@ export default async function LocationPage({
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    serviceType: "Gym fit-out",
+    serviceType: "Gym fitout",
     name: `Gym Fitouts ${loc.city}`,
     description: loc.meta,
     areaServed: { "@type": "Place", name: areaName },
@@ -88,7 +88,7 @@ export default async function LocationPage({
         subtitle={
           loc.state
             ? `Design, supply and install across ${loc.city} and ${loc.state}.`
-            : `Design, supply and deliver complete fit-outs across ${loc.city}.`
+            : `Design, supply and deliver complete fitouts across ${loc.city}.`
         }
         image="/revl/full-studio.jpg"
         imagePosition="center 45%"
@@ -101,7 +101,7 @@ export default async function LocationPage({
 
       <section className="container-mk py-16 lg:py-20 grid lg:grid-cols-[1.5fr_1fr] gap-14">
         <div>
-          <Eyebrow className="mb-5">{loc.city} Fit-Outs</Eyebrow>
+          <Eyebrow className="mb-5">{loc.city} Fitouts</Eyebrow>
           <div className="space-y-5 text-lg leading-relaxed">
             {loc.intro.map((p, i) => (
               <p key={i} className={i === 0 ? "text-ink" : "text-ash"}>
@@ -183,7 +183,7 @@ export default async function LocationPage({
                 href={loc.project.href}
                 className="mt-4 inline-flex items-center gap-2 font-mono text-xs tracking-widest uppercase text-accent-600 hover:text-accent"
               >
-                View the fit-out <span aria-hidden>→</span>
+                View the fitout <span aria-hidden>→</span>
               </Link>
             </div>
           )}
@@ -198,11 +198,11 @@ export default async function LocationPage({
           </div>
           <div>
             <Link href="/contact" className="btn btn-accent w-full">
-              Request {/^[AEIOU]/i.test(loc.city) ? "an" : "a"} {loc.city} Fit-Out{" "}
+              Request {/^[AEIOU]/i.test(loc.city) ? "an" : "a"} {loc.city} Fitout{" "}
               <span aria-hidden>→</span>
             </Link>
             <Link href="/fitout" className="btn btn-out !text-ink w-full mt-3">
-              Explore fit-out types
+              Explore fitout types
             </Link>
           </div>
         </aside>

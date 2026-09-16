@@ -26,7 +26,7 @@ export const usps = [
   {
     n: "05",
     title: "One Partner, Total Coverage",
-    body: "One accountable supplier and fit-out partner across your whole group - head office and every site, treated the same.",
+    body: "One accountable supplier and fitout partner across your whole group - head office and every site, treated the same.",
   },
   {
     n: "06",
@@ -39,5 +39,5 @@ export const stats = [
   { value: "12", label: "Countries", detail: "Global capability, local delivery" },
   { value: "229", label: "Sites fitted out", detail: "Gyms, clinics & studios" },
   { value: "72hr", label: "Service SLA", detail: "Response & resolution, in writing" },
-  { value: "Complete", label: "Fit-out scope", detail: "Equipment, flooring & storage" },
+  { value: "Complete", label: "Fitout scope", detail: "Equipment, flooring & storage" },
 ];

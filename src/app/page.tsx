@@ -27,7 +27,7 @@ const orgSchema = {
   image: `${SITE_URL}/brand/logo-circle.svg`,
   slogan: "Engineered for Fitness",
   description:
-    "MasterKraft designs, engineers and supplies commercial and home gym equipment and delivers complete custom gym fit-outs across Australia and the Asia-Pacific.",
+    "MasterKraft designs, engineers and supplies commercial and home gym equipment and delivers complete custom gym fitouts across Australia and the Asia-Pacific.",
   areaServed: [
     { "@type": "Country", name: "Australia" },
     { "@type": "Place", name: "Asia-Pacific" },

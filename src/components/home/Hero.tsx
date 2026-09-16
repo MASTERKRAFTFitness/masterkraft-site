@@ -17,7 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 // only one of these is ever read aloud.
 const slides = [
   {
-    tag: "Commercial Fitness Equipment & Fit-Out",
+    tag: "Commercial Fitness Equipment & Fitout",
     heading: "Engineered for Fitness",
     body: "Bespoke solutions, uncompromising quality, honest affordability - premium equipment built by fitness professionals, for fitness professionals.",
     image: "/home/hero-1.jpg",
@@ -43,7 +43,7 @@ const slides = [
   {
     tag: "The MasterKraft Difference",
     heading: "One Partner, Total Transparency",
-    body: "One accountable supplier and fit-out partner across your whole group - ordering, tracking and support in one portal.",
+    body: "One accountable supplier and fitout partner across your whole group - ordering, tracking and support in one portal.",
     image: "/home/distributor.jpg",
     alt: "Dumbbell squat in a MasterKraft-fitted studio with kettlebells, battle ropes and plyo boxes",
     pos: "64% 42%",
@@ -103,7 +103,7 @@ export default function Hero() {
               Shop the Range <span aria-hidden>→</span>
             </Link>
             <Link href="/fitout" className="btn btn-outline">
-              Request a Fit-Out Solution
+              Request a Fitout Solution
             </Link>
           </div>
         </div>

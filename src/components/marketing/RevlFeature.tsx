@@ -21,7 +21,7 @@ export default function RevlFeature() {
           </p>
           <div className="mt-9 flex flex-wrap gap-4">
             <Link href="/revl-fitouts" className="btn btn-accent">
-              See the REVL fit-outs <span aria-hidden>→</span>
+              See the REVL fitouts <span aria-hidden>→</span>
             </Link>
             <Link href="/contact" className="btn btn-out !text-white">
               Start your studio

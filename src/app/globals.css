@@ -181,7 +181,7 @@ html.nav-busy * {
   }
 }
 
-/* Step transition for the fit-out brief wizard (FitoutBriefForm). A short rise +
+/* Step transition for the fitout brief wizard (FitoutBriefForm). A short rise +
    fade on each step so moving through five steps feels like one surface moving
    rather than five page loads. Motion is the only thing it carries, so it is
    dropped entirely under prefers-reduced-motion rather than slowed down. */

@@ -6,7 +6,7 @@ import Eyebrow from "@/components/ui/Eyebrow";
 
 export const metadata: Metadata = {
   title: "Equipment Finance | Afterpay, Zip & GRENKE",
-  description: "Flexible ways to fund your equipment and fit-out — Afterpay, Zip Money and GRENKE.",
+  description: "Flexible ways to fund your equipment and fitout — Afterpay, Zip Money and GRENKE.",
 };
 
 type Provider = {
@@ -72,7 +72,7 @@ export default function FinancePage() {
       <PageHero
         eyebrow="Support"
         title="Finance"
-        subtitle="Flexible ways to fund your equipment and fit-out."
+        subtitle="Flexible ways to fund your equipment and fitout."
       />
 
       <section className="container-mk py-16">

@@ -20,7 +20,7 @@ const rawSites: RawRevlSite[] = [
     slug: "revl-brighton",
     name: "REVL Brighton",
     location: "Brighton, SA",
-    blurb: "A full boutique fit-out for REVL's Brighton studio in South Australia.",
+    blurb: "A full boutique fitout for REVL's Brighton studio in South Australia.",
     image: "/revl/gallery/shot-4.jpg",
     body: [
       "REVL Brighton required a complete performance-training environment built for high-intensity group classes running back to back, all day.",
@@ -42,7 +42,7 @@ const rawSites: RawRevlSite[] = [
     slug: "revl-burleigh",
     name: "REVL Burleigh",
     location: "Burleigh, QLD",
-    blurb: "A complete REVL fit-out on Queensland's Gold Coast.",
+    blurb: "A complete REVL fitout on Queensland's Gold Coast.",
     image: "/revl/gallery/shot-3.png",
     body: [
       "REVL Burleigh brought the REVL experience to the Gold Coast. MasterKraft delivered the full floor to REVL's exact specification, installed and ready to train.",
@@ -67,7 +67,7 @@ const rawSites: RawRevlSite[] = [
     blurb: "Another premium REVL studio delivered end-to-end by MasterKraft.",
     image: "/revl/gallery/shot-2.png",
     body: [
-      "As REVL expanded, Campbelltown needed the same identical, repeatable fit-out delivered to a new footprint on schedule.",
+      "As REVL expanded, Campbelltown needed the same identical, repeatable fitout delivered to a new footprint on schedule.",
       "MasterKraft specified the equipment once and delivered it identically - the same spec sheet, the same quality, the same branding - so members get a consistent REVL experience across locations.",
     ],
   },
@@ -75,10 +75,10 @@ const rawSites: RawRevlSite[] = [
     slug: "revl-singapore",
     name: "REVL City Hall",
     location: "Singapore",
-    blurb: "The REVL fit-out delivered beyond Australia, into the Asia-Pacific.",
+    blurb: "The REVL fitout delivered beyond Australia, into the Asia-Pacific.",
     image: "/revl/gallery/cityhall.jpg",
     body: [
-      "REVL City Hall took the REVL model into Singapore. MasterKraft delivered the full studio fit-out, shipped complete in a single coordinated container.",
+      "REVL City Hall took the REVL model into Singapore. MasterKraft delivered the full studio fitout, shipped complete in a single coordinated container.",
       "Same spec sheet, same quality, the same branding REVL runs across its network - one accountable partner and a floor built to perform from day one, delivered internationally.",
     ],
   },
@@ -111,7 +111,7 @@ const rawSites: RawRevlSite[] = [
     blurb: "REVL's Vietnam studio, delivered complete from Australia.",
     image: "/revl/gallery/raffles-place.jpg",
     body: [
-      "MasterKraft delivered REVL's Ho Chi Minh City floor to the exact REVL specification, shipped and installed as a complete, coordinated fit-out.",
+      "MasterKraft delivered REVL's Ho Chi Minh City floor to the exact REVL specification, shipped and installed as a complete, coordinated fitout.",
       "The same equipment, branding and quality REVL members expect, delivered across the region.",
     ],
   },
@@ -122,7 +122,7 @@ const rawSites: RawRevlSite[] = [
     blurb: "REVL's eighth market, fitted out by MasterKraft.",
     image: "/revl/gallery/shot-6.jpg",
     body: [
-      "REVL Taipei marked REVL's eighth market. MasterKraft delivered the full studio fit-out to REVL's global specification, complete and ready to train.",
+      "REVL Taipei marked REVL's eighth market. MasterKraft delivered the full studio fitout to REVL's global specification, complete and ready to train.",
       "One accountable partner behind every REVL floor, worldwide.",
     ],
   },
@@ -182,7 +182,7 @@ export type RevlClub = {
   name: string;
   suburb: string;
   state: "NSW" | "QLD" | "SA" | "VIC";
-  // Slug of the city/region fit-out page this club sits in. Omitted for clubs
+  // Slug of the city/region fitout page this club sits in. Omitted for clubs
   // outside any city page's catchment (e.g. Albury, Mount Gambier).
   region?: string;
   // Regional rather than metro - listed separately on the city page.

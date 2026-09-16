@@ -95,7 +95,7 @@ export default async function FitoutTypePage({
         </aside>
       </section>
 
-      {/* Boutique fitness: showcase the real REVL studio fit-out as proof. */}
+      {/* Boutique fitness: showcase the real REVL studio fitout as proof. */}
       {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
 
       {/* Commercial gym: showcase Fernwood custom-branded equipment as proof. */}

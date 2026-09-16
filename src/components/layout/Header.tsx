@@ -139,7 +139,7 @@ export default function Header() {
             Portal
           </Link>
           <Link href="/contact" className="btn btn-accent hidden md:inline-flex whitespace-nowrap">
-            Fit-Out Solution&nbsp;<span aria-hidden>→</span>
+            Fitout Solution&nbsp;<span aria-hidden>→</span>
           </Link>
 
           {/* Mobile toggle */}
@@ -217,7 +217,7 @@ export default function Header() {
                 Portal
               </Link>
               <Link href="/contact" onClick={() => setMobileOpen(false)} className="btn btn-accent">
-                Fit-Out Solution →
+                Fitout Solution →
               </Link>
             </li>
           </ul>

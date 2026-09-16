@@ -1,4 +1,4 @@
-// The fit-out brief: the shape of what /contact's wizard collects, the options it
+// The fitout brief: the shape of what /contact's wizard collects, the options it
 // offers, and how the answers are rendered back out as prose.
 //
 // Shared by the client wizard and /api/fitout-brief ON PURPOSE. The option lists
@@ -245,7 +245,7 @@ export function briefLines(
   attachments: BriefAttachment[] = []
 ): [string, string][] {
   const rows: [string, string][] = [
-    ["Fit-out type", brief.projectType],
+    ["Fitout type", brief.projectType],
     ["Project stage", brief.stage],
     ["Floor area", dimension(brief.floorArea, brief.areaUnit)],
     ["Ceiling height", dimension(brief.ceilingHeight, brief.heightUnit)],

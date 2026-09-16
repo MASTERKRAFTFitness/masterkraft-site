@@ -1,7 +1,7 @@
 "use client";
 
-// The fit-out brief wizard - the conversion path on /contact, and where the
-// header's "Fit-Out Solution" CTA lands.
+// The fitout brief wizard - the conversion path on /contact, and where the
+// header's "Fitout Solution" CTA lands.
 //
 // WHY FIVE STEPS AND NOT ONE LONG FORM: this asks for eleven things. Shown at
 // once that is a wall a visitor bounces off; shown five at a time, each step is
@@ -324,7 +324,7 @@ export default function FitoutBriefForm() {
               help="Two taps and we know which of our design teams should pick this up."
             />
             <fieldset className="border-0 p-0 m-0">
-              <Legend>Fit-out type</Legend>
+              <Legend>Fitout type</Legend>
               <div className="mk-stagger grid @sm:grid-cols-2 @xl:grid-cols-3 gap-3">
                 {projectTypes.map((c) => (
                   <TapCard

@@ -10,11 +10,11 @@ import { heroAlt } from "@/lib/image-alt";
 import { fitouts } from "@/lib/fitouts";
 import { SITE_URL, portalLoginHref } from "@/lib/site";
 
-// THIS IS THE FIT-OUT LANDING PAGE, not a generic contact page.
+// THIS IS THE FITOUT LANDING PAGE, not a generic contact page.
 //
-// The header's primary CTA ("Fit-Out Solution →", desktop and mobile) points
+// The header's primary CTA ("Fitout Solution →", desktop and mobile) points
 // here, as does the homepage hero's second button and every "get in touch" on the
-// fit-out and city pages. It is the site's main conversion surface, and it used to
+// fitout and city pages. It is the site's main conversion surface, and it used to
 // be a hero, a seven-field form and a phone number - no proof, no scope, no answer
 // to "what happens after I press send".
 //
@@ -28,7 +28,7 @@ import { SITE_URL, portalLoginHref } from "@/lib/site";
 // rather than dropped: the footer's "Contact us" link lands here too.
 
 export const metadata: Metadata = {
-  title: "Gym Fit-Out Enquiry | Free 3D Design & Quote",
+  title: "Gym Fitout Enquiry | Free 3D Design & Quote",
   description:
     "Tell us about your space and our design team comes back within one business day with a 3D concept and an indicative price. Commercial gyms, boutique studios, PT and home setups.",
   alternates: { canonical: "/contact" },
@@ -92,20 +92,20 @@ const process = [
 
 const faqs = [
   {
-    q: "How much does a gym fit-out cost?",
+    q: "How much does a gym fitout cost?",
     a: "It depends on the floor area and the spec, which is why the brief asks for a budget band rather than a figure. As a guide, a PT studio or home setup usually lands under $50k, a boutique studio between $50k and $150k, and a full commercial floor above that. You get an indicative price with your concept, before any commitment.",
   },
   {
     q: "Is the 3D design really free?",
-    a: "Yes. There is no charge and no deposit for the concept and the indicative price. We do it because a fit-out is a considered purchase and a layout you can see is the fastest way to know whether we are the right partner.",
+    a: "Yes. There is no charge and no deposit for the concept and the indicative price. We do it because a fitout is a considered purchase and a layout you can see is the fastest way to know whether we are the right partner.",
   },
   {
-    q: "How long does a fit-out take?",
+    q: "How long does a fitout take?",
     a: "Typically eight to fourteen weeks from an approved design to an installed floor, depending on how much is custom-branded and where you are. We stage delivery to your build schedule, so a construction delay does not leave equipment sitting in a car park.",
   },
   {
     q: "Do you take on small projects?",
-    a: "Yes - home gyms and single-zone upgrades go through the same brief as a multi-site group. A small fit-out done properly is how a lot of our commercial relationships started.",
+    a: "Yes - home gyms and single-zone upgrades go through the same brief as a multi-site group. A small fitout done properly is how a lot of our commercial relationships started.",
   },
   {
     q: "What if I do not have a floor plan?",
@@ -113,7 +113,7 @@ const faqs = [
   },
   {
     q: "Do you deliver outside Australia?",
-    a: "Yes. We are warehoused near our markets and have delivered fit-outs across 12 countries, including Singapore and New Zealand. Give us your postcode or city in the brief and we cost freight and installation to your site.",
+    a: "Yes. We are warehoused near our markets and have delivered fitouts across 12 countries, including Singapore and New Zealand. Give us your postcode or city in the brief and we cost freight and installation to your site.",
   },
   {
     q: "Can you match our existing equipment and branding?",
@@ -128,8 +128,8 @@ export default function ContactPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "Service",
-          serviceType: "Gym fit-out design, supply and installation",
-          name: "MasterKraft Gym Fit-Outs",
+          serviceType: "Gym fitout design, supply and installation",
+          name: "MasterKraft Gym Fitouts",
           description: metadata.description,
           areaServed: { "@type": "Place", name: "Australia and international" },
           provider: {
@@ -174,7 +174,7 @@ export default function ContactPage() {
         <div className="relative container-mk pt-28 lg:pt-36 pb-20 grid lg:grid-cols-[1fr_1.15fr] lg:grid-rows-[auto_1fr] gap-x-12 lg:gap-x-16 gap-y-10 items-start">
           <div className="lg:col-start-1 lg:row-start-1">
             <Eyebrow tone="dark" className="mb-5">
-              Fit-Out Solution
+              Fitout Solution
             </Eyebrow>
             <h1 className="text-4xl lg:text-6xl font-bold leading-[1.05]">
               Get a 3D design of your gym, free
@@ -222,13 +222,13 @@ export default function ContactPage() {
 
       <StatsBand />
 
-      {/* SCOPE - what "fit-out" actually covers here */}
+      {/* SCOPE - what "fitout" actually covers here */}
       <section className="container-mk py-20">
         <div className="max-w-2xl mb-14">
           <Eyebrow className="mb-4">What You Get</Eyebrow>
           <h2 className="text-3xl lg:text-4xl font-bold">One scope, one accountable partner</h2>
           <p className="mt-4 text-ash leading-relaxed">
-            Every part of a fit-out sits with us, so there is nobody to chase and nothing
+            Every part of a fitout sits with us, so there is nobody to chase and nothing
             that falls between two suppliers.
           </p>
         </div>
@@ -305,7 +305,7 @@ export default function ContactPage() {
         <div className="container-mk py-20 grid lg:grid-cols-[1fr_1.6fr] gap-14">
           <div className="lg:sticky lg:top-28 self-start">
             <Eyebrow className="mb-4">Before You Ask</Eyebrow>
-            <h2 className="text-3xl lg:text-4xl font-bold">Fit-out questions</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold">Fitout questions</h2>
             <Link href="#brief" className="btn btn-accent mt-8">
               Send your brief <span aria-hidden>→</span>
             </Link>
@@ -322,11 +322,11 @@ export default function ContactPage() {
       </section>
 
       {/* EVERYTHING ELSE. The footer's "Contact us" lands on this page too, so the
-          non-fit-out routes have to stay reachable. */}
+          non-fitout routes have to stay reachable. */}
       <section className="container-mk py-20">
         <div className="max-w-2xl mb-12">
           <Eyebrow className="mb-4">Other Enquiries</Eyebrow>
-          <h2 className="text-3xl lg:text-4xl font-bold">Not a fit-out?</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold">Not a fitout?</h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line">
           <div className="bg-white p-8">

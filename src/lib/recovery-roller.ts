@@ -45,7 +45,7 @@ export const ARGUMENTS = [
   },
   {
     title: "Most gyms answer with a corner",
-    body: "A mat, two foam rollers and whatever was left in the fit-out budget. It is the most asked-about part of a floor and the least specified.",
+    body: "A mat, two foam rollers and whatever was left in the fitout budget. It is the most asked-about part of a floor and the least specified.",
   },
   {
     title: "The gap was the equipment",

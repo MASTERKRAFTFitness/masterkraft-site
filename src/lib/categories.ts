@@ -183,22 +183,22 @@ export const categories: Category[] = [
     about:
       "<p>Training wear that has to survive what a gym wardrobe actually puts it through: cut to move through a full range of motion, and built for the wash cycle that follows every session.</p>" +
       "<p>The range runs from tees, tanks and polos through to hoodies, sweatshirts, shorts and leggings, in men's, women's and unisex fits, mostly S to XL. Accessories — caps, socks, sweat towels — round out the front-of-house stock a club sells over the counter.</p>" +
-      "<p>Custom-branded apparel is available as part of a fit-out or a club supply arrangement. <a href=\"/contact\">Talk to us</a> about your colours and logo.</p>",
+      "<p>Custom-branded apparel is available as part of a fitout or a club supply arrangement. <a href=\"/contact\">Talk to us</a> about your colours and logo.</p>",
   },
   {
     slug: "lighting",
     label: "Lighting",
     blurb: "Linear LED systems and dimmers built for training floors.",
-    meta: "Linear LED lighting systems and dimmers for gym and studio fit-outs — even light across a floor, and class lighting that changes through a session.",
+    meta: "Linear LED lighting systems and dimmers for gym and studio fitouts — even light across a floor, and class lighting that changes through a session.",
     seoTitle: "Gym Lighting | Linear LED Systems & Dimmers",
     productSuffix: "Gym Lighting Systems",
     erpGroup: "Lighting",
     wcId: 348,
     // The snapshot has no WooCommerce description for this term.
     about:
-      "<p>Lighting is the part of a fit-out people notice only when it is wrong. Spot fittings drop pools of light between rigs; a continuous linear run lights a floor evenly, which is what makes a rig line read as deliberate rather than as equipment in a room.</p>" +
+      "<p>Lighting is the part of a fitout people notice only when it is wrong. Spot fittings drop pools of light between rigs; a continuous linear run lights a floor evenly, which is what makes a rig line read as deliberate rather than as equipment in a room.</p>" +
       "<p>The range is a linear LED system and the dimmer that goes with it. Dimming matters more in a boutique studio than the fitting does — lighting that comes down for a cool-down and up for a working set is standard programming now, and it is a control problem before it is a lighting one.</p>" +
-      "<p>Specified as part of a MasterKraft <a href=\"/fitout\">gym fit-out</a>, alongside the floor and the equipment.</p>",
+      "<p>Specified as part of a MasterKraft <a href=\"/fitout\">gym fitout</a>, alongside the floor and the equipment.</p>",
   },
   {
     slug: "packages",

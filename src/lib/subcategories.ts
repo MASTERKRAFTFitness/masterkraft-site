@@ -88,9 +88,9 @@ export const subcategories: Subcategory[] = [
     meta:
       "Commercial chest and shoulder machines for gyms: chest press, incline press, pec fly and shoulder press stations, plate-loaded or selectorised.",
     about:
-      "<p>Chest and shoulder work is where a gym floor gets busiest, and where the queue forms if the selection is thin. This range covers the presses and the fly stations in both loading types, so a fit-out can put a plate-loaded press next to a selectorised one and let members choose rather than wait.</p>" +
+      "<p>Chest and shoulder work is where a gym floor gets busiest, and where the queue forms if the selection is thin. This range covers the presses and the fly stations in both loading types, so a fitout can put a plate-loaded press next to a selectorised one and let members choose rather than wait.</p>" +
       "<p>The plate-loaded frames suit strength-focused floors and clubs that already hold plate inventory. The selectorised stations suit mixed memberships, induction programmes and anyone who wants a seat, a pin and no setup. Most commercial floors end up with both.</p>" +
-      "<p>Every frame is available in the MasterKraft finish range, and every one can be branded for a club or franchise fit-out. Tell us the floor area and the member profile and we will lay the mix out for you.</p>",
+      "<p>Every frame is available in the MasterKraft finish range, and every one can be branded for a club or franchise fitout. Tell us the floor area and the member profile and we will lay the mix out for you.</p>",
   },
   {
     category: "strength",
@@ -99,7 +99,7 @@ export const subcategories: Subcategory[] = [
     label: "Lower Body Machines",
     blurb: "Leg press, hack squat, extension, curl and hip stations.",
     meta:
-      "Commercial lower body machines: leg press, hack squat, leg extension, seated and lying curl, abduction and hip thrust stations for gym fit-outs.",
+      "Commercial lower body machines: leg press, hack squat, leg extension, seated and lying curl, abduction and hip thrust stations for gym fitouts.",
     about:
       "<p>Lower body stations carry the heaviest loads in the building and take the most abuse, which is why the frames here are built around commercial-duty bearings and guide systems rather than scaled-up home equipment.</p>" +
       "<p>The range runs from the compound stations a strength floor is planned around — leg press, hack squat, the squat-lunge frames — through to the isolation work that fills out a circuit: extension, seated and lying curl, abduction and adduction. Hip thrust appears in both a plate-loaded and a selectorised version, which are different machines rather than two names for one.</p>" +
@@ -153,7 +153,7 @@ export const subcategories: Subcategory[] = [
     label: "Cable Machines",
     blurb: "Functional trainers, dual pulleys and multi-stations.",
     meta:
-      "Commercial cable machines: dual adjustable pulleys, functional trainers and multi-station units for gyms, studios and small-footprint fit-outs.",
+      "Commercial cable machines: dual adjustable pulleys, functional trainers and multi-station units for gyms, studios and small-footprint fitouts.",
     about:
       "<p>A cable station is the most flexible square metre in a gym. One frame covers pressing, pulling, rotation and every cable accessory movement a trainer wants to programme, which is why it is usually the first machine into a studio and the last one an operator would remove.</p>" +
       "<p>The range runs from dual adjustable pulleys and functional trainers through to multi-stations that give several members their own station on one footprint. Multi-stations are the answer where floor area is the constraint rather than budget.</p>" +
@@ -197,7 +197,7 @@ export const subcategories: Subcategory[] = [
     label: "Weight Plates",
     blurb: "Bumper, rubber, urethane and competition plates.",
     meta:
-      "Commercial weight plates: bumper, rubber-coated, urethane and competition plates in full weight ranges for gym fit-outs and strength floors.",
+      "Commercial weight plates: bumper, rubber-coated, urethane and competition plates in full weight ranges for gym fitouts and strength floors.",
     about:
       "<p>Plates are bought by the tonne and chosen on how they behave when dropped. Bumper plates are for platforms and Olympic lifting, where the plate has to take a drop from overhead and not destroy the floor underneath it. Rubber and urethane plates suit general floors, where the priority is a plate that survives being racked, dropped a short distance, and handled all day.</p>" +
       "<p>The range runs the full weight sequence in each type, so a club can buy a consistent set rather than assembling one from what was available. Colour-coded competition plates are here for platforms that host lifting.</p>" +
@@ -298,7 +298,7 @@ export const subcategories: Subcategory[] = [
     label: "Dumbbells",
     blurb: "Rubber hex, urethane and studio dumbbell ranges.",
     meta:
-      "Commercial dumbbells for gyms: rubber hex, urethane and studio ranges in full weight sets, with matching racks for club and studio fit-outs.",
+      "Commercial dumbbells for gyms: rubber hex, urethane and studio ranges in full weight sets, with matching racks for club and studio fitouts.",
     about:
       "<p>Dumbbells are bought as a range, not as a product. A commercial floor needs the whole sequence, in matching finish, with enough of the light and middle weights that a class or a busy evening does not strip the rack.</p>" +
       "<p>Rubber hex is the workhorse: it does not roll, it survives being dropped, and it is the most forgiving of a floor that gets used hard. Urethane costs more and holds its appearance far longer, which is why it tends to go into premium clubs and anywhere the dumbbell rack is visible from reception. Studio sets suit class formats where the weights are light, handled constantly and stored in a small space.</p>" +
@@ -459,7 +459,7 @@ export const subcategories: Subcategory[] = [
     meta:
       "Freestanding gym storage: dumbbell racks, barbell and plate trees, kettlebell shelving and ball storage for commercial floors and studios.",
     about:
-      "<p>Storage is what separates a gym floor that looks run from one that does not, and it is the line item most often cut from a fit-out and regretted within a month. Loose plates and dumbbells are the most common cause of both injury claims and equipment damage.</p>" +
+      "<p>Storage is what separates a gym floor that looks run from one that does not, and it is the line item most often cut from a fitout and regretted within a month. Loose plates and dumbbells are the most common cause of both injury claims and equipment damage.</p>" +
       "<p>Freestanding units go where the equipment is used, which is their advantage over wall-mounted storage: a dumbbell rack belongs beside the benches, not at the edge of the room. The range covers dumbbell racks, barbell and plate trees, kettlebell shelving and ball storage.</p>" +
       "<p>Buy storage with the equipment it holds, sized for the full range rather than for what is on the floor today. A rack that is already full has nowhere to put the next order.</p>",
   },
@@ -485,10 +485,10 @@ export const subcategories: Subcategory[] = [
     label: "Turf & Sled Tracks",
     blurb: "Artificial turf lanes for sleds, carries and conditioning.",
     meta:
-      "Gym turf and sled tracks: artificial turf lanes for sled pushes, carries, prowler work and functional conditioning in commercial fit-outs.",
+      "Gym turf and sled tracks: artificial turf lanes for sled pushes, carries, prowler work and functional conditioning in commercial fitouts.",
     about:
       "<p>A turf lane is the single addition that turns a strength floor into a functional one. It gives sleds a surface to run on, carries and crawls somewhere to happen, and a coach a defined lane to run a class down instead of improvising around the machines.</p>" +
-      "<p>Turf also changes how a room sounds and looks. It absorbs noise that rubber reflects and it visually marks the functional zone, which is why it usually ends up in the photographs of a finished fit-out.</p>" +
+      "<p>Turf also changes how a room sounds and looks. It absorbs noise that rubber reflects and it visually marks the functional zone, which is why it usually ends up in the photographs of a finished fitout.</p>" +
       "<p>The lane length is the decision, not the turf. Sleds need a usable run and the mistake is fitting a lane that is too short to programme. Send us the room dimensions and we will tell you what run you can get out of it before anything is ordered.</p>",
   },
 ];

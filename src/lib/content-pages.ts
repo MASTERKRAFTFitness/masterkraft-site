@@ -53,7 +53,7 @@ export const contentPages: Record<string, ContentPageData> = {
   finance: {
     eyebrow: "Support",
     title: "Finance",
-    subtitle: "Flexible ways to fund your equipment and fit-out.",
+    subtitle: "Flexible ways to fund your equipment and fitout.",
     intro:
       "MasterKraft has researched the best financiers for fitness equipment and partnered with those that offer a range of flexible finance options, enabling you to get your equipment faster and at the most competitive finance rates. If you need assistance, contact us on +61 3 9044 9575 and we will provide advice on a tailored finance solution.",
     sections: [
@@ -103,14 +103,14 @@ export const contentPages: Record<string, ContentPageData> = {
       {
         heading: "Delivery",
         body: [
-          "Delivery timeframes depend on stock availability, product type and destination. In-stock accessories dispatch quickly; larger equipment and full fit-outs are sequenced to your rollout schedule.",
-          "For fit-outs, we coordinate staged manufacture, freight and installation against your build timeline.",
+          "Delivery timeframes depend on stock availability, product type and destination. In-stock accessories dispatch quickly; larger equipment and full fitouts are sequenced to your rollout schedule.",
+          "For fitouts, we coordinate staged manufacture, freight and installation against your build timeline.",
         ],
       },
       {
         heading: "Freight & installation",
         body: [
-          "Freight is calculated by weight, volume and destination. Installation and commissioning can be arranged as part of a fit-out package.",
+          "Freight is calculated by weight, volume and destination. Installation and commissioning can be arranged as part of a fitout package.",
         ],
       },
     ],
@@ -207,7 +207,7 @@ export const contentPages: Record<string, ContentPageData> = {
     seoTitle: "Our Process | From Survey to Commissioning",
     subtitle: "One accountable partner, every step of the way.",
     intro:
-      "Whether you're outfitting a single space or a multi-site group, our process is the same: understand how you operate, then build the equipment, fit-out, branding and support around it.",
+      "Whether you're outfitting a single space or a multi-site group, our process is the same: understand how you operate, then build the equipment, fitout, branding and support around it.",
     sections: [
       { heading: "Scope", body: ["We survey each site and design a treatment- or training-floor layout for its footprint."] },
       { heading: "Spec", body: ["We standardise your equipment schedule in your colours, with custom upholstery and branding."] },

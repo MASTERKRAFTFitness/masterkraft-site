@@ -74,7 +74,7 @@ export default function FitoutLanding() {
             <Eyebrow className="mb-3">By Location</Eyebrow>
             <h2 className="text-3xl lg:text-4xl font-bold">Gym Fitouts, Australia &amp; Beyond</h2>
             <p className="mt-3 text-ash max-w-2xl">
-              We design, supply and install complete gym fit-outs across Australia and internationally,
+              We design, supply and install complete gym fitouts across Australia and internationally,
               each delivered as a single coordinated container.
             </p>
           </div>

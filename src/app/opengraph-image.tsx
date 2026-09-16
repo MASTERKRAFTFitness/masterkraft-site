@@ -48,7 +48,7 @@ export default function OgImage() {
           <div style={{ display: "flex" }}>for Fitness</div>
         </div>
         <div style={{ display: "flex", fontSize: 34, color: "rgba(255,255,255,0.65)", marginTop: 44 }}>
-          Commercial fitness equipment and fit-out
+          Commercial fitness equipment and fitout
         </div>
       </div>
     ),

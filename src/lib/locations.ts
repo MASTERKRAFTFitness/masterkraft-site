@@ -1,4 +1,4 @@
-// City landing pages for the fit-out service (/gym-fitouts/[city]).
+// City landing pages for the fitout service (/gym-fitouts/[city]).
 // Each city carries genuinely distinct copy + FAQs (and a real local project
 // where one exists) so these read as real service pages, not thin doorway
 // pages. Capability content is shared; the unique content leads.
@@ -31,30 +31,30 @@ export const locations: Location[] = [
     city: "Melbourne",
     state: "Victoria",
     stateAbbr: "VIC",
-    meta: "Gym fitouts in Melbourne, designed, supplied and installed by MasterKraft. Complete commercial and boutique fit-outs across metro Melbourne and regional Victoria.",
+    meta: "Gym fitouts in Melbourne, designed, supplied and installed by MasterKraft. Complete commercial and boutique fitouts across metro Melbourne and regional Victoria.",
     intro: [
-      "Melbourne is MasterKraft's home ground. We design, supply and install complete gym fit-outs right across the metro area and regional Victoria, from boutique studios in the inner suburbs to full commercial floors.",
-      "It is where a lot of our work lives. We delivered the entire fit-out for REVL's Collingwood studio and we produce the custom-branded equipment used across Fernwood's Victorian clubs. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",
+      "Melbourne is MasterKraft's home ground. We design, supply and install complete gym fitouts right across the metro area and regional Victoria, from boutique studios in the inner suburbs to full commercial floors.",
+      "It is where a lot of our work lives. We delivered the entire fitout for REVL's Collingwood studio and we produce the custom-branded equipment used across Fernwood's Victorian clubs. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",
     ],
     delivery:
       "Fast delivery and installation across Melbourne and regional Victoria, with your whole floor arriving coordinated and on schedule.",
     project: {
       name: "REVL Collingwood",
       href: "/revl-fitouts/revl-collingwood",
-      blurb: "A full boutique performance fit-out delivered floor to ceiling in Collingwood.",
+      blurb: "A full boutique performance fitout delivered floor to ceiling in Collingwood.",
     },
     faqs: [
       {
         q: "Do you install gyms in Melbourne?",
-        a: "Yes. We design, supply and install complete fit-outs across metropolitan Melbourne and regional Victoria, coordinated end to end by our own team.",
+        a: "Yes. We design, supply and install complete fitouts across metropolitan Melbourne and regional Victoria, coordinated end to end by our own team.",
       },
       {
-        q: "Can I see a MasterKraft fit-out near me?",
-        a: "REVL Collingwood is one of our Melbourne fit-outs, delivered floor to ceiling. We also produce the custom-branded equipment used across Fernwood's Victorian clubs.",
+        q: "Can I see a MasterKraft fitout near me?",
+        a: "REVL Collingwood is one of our Melbourne fitouts, delivered floor to ceiling. We also produce the custom-branded equipment used across Fernwood's Victorian clubs.",
       },
       {
         q: "How quickly can you fit out a Melbourne gym?",
-        a: "Because we ship each project as a single coordinated container, most Melbourne fit-outs move from sign-off to installed floor in weeks, not months.",
+        a: "Because we ship each project as a single coordinated container, most Melbourne fitouts move from sign-off to installed floor in weeks, not months.",
       },
     ],
   },
@@ -63,13 +63,13 @@ export const locations: Location[] = [
     city: "Sydney",
     state: "New South Wales",
     stateAbbr: "NSW",
-    meta: "Gym fitouts in Sydney by MasterKraft. Complete commercial and boutique fit-outs designed, supplied and installed across Sydney and New South Wales.",
+    meta: "Gym fitouts in Sydney by MasterKraft. Complete commercial and boutique fitouts designed, supplied and installed across Sydney and New South Wales.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs across Sydney and New South Wales, designed, supplied and installed as one coordinated project.",
+      "MasterKraft delivers complete gym fitouts across Sydney and New South Wales, designed, supplied and installed as one coordinated project.",
       "We know the NSW market. We delivered REVL's Bondi studio end to end, matching the exact spec and branding REVL runs interstate. Whether it is a boutique studio in the Inner West or a commercial floor in Western Sydney, you get one accountable partner from design to handover.",
     ],
     delivery:
-      "Your entire fit-out ships to Sydney in a single container and is installed by one coordinated crew, so there is no juggling separate suppliers across the build.",
+      "Your entire fitout ships to Sydney in a single container and is installed by one coordinated crew, so there is no juggling separate suppliers across the build.",
     project: {
       name: "REVL Bondi",
       href: "/revl-fitouts/revl-bondi",
@@ -78,7 +78,7 @@ export const locations: Location[] = [
     faqs: [
       {
         q: "Do you fit out gyms in Sydney?",
-        a: "Yes. We design, supply and install complete fit-outs across Sydney and New South Wales, from boutique studios to full commercial floors.",
+        a: "Yes. We design, supply and install complete fitouts across Sydney and New South Wales, from boutique studios to full commercial floors.",
       },
       {
         q: "Have you delivered Sydney projects?",
@@ -86,7 +86,7 @@ export const locations: Location[] = [
       },
       {
         q: "Do you deliver to regional NSW?",
-        a: "Yes. The single-container model means we deliver and install complete fit-outs well beyond metro Sydney, right across New South Wales.",
+        a: "Yes. The single-container model means we deliver and install complete fitouts well beyond metro Sydney, right across New South Wales.",
       },
     ],
   },
@@ -95,17 +95,17 @@ export const locations: Location[] = [
     city: "Brisbane",
     state: "Queensland",
     stateAbbr: "QLD",
-    meta: "Gym fitouts in Brisbane by MasterKraft. Complete gym fit-outs designed, supplied and installed across Brisbane, the Gold Coast and South East Queensland.",
+    meta: "Gym fitouts in Brisbane by MasterKraft. Complete gym fitouts designed, supplied and installed across Brisbane, the Gold Coast and South East Queensland.",
     intro: [
-      "MasterKraft designs, supplies and installs gym fit-outs across Brisbane, the Gold Coast and South East Queensland.",
+      "MasterKraft designs, supplies and installs gym fitouts across Brisbane, the Gold Coast and South East Queensland.",
       "South East Queensland is one of the fastest-growing fitness markets in the country. We deliver complete floors, rigs, strength, cardio, functional zones, storage and flooring, coordinated to your brand and built for Queensland's high-traffic clubs.",
     ],
     delivery:
-      "Your whole fit-out arrives in Brisbane as a single coordinated container and is installed to schedule, so a long supply chain never holds up your opening.",
+      "Your whole fitout arrives in Brisbane as a single coordinated container and is installed to schedule, so a long supply chain never holds up your opening.",
     faqs: [
       {
-        q: "Do you deliver gym fit-outs to Brisbane?",
-        a: "Yes. We design, supply and install complete fit-outs across Brisbane and South East Queensland, coordinated end to end.",
+        q: "Do you deliver gym fitouts to Brisbane?",
+        a: "Yes. We design, supply and install complete fitouts across Brisbane and South East Queensland, coordinated end to end.",
       },
       {
         q: "Do you cover the Gold Coast and regional QLD?",
@@ -113,7 +113,7 @@ export const locations: Location[] = [
       },
       {
         q: "Do you supply equipment only, or install as well?",
-        a: "Both. We can supply equipment on its own, or design, supply and install the entire floor as a turnkey fit-out.",
+        a: "Both. We can supply equipment on its own, or design, supply and install the entire floor as a turnkey fitout.",
       },
     ],
   },
@@ -122,17 +122,17 @@ export const locations: Location[] = [
     city: "Gold Coast",
     state: "Queensland",
     stateAbbr: "QLD",
-    meta: "Gym fitouts on the Gold Coast by MasterKraft. Complete boutique and commercial gym fit-outs designed, supplied and installed from Southport to Coolangatta.",
+    meta: "Gym fitouts on the Gold Coast by MasterKraft. Complete boutique and commercial gym fitouts designed, supplied and installed from Southport to Coolangatta.",
     intro: [
-      "The Gold Coast runs one of the densest fitness scenes in the country, and MasterKraft delivers complete gym fit-outs right across it, from Southport and Surfers Paradise down to Burleigh and Coolangatta.",
+      "The Gold Coast runs one of the densest fitness scenes in the country, and MasterKraft delivers complete gym fitouts right across it, from Southport and Surfers Paradise down to Burleigh and Coolangatta.",
       "Boutique studios, PT studios and full commercial floors, all designed, supplied and installed as one coordinated project, finished in your brand and built to hold up to constant, year-round use.",
     ],
     delivery:
-      "Your whole fit-out ships to the Gold Coast as a single coordinated container and is installed on schedule, so nothing holds up your opening.",
+      "Your whole fitout ships to the Gold Coast as a single coordinated container and is installed on schedule, so nothing holds up your opening.",
     faqs: [
       {
         q: "Do you fit out gyms on the Gold Coast?",
-        a: "Yes. We design, supply and install complete fit-outs across the Gold Coast, from Southport to Coolangatta.",
+        a: "Yes. We design, supply and install complete fitouts across the Gold Coast, from Southport to Coolangatta.",
       },
       {
         q: "Do you work with boutique and PT studios?",
@@ -149,9 +149,9 @@ export const locations: Location[] = [
     city: "Sunshine Coast",
     state: "Queensland",
     stateAbbr: "QLD",
-    meta: "Gym fitouts on the Sunshine Coast by MasterKraft. Complete gym fit-outs designed, supplied and installed from Caloundra to Noosa.",
+    meta: "Gym fitouts on the Sunshine Coast by MasterKraft. Complete gym fitouts designed, supplied and installed from Caloundra to Noosa.",
     intro: [
-      "The Sunshine Coast is one of the fastest-growing regions in Queensland, and new studios and gyms are opening to match. MasterKraft delivers complete fit-outs across the region, from Caloundra and Maroochydore up to Noosa.",
+      "The Sunshine Coast is one of the fastest-growing regions in Queensland, and new studios and gyms are opening to match. MasterKraft delivers complete fitouts across the region, from Caloundra and Maroochydore up to Noosa.",
       "From a single boutique studio to a full commercial floor, we design, supply and install the whole project, coordinated to your brand and built to last.",
     ],
     delivery:
@@ -159,11 +159,11 @@ export const locations: Location[] = [
     faqs: [
       {
         q: "Do you deliver to the Sunshine Coast?",
-        a: "Yes. We design, supply and install complete fit-outs across the Sunshine Coast, from Caloundra to Noosa.",
+        a: "Yes. We design, supply and install complete fitouts across the Sunshine Coast, from Caloundra to Noosa.",
       },
       {
         q: "Is the range the same as the capital cities?",
-        a: "Exactly the same range, spec and custom branding, delivered as one complete fit-out.",
+        a: "Exactly the same range, spec and custom branding, delivered as one complete fitout.",
       },
       {
         q: "Do you handle design and layout too?",
@@ -176,17 +176,17 @@ export const locations: Location[] = [
     city: "Perth",
     state: "Western Australia",
     stateAbbr: "WA",
-    meta: "Gym fitouts in Perth by MasterKraft. Complete gym fit-outs delivered and installed across Perth and Western Australia, shipped as a single coordinated container.",
+    meta: "Gym fitouts in Perth by MasterKraft. Complete gym fitouts delivered and installed across Perth and Western Australia, shipped as a single coordinated container.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs to Perth and right across Western Australia.",
-      "Distance is the usual headache for a Perth fit-out. We solve it the same way we deliver across the Asia-Pacific: your entire floor is specified once and shipped as a single coordinated container. You get the full spec, the full quality and the full branding without managing freight from three states away.",
+      "MasterKraft delivers complete gym fitouts to Perth and right across Western Australia.",
+      "Distance is the usual headache for a Perth fitout. We solve it the same way we deliver across the Asia-Pacific: your entire floor is specified once and shipped as a single coordinated container. You get the full spec, the full quality and the full branding without managing freight from three states away.",
     ],
     delivery:
       "One container, one delivery, one install, coordinated from our end so a Perth build runs as smoothly as a metro one.",
     faqs: [
       {
         q: "Can you fit out a gym in Perth?",
-        a: "Yes. We design, supply and install complete fit-outs in Perth and across Western Australia.",
+        a: "Yes. We design, supply and install complete fitouts in Perth and across Western Australia.",
       },
       {
         q: "How do you handle freight to WA?",
@@ -194,7 +194,7 @@ export const locations: Location[] = [
       },
       {
         q: "Is the range the same in Perth as the eastern states?",
-        a: "Exactly the same. Same spec, same quality, same custom branding, delivered to Perth as one complete fit-out.",
+        a: "Exactly the same. Same spec, same quality, same custom branding, delivered to Perth as one complete fitout.",
       },
     ],
   },
@@ -203,26 +203,26 @@ export const locations: Location[] = [
     city: "Adelaide",
     state: "South Australia",
     stateAbbr: "SA",
-    meta: "Gym fitouts in Adelaide by MasterKraft. Complete boutique and commercial gym fit-outs designed, supplied and installed across Adelaide and South Australia.",
+    meta: "Gym fitouts in Adelaide by MasterKraft. Complete boutique and commercial gym fitouts designed, supplied and installed across Adelaide and South Australia.",
     intro: [
-      "MasterKraft designs, supplies and installs gym fit-outs across Adelaide and South Australia.",
-      "South Australia is REVL's largest market, and we have fitted out every one of its clubs, from Brighton and Unley through to Mount Gambier. From boutique and PT studios to full commercial floors, we deliver complete, cohesive fit-outs to Adelaide, coordinated to your brand and built to hold up to constant use.",
+      "MasterKraft designs, supplies and installs gym fitouts across Adelaide and South Australia.",
+      "South Australia is REVL's largest market, and we have fitted out every one of its clubs, from Brighton and Unley through to Mount Gambier. From boutique and PT studios to full commercial floors, we deliver complete, cohesive fitouts to Adelaide, coordinated to your brand and built to hold up to constant use.",
     ],
     delivery:
       "Your whole floor ships to Adelaide as a single coordinated container and is installed on schedule, with one team accountable from design to handover.",
     project: {
       name: "REVL Brighton",
       href: "/revl-fitouts/revl-brighton",
-      blurb: "A full boutique performance fit-out delivered floor to ceiling at Brighton.",
+      blurb: "A full boutique performance fitout delivered floor to ceiling at Brighton.",
     },
     faqs: [
       {
-        q: "Do you deliver gym fit-outs to Adelaide?",
-        a: "Yes. We design, supply and install complete fit-outs across Adelaide and South Australia.",
+        q: "Do you deliver gym fitouts to Adelaide?",
+        a: "Yes. We design, supply and install complete fitouts across Adelaide and South Australia.",
       },
       {
         q: "Do you fit out boutique and PT studios in Adelaide?",
-        a: "We do. Boutique studios, PT studios and full commercial floors are all delivered as complete, coordinated fit-outs.",
+        a: "We do. Boutique studios, PT studios and full commercial floors are all delivered as complete, coordinated fitouts.",
       },
       {
         q: "Do you handle the design as well as supply?",
@@ -235,17 +235,17 @@ export const locations: Location[] = [
     city: "Canberra",
     state: "the ACT",
     stateAbbr: "ACT",
-    meta: "Gym fitouts in Canberra by MasterKraft. Complete commercial and performance gym fit-outs designed, supplied and installed across the ACT.",
+    meta: "Gym fitouts in Canberra by MasterKraft. Complete commercial and performance gym fitouts designed, supplied and installed across the ACT.",
     intro: [
-      "MasterKraft designs, supplies and installs complete gym fit-outs across Canberra and the ACT, from boutique and PT studios to full performance floors.",
+      "MasterKraft designs, supplies and installs complete gym fitouts across Canberra and the ACT, from boutique and PT studios to full performance floors.",
       "The capital has a strong performance and functional-training culture, and we build for it: rigs, strength, conditioning and flooring, coordinated to your brand and specified to take heavy, daily use.",
     ],
     delivery:
       "Your whole floor ships to Canberra as a single coordinated container and is installed on schedule.",
     faqs: [
-      { q: "Do you fit out gyms in Canberra?", a: "Yes. We design, supply and install complete fit-outs across Canberra and the ACT." },
+      { q: "Do you fit out gyms in Canberra?", a: "Yes. We design, supply and install complete fitouts across Canberra and the ACT." },
       { q: "Do you build performance and functional gyms?", a: "We do. Rigs, platforms, strength and conditioning are core to what we deliver." },
-      { q: "Do you supply only, or install as well?", a: "Both, from supply-only through to a full turnkey fit-out." },
+      { q: "Do you supply only, or install as well?", a: "Both, from supply-only through to a full turnkey fitout." },
     ],
   },
   {
@@ -253,9 +253,9 @@ export const locations: Location[] = [
     city: "Newcastle",
     state: "New South Wales",
     stateAbbr: "NSW",
-    meta: "Gym fitouts in Newcastle by MasterKraft. Complete gym fit-outs designed, supplied and installed across Newcastle and the Hunter.",
+    meta: "Gym fitouts in Newcastle by MasterKraft. Complete gym fitouts designed, supplied and installed across Newcastle and the Hunter.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs across Newcastle and the Hunter, designed, supplied and installed as one coordinated project.",
+      "MasterKraft delivers complete gym fitouts across Newcastle and the Hunter, designed, supplied and installed as one coordinated project.",
       "Newcastle's boutique and functional-training scene is growing fast. We deliver full floors built to hold up to constant use, coordinated to your brand from day one.",
     ],
     delivery:
@@ -271,13 +271,13 @@ export const locations: Location[] = [
     city: "Wollongong",
     state: "New South Wales",
     stateAbbr: "NSW",
-    meta: "Gym fitouts in Wollongong by MasterKraft. Complete gym fit-outs designed, supplied and installed across Wollongong and the Illawarra.",
+    meta: "Gym fitouts in Wollongong by MasterKraft. Complete gym fitouts designed, supplied and installed across Wollongong and the Illawarra.",
     intro: [
-      "MasterKraft designs, supplies and installs complete gym fit-outs across Wollongong and the Illawarra.",
+      "MasterKraft designs, supplies and installs complete gym fitouts across Wollongong and the Illawarra.",
       "From coastal boutique studios to full commercial floors, we deliver the whole project, coordinated to your brand and built to last through constant, daily training.",
     ],
     delivery:
-      "Your fit-out ships to Wollongong as a single coordinated container and is installed on schedule.",
+      "Your fitout ships to Wollongong as a single coordinated container and is installed on schedule.",
     faqs: [
       { q: "Do you deliver to Wollongong?", a: "Yes, across Wollongong and the Illawarra." },
       { q: "Do you fit out boutique studios?", a: "We do, alongside full commercial floors." },
@@ -289,17 +289,17 @@ export const locations: Location[] = [
     city: "Geelong",
     state: "Victoria",
     stateAbbr: "VIC",
-    meta: "Gym fitouts in Geelong by MasterKraft. Complete gym fit-outs designed, supplied and installed across Geelong and the Surf Coast.",
+    meta: "Gym fitouts in Geelong by MasterKraft. Complete gym fitouts designed, supplied and installed across Geelong and the Surf Coast.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs across Geelong and the Surf Coast, designed, supplied and installed as one coordinated project.",
+      "MasterKraft delivers complete gym fitouts across Geelong and the Surf Coast, designed, supplied and installed as one coordinated project.",
       "Victoria's second city is growing quickly, and its gyms with it. We deliver full floors, from boutique studios to commercial facilities, coordinated to your brand and built for heavy use.",
     ],
     delivery:
       "One coordinated container, delivered and installed across Geelong and the Surf Coast on schedule. As a Victorian team, we are close by.",
     faqs: [
-      { q: "Do you fit out gyms in Geelong?", a: "Yes. As a Victorian team we deliver and install complete fit-outs across Geelong and the Surf Coast." },
+      { q: "Do you fit out gyms in Geelong?", a: "Yes. As a Victorian team we deliver and install complete fitouts across Geelong and the Surf Coast." },
       { q: "Do you cover the Surf Coast and Bellarine?", a: "We do, right across the region." },
-      { q: "Supply only, or install too?", a: "Both, up to a full turnkey fit-out." },
+      { q: "Supply only, or install too?", a: "Both, up to a full turnkey fitout." },
     ],
   },
   {
@@ -307,10 +307,10 @@ export const locations: Location[] = [
     city: "Hobart",
     state: "Tasmania",
     stateAbbr: "TAS",
-    meta: "Gym fitouts in Hobart by MasterKraft. Complete gym fit-outs delivered and installed across Tasmania, shipped as a single coordinated container.",
+    meta: "Gym fitouts in Hobart by MasterKraft. Complete gym fitouts delivered and installed across Tasmania, shipped as a single coordinated container.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs to Hobart and across Tasmania.",
-      "Freight across Bass Strait is the usual sticking point for a Tasmanian fit-out. We solve it the same way we deliver internationally: your entire floor is specified once and shipped as a single coordinated container, so a Hobart build runs as smoothly as a mainland one.",
+      "MasterKraft delivers complete gym fitouts to Hobart and across Tasmania.",
+      "Freight across Bass Strait is the usual sticking point for a Tasmanian fitout. We solve it the same way we deliver internationally: your entire floor is specified once and shipped as a single coordinated container, so a Hobart build runs as smoothly as a mainland one.",
     ],
     delivery:
       "One container across Bass Strait, one delivery, one install, coordinated end to end.",
@@ -325,15 +325,15 @@ export const locations: Location[] = [
     city: "Darwin",
     state: "the Northern Territory",
     stateAbbr: "NT",
-    meta: "Gym fitouts in Darwin by MasterKraft. Complete gym fit-outs delivered and installed across the Northern Territory, shipped as a single coordinated container.",
+    meta: "Gym fitouts in Darwin by MasterKraft. Complete gym fitouts delivered and installed across the Northern Territory, shipped as a single coordinated container.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs to Darwin and across the Northern Territory.",
+      "MasterKraft delivers complete gym fitouts to Darwin and across the Northern Territory.",
       "Distance is the challenge in the Top End, and it is exactly what our single-container model is built for. Your whole floor is specified once and delivered complete, so you get the full spec and quality without managing freight from the other side of the country.",
     ],
     delivery:
       "One container, delivered and installed in Darwin on schedule, coordinated from our end.",
     faqs: [
-      { q: "Can you deliver a gym fit-out to Darwin?", a: "Yes, to Darwin and across the Northern Territory." },
+      { q: "Can you deliver a gym fitout to Darwin?", a: "Yes, to Darwin and across the Northern Territory." },
       { q: "How does delivery to the NT work?", a: "Everything ships as one coordinated container, so there is no piecing together freight interstate." },
       { q: "Same range as the capital cities?", a: "Identical range, spec and custom branding." },
     ],
@@ -343,32 +343,32 @@ export const locations: Location[] = [
     city: "Central Coast",
     state: "New South Wales",
     stateAbbr: "NSW",
-    meta: "Gym fitouts on the Central Coast by MasterKraft. Complete gym fit-outs designed, supplied and installed from Gosford to Wyong.",
+    meta: "Gym fitouts on the Central Coast by MasterKraft. Complete gym fitouts designed, supplied and installed from Gosford to Wyong.",
     intro: [
-      "MasterKraft designs, supplies and installs complete gym fit-outs across the NSW Central Coast, from Gosford and Wyong through the surrounding region.",
+      "MasterKraft designs, supplies and installs complete gym fitouts across the NSW Central Coast, from Gosford and Wyong through the surrounding region.",
       "The Central Coast is one of the state's fastest-growing corridors, and new studios and gyms are opening across it. We deliver full floors, coordinated to your brand and built to last.",
     ],
     delivery:
-      "Your fit-out ships to the Central Coast as a single coordinated container and is installed on schedule.",
+      "Your fitout ships to the Central Coast as a single coordinated container and is installed on schedule.",
     faqs: [
       { q: "Do you deliver to the Central Coast?", a: "Yes, from Gosford to Wyong and across the region." },
       { q: "Do you work with new studio openings?", a: "We do. A lot of our Central Coast work is new studios opening their doors." },
-      { q: "Do you handle design and install?", a: "Yes, from layout through to a full turnkey fit-out." },
+      { q: "Do you handle design and install?", a: "Yes, from layout through to a full turnkey fitout." },
     ],
   },
   {
     slug: "south-korea",
     city: "South Korea",
     international: true,
-    meta: "Gym fitouts in South Korea by MasterKraft. Complete gym fit-outs designed, supplied and shipped as a single coordinated container.",
+    meta: "Gym fitouts in South Korea by MasterKraft. Complete gym fitouts designed, supplied and shipped as a single coordinated container.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs across South Korea, designed, supplied and shipped as one coordinated project.",
-      "As part of our work across 12 countries and 229 sites, we specify your entire floor once and deliver it complete, so a Korean fit-out arrives to the same spec, quality and branding as anywhere in our network.",
+      "MasterKraft delivers complete gym fitouts across South Korea, designed, supplied and shipped as one coordinated project.",
+      "As part of our work across 12 countries and 229 sites, we specify your entire floor once and deliver it complete, so a Korean fitout arrives to the same spec, quality and branding as anywhere in our network.",
     ],
     delivery:
-      "Your complete fit-out is shipped to South Korea as a single coordinated container.",
+      "Your complete fitout is shipped to South Korea as a single coordinated container.",
     faqs: [
-      { q: "Do you deliver to South Korea?", a: "Yes, as part of our international fit-out work across 12 countries and 229 sites." },
+      { q: "Do you deliver to South Korea?", a: "Yes, as part of our international fitout work across 12 countries and 229 sites." },
       { q: "Is the quality the same as your home market?", a: "Identical. Same spec sheet, same quality, same custom branding." },
       { q: "Do you supply and coordinate installation?", a: "Yes. We supply the complete floor and coordinate installation." },
     ],
@@ -377,16 +377,16 @@ export const locations: Location[] = [
     slug: "malaysia",
     city: "Malaysia",
     international: true,
-    meta: "Gym fitouts in Malaysia by MasterKraft. Complete gym fit-outs designed, supplied and shipped as a single coordinated container.",
+    meta: "Gym fitouts in Malaysia by MasterKraft. Complete gym fitouts designed, supplied and shipped as a single coordinated container.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs across Malaysia, from Kuala Lumpur through the wider market, designed and supplied as one coordinated project.",
+      "MasterKraft delivers complete gym fitouts across Malaysia, from Kuala Lumpur through the wider market, designed and supplied as one coordinated project.",
       "International delivery is what we are built for. With equipment in place across 12 countries and 229 sites, we specify your floor once and ship it complete, so nothing is compromised by distance.",
     ],
     delivery:
-      "Your complete fit-out is shipped to Malaysia as a single coordinated container.",
+      "Your complete fitout is shipped to Malaysia as a single coordinated container.",
     faqs: [
       { q: "Do you deliver to Malaysia?", a: "Yes, across Malaysia including Kuala Lumpur." },
-      { q: "How is a fit-out delivered internationally?", a: "The whole floor is specified once and shipped as a single coordinated container." },
+      { q: "How is a fitout delivered internationally?", a: "The whole floor is specified once and shipped as a single coordinated container." },
       { q: "Can you brand the equipment?", a: "Yes, custom-branded to your identity." },
     ],
   },
@@ -394,13 +394,13 @@ export const locations: Location[] = [
     slug: "vietnam",
     city: "Vietnam",
     international: true,
-    meta: "Gym fitouts in Vietnam by MasterKraft. Complete gym fit-outs designed, supplied and shipped as a single coordinated container.",
+    meta: "Gym fitouts in Vietnam by MasterKraft. Complete gym fitouts designed, supplied and shipped as a single coordinated container.",
     intro: [
-      "MasterKraft delivers complete gym fit-outs across Vietnam, from Ho Chi Minh City and Hanoi through the wider market.",
+      "MasterKraft delivers complete gym fitouts across Vietnam, from Ho Chi Minh City and Hanoi through the wider market.",
       "Vietnam's fitness market is expanding fast. As part of our work across 12 countries and 229 sites, we specify your floor once and ship it complete in a single coordinated container, delivered to the same spec and branding as the rest of our network.",
     ],
     delivery:
-      "Your complete fit-out is shipped to Vietnam as a single coordinated container.",
+      "Your complete fitout is shipped to Vietnam as a single coordinated container.",
     faqs: [
       { q: "Do you deliver to Vietnam?", a: "Yes, including Ho Chi Minh City and Hanoi." },
       { q: "Is the range the same as elsewhere?", a: "Exactly the same range, spec and custom branding." },

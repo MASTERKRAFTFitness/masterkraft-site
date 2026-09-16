@@ -14,7 +14,7 @@ import {
   type FitoutBrief,
 } from "@/lib/fitout-brief";
 
-// The fit-out brief from /contact's wizard.
+// The fitout brief from /contact's wizard.
 //
 // TWO DESTINATIONS, AND BOTH ARE LOAD-BEARING:
 //
@@ -154,7 +154,7 @@ function internalNotification(
     )
     .join("");
 
-  return `<h2>Fit-out brief — ${escape(brief.projectType || "type not given")}</h2>
+  return `<h2>Fitout brief — ${escape(brief.projectType || "type not given")}</h2>
     <p style="font-size:15px">
       <strong>${escape(briefFullName(brief) || "No name")}</strong>${
         brief.company ? ` — ${escape(brief.company)}` : ""
@@ -188,7 +188,7 @@ function confirmation(brief: FitoutBrief, attachments: Attachment[]): string {
     .join("");
 
   return `<p>Hi ${escape(brief.firstName) || "there"},</p>
-    <p>Thanks for your fit-out brief — it is with our design team now. We will come back
+    <p>Thanks for your fitout brief — it is with our design team now. We will come back
     to you within one business day with a concept for the space and an indicative price.</p>
     <h3>What you told us</h3>
     <table cellpadding="6" style="border-collapse:collapse;font-size:14px">${rows}</table>
@@ -254,7 +254,7 @@ export async function POST(request: Request) {
   const hubspot = await submitHubspotForm(
     process.env.HUBSPOT_FORM_CONTACT,
     briefHubspotFields(brief, kept),
-    { pageName: "Fit-Out Brief", pageUri: "/contact" }
+    { pageName: "Fitout Brief", pageUri: "/contact" }
   ).catch((e) => {
     console.error("[fitout-brief] hubspot failed", e);
     return "error" as const;
@@ -262,7 +262,7 @@ export async function POST(request: Request) {
 
   const to = process.env.QUOTE_TO_EMAIL || "hello@masterkraft.com";
   const subject =
-    `Fit-out brief: ${brief.projectType || "enquiry"}` +
+    `Fitout brief: ${brief.projectType || "enquiry"}` +
     `${brief.company ? ` — ${brief.company}` : ""}` +
     `${brief.budget ? ` (${brief.budget})` : ""}`;
 
@@ -276,7 +276,7 @@ export async function POST(request: Request) {
     { replyTo: brief.email, attachments: kept }
   );
   const confirmed = await sendEmail(
-    "We have your fit-out brief",
+    "We have your fitout brief",
     confirmation(brief, kept),
     brief.email,
     { replyTo: to }
