@@ -110,3 +110,37 @@ describe("trackLead", () => {
     expect(JSON.stringify(calls)).not.toContain("transaction_id");
   });
 });
+
+describe("trackEnquiry", () => {
+  it("counts a brief as an Ads lead, but sends no value", async () => {
+    const calls = gtagSpy();
+    const { trackEnquiry } = await withEnv(configured);
+    trackEnquiry("fitout-brief", "dana@example.com");
+
+    expect(calls[0]).toEqual(["event", "generate_lead", { method: "fitout-brief" }]);
+    expect(calls[1]).toEqual([
+      "event",
+      "conversion",
+      { send_to: "AW-123456789/leadLabel", currency: "AUD" },
+    ]);
+    // A brief has no cart behind it. trackLead's `value` is a quoted subtotal,
+    // and a number invented here would corrupt the average deal size the fitout
+    // funnel is judged on — so the conversion carries none.
+    expect(JSON.stringify(calls)).not.toContain("value");
+  });
+
+  // The state the site is in today: no Ads account wired up. The GA4 event must
+  // still fire, and nothing may be addressed to "AW-123/undefined".
+  it("still reports to GA4 when Ads is unconfigured", async () => {
+    const calls = gtagSpy();
+    const { trackEnquiry } = await withEnv({
+      NEXT_PUBLIC_GOOGLE_ADS_ID: undefined,
+      NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL: undefined,
+    });
+    trackEnquiry("contact");
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual(["event", "generate_lead", { method: "contact" }]);
+    expect(JSON.stringify(calls)).not.toContain("undefined");
+  });
+});

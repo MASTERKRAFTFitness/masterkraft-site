@@ -39,9 +39,14 @@ const orgSchema = {
     areaServed: "AU",
     availableLanguage: "English",
   },
+  // Facebook is deliberately absent. `sameAs` is a claim about the profiles this
+  // organisation actually maintains, and the footer stopped linking Facebook, so
+  // asserting it here would point search engines at a profile we no longer treat
+  // as current. Restore the URL if that page is ever picked back up — a stale
+  // sameAs is worse than a missing one, but a live profile left out is a missed
+  // entity association.
   sameAs: [
     "https://www.instagram.com/masterkraft.equipment/",
-    "https://www.facebook.com/people/MasterKraft/100088228633638/",
     "https://www.linkedin.com/company/masterkraft-pty-ltd/",
   ],
 };

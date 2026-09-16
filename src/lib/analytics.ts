@@ -140,13 +140,21 @@ export function trackSignUp(source: string, email?: string) {
 }
 
 /**
- * An enquiry with no cart behind it — the contact form. Shares the `generate_lead`
- * name with trackLead above but carries NO `value`: that one reports a quoted
- * cart subtotal, and inventing a number here would corrupt the average deal size
- * the fitout funnel is judged on.
+ * An enquiry with no cart behind it — the fitout brief, the contact form. Shares
+ * the `generate_lead` name with trackLead above but carries NO `value`: that one
+ * reports a quoted cart subtotal, and inventing a number here would corrupt the
+ * average deal size the fitout funnel is judged on.
+ *
+ * IT DOES FIRE THE ADS CONVERSION, without a value. The fitout brief is the
+ * conversion /contact exists to produce — it is where the header's primary CTA
+ * lands — so an Ads campaign pointed at that page has to be able to see it, or
+ * the bidder is optimising toward clicks it cannot score. Sharing ADS_LEAD_LABEL
+ * with trackLead is deliberate: both are leads, and Ads should count them
+ * together. What must NOT be shared is the value, which is why none is sent.
  */
 export function trackEnquiry(source: string, email?: string) {
   track("generate_lead", { method: source });
+  adsConversion(ADS_LEAD_LABEL);
   identifyUser(email);
   opinlyTrack("generate_lead", { source });
 }
