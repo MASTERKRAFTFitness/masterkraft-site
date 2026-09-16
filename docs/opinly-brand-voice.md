@@ -3,7 +3,9 @@
 **Status: DRAFTED HERE, NOT YET APPLIED.** The brand voice field lives in the
 Opinly dashboard, not in this repo, and it can only be edited by someone signed
 into the workspace. The text below is ready to paste into it. **Do that before
-the three queued posts publish**, not after — see "Why this is urgent".
+the queued posts are approved**, not after — see "Why this is urgent", then
+"The queued posts" below for what is actually in the workspace (two drafts, held
+for review) rather than what the handover said was.
 
 ## Why this is urgent
 
@@ -63,15 +65,75 @@ is #F6EB1D."* Writing a colour into the brand voice field that disagrees with th
 site would be the same class of mistake as the invented statistic: an
 unverified fact, stated confidently, in the place hardest to correct.
 
-## The three queued posts
+## The queued posts — read 2026-09-16 via the Opinly MCP
 
-Three posts are scheduled in the Opinly workspace — Singapore, New Zealand and
-Australia, on commercial gym equipment — and they **go live the moment this site
-can serve `/blog`**. That makes the order non-negotiable:
+**Two posts, not three, and neither auto-publishes.** The handover said three
+(Singapore / NZ / Australia) going live the moment the site can serve `/blog`.
+What is actually in the workspace (`comp_4uxP45Rq6aqaL_5ceX8K3`):
 
-1. Paste the brand voice text above.
-2. Read the three queued drafts and check them against it — in particular for
-   invented figures, prices, and any STRONG reference.
-3. Only then set `OPINLY_CDN_NAMESPACE` and redeploy (see `LAUNCH.md`).
+| Post | Status | Scheduled |
+| --- | --- | --- |
+| Commercial Gym Equipment in Singapore: What Actually Determines Long-Term ROI | `scheduled_review` | 2026-09-18 |
+| Commercial Gym Equipment Australia: How to Spec the Right Grade for Your Facility | `scheduled_review` | 2026-09-21 |
 
-Setting the namespace first publishes whatever those drafts currently say.
+There is **no New Zealand post**. Both are `scheduled_review`, which in Opinly
+means queued but held until a human approves — they will not publish on their
+scheduled date on their own, and serving `/blog` does not release them. The
+ordering pressure the handover described is therefore real but softer than
+stated: approval is a gate, not a race.
+
+### They do NOT have the CareLocate problem
+
+Every company claim in both posts was checked against this repo and holds:
+
+- **"229 sites across 12 countries"** — `src/lib/usps.ts:40`, `src/lib/locations.ts`,
+  `src/app/contact/page.tsx:38`, `src/components/home/Hero.tsx:38`. A standing
+  site-wide claim, not an invented figure.
+- **"72-hour response and resolution SLA, in writing"** — `src/lib/usps.ts:41`,
+  `src/app/contact/page.tsx:66`.
+- **"REVL studio fit-outs in Singapore, Kuala Lumpur and Ho Chi Minh City"** —
+  all three in `src/lib/revl.ts` (`revl-singapore` / REVL City Hall,
+  `revl-kuala-lumpur`, `revl-ho-chi-minh-city`).
+- **"Steve Callanan … Managing Director"** — `src/app/api/waitlist/route.ts:90`.
+- **No prices, no stock positions, no STRONG reference** in either post.
+
+So the statistics ban above is preventive here, not remedial. Keep it — it costs
+nothing and the failure it prevents is expensive — but do not go into these two
+drafts expecting to find a "30,000+".
+
+### Two things to fix before approving
+
+**1. One unsupported claim, in the Australia post.** It says the 72-hour SLA is
+something MasterKraft "provides and documents in its warranty terms and
+conditions". The SLA is real, but the warranty page does not carry the number:
+`src/lib/content-pages.ts:25` says only "a committed response and resolution
+SLA". The 72-hour figure lives on the process and support pages
+(`content-pages.ts:201`, `:215`) and in the USP block. Either drop the clause
+about where it is documented, or add the figure to the warranty copy. As written
+it sends a reader to a document that does not contain what they were promised —
+and `src/lib/legal-content.ts:775` has an unrelated "48-72 hours" for dispatch,
+which is what they would find instead.
+
+**2. "fit-out" throughout, which this site stopped writing that morning.**
+Commit `c1a2028` (16 Sep, 11:53) standardised on **fitout**, one word, across
+the whole site — the tree is now 327 "fitout" to 4 "fit-out". Both drafts use
+"fit-out" in body copy, and so does the **shared author bio**, twice ("fit-out
+partner", "fit-out economics"). The bio matters more than the posts: it rides on
+every post this author ever publishes, so fixing it once is worth more than
+fixing either draft.
+
+This is exactly what the brand voice field is for. The line is already in the
+text above; applying it is what stops the next post arriving with the same
+spelling.
+
+### Order of operations
+
+1. Paste the brand voice text above (fixes the spelling for everything future).
+2. Fix the author bio's two "fit-out"s.
+3. Fix the warranty-documentation clause in the Australia post, and the "fit-out"
+   instances in both drafts.
+4. Approve the two `scheduled_review` posts when you are happy with them.
+5. Set `OPINLY_CDN_NAMESPACE` and redeploy (see `LAUNCH.md`) so `/blog` serves.
+
+Steps 4 and 5 are independent — approval does not publish to a site that cannot
+serve `/blog`, and serving `/blog` does not approve anything.
