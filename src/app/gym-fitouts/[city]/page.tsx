@@ -8,6 +8,7 @@ import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site";
 import { locations, getLocation } from "@/lib/locations";
+import { withQualifier } from "@/lib/page-title";
 import { revlClubsForRegion } from "@/lib/revl";
 
 export function generateStaticParams() {
@@ -23,7 +24,9 @@ export async function generateMetadata({
   const loc = getLocation(city);
   if (!loc) return { title: "Gym Fitouts" };
   return {
-    title: `Gym Fitouts ${loc.city} | Design, Supply & Install`,
+    // Same rule as the fit-out types: Sunshine Coast and Central Coast are the
+    // two city names long enough to push it over. See lib/page-title.
+    title: withQualifier(`Gym Fitouts ${loc.city}`, "Design, Supply & Install"),
     description: loc.meta,
     alternates: { canonical: `/gym-fitouts/${loc.slug}` },
   };

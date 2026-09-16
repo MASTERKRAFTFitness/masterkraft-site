@@ -25,6 +25,7 @@ import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 import { getProductContent, resolveCopy } from "@/lib/product-content";
+import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
 // old store never listed have no WooCommerce variation id, and the cart keys on
@@ -42,9 +43,6 @@ import { SITE_URL, absoluteUrl, priceValidUntil } from "@/lib/site";
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
 
-/** " | MASTERKRAFT", which the template in app/layout.tsx appends to every title. */
-const BRAND_SUFFIX_LEN = " | MASTERKRAFT".length;
-
 /**
  * The `<title>` for a product, which is its NAME AND THEN SOME.
  *
@@ -60,20 +58,29 @@ const BRAND_SUFFIX_LEN = " | MASTERKRAFT".length;
  * title past what a search result shows, because a title cut off mid-phrase is
  * worse than a short one.
  *
- * og:title deliberately does NOT get this. A shared link renders under a
+ * AND AT THE OTHER END, the brand comes off. Fourteen names are long enough
+ * that " | MASTERKRAFT" runs past what a search result shows — and the brand is
+ * last, so it is the first thing truncated. Opinly flagged five of them as
+ * `title_too_long` on 2026-09-16; the crawl only samples 100 pages, so there
+ * were fourteen. withoutBrandIfLong drops it rather than spending visible
+ * characters on something nobody sees.
+ *
+ * og:title deliberately does NOT get any of this. A shared link renders under a
  * photograph of the thing, where "Socks" is the right label and the category is
  * noise.
  */
-function productTitle(p: { name: string; categories?: { id?: number; name?: string; slug?: string }[] }): string {
+function productTitle(
+  p: { name: string; categories?: { id?: number; name?: string; slug?: string }[] }
+): string | { absolute: string } {
   const name = p.name.trim();
-  if (name.length + BRAND_SUFFIX_LEN >= 40) return name;
+  if (renderedLength(name) >= TITLE_ADD_FLOOR) return withoutBrandIfLong(name);
 
   const cat = (p.categories ?? []).map((c) => siteCategoryFor(c, categoryTerms())).find(Boolean);
   const suffix = cat?.productSuffix ?? cat?.label;
   if (!suffix) return name;
 
   const full = `${name} | ${suffix}`;
-  return full.length + BRAND_SUFFIX_LEN <= 60 ? full : name;
+  return renderedLength(full) <= TITLE_ADD_MAX ? full : name;
 }
 
 export async function generateMetadata({

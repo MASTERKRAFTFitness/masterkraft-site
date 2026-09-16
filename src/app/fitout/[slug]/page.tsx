@@ -8,6 +8,7 @@ import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodFeature from "@/components/marketing/FernwoodFeature";
 import { fitouts, getFitout } from "@/lib/fitouts";
+import { withQualifier } from "@/lib/page-title";
 
 export function generateStaticParams() {
   return fitouts.map((f) => ({ slug: f.slug }));
@@ -22,7 +23,10 @@ export async function generateMetadata({
   const f = getFitout(slug);
   if (!f) return { title: "Fitouts" };
   return {
-    title: `${f.name} Fitouts | Design, Supply & Install`,
+    // The qualifier goes whole or not at all — "Elite Sports Clubs" and
+    // "Schools & University" run past what a search result shows with it.
+    // See lib/page-title.
+    title: withQualifier(`${f.name} Fitouts`, "Design, Supply & Install"),
     description: f.blurb,
     alternates: { canonical: `/fitout/${f.slug}` },
   };
