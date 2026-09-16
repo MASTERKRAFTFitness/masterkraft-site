@@ -1,10 +1,12 @@
 // Opinly web analytics — the browser half.
 //
-// The pixel is loaded by CookieConsent, alongside GA4/Ads/HubSpot and under the
-// same opt-in, so everything here has to survive the pixel never arriving: a
-// visitor who declines cookies, or an ad-blocker, leaves `window.opinly`
-// undefined forever. Every export below no-ops in that case rather than throwing
-// into a checkout.
+// The pixel is loaded from the root layout on every page, unconditionally —
+// deliberately NOT behind the cookie banner that gates GA4/Ads/HubSpot.
+//
+// Everything here still has to survive the pixel never arriving: an ad-blocker,
+// a network failure or a CSP will leave `window.opinly` undefined forever, and
+// these calls sit inside a paid checkout. Every export below no-ops in that case
+// rather than throwing.
 //
 // Nothing in here is called directly by components. lib/analytics is the one
 // front door for events; this module is the Opinly sink behind it.

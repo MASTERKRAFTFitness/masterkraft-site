@@ -91,7 +91,10 @@ missing var fails **silently** — that's why each must be checked deliberately.
   and not revenue. Values are read at build time, so setting them needs a redeploy.
 - ⚙️ `OPINLY_API_KEY` — **not set, and until it is, only the browser reports sales.**
   Opinly's pixel key is publishable and already compiled in, so page views, add-to-cart,
-  sign-ups and leads work with no config. This one is the SERVER key, and it is what
+  sign-ups and leads work with no config. Note the Opinly pixel loads on EVERY page and
+  is **not** gated on the cookie banner, unlike GA4/Ads/HubSpot — a deliberate exception
+  (Michael, 2026-09-16) and the one to mention if the banner or privacy policy is ever
+  rewritten to spell out what loads when. This one is the SERVER key, and it is what
   `/api/order` uses to report a paid order from the back end — the copy that survives a
   customer closing the tab on the confirmation screen, an ad-blocker, or a declined
   cookie banner. Both ends send the order number as `externalEventId`, so the two
