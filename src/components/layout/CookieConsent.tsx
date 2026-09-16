@@ -8,6 +8,7 @@ const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const HS_ID = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID;
 const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
 export default function CookieConsent() {
   const [choice, setChoice] = useState<"accepted" | "declined" | null>(null);
@@ -45,6 +46,26 @@ export default function CookieConsent() {
           </Script>
         </>
       )}
+      {/* Meta Pixel. BEHIND THE BANNER, with GA4 and Ads, not beside Opinly in
+          layout.tsx: this is an advertising tracker that builds retargeting
+          audiences off a visitor's browsing, which is exactly the processing the
+          Accept button exists to authorise. Opinly's placement outside the banner
+          was a specific, documented decision; it is not a precedent.
+
+          PageView fires here. The `Lead` conversion does NOT - it fires from
+          lib/analytics.ts where the brief actually submits, so Meta counts a
+          completed brief rather than a page that merely loaded. */}
+      {ready && choice === "accepted" && META_PIXEL_ID && (
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?` +
+            `n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;` +
+            `n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;` +
+            `t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}` +
+            `(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');` +
+            `fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`}
+        </Script>
+      )}
+
       {ready && choice === "accepted" && HS_ID && (
         <Script id="hs-script-loader" strategy="afterInteractive" src={`https://js-ap1.hs-scripts.com/${HS_ID}.js`} />
       )}

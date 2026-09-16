@@ -17,6 +17,16 @@ function gtagSpy(): GtagCall[] {
   return calls;
 }
 
+
+function fbqSpy(): GtagCall[] {
+  const calls: GtagCall[] = [];
+  (globalThis as unknown as { window: unknown }).window = globalThis;
+  (globalThis as unknown as { fbq: (...a: unknown[]) => void }).fbq = (...a) => {
+    calls.push(a);
+  };
+  return calls;
+}
+
 async function withEnv(env: Record<string, string | undefined>) {
   vi.resetModules();
   for (const [k, v] of Object.entries(env)) {
@@ -39,6 +49,7 @@ beforeEach(() => {
 afterEach(() => {
   for (const k of Object.keys(configured)) delete process.env[k];
   delete (globalThis as unknown as { gtag?: unknown }).gtag;
+  delete (globalThis as unknown as { fbq?: unknown }).fbq;
   delete (globalThis as unknown as { window?: unknown }).window;
   vi.resetModules();
 });
@@ -142,5 +153,28 @@ describe("trackEnquiry", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual(["event", "generate_lead", { method: "contact" }]);
     expect(JSON.stringify(calls)).not.toContain("undefined");
+  });
+});
+
+describe("the Meta pixel conversion", () => {
+  it("sends Meta's standard Lead when the pixel has loaded", async () => {
+    gtagSpy();
+    const meta = fbqSpy();
+    const { trackEnquiry } = await withEnv(configured);
+    trackEnquiry("fitout-brief", "dana@example.com");
+
+    // The name must be exactly "Lead" — Meta only optimises toward events it
+    // recognises, and a custom name leaves campaigns bidding on link clicks.
+    expect(meta).toEqual([["track", "Lead", { content_name: "fitout-brief" }]]);
+  });
+
+  // fbq only exists after the visitor accepts cookies (see CookieConsent), and
+  // with no NEXT_PUBLIC_META_PIXEL_ID it never loads at all. Both are ordinary
+  // states, not failures: the GA4 event must still fire and nothing may throw.
+  it("is a no-op when the pixel never loaded", async () => {
+    const calls = gtagSpy();
+    const { trackEnquiry } = await withEnv(configured);
+    expect(() => trackEnquiry("contact")).not.toThrow();
+    expect(calls.some((c) => c[1] === "generate_lead")).toBe(true);
   });
 });

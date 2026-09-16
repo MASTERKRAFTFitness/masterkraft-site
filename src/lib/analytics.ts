@@ -37,6 +37,7 @@ const ADS_LEAD_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL;
 interface AnalyticsWindow extends Window {
   gtag?: (...args: unknown[]) => void;
   _hsq?: unknown[];
+  fbq?: (...args: unknown[]) => void;
 }
 
 export function track(event: string, params: Params = {}): void {
@@ -59,6 +60,26 @@ function adsConversion(label: string | undefined, params: Params = {}): void {
   const w = window as AnalyticsWindow;
   if (typeof w.gtag !== "function") return;
   w.gtag("event", "conversion", { send_to: `${ADS_ID}/${label}`, currency: "AUD", ...params });
+}
+
+/**
+ * One Meta (Instagram/Facebook) conversion.
+ *
+ * Separate from track() for the same reason adsConversion is: Meta has its own
+ * queue (`fbq`), its own event vocabulary, and must not receive HubSpot's or
+ * GA4's. `fbq` only exists once the pixel has loaded, which is AFTER the visitor
+ * accepts cookies - see CookieConsent - so this is a no-op for anyone who has
+ * declined or not yet answered. That is the intended behaviour, not a gap.
+ *
+ * NO PIXEL ID CONFIGURED IS A WORKING STATE. With none set, `fbq` never exists
+ * and this does nothing, which is what lets the Lead event ship before the Meta
+ * account is ready - the same deal as the Google Ads labels above.
+ */
+function metaConversion(event: string, params: Params = {}): void {
+  if (typeof window === "undefined") return;
+  const w = window as AnalyticsWindow;
+  if (typeof w.fbq !== "function") return;
+  w.fbq("track", event, params);
 }
 
 export function trackAddToCart(item: { id: number; name: string; price: number }, qty: number) {
@@ -193,6 +214,10 @@ export function trackSignUp(source: string, email?: string) {
 export function trackEnquiry(source: string, email?: string) {
   track("generate_lead", { method: source });
   adsConversion(ADS_LEAD_LABEL);
+  // Meta's standard `Lead`. Named exactly that because Meta only optimises
+  // toward events it recognises - a custom name would leave campaigns bidding
+  // on link clicks, which is most of the value of paid social gone.
+  metaConversion("Lead", { content_name: source });
   identifyUser(email);
   opinlyTrack("generate_lead", { source });
 }
