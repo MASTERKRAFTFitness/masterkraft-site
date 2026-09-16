@@ -101,7 +101,7 @@ So the statistics ban above is preventive here, not remedial. Keep it — it cos
 nothing and the failure it prevents is expensive — but do not go into these two
 drafts expecting to find a "30,000+".
 
-### Two things to fix before approving
+### Two things found; one fixed, one still open
 
 **1. One unsupported claim, in the Australia post.** It says the 72-hour SLA is
 something MasterKraft "provides and documents in its warranty terms and
@@ -114,24 +114,36 @@ it sends a reader to a document that does not contain what they were promised �
 and `src/lib/legal-content.ts:775` has an unrelated "48-72 hours" for dispatch,
 which is what they would find instead.
 
-**2. "fit-out" throughout, which this site stopped writing that morning.**
-Commit `c1a2028` (16 Sep, 11:53) standardised on **fitout**, one word, across
-the whole site — the tree is now 327 "fitout" to 4 "fit-out". Both drafts use
-"fit-out" in body copy, and so does the **shared author bio**, twice ("fit-out
-partner", "fit-out economics"). The bio matters more than the posts: it rides on
-every post this author ever publishes, so fixing it once is worth more than
-fixing either draft.
+**2. ✅ FIXED 2026-09-16 — "fit-out" throughout, which this site stopped writing
+that morning.** Commit `c1a2028` (16 Sep, 11:53) standardised on **fitout**, one
+word, across the whole site — the tree is 327 "fitout" to 4 "fit-out". Both
+drafts used "fit-out" in body copy, and so did the shared author bio.
 
-This is exactly what the brand voice field is for. The line is already in the
-text above; applying it is what stops the next post arriving with the same
-spelling.
+Corrected via the Opinly MCP with targeted replacements (`edit_post` `edits`,
+not a whole-body resend, so nothing else could drift):
+
+- **Author bio** `auth_MQzUaks3hkWIud4pTJMD7` — 2 instances. This was the one
+  that mattered most: the bio rides on every post this author ever publishes,
+  so fixing it once fixes it forward.
+- **Singapore post** — 17 instances, including four `##` headings.
+- **Australia post** — 12 instances. Its existing "MasterKraft's gym fitouts
+  across Australia" was already correct and was left alone.
+
+Both re-read afterwards to confirm zero remain. **Neither post was approved or
+published** — both are still `scheduled_review`, and the edits are saved to the
+scheduled draft, which goes live only when the post does.
 
 ### Order of operations
 
-1. Paste the brand voice text above (fixes the spelling for everything future).
-2. Fix the author bio's two "fit-out"s.
-3. Fix the warranty-documentation clause in the Australia post, and the "fit-out"
-   instances in both drafts.
+1. Paste the brand voice text above. This is what stops the *next* post arriving
+   with the same spelling — the fixes below are to the two drafts that exist,
+   not to the generator that produced them.
+2. ~~Fix the author bio's two "fit-out"s.~~ Done, 2026-09-16.
+3. ~~Fix the "fit-out" instances in both drafts.~~ Done, 2026-09-16. **Still
+   open:** the warranty-documentation clause in the Australia post (item 1
+   above) — left alone deliberately, because it needs a decision rather than a
+   substitution: either drop the clause or add the 72-hour figure to the
+   warranty copy in `src/lib/content-pages.ts`.
 4. Approve the two `scheduled_review` posts when you are happy with them.
 5. Set `OPINLY_CDN_NAMESPACE` and redeploy (see `LAUNCH.md`) so `/blog` serves.
 
