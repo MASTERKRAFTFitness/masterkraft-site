@@ -7,7 +7,7 @@ import { ARGUMENTS, RELEASE_LABEL, SPEC_ROWS } from "@/lib/recovery-roller";
 // The light is "integrated" and nothing more, pending the TGA question.
 
 export const metadata: Metadata = {
-  title: "Recovery Roller",
+  title: "Recovery Roller | Commercial Recovery Machine",
   description:
     "A commercial recovery machine, built by MasterKraft. Register to get the specification and pricing before they go out generally.",
 };

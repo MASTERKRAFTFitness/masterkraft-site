@@ -66,9 +66,15 @@ export default function Header() {
       <div className="container-mk flex items-center justify-between h-[76px] gap-4">
         {/* Brand (left) */}
         <Link href="/" aria-label="MasterKraft home" className="flex items-center gap-3 shrink-0">
+          {/* The mark and the wordmark are ONE link, labelled once by the Link's
+              aria-label — so neither alt is read aloud, and the mark's used to
+              be empty on that basis. It is not decorative to a crawler, which
+              counted it on all 100 pages of the Opinly audit, and it is not
+              decorative below `sm`, where the wordmark is hidden and this is the
+              only brand on the page. */}
           <Image
             src="/brand/logo-circle.svg"
-            alt=""
+            alt="MasterKraft"
             width={38}
             height={38}
             className={`h-9 w-9 transition ${solid ? "" : "brightness-0 invert"}`}

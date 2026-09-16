@@ -5,6 +5,19 @@ export type ContentSection = { heading?: string; body: string[] };
 export type ContentPageData = {
   eyebrow: string;
   title: string;
+  /**
+   * The `<title>`, where the H1 is too short to be one on its own.
+   *
+   * These pages set `metadata.title` from `title`, and `title` is an H1 sitting
+   * under an eyebrow that already says "Support" or "Legal" — so it is one or
+   * two words, and "Returns | MASTERKRAFT" is what went to Google. Eight of
+   * these pages were flagged as having too short a title in the Opinly site
+   * audit on 2026-09-16.
+   *
+   * Only the route's metadata reads this; the page still renders `title`.
+   * Unset means the H1 is already carrying its own weight.
+   */
+  seoTitle?: string;
   subtitle?: string;
   intro?: string;
   sections: ContentSection[];

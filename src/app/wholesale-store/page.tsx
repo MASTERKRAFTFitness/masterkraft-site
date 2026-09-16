@@ -4,7 +4,7 @@ import PageHero from "@/components/marketing/PageHero";
 import { portalLoginHref } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Wholesale Store",
+  title: "Wholesale Store | Trade Ordering & Pricing",
   description: "Wholesale ordering for MasterKraft trade partners.",
 };
 

@@ -4,6 +4,8 @@ import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useState } from "react";
 
+import { OPINLY_KEY, OPINLY_SRC } from "@/lib/opinly";
+
 const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const HS_ID = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID;
@@ -47,6 +49,20 @@ export default function CookieConsent() {
       )}
       {ready && choice === "accepted" && HS_ID && (
         <Script id="hs-script-loader" strategy="afterInteractive" src={`https://js-ap1.hs-scripts.com/${HS_ID}.js`} />
+      )}
+
+      {/* Opinly. Rendered from the root layout like the tags above it, so it is on
+          every page — but behind the SAME opt-in, deliberately. The pixel writes a
+          durable anonId to local storage and auto-captures page views, clicks and
+          form submissions, which is exactly the tracking this banner exists to ask
+          about. Loading it before Accept would make the banner a lie. */}
+      {ready && choice === "accepted" && OPINLY_KEY && (
+        <Script
+          id="opinly-pixel"
+          strategy="afterInteractive"
+          src={OPINLY_SRC}
+          data-key={OPINLY_KEY}
+        />
       )}
 
       {ready && choice === null && (

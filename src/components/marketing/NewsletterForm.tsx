@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import { trackSignUp } from "@/lib/analytics";
 
 export default function NewsletterForm() {
   const elapsed = useFillTimer();
@@ -18,8 +19,11 @@ export default function NewsletterForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: f.get("email"), ...guardValues(f, elapsed()) }),
       });
+      trackSignUp("newsletter", String(f.get("email") ?? ""));
       setDone(true);
     } catch {
+      // Not tracked on this path: the UI fails soft and thanks them anyway, but
+      // a conversion we are not sure landed is not one worth counting.
       setDone(true); // fail soft — don't block the user
     } finally {
       setSending(false);

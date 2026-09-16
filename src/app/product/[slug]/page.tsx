@@ -24,7 +24,7 @@ import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
-import { productCopy, productCopyHtml } from "@/lib/product-copy";
+import { getProductContent, resolveCopy } from "@/lib/product-content";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
 // old store never listed have no WooCommerce variation id, and the cart keys on
@@ -41,6 +41,40 @@ import { SITE_URL, absoluteUrl, priceValidUntil } from "@/lib/site";
 
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
+
+/** " | MASTERKRAFT", which the template in app/layout.tsx appends to every title. */
+const BRAND_SUFFIX_LEN = " | MASTERKRAFT".length;
+
+/**
+ * The `<title>` for a product, which is its NAME AND THEN SOME.
+ *
+ * The name alone is enough for a rack or an erg. It is not enough for the
+ * apparel and accessories, whose names are one or two words — "Socks",
+ * "Train Cap", "Abdominal Mat" — and which went to Google as nineteen to
+ * twenty-seven characters including the brand. Ten of them were flagged in the
+ * Opinly site audit on 2026-09-16.
+ *
+ * So a short name borrows its category's `productSuffix` (lib/categories.ts),
+ * and a name that already fills the line is left exactly as it was. The
+ * qualifier is dropped rather than truncated when it would push the rendered
+ * title past what a search result shows, because a title cut off mid-phrase is
+ * worse than a short one.
+ *
+ * og:title deliberately does NOT get this. A shared link renders under a
+ * photograph of the thing, where "Socks" is the right label and the category is
+ * noise.
+ */
+function productTitle(p: { name: string; categories?: { id?: number; name?: string; slug?: string }[] }): string {
+  const name = p.name.trim();
+  if (name.length + BRAND_SUFFIX_LEN >= 40) return name;
+
+  const cat = (p.categories ?? []).map((c) => siteCategoryFor(c, categoryTerms())).find(Boolean);
+  const suffix = cat?.productSuffix ?? cat?.label;
+  if (!suffix) return name;
+
+  const full = `${name} | ${suffix}`;
+  return full.length + BRAND_SUFFIX_LEN <= 60 ? full : name;
+}
 
 export async function generateMetadata({
   params,
@@ -59,9 +93,10 @@ export async function generateMetadata({
   // it off the snapshot pointed every share at the WordPress photograph while
   // the page itself showed the ERP's. It is the same cached map the body awaits
   // on this request, so this costs a cache read, not a second catalogue build.
-  const [unleashed, gallery] = await Promise.all([
+  const [unleashed, gallery, content] = await Promise.all([
     getUnleashedMap().catch(() => ({})),
     getGallery(),
+    getProductContent(),
   ]);
   const unit = wooProduct ? undefined : erpUnitBySlug(unleashed, slug);
   const p = wooProduct
@@ -74,9 +109,13 @@ export async function generateMetadata({
   // Google the same thing about different equipment. An entry in
   // product-copy.json separates them without editing the frozen snapshot, which
   // check:snapshot compares against the live store.
-  const authored = productCopy(slug);
+  //
+  // A human-edited product_content row now outranks both. resolveCopy applies
+  // that order and degrades to exactly this line's old behaviour on an empty
+  // map, so the metadata and the body cannot disagree about which words won.
+  const authored = resolveCopy(slug, content);
   return {
-    title: `${p.name}`,
+    title: productTitle(p),
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
     // the sizes and price its card carries rather than going out bare.
     description:
@@ -112,9 +151,10 @@ export default async function ProductPage({
   // segment in Suspense, which flushes the shell - and a 200 - before this line
   // runs, turning every 404 into a SOFT 404 (404 body, 200 status) that Google
   // would happily index. Re-adding a skeleton here brings that back.
-  const [unleashed, gallery] = await Promise.all([
+  const [unleashed, gallery, content] = await Promise.all([
     getUnleashedMap().catch(() => ({})),
     getGallery(),
+    getProductContent(),
   ]);
   const wooProduct = await getProductBySlug(slug).catch(() => null);
   const unit = erpUnitBySlug(unleashed, slug);
@@ -139,8 +179,14 @@ export default async function ProductPage({
   // those would discard good copy to fix a different fault. For an ERP-only
   // unit these are the values unitAsProduct already put there, so this is a
   // no-op on that path.
-  const authoredCopy = productCopy(slug);
-  const authoredHtml = productCopyHtml(slug);
+  //
+  // resolveCopy puts a human-edited product_content row ahead of the JSON and
+  // the snapshot; the SAME call and the same map as generateMetadata, so the
+  // meta description and the rendered overview can never come from different
+  // sources.
+  const resolved = resolveCopy(slug, content);
+  const authoredCopy = resolved.short ? { short: resolved.short } : undefined;
+  const authoredHtml = resolved.html;
   const product =
     authoredCopy || authoredHtml
       ? {

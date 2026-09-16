@@ -6,7 +6,7 @@ import ResourcesList, { type ResourceProduct } from "@/components/marketing/Reso
 import docs from "@/lib/resource-docs.json";
 
 export const metadata: Metadata = {
-  title: "Resources",
+  title: "Resources | Manuals, Guides & Spec Sheets",
   description:
     "Product manuals, installation guides and technical documents for MasterKraft equipment.",
 };

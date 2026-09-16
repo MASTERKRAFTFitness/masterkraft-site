@@ -5,7 +5,7 @@ import Marquee from "@/components/marketing/Marquee";
 import Eyebrow from "@/components/ui/Eyebrow";
 
 export const metadata: Metadata = {
-  title: "Our Story",
+  title: "Our Story | The People Behind the Equipment",
   description:
     "The power of passion - expertly engineered gym equipment for commercial and corporate fitouts globally. Made by fitness professionals, for fitness professionals.",
 };

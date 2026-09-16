@@ -89,6 +89,15 @@ missing var fails **silently** — that's why each must be checked deliberately.
   setup under Goals > Conversions. Two actions are wired: a paid card order
   (purchase) and a submitted quote (lead) — keep them separate, a quote is a lead
   and not revenue. Values are read at build time, so setting them needs a redeploy.
+- ⚙️ `OPINLY_API_KEY` — **not set, and until it is, only the browser reports sales.**
+  Opinly's pixel key is publishable and already compiled in, so page views, add-to-cart,
+  sign-ups and leads work with no config. This one is the SERVER key, and it is what
+  `/api/order` uses to report a paid order from the back end — the copy that survives a
+  customer closing the tab on the confirmation screen, an ad-blocker, or a declined
+  cookie banner. Both ends send the order number as `externalEventId`, so the two
+  collapse into one sale rather than double-counting revenue. Secret: set it in Vercel,
+  never in the repo. Optional companion `NEXT_PUBLIC_OPINLY_KEY` overrides the built-in
+  publishable key if the property is ever swapped.
 
 ### Forms — verify these are set (enquiries are the point of the site) 🔎
 The enquiry/quote/newsletter forms post to HubSpot (server-side) and email via

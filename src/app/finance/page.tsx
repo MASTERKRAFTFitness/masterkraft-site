@@ -5,7 +5,7 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 
 export const metadata: Metadata = {
-  title: "Finance",
+  title: "Equipment Finance | Afterpay, Zip & GRENKE",
   description: "Flexible ways to fund your equipment and fit-out — Afterpay, Zip Money and GRENKE.",
 };
 

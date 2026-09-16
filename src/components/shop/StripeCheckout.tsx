@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
-import { trackPurchase } from "@/lib/analytics";
+import { identifyUser, trackPurchase } from "@/lib/analytics";
+import { opinlyAnonId } from "@/lib/opinly";
 import { freightMessage } from "@/lib/freight-message";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -153,6 +154,11 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
+    // The storefront has no login, so this is the identity surface: a customer
+    // who has reached the card screen has given us a real, deliverable email.
+    // Deliberately not on the freight step above — that one is re-run on every
+    // edit, and Opinly keeps the FIRST email it is given, forever.
+    identifyUser(b.email);
     setBilling(b);
     setOrderRefs(refs);
     setClientSecret(data.clientSecret);
@@ -394,6 +400,10 @@ function PayForm({
           billing,
           shipping: billing,
           paymentIntentId: paymentIntent?.id,
+          // Lets the server report this sale against the visit that produced it.
+          // Undefined when the pixel never loaded (cookies declined, blocker) —
+          // the server falls back to the billing email.
+          anonId: opinlyAnonId(),
         }),
       });
       const data = await res.json();

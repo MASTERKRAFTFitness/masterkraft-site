@@ -5,7 +5,9 @@ import { contentPages } from "@/lib/content-pages";
 const data = contentPages["our-process"];
 
 export const metadata: Metadata = {
-  title: `${data.title}`,
+  // `seoTitle` where the H1 is too short to be a search result on its own; see
+  // the field on ContentPageData.
+  title: data.seoTitle ?? data.title,
   description: data.subtitle,
 };
 

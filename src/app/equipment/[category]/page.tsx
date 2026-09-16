@@ -38,8 +38,15 @@ export async function generateMetadata({
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const canonical = page > 1 ? `/equipment/${c.slug}?page=${page}` : `/equipment/${c.slug}`;
 
+  // THE TITLE IS NOT THE H1. `seoTitle` where the category has one — see the
+  // field in lib/categories.ts for why ten of these were a single word plus the
+  // brand. Page 2 stays on the label: a paginated view wants to be
+  // distinguishable in a search result, not to compete with page 1 for the same
+  // phrase.
+  const title = page > 1 ? `${c.label} — Page ${page}` : c.seoTitle ?? c.label;
+
   return {
-    title: page > 1 ? `${c.label} — Page ${page}` : `${c.label}`,
+    title,
     description: c.meta,
     alternates: { canonical },
   };

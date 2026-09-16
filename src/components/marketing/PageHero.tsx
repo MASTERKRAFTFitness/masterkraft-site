@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
+import { heroAlt } from "@/lib/image-alt";
 import { SITE_URL } from "@/lib/site";
 
 export type Crumb = { name: string; href: string };
@@ -11,6 +12,7 @@ export default function PageHero({
   title,
   subtitle,
   image,
+  imageAlt,
   imagePosition = "center 28%",
   breadcrumbs,
 }: {
@@ -18,6 +20,14 @@ export default function PageHero({
   title: string;
   subtitle?: string;
   image?: string;
+  /**
+   * What the photograph shows, for the pages whose banner is not in the shared
+   * registry — a REVL club's own studio, say, where the description follows
+   * from the club and not from the file. Falls back to lib/image-alt, and then
+   * to "", which is what every banner on the site used to be. See the header of
+   * that file for why this is not just the page title.
+   */
+  imageAlt?: string;
   // Focal point for the banner crop. Defaults to an upward bias so people's
   // heads/faces (usually near the top of these shots) stay cropped IN rather
   // than sliced off by the short, wide banner band.
@@ -31,7 +41,7 @@ export default function PageHero({
         <>
           <Image
             src={image}
-            alt=""
+            alt={imageAlt ?? heroAlt(image) ?? ""}
             fill
             className="object-cover opacity-40"
             style={{ objectPosition: imagePosition }}

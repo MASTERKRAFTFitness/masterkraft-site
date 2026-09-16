@@ -7,6 +7,7 @@ export const contentPages: Record<string, ContentPageData> = {
   warranty: {
     eyebrow: "Support",
     title: "Warranty",
+    seoTitle: "Warranty | Coverage, Terms & Claims",
     subtitle: "Every piece of MasterKraft equipment is built to endure - and backed accordingly.",
     intro:
       "MasterKraft equipment is engineered and manufactured to commercial-grade standards. We stand behind it with a warranty appropriate to each product category and its intended use.",
@@ -30,6 +31,7 @@ export const contentPages: Record<string, ContentPageData> = {
   returns: {
     eyebrow: "Support",
     title: "Returns",
+    seoTitle: "Returns | Eligibility, Timeframes & Process",
     subtitle: "Straightforward returns on eligible items.",
     sections: [
       {
@@ -136,6 +138,7 @@ export const contentPages: Record<string, ContentPageData> = {
   fitpass: {
     eyebrow: "Programs",
     title: "FitPass",
+    seoTitle: "FitPass | Partner Benefits from MasterKraft",
     subtitle: "Partner benefits from MasterKraft.",
     sections: [
       {
@@ -149,6 +152,7 @@ export const contentPages: Record<string, ContentPageData> = {
   forms: {
     eyebrow: "Resources",
     title: "Forms",
+    seoTitle: "Forms | Downloadable Documentation",
     subtitle: "Downloadable forms and documentation.",
     sections: [
       {
@@ -162,6 +166,7 @@ export const contentPages: Record<string, ContentPageData> = {
   "become-a-member": {
     eyebrow: "Wholesale",
     title: "Become a Member",
+    seoTitle: "Become a Member | Trade & Wholesale Access",
     subtitle: "Trade and wholesale access to the MasterKraft range.",
     sections: [
       {
@@ -199,6 +204,7 @@ export const contentPages: Record<string, ContentPageData> = {
   "our-process": {
     eyebrow: "How We Work",
     title: "Our Process",
+    seoTitle: "Our Process | From Survey to Commissioning",
     subtitle: "One accountable partner, every step of the way.",
     intro:
       "Whether you're outfitting a single space or a multi-site group, our process is the same: understand how you operate, then build the equipment, fit-out, branding and support around it.",
@@ -240,6 +246,7 @@ export const contentPages: Record<string, ContentPageData> = {
   "privacy-policy": {
     eyebrow: "Legal",
     title: "Privacy Policy",
+    seoTitle: "Privacy Policy | How We Handle Your Data",
     subtitle: "How MasterKraft collects, uses and protects your information.",
     sections: [
       {

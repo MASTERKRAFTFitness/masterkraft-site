@@ -8,12 +8,20 @@ import { useCallback, useEffect, useState } from "react";
 // `pos` = object-position focal point per image so the person stays cropped IN
 // across the tall desktop hero and the narrow mobile crop (subjects sit off to
 // one side / heads near the top in these shots).
+//
+// `alt` DESCRIBES THE PHOTOGRAPH, not the slide. These were empty on the
+// grounds that the copy sits over the top of them, which is true for a texture
+// and false for four photographs of fitted-out gyms — the only images of the
+// work on the home page, and four of the ones the Opinly audit counted as
+// missing alt text on 2026-09-16. The non-current slides are aria-hidden, so
+// only one of these is ever read aloud.
 const slides = [
   {
     tag: "Commercial Fitness Equipment & Fit-Out",
     heading: "Engineered for Fitness",
     body: "Bespoke solutions, uncompromising quality, honest affordability - premium equipment built by fitness professionals, for fitness professionals.",
     image: "/home/hero-1.jpg",
+    alt: "Lifter chalking up over a MasterKraft barbell loaded with 20 kg bumper plates",
     pos: "50% 45%",
   },
   {
@@ -21,6 +29,7 @@ const slides = [
     heading: "Honest Affordability",
     body: "Commercial-grade quality without the over-engineered price tag - value your P&L can justify.",
     image: "/home/hero-2.jpg",
+    alt: "Box jump onto a MasterKraft plyo box beside a half rack, bumper plates and kettlebells",
     pos: "64% 35%",
   },
   {
@@ -28,6 +37,7 @@ const slides = [
     heading: "Global Scale, Local Speed",
     body: "12 countries and 229 sites - warehoused near your markets and delivered in weeks, not months.",
     image: "/home/hero-3.jpg",
+    alt: "Athlete swinging a MasterKraft barbell with 15 kg bumper plates beside a loaded rack",
     pos: "38% 30%",
   },
   {
@@ -35,6 +45,7 @@ const slides = [
     heading: "One Partner, Total Transparency",
     body: "One accountable supplier and fit-out partner across your whole group - ordering, tracking and support in one portal.",
     image: "/home/distributor.jpg",
+    alt: "Dumbbell squat in a MasterKraft-fitted studio with kettlebells, battle ropes and plyo boxes",
     pos: "64% 42%",
   },
 ];
@@ -64,7 +75,7 @@ export default function Hero() {
         >
           <Image
             src={s.image}
-            alt=""
+            alt={s.alt}
             fill
             priority={i === 0}
             className="object-cover"

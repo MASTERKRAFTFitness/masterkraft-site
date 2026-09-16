@@ -180,3 +180,38 @@ html.nav-busy * {
     animation-duration: 2.4s;
   }
 }
+
+/* Step transition for the fit-out brief wizard (FitoutBriefForm). A short rise +
+   fade on each step so moving through five steps feels like one surface moving
+   rather than five page loads. Motion is the only thing it carries, so it is
+   dropped entirely under prefers-reduced-motion rather than slowed down. */
+@keyframes mk-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mk-step-in {
+  animation: mk-step-in 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+/* Tap-cards stagger in behind their step, capped so a nine-card grid does not
+   leave the last card arriving after the visitor has already reached for it. */
+.mk-stagger > * {
+  animation: mk-step-in 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.mk-stagger > *:nth-child(2) { animation-delay: 0.035s; }
+.mk-stagger > *:nth-child(3) { animation-delay: 0.07s; }
+.mk-stagger > *:nth-child(4) { animation-delay: 0.105s; }
+.mk-stagger > *:nth-child(5) { animation-delay: 0.14s; }
+.mk-stagger > *:nth-child(6) { animation-delay: 0.175s; }
+.mk-stagger > *:nth-child(n + 7) { animation-delay: 0.21s; }
+@media (prefers-reduced-motion: reduce) {
+  .mk-step-in,
+  .mk-stagger > * {
+    animation: none;
+  }
+}

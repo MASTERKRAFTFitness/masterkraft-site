@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import { trackSignUp } from "@/lib/analytics";
 import {
   SITE_COUNT_OPTIONS,
   TIMEFRAME_OPTIONS,
@@ -35,6 +36,7 @@ export default function WaitlistForm() {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Something went wrong.");
+      trackSignUp("recovery-roller-waitlist", data.email);
       setState("done");
       form.reset();
     } catch (err) {

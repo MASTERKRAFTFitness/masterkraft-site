@@ -10,7 +10,7 @@ import { CLEARANCE_GROUP, erpSubgroups, erpUnits, unitCard, type ErpUnit } from 
 import { categories } from "@/lib/categories";
 
 export const metadata: Metadata = {
-  title: "All Equipment",
+  title: "All Gym Equipment | Shop the Full Range",
   description:
     "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.",
   alternates: { canonical: "/all-equipment" },

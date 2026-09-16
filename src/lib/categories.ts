@@ -40,6 +40,37 @@ export type Category = {
    * pattern as `meta` on a Location in lib/locations.ts.
    */
   meta: string;
+  /**
+   * The `<title>`, SEPARATE FROM THE LABEL, for the categories whose name is a
+   * single word.
+   *
+   * The title used to be the label alone, which the template turns into
+   * "Socks | MASTERKRAFT" — nineteen characters where a search result will show
+   * about sixty, and nineteen characters that say nothing a buyer typed. Ten
+   * category pages and thirty-five pages in total were flagged for it in the
+   * Opinly site audit on 2026-09-16.
+   *
+   * Same split as `blurb` and `meta` above, and for the same reason: the H1
+   * sits under an eyebrow that already says "Equipment", so it can stay one
+   * word, while the title has to work in a list of ten blue links. Omitted
+   * where the label already carries the keyword — "Equipment Storage",
+   * "Mixed Implements" — because padding those adds length, not meaning.
+   */
+  seoTitle?: string;
+  /**
+   * What a SHORT-NAMED product in this category gets appended to its `<title>`.
+   *
+   * "Socks", "Train Cap" and "Abdominal Mat" are the whole product name, so the
+   * title was the whole product name, and ten product pages were flagged
+   * alongside the ten category ones. The category is the honest thing to add —
+   * it is the words the buyer used to get here — but the label alone is too
+   * thin for the two categories this actually happens in: "Socks | Apparel"
+   * is longer and no more useful. See the title rule in product/[slug].
+   *
+   * Falls back to `label` where it is unset, so a category added later gets
+   * something sensible without a code change.
+   */
+  productSuffix?: string;
   /** Unleashed ProductGroup. Absent only for Clearance — see below. */
   erpGroup?: string;
   wcId?: number;
@@ -59,6 +90,7 @@ export const categories: Category[] = [
     image: "/category/strength.jpg",
     blurb: "Plate-loaded and selectorised strength machines.",
     meta: "Commercial strength machines from MasterKraft — plate-loaded and selectorised presses, rows, pulldowns, leg machines, benches and multi-stations.",
+    seoTitle: "Strength Machines | Commercial Gym Equipment",
     erpGroup: "Strength",
     wcId: 52,
   },
@@ -68,6 +100,7 @@ export const categories: Category[] = [
     image: "/category/weightlifting.jpg",
     blurb: "Barbells, bumper plates, benches and platforms.",
     meta: "Barbells, bumper and competition plates, fixed bars and lifting platforms — the weightlifting range MasterKraft supplies to commercial floors across Australia.",
+    seoTitle: "Weightlifting | Barbells, Plates & Platforms",
     erpGroup: "Weightlifting",
     wcId: 53,
   },
@@ -77,6 +110,7 @@ export const categories: Category[] = [
     image: "/category/rigs-racks.jpg",
     blurb: "Power racks, rigs and squat stands engineered to last.",
     meta: "Power racks, half racks, wall-mounted rigs, Smith machines and functional training systems — engineered for commercial floors and sized to your space.",
+    seoTitle: "Rigs & Racks | Power Racks, Half Racks & Rigs",
     erpGroup: "Rigs & Racks",
     wcId: 231,
   },
@@ -86,6 +120,7 @@ export const categories: Category[] = [
     image: "/category/cardio.jpg",
     blurb: "Air bikes, rowers, ski trainers and curved treadmills.",
     meta: "Air bikes, rowers, ski trainers, curved treadmills and reformers — including the Concept2 range, supplied and installed by MasterKraft.",
+    seoTitle: "Cardio Equipment | Bikes, Rowers & Treadmills",
     erpGroup: "Cardio",
     wcId: 49,
   },
@@ -104,6 +139,8 @@ export const categories: Category[] = [
     image: "/category/body-weight.jpg",
     blurb: "Functional and calisthenics gear for bodyweight training.",
     meta: "Resistance bands, plyo boxes, fitness balls, exercise mats and agility gear — bodyweight and functional training equipment for studios and commercial gyms.",
+    seoTitle: "Bodyweight & Functional Training Equipment",
+    productSuffix: "Bodyweight Training Gear",
     erpGroup: "Body Weight",
     wcId: 48,
   },
@@ -122,6 +159,7 @@ export const categories: Category[] = [
     image: "/category/flooring.jpg",
     blurb: "Rubber tiles, rolls and platforms built for heavy use.",
     meta: "Commercial rubber tiles, acoustic underlay, artificial turf and sled tracks — gym flooring that protects the slab and takes what a free-weight floor gives it.",
+    seoTitle: "Gym Flooring | Rubber Tiles, Rolls & Turf",
     erpGroup: "Flooring",
     wcId: 50,
   },
@@ -130,6 +168,8 @@ export const categories: Category[] = [
     label: "Apparel",
     blurb: "Training wear and accessories in MasterKraft colours.",
     meta: "MasterKraft training wear — tees, tanks, hoodies, shorts, leggings and accessories, cut for lifting and conditioning rather than for the walk in.",
+    seoTitle: "Gym Apparel | Training Wear & Accessories",
+    productSuffix: "Training Apparel & Accessories",
     erpGroup: "Apparel",
     wcId: 349,
     // The snapshot has no WooCommerce description for this term.
@@ -143,6 +183,7 @@ export const categories: Category[] = [
     label: "Lighting",
     blurb: "Linear LED systems and dimmers built for training floors.",
     meta: "Linear LED lighting systems and dimmers for gym and studio fit-outs — even light across a floor, and class lighting that changes through a session.",
+    seoTitle: "Gym Lighting | Linear LED Systems & Dimmers",
     erpGroup: "Lighting",
     wcId: 348,
     // The snapshot has no WooCommerce description for this term.
@@ -157,6 +198,7 @@ export const categories: Category[] = [
     image: "/category/packages.jpg",
     blurb: "Curated equipment packages for a complete setup.",
     meta: "Complete equipment packages — dumbbell, kettlebell, wall ball, bumper plate and storage sets bought as a full range rather than one increment at a time.",
+    seoTitle: "Gym Equipment Packages | Complete Sets",
     erpGroup: "Packages",
     wcId: 275,
   },
@@ -172,6 +214,7 @@ export const categories: Category[] = [
     image: "/category/clearance.jpg",
     blurb: "Ex-display and end-of-line equipment at reduced prices.",
     meta: "Ex-display and end-of-line gym equipment at reduced prices — commercial-grade stock, limited to what is on hand and not repeatable once it is gone.",
+    seoTitle: "Clearance Gym Equipment | Ex-Display Stock",
     wcId: 356,
   },
 ];

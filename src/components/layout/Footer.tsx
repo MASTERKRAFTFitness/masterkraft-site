@@ -31,9 +31,6 @@ export default function Footer() {
             <a href="https://www.instagram.com/masterkraft.equipment/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:text-accent transition-colors">
               <InstagramIcon />
             </a>
-            <a href="https://www.facebook.com/people/MasterKraft/100088228633638/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-accent transition-colors">
-              <FacebookIcon />
-            </a>
             <a href="https://www.linkedin.com/company/masterkraft-pty-ltd/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-accent transition-colors">
               <LinkedInIcon />
             </a>
@@ -99,14 +96,6 @@ function InstagramIcon() {
       <rect x="2" y="2" width="20" height="20" rx="5" />
       <circle cx="12" cy="12" r="4" />
       <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function FacebookIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M14 9h3V6h-3c-1.7 0-3 1.3-3 3v2H9v3h2v7h3v-7h2.5l.5-3H14V9c0-.6.4-1 1-1z" />
     </svg>
   );
 }

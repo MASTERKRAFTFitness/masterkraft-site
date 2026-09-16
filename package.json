@@ -45,6 +45,7 @@
     "report:wooimages": "vitest run --config vitest.reports.config.mts scripts/woo-image-gap.report.ts",
     "report:photoupload": "vitest run --config vitest.reports.config.mts scripts/erp-photo-upload.report.ts",
     "report:shootlist": "vitest run --config vitest.reports.config.mts scripts/photo-shoot-list.report.ts",
+    "report:siteimages": "vitest run --config vitest.reports.config.mts scripts/site-image-gap.report.ts",
     "brief:pdf": "npx --yes serve -l 8899 docs >/dev/null 2>&1 & sleep 2; \"$CHROME_PATH\" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=15000 --print-to-pdf=reports/MasterKraft-Freight-API.pdf http://localhost:8899/freight-api-spec.html; kill %1",
     "report:cartons": "vitest run --config vitest.reports.config.mts scripts/carton-gaps.report.ts",
     "report:workbook": "npm run report:cartons && npm run report:bulky && npm run report:clearance && python3 scripts/build-gaps-workbook.py",
@@ -67,6 +68,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
+    "@opinly/backend": "^1.6.0",
     "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.12.1",
     "@supabase/supabase-js": "^2.112.4",

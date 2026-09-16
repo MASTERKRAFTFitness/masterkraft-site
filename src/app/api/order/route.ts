@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/order-lines";
 import { placeOrder, orderingEnabled, orderMetadata, existingOrderOn } from "@/lib/orders";
+import { reportPurchase } from "@/lib/opinly-server";
 
 // Called after the customer pays. Verifies the PaymentIntent succeeded and that
 // the paid amount matches the SERVER-repriced total, then places the order.
@@ -15,6 +16,9 @@ export async function POST(request: Request) {
     shipping?: OrderAddress;
     paymentIntentId?: string;
     customerNote?: string;
+    // window.opinly.anonId, forwarded by the browser so the sale can be joined
+    // to the visit (and therefore the campaign) that produced it.
+    anonId?: string;
   };
   try {
     payload = await request.json();
@@ -22,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 
-  const { items, billing, shipping, paymentIntentId, customerNote } = payload;
+  const { items, billing, shipping, paymentIntentId, customerNote, anonId } = payload;
   if (!Array.isArray(items) || items.length === 0 || !billing?.email) {
     return NextResponse.json({ ok: false, error: "Missing items or billing email" }, { status: 400 });
   }
@@ -128,6 +132,20 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // Report the sale to Opinly. Deduped against the browser's own purchase event
+  // by the order number, so whichever of the two lands first wins and the second
+  // is collapsed rather than double-counting the revenue.
+  //
+  // Awaited, but it cannot fail the request: the order exists and the card is
+  // charged by this point.
+  await reportPurchase({
+    orderNumber: order.orderNumber,
+    value: chargedTotal,
+    currency: "AUD",
+    anonId,
+    email: billing.email,
+  });
 
   // Record the order on the PaymentIntent so a retry short-circuits above rather
   // than creating a duplicate. Best-effort: the order already exists, so never

@@ -6,7 +6,7 @@ import Eyebrow from "@/components/ui/Eyebrow";
 import { revlSites, revlNetwork, revlOperatingMarketCount } from "@/lib/revl";
 
 export const metadata: Metadata = {
-  title: "REVL Fitouts",
+  title: "REVL Fitouts | Global Studio Equipment Supply",
   description:
     "MasterKraft is the exclusive global equipment supplier to REVL Training, fitting out studios across Australia, Singapore, Malaysia, Vietnam, Taiwan and beyond - delivered complete in a single container.",
   alternates: { canonical: "/revl-fitouts" },
