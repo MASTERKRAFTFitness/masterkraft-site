@@ -933,7 +933,7 @@
       "Solo training, rehab progressions and accessory volume"
     ]
   },
-  "coloured-bumper-plates-set-of-10-150kg": {
+  "coloured-bumper-plates-set-of-10": {
     "short": "A coloured bumper plate set of 10, totalling 150kg — a complete platform loadout with colour-coded weights.",
     "body": [
       "Ten coloured bumper plates totalling 150kg: enough to load a platform properly rather than approximately.",
@@ -945,7 +945,7 @@
       "Bumper construction — designed to be dropped"
     ]
   },
-  "coloured-bumper-plates-set-of-6-90kg": {
+  "coloured-bumper-plates-set-of-6": {
     "short": "A coloured bumper plate set of 6, totalling 90kg — the starter platform loadout for a studio or home platform.",
     "body": [
       "Six coloured bumper plates totalling 90kg — the smallest set that still makes a platform usable across a range of loads.",
@@ -957,7 +957,7 @@
       "Single platform, studio or home"
     ]
   },
-  "coloured-bumper-plates-set-of-8-100kg": {
+  "coloured-bumper-plates-set-of-8": {
     "short": "A coloured bumper plate set of 8, totalling 100kg — a working platform loadout between the 90kg and 150kg sets.",
     "body": [
       "Eight coloured bumper plates totalling 100kg: more increments than the six-plate set, less commitment than the ten.",
@@ -969,7 +969,7 @@
       "Bumper construction — designed to be dropped"
     ]
   },
-  "coloured-bumper-plates-set-of-8-2-5kg-change-plates-145kg": {
+  "coloured-bumper-plates-set-of-8-and-2-5kg-change-plates": {
     "short": "A coloured bumper set of 8 with 2.5kg change plates, totalling 145kg — full loads plus the small jumps.",
     "body": [
       "Eight coloured bumpers with 2.5kg change plates included, 145kg in total. The bumpers carry the load; the change plates make the small increases possible.",
@@ -981,7 +981,7 @@
       "Colour-coded by weight"
     ]
   },
-  "competition-bumper-plates-set-of-10-150kg": {
+  "competition-bumper-plates-set-of-10": {
     "short": "A competition bumper plate set of 10, totalling 150kg — calibrated plates for platforms held to competition standard.",
     "body": [
       "Ten competition bumper plates, 150kg total. Competition plates are held to tighter weight tolerance and a consistent diameter, so a loaded bar sits at the correct height and weighs what it says.",
@@ -993,7 +993,7 @@
       "Testing, competition and coached platforms"
     ]
   },
-  "competition-bumper-plates-set-of-8-100kg": {
+  "competition-bumper-plates-set-of-8": {
     "short": "Competition bumper plate sets of 8, in 100kg and 140kg totals — calibrated plates in two loadouts.",
     "body": [
       "An eight-plate competition set, available in a 100kg and a 140kg total. Same competition tolerance and diameter, two levels of loading.",
@@ -1029,7 +1029,7 @@
       "Defines the lifting area within a floor"
     ]
   },
-  "olympic-premium-rubber-weight-plates-3-grip-set-of-10-150kg": {
+  "olympic-premium-rubber-weight-plates-3-grip-set-of-10": {
     "short": "Olympic premium rubber weight plates with 3-grip design, a set of 10 totalling 150kg.",
     "body": [
       "Ten premium rubber Olympic plates totalling 150kg, with a three-grip design cast into the plate.",
@@ -1041,7 +1041,7 @@
       "Premium rubber, Olympic sleeve"
     ]
   },
-  "olympic-premium-rubber-weight-plates-3-grip-set-of-8-100kg": {
+  "olympic-premium-rubber-weight-plates-3-grip-set-of-8": {
     "short": "Olympic premium rubber weight plates with 3-grip design, a set of 8 totalling 100kg.",
     "body": [
       "Eight premium rubber Olympic plates, 100kg in total, with the same three-grip design as the larger set.",
@@ -1077,7 +1077,7 @@
       "Urethane — hard-wearing and colour-stable"
     ]
   },
-  "rubber-fixed-barbells-set-of-10-bars-rack": {
+  "rubber-fixed-barbells-set-of-10-bars-and-rack": {
     "short": "Ten rubber fixed barbells supplied with a rack — a complete fixed-bar station, bars and storage together.",
     "body": [
       "Ten rubber fixed barbells and the rack to hold them, supplied as one station rather than as bars plus a storage problem.",
@@ -1089,7 +1089,7 @@
       "Complete station — bars and storage"
     ]
   },
-  "rubber-fixed-barbells-set-of-5-bars-rack": {
+  "rubber-fixed-barbells-set-of-5-bars-and-rack": {
     "short": "Five rubber fixed barbells supplied with a rack — the compact fixed-bar station for studios and PT rooms.",
     "body": [
       "Five rubber fixed barbells with their rack: the smaller station, for a studio, a PT room or a group fitness floor that needs a short range rather than a full one.",

@@ -351,23 +351,6 @@
     "weightKg": null
   },
   {
-    "slug": "agility-dots-set-of-5",
-    "name": "Agility Dots (Set of 5)",
-    "group": "Body Weight",
-    "subgroup": "Speed & Agility",
-    "brand": "MK",
-    "codes": [
-      "MBSADO01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 20,
-    "priceMax": 20,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "eva-exercise-mat-set-of-10",
     "name": "EVA Exercise Mat (Set of 10)",
     "group": "Body Weight",
@@ -382,29 +365,6 @@
     "priceMax": 2000,
     "inStock": false,
     "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "fitness-ball",
-    "name": "Fitness Ball",
-    "group": "Body Weight",
-    "subgroup": "Balance & Stability",
-    "brand": "MK",
-    "codes": [
-      "MBCT5501",
-      "MBCT6501",
-      "MBCT7501"
-    ],
-    "sizes": [
-      "55cm (Anti-Burst)",
-      "65cm (Anti-Burst)",
-      "75cm (Anti-Burst)"
-    ],
-    "isRange": true,
-    "price": 30,
-    "priceMax": 40,
-    "inStock": false,
-    "hasImage": true,
     "weightKg": null
   },
   {
@@ -448,69 +408,6 @@
     "weightKg": null
   },
   {
-    "slug": "micro-bands",
-    "name": "Micro Bands",
-    "group": "Body Weight",
-    "subgroup": "Resistance & Power Bands",
-    "brand": "MK",
-    "codes": [
-      "MBRPPO03",
-      "MBRPPO04",
-      "MBRPPO05"
-    ],
-    "sizes": [
-      "Heavy",
-      "X Heavy",
-      "XX Heavy"
-    ],
-    "isRange": true,
-    "price": 6,
-    "priceMax": 10,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "power-bands",
-    "name": "Power Bands",
-    "group": "Body Weight",
-    "subgroup": "Resistance & Power Bands",
-    "brand": "MK",
-    "codes": [
-      "MBRPPO06",
-      "MBRPPO07",
-      "MBRPPO08"
-    ],
-    "sizes": [
-      "13mm (Red)",
-      "21mm (Grey)",
-      "32mm (Black)"
-    ],
-    "isRange": true,
-    "price": 12,
-    "priceMax": 30,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "station-markers-set-of-20",
-    "name": "Station Markers (Set of 20)",
-    "group": "Body Weight",
-    "subgroup": "Speed & Agility",
-    "brand": "MK",
-    "codes": [
-      "MBSADO03"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 80,
-    "priceMax": 80,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
     "slug": "concept-2-bike-erg-with-pm5-monitor",
     "name": "CONCEPT 2 - Bike Erg with PM5 Monitor",
     "group": "Cardio",
@@ -540,23 +437,6 @@
     "isRange": false,
     "price": 1705,
     "priceMax": 1705,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "concept-2-ski-erg-floor-stand",
-    "name": "CONCEPT 2 - Ski Erg Floor Stand",
-    "group": "Cardio",
-    "subgroup": "Ski Trainer",
-    "brand": "CONCEPT 2",
-    "codes": [
-      "C2SKIERGFS"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 440,
-    "priceMax": 440,
     "inStock": false,
     "hasImage": true,
     "weightKg": null
@@ -732,23 +612,6 @@
     "weightKg": null
   },
   {
-    "slug": "barbell-storage-box",
-    "name": "Barbell Storage Box",
-    "group": "Equipment Storage",
-    "subgroup": "Freestanding",
-    "brand": "MK",
-    "codes": [
-      "MEFSBB04"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 280.01,
-    "priceMax": 280.01,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
     "slug": "modular-storage-rack-complete",
     "name": "Modular Storage Rack (Complete)",
     "group": "Equipment Storage",
@@ -761,57 +624,6 @@
     "isRange": false,
     "price": 0,
     "priceMax": 0,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "wall-mounted-battle-rope-storage",
-    "name": "Wall Mounted-Battle Rope Storage",
-    "group": "Equipment Storage",
-    "subgroup": "Wall Mounted",
-    "brand": "MK",
-    "codes": [
-      "MEWMRO 01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 45,
-    "priceMax": 45,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "wall-mounted-exercise-mat-hanging-rack",
-    "name": "Wall Mounted-Exercise Mat Hanging Rack",
-    "group": "Equipment Storage",
-    "subgroup": "Wall Mounted",
-    "brand": "MK",
-    "codes": [
-      "MEWMMA 01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 50,
-    "priceMax": 50,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "wall-mounted-rope-and-band-rack",
-    "name": "Wall Mounted-Rope & Band Rack",
-    "group": "Equipment Storage",
-    "subgroup": "Wall Mounted",
-    "brand": "MK",
-    "codes": [
-      "MEWMRO 02"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 70,
-    "priceMax": 70,
     "inStock": false,
     "hasImage": false,
     "weightKg": null
@@ -831,31 +643,6 @@
     "priceMax": 0,
     "inStock": false,
     "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "acoustic-underlay-1m-x-10m",
-    "name": "Acoustic Underlay (1m x 10m)",
-    "group": "Flooring",
-    "subgroup": "Acoustic Underlay",
-    "brand": "NO BRAND",
-    "codes": [
-      "NBFAFRR01",
-      "NBFAFRR02",
-      "NBFAFRR03",
-      "NBFAFRR04"
-    ],
-    "sizes": [
-      "5mm",
-      "10mm",
-      "15mm",
-      "20mm"
-    ],
-    "isRange": true,
-    "price": 30.5,
-    "priceMax": 64,
-    "inStock": false,
-    "hasImage": true,
     "weightKg": null
   },
   {
@@ -907,61 +694,6 @@
     "priceMax": 1336.5,
     "inStock": true,
     "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "commercial-rubber-tiles",
-    "name": "Commercial Rubber Tiles",
-    "group": "Flooring",
-    "subgroup": "Rubber Flooring",
-    "brand": "MK",
-    "codes": [
-      "MFRFRR06"
-    ],
-    "sizes": [
-      "15mm"
-    ],
-    "isRange": false,
-    "price": 250,
-    "priceMax": 250,
-    "inStock": true,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "led-dimmer",
-    "name": "LED Dimmer",
-    "group": "Lighting",
-    "subgroup": "LED Dimmer",
-    "brand": "NO BRAND",
-    "codes": [
-      "NBLLE2502"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 45,
-    "priceMax": 45,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "linear-led-lighting-system",
-    "name": "Linear LED Lighting System",
-    "group": "Lighting",
-    "subgroup": "LED",
-    "brand": "NO BRAND",
-    "codes": [
-      "NBLLE2501"
-    ],
-    "sizes": [
-      "2.4m"
-    ],
-    "isRange": false,
-    "price": 445,
-    "priceMax": 445,
-    "inStock": false,
-    "hasImage": true,
     "weightKg": null
   },
   {
@@ -1024,23 +756,6 @@
     "weightKg": null
   },
   {
-    "slug": "chrome-110-dumbbells-1kg-7kg-pairs",
-    "name": "Chrome 110 Dumbbells (1kg-7kg Pairs)",
-    "group": "Mixed Implements",
-    "subgroup": "Dumbbells",
-    "brand": "MK",
-    "codes": [
-      "MMPACE103"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 431.2,
-    "priceMax": 431.2,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "chrome-dumbbell-set-1kg-10kg-pairs",
     "name": "Chrome Dumbbell Set (1kg-10kg Pairs)",
     "group": "Mixed Implements",
@@ -1054,42 +769,6 @@
     "price": 825,
     "priceMax": 825,
     "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "climbing-rope",
-    "name": "Climbing Rope",
-    "group": "Mixed Implements",
-    "subgroup": "Battle Ropes",
-    "brand": "MK",
-    "codes": [
-      "MMBRNC02"
-    ],
-    "sizes": [
-      "7m"
-    ],
-    "isRange": false,
-    "price": 110,
-    "priceMax": 110,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "cotton-inners",
-    "name": "Cotton Inners",
-    "group": "Mixed Implements",
-    "subgroup": "Boxing",
-    "brand": "MK",
-    "codes": [
-      "MMBXG01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 1,
-    "priceMax": 1,
-    "inStock": true,
     "hasImage": false,
     "weightKg": null
   },
@@ -1111,73 +790,20 @@
     "weightKg": null
   },
   {
-    "slug": "group-fitness-step-4-risers",
-    "name": "Group Fitness Step (4 Risers)",
+    "slug": "group-fitness-step-6-risers",
+    "name": "Group Fitness Step (6 Risers)",
     "group": "Mixed Implements",
     "subgroup": "Group Fitness",
     "brand": "MK",
     "codes": [
-      "MBASADJ02"
+      "MBASADJ03"
     ],
     "sizes": [],
     "isRange": false,
-    "price": 245,
-    "priceMax": 245,
-    "inStock": false,
+    "price": 285,
+    "priceMax": 285,
+    "inStock": true,
     "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "olympic-dumbbell-handles-pair",
-    "name": "Olympic Dumbbell Handles (Pair)",
-    "group": "Mixed Implements",
-    "subgroup": "Dumbbells",
-    "brand": "MK",
-    "codes": [
-      "MMDBOH01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 109,
-    "priceMax": 109,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "pilates-ring",
-    "name": "Pilates Ring",
-    "group": "Mixed Implements",
-    "subgroup": "Pilates",
-    "brand": "MK",
-    "codes": [
-      "MMPILFG01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 30,
-    "priceMax": 30,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "urethane-fixed-dumbbells-pair",
-    "name": "Urethane Fixed Dumbbells (Pair)",
-    "group": "Mixed Implements",
-    "subgroup": "Dumbbells",
-    "brand": "MK",
-    "codes": [
-      "MMDBUR19"
-    ],
-    "sizes": [
-      "7.5kg"
-    ],
-    "isRange": false,
-    "price": 132,
-    "priceMax": 132,
-    "inStock": false,
-    "hasImage": false,
     "weightKg": null
   },
   {
@@ -2395,23 +2021,6 @@
     "weightKg": null
   },
   {
-    "slug": "power-grip-cable-attachment-set-5",
-    "name": "Power Grip Cable Attachment Set (5)",
-    "group": "Strength",
-    "subgroup": "Cable Machines",
-    "brand": "MK",
-    "codes": [
-      "MSCMATT01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 185,
-    "priceMax": 185,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
     "slug": "preacher-bench",
     "name": "Preacher Bench",
     "group": "Strength",
@@ -2718,7 +2327,7 @@
     "weightKg": null
   },
   {
-    "slug": "coloured-bumper-plates-set-of-10-150kg",
+    "slug": "coloured-bumper-plates-set-of-10",
     "name": "Coloured Bumper Plates (Set of 10)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2737,7 +2346,7 @@
     "weightKg": null
   },
   {
-    "slug": "coloured-bumper-plates-set-of-6-90kg",
+    "slug": "coloured-bumper-plates-set-of-6",
     "name": "Coloured Bumper Plates (Set of 6)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2756,7 +2365,7 @@
     "weightKg": null
   },
   {
-    "slug": "coloured-bumper-plates-set-of-8-100kg",
+    "slug": "coloured-bumper-plates-set-of-8",
     "name": "Coloured Bumper Plates (Set of 8)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2775,7 +2384,7 @@
     "weightKg": null
   },
   {
-    "slug": "coloured-bumper-plates-set-of-8-2-5kg-change-plates-145kg",
+    "slug": "coloured-bumper-plates-set-of-8-and-2-5kg-change-plates",
     "name": "Coloured Bumper Plates (Set of 8) & 2.5kg Change Plates",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2794,7 +2403,7 @@
     "weightKg": null
   },
   {
-    "slug": "competition-bumper-plates-set-of-10-150kg",
+    "slug": "competition-bumper-plates-set-of-10",
     "name": "Competition Bumper Plates (Set of 10)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2813,7 +2422,7 @@
     "weightKg": null
   },
   {
-    "slug": "competition-bumper-plates-set-of-8-100kg",
+    "slug": "competition-bumper-plates-set-of-8",
     "name": "Competition Bumper Plates (Set of 8)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2829,61 +2438,6 @@
     "isRange": true,
     "price": 1200,
     "priceMax": 1680,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "fixed-pu-curl-barbell",
-    "name": "Fixed PU Curl Barbell",
-    "group": "Weightlifting",
-    "subgroup": "Barbells",
-    "brand": "MK",
-    "codes": [
-      "MWBBFUR20",
-      "MWBBFUR21",
-      "MWBBFUR22",
-      "MWBBFUR23",
-      "MWBBFUR24",
-      "MWBBFUR25",
-      "MWBBFUR26",
-      "MWBBFUR27",
-      "MWBBFUR28",
-      "MWBBFUR29",
-      "MWBBFUR30",
-      "MWBBFUR31",
-      "MWBBFUR32",
-      "MWBBFUR33",
-      "MWBBFUR34",
-      "MWBBFUR35",
-      "MWBBFUR36",
-      "MWBBFUR37",
-      "MWBBFUR38"
-    ],
-    "sizes": [
-      "5kg",
-      "7.5kg",
-      "10kg",
-      "12.5kg",
-      "15kg",
-      "17.5kg",
-      "20kg",
-      "22.5kg",
-      "25kg",
-      "27.5kg",
-      "30kg",
-      "32.5kg",
-      "35kg",
-      "37.5kg",
-      "40kg",
-      "42.5kg",
-      "45kg",
-      "47.5kg",
-      "50kg"
-    ],
-    "isRange": true,
-    "price": 45,
-    "priceMax": 415,
     "inStock": false,
     "hasImage": true,
     "weightKg": null
@@ -2906,7 +2460,7 @@
     "weightKg": null
   },
   {
-    "slug": "olympic-premium-rubber-weight-plates-3-grip-set-of-10-150kg",
+    "slug": "olympic-premium-rubber-weight-plates-3-grip-set-of-10",
     "name": "Olympic Premium Rubber Weight Plates (3 Grip) (Set of 10)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2925,7 +2479,7 @@
     "weightKg": null
   },
   {
-    "slug": "olympic-premium-rubber-weight-plates-3-grip-set-of-8-100kg",
+    "slug": "olympic-premium-rubber-weight-plates-3-grip-set-of-8",
     "name": "Olympic Premium Rubber Weight Plates (3 Grip) (Set of 8)",
     "group": "Weightlifting",
     "subgroup": "Weight Plates",
@@ -2944,55 +2498,7 @@
     "weightKg": null
   },
   {
-    "slug": "olympic-pu-weight-plates-4-grip",
-    "name": "Olympic PU Weight Plates (4 Grip)",
-    "group": "Weightlifting",
-    "subgroup": "Weight Plates",
-    "brand": "MK",
-    "codes": [
-      "MWWPOU08",
-      "MWWPOU11",
-      "MWWPOU14",
-      "MWWPOU09",
-      "MWWPOU12"
-    ],
-    "sizes": [
-      "1.25kg",
-      "2.5kg",
-      "5kg",
-      "10kg",
-      "20kg"
-    ],
-    "isRange": true,
-    "price": 11.25,
-    "priceMax": 180,
-    "inStock": false,
-    "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "olympic-urethane-weight-plates-4-grip",
-    "name": "Olympic Urethane Weight Plates (4 Grip)",
-    "group": "Weightlifting",
-    "subgroup": "Weight Plates",
-    "brand": "MK",
-    "codes": [
-      "MWWPOU10",
-      "MWWPOU13"
-    ],
-    "sizes": [
-      "15kg",
-      "25kg"
-    ],
-    "isRange": true,
-    "price": 135,
-    "priceMax": 225,
-    "inStock": false,
-    "hasImage": false,
-    "weightKg": null
-  },
-  {
-    "slug": "rubber-fixed-barbells-set-of-10-bars-rack",
+    "slug": "rubber-fixed-barbells-set-of-10-bars-and-rack",
     "name": "Rubber Fixed Barbells (Set of 10 Bars) & Rack",
     "group": "Weightlifting",
     "subgroup": "Barbells",
@@ -3009,7 +2515,7 @@
     "weightKg": null
   },
   {
-    "slug": "rubber-fixed-barbells-set-of-5-bars-rack",
+    "slug": "rubber-fixed-barbells-set-of-5-bars-and-rack",
     "name": "Rubber Fixed Barbells (Set of 5 Bars) & Rack",
     "group": "Weightlifting",
     "subgroup": "Barbells",
@@ -3023,23 +2529,6 @@
     "priceMax": 1170,
     "inStock": false,
     "hasImage": true,
-    "weightKg": null
-  },
-  {
-    "slug": "technique-training-pipe",
-    "name": "Technique/Training Pipe",
-    "group": "Weightlifting",
-    "subgroup": "Weightlifting Accessories",
-    "brand": "MK",
-    "codes": [
-      "MWWLPVC01"
-    ],
-    "sizes": [],
-    "isRange": false,
-    "price": 25,
-    "priceMax": 25,
-    "inStock": false,
-    "hasImage": false,
     "weightKg": null
   }
 ]
