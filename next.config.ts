@@ -45,6 +45,38 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // WWW IS A SECOND COPY OF THE SITE, and until now it answered 200 on every
+      // path. The apex is what the sitemap advertises, what robots.txt names and
+      // what lib/site reports to Opinly — but nothing ever told a crawler that,
+      // because no redirect existed and isIndexableHost (lib/site.ts) allows BOTH
+      // hostnames on purpose, so www served a full, indexable, `Allow: /` copy.
+      //
+      // Most pages survived that on their canonical tag alone: www's copy of a
+      // product or category page points at the apex, so Google folds it back.
+      // The seventeen pages in this commit had no canonical at all, which left
+      // www.masterkraft.com/our-story and masterkraft.com/our-story as two
+      // indexable URLs of one page with nothing to separate them — and Google
+      // picking the wrong one of a pair is exactly what the Search Console
+      // notice of 2026-09-17 reports ("Duplicate, Google chose different
+      // canonical than user").
+      //
+      // FIRST IN THE ARRAY, because redirects match in order and this one
+      // normalises the host for every rule below it. Putting it last would send
+      // www/shop to a relative /all-equipment that is still on www, and only
+      // move it to the apex on the request after that.
+      //
+      // THE HOST IS MATCHED LITERALLY rather than by a /^www\./ pattern. The
+      // same deployment answers on the vercel.app URL and on
+      // web.test.masterkraft.com, which are NOISE, not duplicates: robots.txt
+      // already noindexes them (isIndexableHost), and a broad rule would rewrite
+      // a preview's own hostname out from under whoever is testing on it.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.masterkraft.com" }],
+        destination: "https://masterkraft.com/:path*",
+        permanent: true,
+      },
+
       // WooCommerce used "packages-2"; storefront uses "packages"
       { source: "/equipment/packages-2", destination: "/equipment/packages", permanent: true },
       // Reformers was a category from 2026-08-27 to 2026-09-02 and never held a

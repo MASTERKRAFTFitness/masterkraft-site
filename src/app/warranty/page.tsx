@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   // the field on ContentPageData.
   title: data.seoTitle ?? data.title,
   description: data.subtitle,
+  alternates: { canonical: "/warranty" },
 };
 
 export default function Page() {

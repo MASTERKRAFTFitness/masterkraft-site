@@ -6,6 +6,7 @@ import { portalLoginHref } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Wholesale Store | Trade Ordering & Pricing",
   description: "Wholesale ordering for MasterKraft trade partners.",
+  alternates: { canonical: "/wholesale-store" },
 };
 
 export default function WholesaleStorePage() {

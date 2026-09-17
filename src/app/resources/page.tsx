@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Resources | Manuals, Guides & Spec Sheets",
   description:
     "Product manuals, installation guides and technical documents for MasterKraft equipment.",
+  alternates: { canonical: "/resources" },
 };
 
 export default function ResourcesPage() {
