@@ -11,7 +11,12 @@ vi.mock("@/lib/catalogue", () => ({
   allProducts: () => [],
   variationsFor: () => [],
   productBySlug: (slug: string) =>
-    slug === "change-plates" ? { name: "Fractional Change Plates" } : undefined,
+    slug === "change-plates"
+      ? {
+          name: "Fractional Change Plates",
+          short_description: "<p>Milled steel change plates for the last 2.5kg of a lift.</p>",
+        }
+      : undefined,
 }));
 
 // Only the slugs under test are advertised, so the fixtures below do not have
@@ -120,6 +125,39 @@ describe("building the feed", () => {
   it("puts the label in the XML where Merchant Center reads it", () => {
     const xml = feedToXml(buildFeed(map()).items);
     expect(xml).toContain("<g:custom_label_0>freight-verified</g:custom_label_0>");
+  });
+});
+
+describe("descriptions", () => {
+  // The bug this pins: the feed read product-copy.json only, so 118 of 127
+  // items advertised "Buy X at MASTERKRAFT. $20.00 inc. GST." while their own
+  // landing page served real copy from the WooCommerce snapshot.
+  const withPage = (over = {}) =>
+    map({ MWWPCP01: { ...entry("Change Plates - 0.5kg", { price: 26 }), ...over } });
+
+  it("uses the snapshot's copy rather than the generated string", () => {
+    const { items } = buildFeed(withPage());
+    const d = items.find((i) => i.id === "MWWPCP01")!.description;
+    expect(d).toBe("Milled steel change plates for the last 2.5kg of a lift.");
+    expect(d).not.toMatch(/^Buy /);
+  });
+
+  it("strips the snapshot's HTML, which Merchant Center rejects", () => {
+    const { items } = buildFeed(withPage());
+    expect(items.find((i) => i.id === "MWWPCP01")!.description).not.toMatch(/[<>]/);
+  });
+
+  it("lets an editor's database row win over the snapshot", () => {
+    const { items } = buildFeed(withPage(), {
+      content: { "change-plates": { short: "The edited sentence." } },
+    });
+    expect(items.find((i) => i.id === "MWWPCP01")!.description).toBe("The edited sentence.");
+  });
+
+  it("falls back to the generated string only when nothing else exists", () => {
+    // MBSARO01's slug has no snapshot page in the mock and no JSON entry.
+    const { items } = buildFeed(map());
+    expect(items.find((i) => i.id === "MBSARO01")!.description).toMatch(/^Buy .* at MASTERKRAFT\./);
   });
 });
 

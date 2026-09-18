@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { getUnleashedMap } from "@/lib/unleashed";
 import { buildFeed, feedToXml } from "@/lib/merchant-feed";
 import { isIndexableHost } from "@/lib/site";
+import { getProductContent } from "@/lib/product-content";
 
 export const runtime = "nodejs";
 
@@ -37,7 +38,12 @@ export async function GET() {
     });
   }
 
-  const { items } = buildFeed(map);
+  // The same map the product page reads, so an editor's override reaches the
+  // feed and the advertised description matches the landing page. It fails soft
+  // to {}, which is the JSON-and-snapshot behaviour, so a content outage costs
+  // an edit rather than the feed.
+  const content = await getProductContent();
+  const { items } = buildFeed(map, { content });
   if (!items.length) {
     return new Response("Catalogue empty", {
       status: 503,

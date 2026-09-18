@@ -23,8 +23,8 @@
 import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
-import { decodeEntities } from "@/lib/woocommerce";
-import { productCopy } from "@/lib/product-copy";
+import { decodeEntities, plainText } from "@/lib/woocommerce";
+import { resolveCopy, type ContentMap } from "@/lib/product-content";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 
@@ -130,14 +130,43 @@ export function feedTitle(unit: ErpUnit, size: string | undefined): string {
   return `${name.slice(0, Math.max(0, 149 - tail.length))} ${tail}`.trim();
 }
 
+/**
+ * THE DESCRIPTION THE LANDING PAGE SHOWS, resolved the same way the page
+ * resolves it: database row, then product-copy.json, then the WooCommerce
+ * snapshot, then the generated string as a last resort.
+ *
+ * READING ONLY product-copy.json WAS A BUG, and an expensive one to leave in:
+ * 118 of the feed's 127 items shipped "Buy X at MASTERKRAFT. $20.00 inc. GST."
+ * while their own page served real copy from the snapshot. It reads as missing
+ * content, which is what nearly sent someone off to write seventy descriptions
+ * that already existed. The snapshot is where most of this catalogue's words
+ * live — product-copy.json covers 170 slugs, the snapshot covers far more.
+ *
+ * The snapshot field is HTML, so it goes through plainText; Merchant Center
+ * wants prose, and markup in a description is a disapproval.
+ */
+function descriptionFor(unit: ErpUnit, content: ContentMap | undefined): string {
+  const resolved = resolveCopy(unit.slug, content ?? {});
+  // Keyed on unit.slug — the slug `link` points at — rather than wooSlug. They
+  // are the same string whenever a snapshot page exists (erpUnits sets both
+  // from page.slug), and for an ERP-only unit the lookup simply misses. Using
+  // the slug we advertise is what guarantees the description belongs to the
+  // page the shopper lands on.
+  const snapshot = productBySlug(unit.slug)?.short_description;
+  const text = plainText(resolved.short ?? "") || plainText(snapshot ?? "");
+  // 5000 is Merchant Center's limit. Nothing in this catalogue is close, but a
+  // description that silently overruns is rejected rather than truncated.
+  return (text || unitDescription(unit)).slice(0, 5000);
+}
+
 function itemFor(
   unit: ErpUnit,
   code: string,
   size: string | undefined,
   entry: UnleashedEntry,
   isVerified: boolean,
+  content: ContentMap | undefined,
 ): FeedItem {
-  const copy = productCopy(unit.slug)?.short;
   const image = entry.image ?? unit.image ?? "";
   return {
     id: code,
@@ -146,7 +175,7 @@ function itemFor(
     // with a size picker holding one size.
     itemGroupId: unit.isRange ? unit.slug : undefined,
     title: feedTitle(unit, size),
-    description: copy && copy.trim() ? copy.trim() : unitDescription(unit),
+    description: descriptionFor(unit, content),
     link: `${SITE_URL}/product/${unit.slug}`,
     imageLink: absoluteUrl(image),
     price: feedPrice(entry.price),
@@ -176,6 +205,14 @@ export type BuildOptions = {
    * catalogue-wide disapproval, or a campaign structure that cannot filter.
    */
   verifiedOnly?: boolean;
+  /**
+   * The product_content map from getProductContent(). Supplying it makes the
+   * feed's descriptions match the page exactly, including an editor's override;
+   * omitting it falls back to the JSON and the snapshot, which is what the page
+   * shows when the table is empty. Passed in rather than fetched so buildFeed
+   * stays synchronous and testable.
+   */
+  content?: ContentMap;
 };
 
 /**
@@ -242,7 +279,7 @@ export function buildFeed(
         rejected.push({ code, unit: unit.slug, reason: "no image" });
         return;
       }
-      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified));
+      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified, opts.content));
     });
   }
 
