@@ -5,7 +5,7 @@
 // here, so the two can never disagree about what a delivery costs.
 
 import { productById, variationsFor } from "@/lib/catalogue";
-import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
+import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 import {
   quoteFreight,
   cartonsContradict,
@@ -61,7 +61,11 @@ const num = (v: unknown): number => {
  * below - it is what stopped a 116cm barbell being quoted as an 11.6cm parcel.
  */
 export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightItem[]> {
-  const erp = await getUnleashedMap().catch(() => ({}));
+  // LIVE, NOT THE MIRROR. The scope doc names only the charge path, but a carton
+  // is money too: these weights and dimensions become the freight amount added
+  // to the order. Dimensions change far less often than prices, so this is
+  // cheap insurance rather than a real constraint.
+  const erp = await getUnleashedMapLive().catch(() => ({}));
   const items: FreightItem[] = [];
 
   for (const ref of refs) {

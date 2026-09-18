@@ -8,7 +8,7 @@
 // pointed at WC_STORE_URL, which is this storefront, and 404s. What is left is
 // the repricing and the types, both backend-neutral, hence the rename.
 
-import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
+import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 
 export type CartRef = {
   productId: number;
@@ -50,7 +50,10 @@ export type CartRef = {
 export async function resolveOrderLines(
   refs: CartRef[]
 ): Promise<{ lines: OrderLine[]; total: number; hasPoa: boolean }> {
-  const map = await getUnleashedMap().catch(() => ({}));
+  // LIVE, NOT THE MIRROR. This is the function that decides what a card is
+  // charged, so a stale price here is money, not a stale listing. See the note
+  // on getUnleashedMapLive.
+  const map = await getUnleashedMapLive().catch(() => ({}));
   const lines: OrderLine[] = [];
   for (const r of refs) {
     const qty = Math.max(1, Math.floor(r.quantity || 1));

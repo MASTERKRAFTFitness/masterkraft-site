@@ -22,6 +22,7 @@ const quoted: FreightItem[][] = [];
 vi.mock("@/lib/unleashed", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed")>()),
   getUnleashedMap: async () => erp,
+  getUnleashedMapLive: async () => erp,
 }));
 vi.mock("@/lib/freight", async (orig) => ({
   ...(await orig<typeof import("@/lib/freight")>()),

@@ -19,7 +19,7 @@
 // The payload builder is pure and fully tested, so when both land this is a
 // matter of turning it on rather than writing it.
 import { createHmac, randomUUID } from "node:crypto";
-import { getUnleashedMap, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
+import { getUnleashedMapLive, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
 import type { OrderLine } from "@/lib/order-lines";
 
 const BASE = "https://api.unleashedsoftware.com";
@@ -338,7 +338,8 @@ export async function createUnleashedOrder(
   }
 
   const [erp, customer] = await Promise.all([
-    getUnleashedMap().catch(() => ({})),
+    // LIVE, NOT THE MIRROR — this writes the order lines that get invoiced.
+    getUnleashedMapLive().catch(() => ({})),
     resolveCustomer(input.billing),
   ]);
 

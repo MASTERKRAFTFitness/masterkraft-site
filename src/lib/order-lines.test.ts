@@ -10,9 +10,13 @@ const erp: UnleashedMap = {
   MPOA0001: { price: 0, stock: 0, name: "Custom Rig", sellable: true },
 };
 
+// BOTH, because the money path deliberately calls the live reader rather than
+// the mirror (2026-09-18). Stubbing only getUnleashedMap would let the real
+// getUnleashedMapLive run and these would test nothing.
 vi.mock("@/lib/unleashed", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed")>()),
   getUnleashedMap: async () => erp,
+  getUnleashedMapLive: async () => erp,
 }));
 
 // THE WOOCOMMERCE STUBS ARE GONE, 2026-09-18, and so is every

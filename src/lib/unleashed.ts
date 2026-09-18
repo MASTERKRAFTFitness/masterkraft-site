@@ -16,6 +16,7 @@ import {
 import { skuAliases } from "@/lib/unleashed-aliases";
 import { getRange } from "@/lib/ranges";
 import erpImageOverrides from "@/lib/erp-image-overrides.json";
+import { adminDb } from "@/lib/admin-db";
 
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
@@ -234,11 +235,228 @@ const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v10"], {
   tags: ["unleashed"],
 });
 
+// ---------------------------------------------------------------------------
+// THE MIRROR READ PATH — docs/erp-mirror-scope.md, step 4. Added 2026-09-18.
+//
+// `erp_products` in Supabase holds the same catalogue this function pages out of
+// Unleashed, refreshed wholesale by scripts/erp-mirror.load.ts. Reading it turns
+// a ~16s cold start into one query, and it is the seam the whole site already
+// goes through, so it is the only place that has to change.
+//
+// THE MIRROR IS A CACHE. Unleashed stays the product database. Nothing here
+// writes, and if the mirror and the ERP disagree the mirror is stale and gets
+// overwritten — there is nothing to adjudicate. The moment somebody edits a
+// price in Supabase this stops being true and becomes the two-sources problem
+// that 20260905_product_content.sql warns about.
+//
+// THE TRANSFORMS LIVE HERE, NOT IN THE TABLE. The mirror stores what the ERP
+// holds: price EX GST, the raw CDN image. This applies the GST multiplication
+// and the /erp-bg repaint overrides exactly as buildMap does, so a business rule
+// exists in one place and a mirror row means the same thing as an API response.
+//
+// IT FALLS BACK, IT NEVER FAILS. Supabase unreachable, unconfigured, empty,
+// short or stale all return null and the caller pages Unleashed as before. That
+// is what makes this deployable without a cutover.
+// ---------------------------------------------------------------------------
+
+/**
+ * OFF unless explicitly enabled. The mirror can be populated and inspected in
+ * production for as long as you like before anything reads it.
+ */
+const mirrorEnabled = () => process.env.ERP_MIRROR_ENABLED === "true";
+
+/**
+ * Below this the mirror is assumed truncated and is not used.
+ *
+ * The loader refuses to SHRINK the table by more than 10%, but that guard cannot
+ * help a read: a table half-written by an interrupted first run has no previous
+ * size to be measured against. Same floor reasoning as build:catalogue's
+ * MIN_PRODUCTS — a short catalogue empties the shop, and 16 slow seconds is a
+ * far better outcome than a shop missing a third of its products.
+ */
+const MIRROR_MIN_ROWS = 1_000;
+
+/**
+ * Past this the mirror is ignored in favour of live Unleashed.
+ *
+ * `docs/erp-mirror-scope.md` says stale beats empty, and for an hourly refresh
+ * that is right. THERE IS NO SCHEDULED REFRESH YET — `npm run mirror:erp:write`
+ * is run by hand — so without a ceiling, enabling the flag would serve whatever
+ * the catalogue looked like the last time somebody remembered. That is not a
+ * cache, it is a second frozen snapshot, and this codebase already has one of
+ * those.
+ *
+ * So the ceiling is a SAFETY PROPERTY, not a tuning knob: it makes the flag safe
+ * to turn on by accident. Raise it once a cron actually refreshes the table.
+ */
+const MIRROR_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+type MirrorRow = {
+  erp_code: string | null;
+  guid: string | null;
+  name: string | null;
+  price: number | string | null;
+  stock: number | string | null;
+  brand: string | null;
+  group_name: string | null;
+  subgroup: string | null;
+  sellable: boolean | null;
+  image: string | null;
+  weight_kg: number | string | null;
+  width_cm: number | string | null;
+  depth_cm: number | string | null;
+  height_cm: number | string | null;
+  synced_at: string | null;
+};
+
+const n = (v: number | string | null): number | undefined => {
+  if (v === null || v === "") return undefined;
+  const parsed = typeof v === "number" ? v : parseFloat(v);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+/**
+ * The catalogue map, built from Supabase. Null means "could not, use Unleashed".
+ *
+ * Never throws: every failure is a reason to fall back, and a mirror that makes
+ * the site worse than no mirror would defeat the point.
+ */
+export async function buildMapFromMirror(): Promise<UnleashedMap | null> {
+  try {
+    const db = adminDb();
+    // Unconfigured is not an error. Report scripts and local checkouts run
+    // without Supabase credentials and must behave exactly as they did.
+    if (!db) return null;
+
+    // PAGED, BECAUSE POSTGREST CAPS A SELECT AT 1,000 ROWS and does not say so:
+    // it returns exactly 1,000 and a 200. The catalogue is 1,648, so the
+    // unpaged version of this silently built a map missing a third of the shop
+    // — and 1,000 happens to clear MIRROR_MIN_ROWS by a single row, so the floor
+    // would not have caught it either. Found by scripts/erp-mirror-parity.report.ts
+    // on the first run, which is the entire reason docs/erp-mirror-scope.md
+    // insists the comparison happens before anything reads this.
+    const PAGE = 1_000;
+    const rows: MirrorRow[] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await db
+        .from("erp_products")
+        .select(
+          "erp_code, guid, name, price, stock, brand, group_name, subgroup, sellable, image, weight_kg, width_cm, depth_cm, height_cm, synced_at"
+        )
+        // OBSOLETE ROWS ARE EXCLUDED TO MATCH buildMap, which fetches Products
+        // without includeObsolete=true on purpose. Carrying them here would put
+        // codes in the map that the live path has never had in it, and "the cache
+        // returns more than the source" is the kind of difference that surfaces
+        // months later as a retired product on a page.
+        .or("obsolete.is.null,obsolete.eq.false")
+        // Ordered so the pages partition the table. Without it PostgREST gives
+        // no stability guarantee across requests and a row can be fetched twice
+        // or not at all.
+        .order("erp_code", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) {
+        console.error("[unleashed] mirror read failed", error.message);
+        return null;
+      }
+      const page = (data ?? []) as MirrorRow[];
+      rows.push(...page);
+      if (page.length < PAGE) break;
+    }
+
+    if (rows.length < MIRROR_MIN_ROWS) {
+      console.error(
+        `[unleashed] mirror has ${rows.length} rows, floor is ${MIRROR_MIN_ROWS} — using live Unleashed.`
+      );
+      return null;
+    }
+
+    // Freshness is the OLDEST row, not the newest. The loader writes wholesale,
+    // so a single fresh row beside a thousand old ones means a partial write,
+    // and taking the newest would read that as healthy.
+    let oldest = Infinity;
+    for (const r of rows) {
+      const t = r.synced_at ? Date.parse(r.synced_at) : NaN;
+      if (Number.isFinite(t)) oldest = Math.min(oldest, t);
+      else oldest = -Infinity; // a row with no stamp cannot be vouched for
+    }
+    const age = Date.now() - oldest;
+    if (!Number.isFinite(oldest) || age > MIRROR_MAX_AGE_MS) {
+      console.error(
+        `[unleashed] mirror is ${Number.isFinite(oldest) ? `${Math.round(age / 3_600_000)}h old` : "unstamped"}, ` +
+          `ceiling is ${MIRROR_MAX_AGE_MS / 3_600_000}h — using live Unleashed. Has the refresh run?`
+      );
+      return null;
+    }
+
+    const map: UnleashedMap = {};
+    for (const r of rows) {
+      const code = (r.erp_code ?? "").trim().toUpperCase();
+      if (!code) continue;
+      const price = n(r.price) ?? 0;
+      map[code] = {
+        // Identical to buildMap, deliberately: ex-GST in the table, inc-GST in
+        // the map, rounded the same way, and 0 stays 0 rather than becoming 0.00
+        // of nothing.
+        price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
+        stock: n(r.stock) ?? 0,
+        name: r.name?.trim() || undefined,
+        image: IMAGE_OVERRIDES[code] ?? r.image ?? undefined,
+        brand: r.brand?.trim() || undefined,
+        group: r.group_name?.trim() || undefined,
+        subgroup: r.subgroup?.trim() || undefined,
+        sellable: r.sellable !== false,
+        guid: r.guid || undefined,
+        widthCm: n(r.width_cm),
+        heightCm: n(r.height_cm),
+        depthCm: n(r.depth_cm),
+        weightKg: n(r.weight_kg),
+      };
+    }
+    return map;
+  } catch (e) {
+    console.error("[unleashed] mirror read threw", e);
+    return null;
+  }
+}
+
+const cachedMirrorMap = unstable_cache(buildMapFromMirror, ["erp-mirror-map-v1"], {
+  // Shorter than the live map's hour: this read costs one query rather than 16
+  // seconds, so there is no reason to hold a stale answer as long.
+  revalidate: 600,
+  tags: ["unleashed"],
+});
+
 export async function getUnleashedMap(): Promise<UnleashedMap> {
+  if (mirrorEnabled()) {
+    const mirrored = await cachedMirrorMap();
+    if (mirrored) return mirrored;
+    // Falling through is the designed behaviour, not an error path.
+  }
   try {
     return await cachedBuildMap();
   } catch (e) {
     console.error("[unleashed] map build failed", e);
+    return {};
+  }
+}
+
+/**
+ * The catalogue map, always from Unleashed itself, never the mirror.
+ *
+ * THIS EXISTS FOR THE MONEY PATH, and `docs/erp-mirror-scope.md` calls for it by
+ * name: `payment-intent` reprices a cart from this map at charge time, so a
+ * stale price here is CHARGED, not merely displayed. A listing that is an hour
+ * behind is cosmetic; taking $2,499 for something that now costs $2,799 is not.
+ *
+ * It still goes through the same 60-minute cache the site has always used, so
+ * this is not "live to the second" — it is "no worse than before the mirror
+ * existed", which is the property that matters.
+ */
+export async function getUnleashedMapLive(): Promise<UnleashedMap> {
+  try {
+    return await cachedBuildMap();
+  } catch (e) {
+    console.error("[unleashed] live map build failed", e);
     return {};
   }
 }
