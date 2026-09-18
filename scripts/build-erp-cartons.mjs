@@ -28,7 +28,7 @@
 // and is the volume under the cap), both of which are order-independent. It
 // would matter to anything that builds a consignment, so do not use this for
 // that: lib/freight-server is where a carton is chosen for a quote.
-import crypto from "node:crypto";
+import { fetchAllProducts } from "./lib/erp-products.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,29 +52,15 @@ function env(name) {
 const API_ID = env("UNLEASHED_API_ID");
 const API_KEY = env("UNLEASHED_API_KEY");
 
-async function page(n) {
-  // includeObsolete=true for the same reason build-obsolete-skus.mjs passes it:
-  // GET /Products hides retired records, and a retired product still has a
-  // carton worth knowing about while its page is being wound down.
-  const query = "pageSize=200&includeObsolete=true";
-  const res = await fetch(`https://api.unleashedsoftware.com/Products/${n}?${query}`, {
-    headers: {
-      "api-auth-id": API_ID,
-      "api-auth-signature": crypto.createHmac("sha256", API_KEY).update(query).digest("base64"),
-      Accept: "application/json",
-      "User-Agent": "Mozilla/5.0", // Unleashed's WAF rejects some default agents
-    },
-  });
-  if (!res.ok) throw new Error(`Unleashed ${res.status} on Products/${n}`);
-  return res.json();
-}
-
-const first = await page(1);
-const pages = first.Pagination?.NumberOfPages ?? 1;
-const items = [...first.Items];
-for (const p of await Promise.all(Array.from({ length: pages - 1 }, (_, i) => page(i + 2)))) {
-  items.push(...p.Items);
-}
+// Paging moved to scripts/lib/erp-products.mjs on 2026-09-18, sequential and
+// with retries. It keeps passing includeObsolete=true for the reason this file
+// always did: GET /Products hides retired records, and a retired product still
+// has a carton worth knowing about while its page is being wound down.
+const { items } = await fetchAllProducts({
+  apiId: API_ID,
+  apiKey: API_KEY,
+  log: (line) => console.error(line),
+});
 
 if (items.length < 1500) {
   console.error(
