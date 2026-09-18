@@ -34,7 +34,10 @@ const entry = (name: string, over: Record<string, unknown> = {}) => ({
   stock: 4,
   name,
   brand: "MK",
-  group: "Weight Plates",
+  // Group AND subgroup, as the real ERP carries them — the taxonomy map keys on
+  // "Group > Subgroup", so a fixture with only a group tests nothing.
+  group: "Weightlifting",
+  subgroup: "Weight Plates",
   sellable: true,
   image: "https://cdn.example/plate.jpg",
   ...measured,
@@ -45,7 +48,7 @@ const map = (over: Record<string, unknown> = {}): UnleashedMap =>
   ({
     MWWPCP01: entry("Change Plates - 0.5kg", { price: 26 }),
     MWWPCP02: entry("Change Plates - 1kg", { price: 46 }),
-    MBSARO01: entry("Speed Rope", { group: "Body Weight", price: 25 }),
+    MBSARO01: entry("Speed Rope", { group: "Body Weight", subgroup: "Speed & Agility", price: 25 }),
     ...over,
   }) as unknown as UnleashedMap;
 
@@ -103,19 +106,19 @@ describe("building the feed", () => {
     // Narrowing the FEED does not control spend — a campaign does. What the
     // feed must do is carry the distinction, so a paid campaign can filter on it
     // later without a redeploy.
-    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio" }) }));
+    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio", subgroup: "Bikes" }) }));
     expect(items.map((i) => i.id)).toContain("MZZUNK01");
   });
 
   it("tags the freight-verified so a campaign can bid on only those", () => {
-    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio" }) }));
+    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio", subgroup: "Bikes" }) }));
     const label = Object.fromEntries(items.map((i) => [i.id, i.customLabel0]));
     expect(label.MWWPCP01).toBe("freight-verified");
     expect(label.MZZUNK01).toBe("unverified");
   });
 
   it("narrows to the verified set only when explicitly asked", () => {
-    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio" }) }), {
+    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio", subgroup: "Bikes" }) }), {
       verifiedOnly: true,
     });
     expect(items.map((i) => i.id)).not.toContain("MZZUNK01");
@@ -158,6 +161,31 @@ describe("descriptions", () => {
     // MBSARO01's slug has no snapshot page in the mock and no JSON entry.
     const { items } = buildFeed(map());
     expect(items.find((i) => i.id === "MBSARO01")!.description).toMatch(/^Buy .* at MASTERKRAFT\./);
+  });
+});
+
+describe("google product category", () => {
+  // The earlier version of this map invented paths — "Weightlifting > Weight
+  // Plates", "Dumbbells", "Kettlebells" — none of which exist in Google's
+  // taxonomy. 34 items carried one and would have been rejected outright.
+  it("emits numeric taxonomy ids, never a hand-written path", () => {
+    const { items } = buildFeed(map());
+    for (const i of items) expect(i.googleProductCategory).toMatch(/^\d+$/);
+  });
+
+  it("maps on the ERP subgroup, which is where the precision is", () => {
+    // Weight Plates are Free Weights (3164), not the Exercise & Fitness parent.
+    const { items } = buildFeed(map());
+    expect(items.find((i) => i.id === "MWWPCP01")!.googleProductCategory).toBe("3164");
+  });
+
+  it("falls back to the parent for a subgroup with no honest leaf", () => {
+    const { items } = buildFeed(
+      map({ MZZODD01: entry("Odd Thing", { group: "Mixed Implements", subgroup: "Sleds" }) }),
+      { verifiedOnly: false },
+    );
+    const odd = items.find((i) => i.id === "MZZODD01");
+    if (odd) expect(odd.googleProductCategory).toBe("990");
   });
 });
 

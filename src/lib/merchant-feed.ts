@@ -54,32 +54,59 @@ export type FeedItem = {
  */
 export type FeedRejection = { code: string; unit: string; reason: string };
 
-// Google's taxonomy, by ERP ProductGroup. Everything on this site sits under
-// Sporting Goods > Exercise & Fitness, and the leaves below are the ones Google
-// splits bids on.
+// Google's product taxonomy, as NUMERIC IDs rather than path strings.
 //
-// EVERY STRING HERE MUST BE A REAL NODE. Google matches the value against its
-// published taxonomy exactly and rejects the item when it does not resolve —
-// there is no fuzzy match and no partial credit. An unmapped group therefore
-// falls back to the parent, which is always valid: a broad category costs some
-// bidding precision, a wrong one costs the item.
+// THE STRINGS WERE WRONG AND WOULD HAVE COST 34 ITEMS. An earlier version of
+// this map guessed paths like "Weightlifting > Weightlifting Bars", "Weight
+// Plates", "Dumbbells" and "Kettlebells". Validated against Google's published
+// taxonomy (google.com/basepages/producttype/taxonomy-with-ids.en-AU.txt), NONE
+// of those nodes exist — Google files all of them under "Free Weights" and
+// "Free Weight Accessories". A value that does not resolve EXACTLY is rejected,
+// with no fuzzy match and no partial credit, so those 34 items would simply
+// have been refused. Re-validate against that file before editing this map.
 //
-// The mapping below is deliberately conservative for that reason. Before the
-// first Merchant Center fetch, check each string against the current
-// taxonomy file (google.com/basepages/producttype/taxonomy-with-ids.en-AU.txt)
-// and switch to the numeric IDs, which are stable where the wording is not.
-const EXERCISE_AND_FITNESS = "Sporting Goods > Exercise & Fitness";
-const CATEGORY_BY_GROUP: Record<string, string> = {
-  "Weightlifting": `${EXERCISE_AND_FITNESS} > Weightlifting > Weightlifting Bars`,
-  "Weight Plates": `${EXERCISE_AND_FITNESS} > Weightlifting > Weight Plates`,
-  "Dumbbells": `${EXERCISE_AND_FITNESS} > Weightlifting > Dumbbells`,
-  "Kettlebells": `${EXERCISE_AND_FITNESS} > Weightlifting > Kettlebells`,
-  "Barbells": `${EXERCISE_AND_FITNESS} > Weightlifting > Weightlifting Bars`,
-  "Mixed Implements": `${EXERCISE_AND_FITNESS} > Exercise Balls`,
-  // "Equipment Storage" and "Body Weight" have no leaf worth guessing at —
-  // racks and mats do not map cleanly onto the weightlifting branch — so they
-  // take the parent rather than a plausible-looking string that may not exist.
+// IDs, not paths, because the id is stable when Google rewords a node — and
+// because a typo in an id fails loudly rather than looking plausible.
+//
+// KEYED ON "Group > Subgroup" FIRST. The ERP's subgroup is far more precise
+// than its group: "Mixed Implements" alone spans kettlebells, medicine balls,
+// sleds and battle ropes, which belong in four different places.
+const EXERCISE_AND_FITNESS = "990"; // Sporting Goods > Exercise & Fitness
+const CATEGORY_BY_SUBGROUP: Record<string, string> = {
+  // Weightlifting
+  "Weightlifting > Weight Plates": "3164", // Free Weights
+  "Mixed Implements > Kettlebells": "3164",
+  "Mixed Implements > Dumbbells": "3164",
+  "Weightlifting > Barbells": "3271", // Free Weight Accessories > Weight Bars
+  "Weightlifting > Weightlifting Accessories": "6452", // Free Weight Accessories
+  // Storage. Google files gym storage under the weightlifting branch, which is
+  // not where you would look for it, but it is the only node that fits.
+  "Equipment Storage > Freestanding": "8083", // Free Weight Storage Racks
+  "Equipment Storage > Wall Mounted": "8083",
+  // Racks, rigs and the machines that hang off them
+  "Rigs & Racks > Squat & Power Racks": "3542", // Weightlifting Machines & Racks
+  "Strength > Cable Machines": "3542",
+  "Rigs & Racks > Attachments": "3217", // Weightlifting Machine & Bench Accessories
+  "Strength > Weight Benches": "499795", // Exercise Benches
+  // Balls
+  "Mixed Implements > Medicine Balls": "3938", // Medicine Balls
+  "Mixed Implements > Wall Balls": "3938",
+  "Mixed Implements > Dead Balls": "3938",
+  // Everything else with an honest leaf
+  "Body Weight > Resistance & Power Bands": "5869", // Exercise Bands
+  "Body Weight > Recovery & Mobility": "5319", // Foam Rollers
+  "Body Weight > Balance & Stability": "499796", // Balance Trainers
+  "Body Weight > Exercise Mats": "4669", // Exercise Equipment Mats
+  "Flooring > Rubber Flooring": "4669",
+  "Cardio > Treadmills": "997", // Cardio Machines > Treadmills
+  "Cardio > Ski Trainer": "4589", // Cardio Machines
 };
+// Subgroups deliberately absent above — Group Fitness, Core Training, Speed &
+// Agility, Plyometric Boxes, Gymnastics, Battle Ropes, Power Bags, Sleds — hold
+// products Google has no node for, or a mix that one node would misrepresent.
+// They take the parent, which always resolves. A broad category costs a little
+// ranking precision; a wrong one misfiles the product against the wrong
+// competitors, which is worse.
 
 const GST_INCLUSIVE_CURRENCY = "AUD";
 
@@ -159,6 +186,12 @@ function descriptionFor(unit: ErpUnit, content: ContentMap | undefined): string 
   return (text || unitDescription(unit)).slice(0, 5000);
 }
 
+/** The taxonomy id for a unit: subgroup first, then the always-valid parent. */
+export function googleCategory(unit: ErpUnit): string {
+  const key = unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group;
+  return CATEGORY_BY_SUBGROUP[key] ?? EXERCISE_AND_FITNESS;
+}
+
 function itemFor(
   unit: ErpUnit,
   code: string,
@@ -183,7 +216,7 @@ function itemFor(
     mpn: code,
     availability: "in_stock",
     condition: "new",
-    googleProductCategory: CATEGORY_BY_GROUP[unit.group] ?? EXERCISE_AND_FITNESS,
+    googleProductCategory: googleCategory(unit),
     productType: unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group,
     shippingWeightKg: entry.weightKg,
     customLabel0: isVerified ? FREIGHT_VERIFIED_LABEL : UNVERIFIED_LABEL,

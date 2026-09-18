@@ -76,7 +76,7 @@ const freightCode = () => process.env.UNLEASHED_FREIGHT_CODE || "";
 //                 and the most work, with real duplicate risk against 4,108
 //                 existing records that were not deduplicated on email.
 //
-// Steve or Gaetana decides. Until then only "generic" is implemented, and it
+// Steve decides. Until then only "generic" is implemented, and it
 // still needs an account to exist — it will not invent one.
 // ---------------------------------------------------------------------------
 

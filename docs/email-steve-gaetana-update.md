@@ -1,12 +1,17 @@
-# Update email to Steve & Gaetana — feedback actioned
+# Update email to Steve — feedback actioned
 
 Draft for Michael to review/send. Covers the website feedback worked through today.
+
+**Addressed to Steve alone as of 18 Sep 2026.** The filename still says
+`steve-gaetana` on purpose: `email-work-summary-2026-09-06.md` links to it by that
+path, and renaming the file to tidy the title would break a dated record of what
+was true at the time.
 
 ---
 
 **Subject:** MasterKraft website — your feedback is in, ready to review
 
-Hi Steve and Gaetana,
+Hi Steve,
 
 Thanks for the detailed feedback. We have worked through a big chunk of it and it
 is now live on the staging site for you to review. Here is a summary of what has
