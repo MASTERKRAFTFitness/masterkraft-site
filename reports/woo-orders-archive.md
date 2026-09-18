@@ -43,4 +43,4 @@ PaymentIntent — over a `raw` column holding the complete WooCommerce record. T
 columns are a guess about what a future question looks like; `raw` is the insurance
 that a wrong guess costs a JSON path rather than the data.
 
-_Last run: 2026-09-18 02:33Z, dry run, nothing written._
+_Last run: 2026-09-18 05:53Z, 199 rows written._
