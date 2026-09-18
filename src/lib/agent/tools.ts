@@ -16,10 +16,15 @@ import {
 import { formatPrice, isPortalOnlyBrand, type WcProduct } from "@/lib/woocommerce";
 import { isRetiredSku } from "@/lib/obsolete";
 import { parseProductDetail } from "@/lib/spec";
-import { enrich, getLiveEntries, getShipmentsForOrder, getUnleashedMap } from "@/lib/unleashed";
+import {
+  enrich,
+  getLiveEntries,
+  getSalesOrder,
+  getShipmentsForOrder,
+  getUnleashedMap,
+} from "@/lib/unleashed";
 import { collectionAddress, quoteFreight } from "@/lib/freight";
 import { refsToFreightItems, type CartRefLike } from "@/lib/freight-server";
-import { getOrder, listRecentOrders, ordersConfigured, summariseOrder } from "@/lib/wc-admin";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { stripe, stripeEnabled } from "@/lib/stripe";
 
@@ -274,11 +279,27 @@ const checkStockTool: AgentTool = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// ORDER READS COME OFF UNLEASHED, 2026-09-18.
+//
+// These three tools read WooCommerce until today, through lib/wc-admin.ts, which
+// is now deleted. That reader had been answering nothing useful for twelve days:
+// WC_STORE_URL is this storefront, so every call 404'd, and the tools reported
+// "No order found with that number" for orders that plainly existed.
+//
+// Unleashed is where orders have been written since 6 Sep, so it is where they
+// are read from. What the ERP does not carry, the tools no longer claim: there
+// is no delivery address or payment-method title on a SalesOrder, and
+// `list_recent_orders` is gone entirely because the ERP has no "newest orders"
+// endpoint to back it. Finding an order without its number is now a job for
+// Unleashed itself.
+// ---------------------------------------------------------------------------
+
 const lookupOrderTool: AgentTool = {
   definition: {
     name: "lookup_order",
     description:
-      "Look up one WooCommerce order by its number, e.g. 490118. Returns status, totals, customer contact, delivery address and line items. Orders flow on to Unleashed as sales orders under the same number.",
+      "Look up one order by its number, e.g. 490118. Reads the sales order in Unleashed and returns status, order date, total, line items and the email addresses recorded against it. Use for any 'what did I order' or 'what is happening with my order' question.",
     input_schema: {
       type: "object",
       properties: {
@@ -289,36 +310,21 @@ const lookupOrderTool: AgentTool = {
     },
   },
   run: async (input) => {
-    if (!ordersConfigured()) return { error: "WooCommerce credentials are not configured." };
-    const order = await getOrder(str(input.order_number)).catch((e: Error) => ({ error: e.message }));
+    const reference = str(input.order_number).trim();
+    if (!reference) return { error: "Provide an order number." };
+    const order = await getSalesOrder(reference).catch((e: Error) => e);
+    if (order instanceof Error) return { error: order.message };
     if (!order) return { error: "No order found with that number." };
-    if ("error" in order) return order;
-    return summariseOrder(order);
-  },
-};
-
-const recentOrdersTool: AgentTool = {
-  definition: {
-    name: "list_recent_orders",
-    description:
-      "List the most recent WooCommerce orders, newest first. Use to answer 'what has come in today' or to find an order when the customer does not have the number.",
-    input_schema: {
-      type: "object",
-      properties: {
-        limit: { type: "number", description: "How many, default 10, max 25." },
-        status: {
-          type: "string",
-          description: "Optional WooCommerce status filter, e.g. processing, pending, on-hold, completed.",
-        },
-      },
-      required: [],
-      additionalProperties: false,
-    },
-  },
-  run: async (input) => {
-    if (!ordersConfigured()) return { error: "WooCommerce credentials are not configured." };
-    const orders = await listRecentOrders(num(input.limit, 10) || 10, str(input.status) || undefined);
-    return { count: orders.length, orders: orders.map(summariseOrder) };
+    return {
+      order: order.orderNumber,
+      status: order.status,
+      placed: order.orderedAt,
+      total: order.total === null ? null : `AUD ${order.total.toFixed(2)}`,
+      emails: order.emails,
+      paid_by_card: Boolean(order.stripeRef),
+      lines: order.lines.map((l) => ({ code: l.code, name: l.name, qty: l.qty })),
+      basis: "Read live from Unleashed, which is where website orders are written.",
+    };
   },
 };
 
@@ -346,7 +352,12 @@ const checkShipmentTool: AgentTool = {
     if (!shipments.length) {
       // No dispatch record. Distinguish "not shipped yet" from "no such order",
       // otherwise a typo reads back as a delayed delivery.
-      const order = ordersConfigured() ? await getOrder(reference).catch(() => null) : null;
+      //
+      // THIS ASKED WOOCOMMERCE UNTIL 2026-09-18, and got null every time, so a
+      // real order awaiting dispatch was reported as a number that does not
+      // exist — the exact confusion the branch was written to prevent. It asks
+      // Unleashed now, which is the system the order is actually in.
+      const order = await getSalesOrder(reference).catch(() => null);
       if (!order) {
         return {
           order: reference,
@@ -355,10 +366,10 @@ const checkShipmentTool: AgentTool = {
         };
       }
       return {
-        order: order.number,
+        order: order.orderNumber,
         dispatched: false,
         order_status: order.status,
-        placed: order.date_created ?? null,
+        placed: order.orderedAt,
         note: "The order exists but has not been dispatched. This is not a missing record, it means it has not left yet.",
       };
     }
@@ -479,27 +490,31 @@ const checkPaymentTool: AgentTool = {
     },
   },
   run: async (input) => {
-    if (!ordersConfigured()) return { error: "WooCommerce credentials are not configured." };
-    const order = await getOrder(str(input.order_number)).catch(() => null);
+    const reference = str(input.order_number).trim();
+    if (!reference) return { error: "Provide an order number." };
+    // The Stripe id came off the Woo order's `transaction_id` until 2026-09-18.
+    // It now comes off the "Stripe: pi_…" line buildComments writes into the
+    // Unleashed order, which is the only remaining join from an order number to
+    // a payment.
+    const order = await getSalesOrder(reference).catch(() => null);
     if (!order) return { error: "No order found with that number." };
 
     const base = {
-      order: order.number,
+      order: order.orderNumber,
       order_status: order.status,
-      order_total: `${order.currency ?? "AUD"} ${order.total}`,
-      marked_paid_at: order.date_paid ?? null,
-      method: order.payment_method_title ?? null,
+      order_total: order.total === null ? null : `AUD ${order.total.toFixed(2)}`,
+      placed: order.orderedAt,
     };
 
-    if (!order.transaction_id) {
+    if (!order.stripeRef) {
       return { ...base, stripe: null, note: "No Stripe reference on this order, so it was not a card payment through the site." };
     }
     if (!stripeEnabled() || !stripe) {
-      return { ...base, stripe_ref: order.transaction_id, error: "STRIPE_SECRET_KEY is not set, so the payment itself cannot be checked." };
+      return { ...base, stripe_ref: order.stripeRef, error: "STRIPE_SECRET_KEY is not set, so the payment itself cannot be checked." };
     }
 
     try {
-      const pi = await stripe.paymentIntents.retrieve(order.transaction_id, { expand: ["latest_charge"] });
+      const pi = await stripe.paymentIntents.retrieve(order.stripeRef, { expand: ["latest_charge"] });
       const charge = pi.latest_charge && typeof pi.latest_charge !== "string" ? pi.latest_charge : null;
       const card = charge?.payment_method_details?.card;
       return {
@@ -519,7 +534,7 @@ const checkPaymentTool: AgentTool = {
       const message = e instanceof Error ? e.message : String(e);
       return {
         ...base,
-        stripe_ref: order.transaction_id,
+        stripe_ref: order.stripeRef,
         error: `Stripe could not find that payment: ${message}`,
         note: "If the site is running test Stripe keys, a real customer payment is invisible to them. That is a key mismatch, not a missing payment. Do not tell a customer they have not paid on the strength of this.",
       };
@@ -624,7 +639,10 @@ export const AGENT_TOOLS: AgentTool[] = [
   getProductTool,
   checkStockTool,
   lookupOrderTool,
-  recentOrdersTool,
+  // recentOrdersTool was here until 2026-09-18. It listed WooCommerce's newest
+  // orders, and Unleashed has no equivalent endpoint to repoint it at. Removing
+  // it shifts every later tool up one position in the cached prompt prefix; that
+  // is a one-off cache miss, not a reason to keep a tool that returns nothing.
   checkPaymentTool,
   checkShipmentTool,
   freightTool,

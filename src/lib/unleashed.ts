@@ -549,6 +549,18 @@ export type SalesOrder = {
    * somebody else's order.
    */
   emails: string[];
+  /**
+   * The Stripe PaymentIntent id, or null when the order carries none.
+   *
+   * `buildComments` writes it as a labelled "Stripe: pi_…" line, the same way it
+   * writes the email, and this is the ONLY place an order number can be joined
+   * to its payment now that the WooCommerce order records are unreachable —
+   * `transaction_id` on the Woo order used to carry it.
+   *
+   * Null is a real answer, not a failure: a quote or a manually entered order
+   * was never paid by card through the site.
+   */
+  stripeRef: string | null;
 };
 
 type RawSalesOrder = {
@@ -576,6 +588,18 @@ function emailsOn(raw: RawSalesOrder): string[] {
   // order, so it is only useful when the account is per-order or match-email.
   if (structured) found.add(structured);
   return [...found];
+}
+
+/**
+ * The Stripe PaymentIntent id `buildComments` recorded, if any.
+ *
+ * Anchored to its own labelled line for the same reason emailsOn is: Comments
+ * also carries staff notes, and a loose scan for anything `pi_`-shaped would
+ * happily return a reference somebody pasted in from another order.
+ */
+function stripeRefOn(raw: RawSalesOrder): string | null {
+  const m = /^Stripe:[ \t]*(pi_[A-Za-z0-9]+)[ \t]*$/im.exec(String(raw.Comments ?? ""));
+  return m ? m[1] : null;
 }
 
 /**
@@ -620,6 +644,7 @@ export async function getSalesOrder(orderNumber: string): Promise<SalesOrder | n
       qty: l.OrderQuantity ?? 0,
     })),
     emails: emailsOn(exact),
+    stripeRef: stripeRefOn(exact),
   };
 }
 

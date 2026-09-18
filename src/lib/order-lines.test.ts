@@ -1,6 +1,6 @@
 // Re-pricing a cart before it is charged. These lock the rules that decide what
 // a customer pays, so a change that quietly alters one should fail here first.
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { UnleashedMap } from "@/lib/unleashed";
 
 const erp: UnleashedMap = {
@@ -10,29 +10,37 @@ const erp: UnleashedMap = {
   MPOA0001: { price: 0, stock: 0, name: "Custom Rig", sellable: true },
 };
 
-// The WooCommerce half is stubbed so these run offline. Since the fallback was
-// deleted (2026-09-15) nothing here should call it at all, so these stubs exist
-// to be asserted AGAINST — `not.toHaveBeenCalled()` is the point of them now.
-const getProductById = vi.fn();
-const getVariation = vi.fn();
-
 vi.mock("@/lib/unleashed", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed")>()),
   getUnleashedMap: async () => erp,
 }));
-// Spread the real module rather than replacing it: other exports are pulled in
-// transitively, and stubbing the whole module breaks them.
-vi.mock("@/lib/woocommerce", async (orig) => ({
-  ...(await orig<typeof import("@/lib/woocommerce")>()),
-  getProductById: (...a: unknown[]) => getProductById(...a),
-  getVariation: (...a: unknown[]) => getVariation(...a),
-}));
 
+// THE WOOCOMMERCE STUBS ARE GONE, 2026-09-18, and so is every
+// `expect(getProductById).not.toHaveBeenCalled()` they existed for.
+//
+// getProductById and getVariation were deleted from lib/woocommerce.ts today.
+// The stubs spread the real module and added those two names back, so the
+// assertions were testing a mock that no longer resembled the code — and once
+// the functions are gone, "was not called" can only ever pass. A vacuous test
+// that reads like a guarantee is worse than no test.
+//
+// What replaces them is structural, and cannot go quietly vacuous: the module
+// must not import from the WooCommerce layer at all. Same shape as the guard in
+// agent/public-tools.test.ts.
 const { resolveOrderLines } = await import("@/lib/order-lines");
 
-beforeEach(() => {
-  getProductById.mockReset();
-  getVariation.mockReset();
+describe("the re-pricing path has no WooCommerce dependency", () => {
+  it("does not import the WooCommerce layer", async () => {
+    const src = await import("node:fs").then((fs) =>
+      fs.readFileSync("src/lib/order-lines.ts", "utf8")
+    );
+    expect(src).not.toMatch(/from "@\/lib\/woocommerce"/);
+    // Call shapes, not bare names: the file's header comment names both
+    // functions while explaining why they are not here, and that history is
+    // worth keeping readable.
+    expect(src).not.toMatch(/getProductById\(/);
+    expect(src).not.toMatch(/getVariation\(/);
+  });
 });
 
 describe("a cart is re-priced from the ERP", () => {
@@ -45,8 +53,6 @@ describe("a cart is re-priced from the ERP", () => {
     expect(lines[0].sku).toBe("MMDBRH12");
     expect(total).toBe(110);
     expect(hasPoa).toBe(false);
-    expect(getProductById).not.toHaveBeenCalled();
-    expect(getVariation).not.toHaveBeenCalled();
   });
 
   it("resolves a size the old store never sold, which had no WooCommerce id at all", async () => {
@@ -57,7 +63,6 @@ describe("a cart is re-priced from the ERP", () => {
     ]);
     expect(lines).toHaveLength(1);
     expect(total).toBe(900);
-    expect(getProductById).not.toHaveBeenCalled();
   });
 
   it("still flags a price-on-application line, so the cart routes to a quote", async () => {
@@ -81,7 +86,6 @@ describe("it fails closed rather than charging the wrong number", () => {
     await expect(resolveOrderLines([{ productId: 55, quantity: 1, sku: "NOSUCH01" }])).rejects.toThrow(
       /ERP code NOSUCH01/
     );
-    expect(getProductById).not.toHaveBeenCalled();
   });
 
   it("throws on a coded line the ERP cannot name", async () => {
@@ -110,12 +114,13 @@ describe("a line with no ERP code is refused, not re-priced elsewhere", () => {
     );
   });
 
-  it("does not call WooCommerce on the way to failing", async () => {
+  it("fails immediately rather than after a network timeout", async () => {
     // The failure must be immediate, not 2.5s of timing out against a host that
-    // cannot answer.
+    // cannot answer. There is no longer a call to make — see the structural
+    // guard at the top of this file — so this holds the timing, not the caller.
+    const started = Date.now();
     await expect(resolveOrderLines([{ productId: 12, quantity: 1 }])).rejects.toThrow();
-    expect(getProductById).not.toHaveBeenCalled();
-    expect(getVariation).not.toHaveBeenCalled();
+    expect(Date.now() - started).toBeLessThan(500);
   });
 
   it("refuses the whole cart, not just the bad line", async () => {
