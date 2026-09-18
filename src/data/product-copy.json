@@ -447,16 +447,16 @@
       "Suits studios, PT rooms and smaller accessory sets"
     ]
   },
-  "acoustic-underlay-1m-x-10m": {
-    "short": "Acoustic underlay in 1m x 10m rolls, at 5mm, 10mm, 15mm and 20mm — impact and noise control under a gym floor.",
+  "acoustic-underlay": {
+    "short": "Acoustic underlay for a gym floor — impact and vibration control between the structure and the finished surface.",
     "body": [
-      "Acoustic underlay in 1m x 10m rolls, in four thicknesses: 5mm, 10mm, 15mm and 20mm. It goes under the finished floor to control impact noise and vibration.",
-      "Thickness is a decision about what is below you. A ground-floor slab and a first-floor tenancy above an office are different problems, and the second one is usually the reason a gym gets a noise complaint. Talk to us about the build-up before ordering."
+      "Underlay is what stops a dropped barbell becoming the tenancy below's problem. It goes under the finished floor and takes the impact before the structure has to.",
+      "What you need depends on what is beneath you. A ground-floor slab and a first-floor tenancy above an office are different problems, and the second one is usually the reason a gym gets a noise complaint. Talk to us about the build-up before ordering."
     ],
     "features": [
-      "1m x 10m rolls",
-      "5mm, 10mm, 15mm and 20mm",
-      "Impact and vibration control under the finished floor"
+      "Impact and vibration control under the finished floor",
+      "Specified against what is underneath it",
+      "Talk to us about the build-up before ordering"
     ]
   },
   "artificial-turf-black-2m-x-15m": {
@@ -1945,5 +1945,24 @@
   },
   "urethane-fixed-barbells-2": {
     "short": "Urethane fixed barbells from 5kg to 50kg in 2.5kg steps — a steel core in urethane, nineteen bars covering the whole range."
+  },
+  "artificial-turf-black-2m-x-10m": {
+    "short": "Black artificial turf, 2m x 10m — the short sled lane, for a room that cannot give a track fifteen metres.",
+    "body": [
+      "Ten metres is what fits when the floor plan says no to a longer run: along a wall, down the side of a rig, or in a studio where the lane shares its space with everything else.",
+      "Short is not token. Heavy pushes and shuttle work both live at this distance, and a lane that fits gets programmed, where a longer one that never fitted does not."
+    ],
+    "features": [
+      "2m x 10m",
+      "Fits where a longer lane will not",
+      "Heavy pushes and shuttle work"
+    ]
+  },
+  "trucker-hat": {
+    "short": "The MasterKraft trucker hat — the cap that leaves the building, for staff on shift and members off the floor.",
+    "body": [
+      "Gym merchandise does two jobs at once: it puts the name on somebody outside the building, and it gives the team something to wear on shift that is not a uniform.",
+      "The trucker cut answers both — it works behind the desk, and away from the gym it still reads as a choice rather than something issued."
+    ]
   }
 }
