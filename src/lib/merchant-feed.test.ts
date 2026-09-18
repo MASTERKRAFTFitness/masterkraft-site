@@ -94,16 +94,32 @@ describe("building the feed", () => {
     expect(items.map((i) => i.id)).not.toContain("MWWPCP02");
   });
 
-  it("publishes nothing that is not freight-verified", () => {
+  it("publishes everything eligible, because a free listing costs nothing", () => {
+    // Narrowing the FEED does not control spend — a campaign does. What the
+    // feed must do is carry the distinction, so a paid campaign can filter on it
+    // later without a redeploy.
     const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio" }) }));
-    expect(items.map((i) => i.id)).not.toContain("MZZUNK01");
+    expect(items.map((i) => i.id)).toContain("MZZUNK01");
   });
 
-  it("publishes the unverified catalogue only when asked", () => {
+  it("tags the freight-verified so a campaign can bid on only those", () => {
+    const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio" }) }));
+    const label = Object.fromEntries(items.map((i) => [i.id, i.customLabel0]));
+    expect(label.MWWPCP01).toBe("freight-verified");
+    expect(label.MZZUNK01).toBe("unverified");
+  });
+
+  it("narrows to the verified set only when explicitly asked", () => {
     const { items } = buildFeed(map({ MZZUNK01: entry("Unvetted Thing", { group: "Cardio" }) }), {
-      includeUnverified: true,
+      verifiedOnly: true,
     });
-    expect(items.map((i) => i.id)).toContain("MZZUNK01");
+    expect(items.map((i) => i.id)).not.toContain("MZZUNK01");
+    expect(items.map((i) => i.id)).toContain("MWWPCP01");
+  });
+
+  it("puts the label in the XML where Merchant Center reads it", () => {
+    const xml = feedToXml(buildFeed(map()).items);
+    expect(xml).toContain("<g:custom_label_0>freight-verified</g:custom_label_0>");
   });
 });
 
@@ -146,6 +162,7 @@ describe("serialising", () => {
         condition: "new",
         googleProductCategory: "Sporting Goods > Exercise & Fitness",
         productType: "Equipment Storage",
+        customLabel0: "freight-verified",
       },
     ]);
     expect(xml).toContain("Rope &amp; Band Rack &lt;&quot;small&quot;&gt;");

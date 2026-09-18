@@ -43,6 +43,8 @@ export type FeedItem = {
   googleProductCategory: string;
   productType: string;
   shippingWeightKg?: number;
+  /** custom_label_0 — what a paid campaign filters on. See FREIGHT_VERIFIED_LABEL. */
+  customLabel0: string;
 };
 
 /**
@@ -133,6 +135,7 @@ function itemFor(
   code: string,
   size: string | undefined,
   entry: UnleashedEntry,
+  isVerified: boolean,
 ): FeedItem {
   const copy = productCopy(unit.slug)?.short;
   const image = entry.image ?? unit.image ?? "";
@@ -154,18 +157,37 @@ function itemFor(
     googleProductCategory: CATEGORY_BY_GROUP[unit.group] ?? EXERCISE_AND_FITNESS,
     productType: unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group,
     shippingWeightKg: entry.weightKg,
+    customLabel0: isVerified ? FREIGHT_VERIFIED_LABEL : UNVERIFIED_LABEL,
   };
 }
 
 export type BuildOptions = {
   /**
-   * Publish every eligible code rather than only the freight-verified ones.
-   * The allowlist exists because a product being sellable is not the same as it
-   * being worth a click — see lib/merchant-feed-allowlist.ts. Widen it here
-   * when the campaign is ready to widen, not to make the feed look fuller.
+   * Publish ONLY the freight-verified units, rather than everything eligible.
+   *
+   * THE FEED IS NOT WHERE SPEND IS CONTROLLED — a campaign is. Merchant Center
+   * shows free listings from this feed at no cost, so narrowing it throws away
+   * free traffic and the conversion data that decides whether paid is worth
+   * starting. Every eligible product therefore ships, and the freight-verified
+   * ones are TAGGED rather than filtered (see customLabel0), so a future paid
+   * campaign can target exactly them with an inventory filter.
+   *
+   * This flag exists for the case where that reasoning stops holding — a
+   * catalogue-wide disapproval, or a campaign structure that cannot filter.
    */
-  includeUnverified?: boolean;
+  verifiedOnly?: boolean;
 };
+
+/**
+ * custom_label_0. The handle a paid campaign filters on.
+ *
+ * "freight-verified" means: priced at or below the market on 17 Sep 2026
+ * against Verve Fitness and Little Bloke Fitness, and quoted for real parcel
+ * freight. Everything else is eligible to be LISTED, which costs nothing, and
+ * not yet cleared to be BID ON, which does.
+ */
+const FREIGHT_VERIFIED_LABEL = "freight-verified";
+const UNVERIFIED_LABEL = "unverified";
 
 /**
  * Build the feed. Pure: takes the ERP map, returns items plus the reason every
@@ -180,7 +202,8 @@ export function buildFeed(
   const verified = FREIGHT_VERIFIED_SLUGS;
 
   for (const unit of erpUnits(map).values()) {
-    if (!opts.includeUnverified && !verified.has(unit.slug)) {
+    const isVerified = verified.has(unit.slug);
+    if (opts.verifiedOnly && !isVerified) {
       rejected.push({ code: unit.codes[0], unit: unit.slug, reason: "not freight-verified" });
       continue;
     }
@@ -219,7 +242,7 @@ export function buildFeed(
         rejected.push({ code, unit: unit.slug, reason: "no image" });
         return;
       }
-      items.push(itemFor(unit, code, unit.sizes[i], entry));
+      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified));
     });
   }
 
@@ -267,6 +290,7 @@ export function feedToXml(items: FeedItem[], now = new Date()): string {
         tag("g:google_product_category", it.googleProductCategory),
         tag("g:product_type", it.productType),
         it.shippingWeightKg ? tag("g:shipping_weight", `${it.shippingWeightKg} kg`) : "",
+        tag("g:custom_label_0", it.customLabel0),
         "  </item>",
       ]
         .filter(Boolean)
