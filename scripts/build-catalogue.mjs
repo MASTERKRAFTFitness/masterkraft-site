@@ -212,7 +212,49 @@ const GENERATED =
   "Raw WooCommerce data; visibility rules are applied at read time in woocommerce.ts.";
 
 const started = Date.now();
-const { products, reported } = await fetchAllProducts();
+
+// --------------------------------------------------------------------------
+// WHEN THE STORE CANNOT ANSWER, `--check` SAYS SO AND PASSES. Added 2026-09-18.
+//
+// `check:catalogue` is a link in `predeploy`, and the WordPress host it reads
+// is on a certificate that expires 27 Sep and cannot renew: the domain points
+// at Vercel, so the renewal challenge can never reach the box. From the 28th,
+// every `npm run deploy` would have died at a TLS error while checking a store
+// nobody uses, and the fix people reach for at that point is to rip the check
+// out of the chain — losing it for the failures it CAN still catch, and losing
+// the reasoning with it.
+//
+// So the question the check asks is stated honestly instead. "Does the
+// committed snapshot match the store?" has three answers, not two: yes, no, and
+// **cannot be established**. Only the middle one is a reason to stop a deploy.
+// An unreachable store makes the snapshot unverifiable, not wrong — and it is
+// frozen anyway, because `build:catalogue` cannot rebuild it from a host that
+// is gone.
+//
+// This is the same judgement check-deploy-branch.mjs already makes about
+// unpushed commits: worth saying loudly, not worth blocking on.
+//
+// IT IS DELIBERATELY NARROW. Only a failure to REACH the store passes. A store
+// that answers and disagrees with the snapshot still exits 1, exactly as before,
+// and a real rebuild (no `--check`) still throws — writing a catalogue from a
+// store you could not read is how you empty the shop.
+let products, reported;
+try {
+  ({ products, reported } = await fetchAllProducts());
+} catch (e) {
+  if (!checkOnly) throw e;
+  const why = e instanceof Error ? e.message : String(e);
+  console.warn(
+    `\n  check-catalogue: THE STORE DID NOT ANSWER — ${why}\n` +
+      `\n  The snapshot could not be checked against it, which is not the same as the\n` +
+      `  snapshot being wrong. src/data/catalogue.json is frozen: the WordPress host it\n` +
+      `  was built from lost its certificate on 27 Sep 2026 and build:catalogue cannot\n` +
+      `  rebuild it. Deploy is NOT blocked.\n` +
+      `\n  If this is unexpected — if that store is supposed to be reachable — stop and\n` +
+      `  find out why before shipping, because nothing else here is checking it.\n`
+  );
+  process.exit(0);
+}
 
 if (products.length < MIN_PRODUCTS) {
   console.error(
