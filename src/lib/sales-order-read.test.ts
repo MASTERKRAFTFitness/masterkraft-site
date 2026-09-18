@@ -79,7 +79,7 @@ describe("getSalesOrder: the Stripe reference", () => {
     // returning it would have the agent read one customer's card details back
     // in answer to another customer's order number.
     const found = await read([
-      order(comments("Email: jane@example.com", "Refunded against pi_OTHERCUSTOMER by Gaetana")),
+      order(comments("Email: jane@example.com", "Refunded against pi_OTHERCUSTOMER by the office")),
     ]);
     expect(found?.stripeRef).toBeNull();
   });
