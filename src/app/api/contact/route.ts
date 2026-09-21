@@ -3,6 +3,8 @@ import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { ENQUIRY_TOPICS, hubspotEnquiryType, toEnquiryKind } from "@/lib/enquiry-type";
 import { internalRecipients } from "@/lib/notify-recipients";
+import { scheduleBlockedLog } from "@/lib/blocked-log";
+import { visitorKey } from "@/lib/agent/rate-limit";
 
 // The general enquiry form on /contact/enquiry.
 //
@@ -132,6 +134,18 @@ export async function POST(request: Request) {
   });
   if (!verdict.ok) {
     console.warn("[contact] blocked", { reason: verdict.reason, detail: verdict.detail });
+    // The three silent verdicts leave no other trace, so a wrongly-blocked
+    // person can be found and answered. Deferred and detached, and it drops
+    // rate_limit itself — see lib/blocked-log.ts.
+    scheduleBlockedLog({
+      form: "contact",
+      reason: verdict.reason,
+      detail: verdict.detail,
+      visitor: visitorKey(request),
+      name: (body.firstName ?? "") + " " + (body.lastName ?? ""),
+      email: body.email,
+      message: body.message,
+    });
     if (verdict.reason === "rate_limit") {
       return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
     }

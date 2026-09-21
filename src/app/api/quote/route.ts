@@ -3,6 +3,8 @@ import { submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients } from "@/lib/notify-recipients";
+import { scheduleBlockedLog } from "@/lib/blocked-log";
+import { visitorKey } from "@/lib/agent/rate-limit";
 
 // Quote request handler. Does two things when configured:
 //   1. Emails the team (via Resend) — needs RESEND_API_KEY + QUOTE_FROM_EMAIL.
@@ -66,6 +68,18 @@ export async function POST(request: Request) {
   });
   if (!verdict.ok) {
     console.warn("[quote] blocked", { reason: verdict.reason, detail: verdict.detail });
+    // The three silent verdicts leave no other trace, so a wrongly-blocked
+    // person can be found and answered. Deferred and detached, and it drops
+    // rate_limit itself — see lib/blocked-log.ts.
+    scheduleBlockedLog({
+      form: "quote",
+      reason: verdict.reason,
+      detail: verdict.detail,
+      visitor: visitorKey(request),
+      name: contact?.name,
+      email: contact?.email,
+      message: contact?.notes,
+    });
     if (verdict.reason === "rate_limit") {
       return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
     }
