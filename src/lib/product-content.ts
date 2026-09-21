@@ -74,7 +74,22 @@ const LOADER = "content.load";
 export type SpecOverride = Partial<Record<SpecLabel, string>>;
 
 /** What a page needs: the meta sentence, the Product Overview as HTML, the specs. */
-export type ContentEntry = { short?: string; html?: string; specs?: SpecOverride };
+export type ContentEntry = {
+  short?: string;
+  html?: string;
+  specs?: SpecOverride;
+  /**
+   * WooCommerce's OWN description fields, NOT the ACF overview above.
+   *
+   * Carried separately because they sit at a different place in the chain: the
+   * ACF overview and the authored JSON both outrank them, and they in turn
+   * outrank the frozen snapshot. Folding them into `short`/`html` at read time
+   * would put them ahead of product-copy.json and quietly reinstate the copy
+   * that file exists to replace.
+   */
+  shortDescription?: string;
+  description?: string;
+};
 
 /** Human-edited copy, keyed by SLUG — which is what the page and the URL have. */
 export type ContentMap = Record<string, ContentEntry>;
@@ -115,7 +130,7 @@ async function buildContent(): Promise<ContentMap> {
   // SPEC_FIELDS; the pairing is what the loader and the resolver share.
   const { data, error } = await db
     .from("product_content")
-    .select("slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty");
+    .select("slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty, description, short_description");
   if (error) throw new Error(`product_content: ${error.message}`);
 
   const out: ContentMap = {};
@@ -144,15 +159,23 @@ async function buildContent(): Promise<ContentMap> {
     }
     const hasSpecs = Object.keys(specs).length > 0;
 
+    // Read off EVERY row, loader-owned included — same reasoning as specs. The
+    // loader copied these from the snapshot, so preferring them over the
+    // snapshot is a no-op today; what it buys is that the snapshot can go.
+    const shortDescription = String(row.short_description ?? "").trim() || undefined;
+    const description = String(row.description ?? "").trim() || undefined;
+
     // A row that sets nothing is not an override of anything. Skipping it keeps
     // "has an entry" meaning "has something to say", so a caller can test the
     // entry rather than each of its fields.
-    if (!short && !html && !hasSpecs) continue;
+    if (!short && !html && !hasSpecs && !shortDescription && !description) continue;
 
     out[slug] = {
       ...(short ? { short } : {}),
       ...(html ? { html } : {}),
       ...(hasSpecs ? { specs } : {}),
+      ...(shortDescription ? { shortDescription } : {}),
+      ...(description ? { description } : {}),
     };
   }
   return out;
@@ -203,9 +226,20 @@ export async function getProductContent(): Promise<ContentMap> {
 export function resolveCopy(slug: string, content: ContentMap = {}): ContentEntry {
   const row = content[slug];
   const json = productCopy(slug);
+  // FOUR LEVELS, and the order is the whole contract:
+  //
+  //   1. a human-edited row's ACF overview       — somebody chose these words
+  //   2. src/data/product-copy.json              — authored, deploy-time
+  //   3. the row's WooCommerce description       — the snapshot, via the loader
+  //   4. the frozen snapshot itself              — the page's own last resort
+  //
+  // 3 sits BELOW the JSON deliberately. It is the snapshot copied, so putting
+  // it above would reinstate exactly the duplicate descriptions product-copy
+  // exists to fix. It sits ABOVE the snapshot so that deleting catalogue.json
+  // changes nothing — which is the point of storing it at all.
   return {
-    short: row?.short ?? json?.short,
-    html: row?.html ?? productCopyHtml(slug),
+    short: row?.short ?? json?.short ?? row?.shortDescription,
+    html: row?.html ?? productCopyHtml(slug) ?? row?.description,
   };
 }
 

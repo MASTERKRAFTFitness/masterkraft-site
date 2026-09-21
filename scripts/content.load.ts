@@ -55,6 +55,11 @@ type ProductRow = {
   // read them back, and caps a value at 50 characters where 19 warranties are
   // longer. Resolved values — discrete ACF field first, legacy blob second —
   // which is what the page shows today.
+  // WooCommerce's OWN description fields, distinct from the ACF overview above.
+  // The page falls back to these when the ACF ones are absent, and 385 live
+  // products get their meta description this way — see the migration.
+  description: string | null;
+  short_description: string | null;
   assembled_size: string | null;
   colour: string | null;
   material: string | null;
@@ -118,7 +123,13 @@ function productRows(): ProductRow[] {
     // most of the ex-display and portal stock. Before the spec columns existed
     // this check was prose-only and skipped them.
     const has =
-      d.overviewShort || d.overviewDescription || features.length || d.packageInclusions || specs.length;
+      d.overviewShort ||
+      d.overviewDescription ||
+      features.length ||
+      d.packageInclusions ||
+      specs.length ||
+      (p.short_description ?? "").trim() ||
+      (p.description ?? "").trim();
     if (!has) continue;
     const spec = (label: keyof typeof SPEC_COLUMNS) =>
       specs.find((sp) => sp.label === label)?.value.trim() || null;
@@ -130,6 +141,10 @@ function productRows(): ProductRow[] {
       features,
       package_inclusions:
         d.packageInclusions?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || null,
+      // Stored as found: both are WooCommerce rich text the page renders as
+      // HTML, so stripping markup here would change what a customer sees.
+      description: (p.description ?? "").trim() || null,
+      short_description: (p.short_description ?? "").trim() || null,
       assembled_size: spec("Assembled size"),
       colour: spec("Colour"),
       material: spec("Material"),
@@ -231,6 +246,10 @@ it("load content", { timeout: 300_000 }, async () => {
   say(`  spec fields       ${specCoverage}`);
   say(
     `  no spec at all    ${products.filter((p) => !Object.values(SPEC_COLUMNS).some((c) => p[c])).length}`
+  );
+  say(
+    `  descriptions      short_description ${products.filter((p) => p.short_description).length}, ` +
+      `description ${products.filter((p) => p.description).length}`
   );
   say(
     `category_content  ${cats.length} rows (${withDescription} carry the old store's description)`

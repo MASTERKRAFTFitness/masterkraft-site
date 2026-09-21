@@ -236,3 +236,57 @@ describe("the spec table, database first", () => {
     expect(map["olympic-bench"].specs).toEqual({ Warranty: "5 years" });
   });
 });
+
+// WooCommerce's own description fields sit BELOW the authored JSON and ABOVE
+// the frozen snapshot. Getting that order wrong is silent in both directions:
+// too high reinstates the duplicate copy product-copy.json exists to fix, too
+// low means deleting catalogue.json strips 385 products of their meta
+// description.
+describe("the WooCommerce description fields, and where they rank", () => {
+  it("reads them off a loader-owned row, unlike prose", async () => {
+    adminDb.mockReturnValue({ from });
+    respond([row({ short_description: "<p>From Woo.</p>", updated_by: "content.load" })]);
+    const map = await getProductContent();
+    expect(map["olympic-bench"].shortDescription).toBe("<p>From Woo.</p>");
+    // its ACF prose is still dropped - that rule is unchanged
+    expect(map["olympic-bench"].short).toBeUndefined();
+    expect(map["olympic-bench"].html).toBeUndefined();
+  });
+
+  it("supplies `short` when nothing outranks it", () => {
+    const out = resolveCopy("a-product", {
+      "a-product": { shortDescription: "<p>Woo short.</p>" },
+    });
+    expect(out.short).toBe("<p>Woo short.</p>");
+  });
+
+  it("does NOT outrank a human-edited overview", () => {
+    const out = resolveCopy("a-product", {
+      "a-product": { short: "Edited.", shortDescription: "<p>Woo short.</p>" },
+    });
+    expect(out.short).toBe("Edited.");
+  });
+
+  it("supplies `html` from the description when nothing outranks it", () => {
+    const out = resolveCopy("a-product", {
+      "a-product": { description: "<p>Woo body.</p>" },
+    });
+    expect(out.html).toBe("<p>Woo body.</p>");
+  });
+
+  it("does NOT outrank an edited row's overview body", () => {
+    const out = resolveCopy("a-product", {
+      "a-product": { html: "<p>Edited body.</p>", description: "<p>Woo body.</p>" },
+    });
+    expect(out.html).toBe("<p>Edited body.</p>");
+  });
+
+  // A row carrying ONLY a Woo description is still worth an entry - before
+  // these columns existed it would have been skipped as having nothing to say.
+  it("keeps a row whose only content is a Woo description", async () => {
+    adminDb.mockReturnValue({ from });
+    respond([row({ overview_short: null, overview: null, features: [], description: "<p>Only this.</p>", updated_by: "content.load" })]);
+    const map = await getProductContent();
+    expect(map["olympic-bench"]?.description).toBe("<p>Only this.</p>");
+  });
+});
