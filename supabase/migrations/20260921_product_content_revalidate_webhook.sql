@@ -80,12 +80,29 @@ $$;
 comment on function public.product_content_revalidate() is
   'Calls the site''s revalidation route so an edit appears in seconds rather than within the hour. Fires only for rows NOT stamped updated_by = ''content.load'' — see the trigger''s WHEN clause.';
 
+-- TWO TRIGGERS, ONE FUNCTION, and not by preference. Postgres rejects a single
+-- INSERT OR UPDATE OR DELETE trigger whose WHEN references NEW:
+--
+--   42P17: DELETE trigger's WHEN condition cannot reference NEW values
+--
+-- NEW does not exist for DELETE, and unlike the function body — which can
+-- branch on TG_OP at run time — a WHEN clause is validated at creation. So the
+-- condition is split the same way the operations are, and both arms call the
+-- same function.
 drop trigger if exists product_content_revalidate on public.product_content;
+drop trigger if exists product_content_revalidate_upsert on public.product_content;
+drop trigger if exists product_content_revalidate_delete on public.product_content;
 
-create trigger product_content_revalidate
-  after insert or update or delete on public.product_content
+create trigger product_content_revalidate_upsert
+  after insert or update on public.product_content
   for each row
-  when (coalesce(new.updated_by, old.updated_by, '') is distinct from 'content.load')
+  when (coalesce(new.updated_by, '') is distinct from 'content.load')
+  execute function public.product_content_revalidate();
+
+create trigger product_content_revalidate_delete
+  after delete on public.product_content
+  for each row
+  when (coalesce(old.updated_by, '') is distinct from 'content.load')
   execute function public.product_content_revalidate();
 
 -- ---------------------------------------------------------------- verifying
@@ -96,7 +113,7 @@ create trigger product_content_revalidate
 --   1. Everything is installed:
 --
 --        select
---          (select count(*) from pg_trigger where tgname = 'product_content_revalidate') as trigger_exists,
+--          (select count(*) from pg_trigger where tgname like 'product_content_revalidate%') as triggers, -- expect 2
 --          (select extversion from pg_extension where extname = 'pg_net') as pg_net_version;
 --
 --   2. Fire it with no visible change to any page, then read the answer. Run
