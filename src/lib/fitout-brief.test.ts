@@ -80,7 +80,15 @@ describe("briefSummary", () => {
 });
 
 describe("briefHubspotFields", () => {
-  it("sends only the seven properties the portal already defines", () => {
+  // A completed brief is qualification, not a signup, so it enters the funnel as
+  // an MQL rather than a bare Lead. The value is HubSpot's internal one; the
+  // label "MQL" would be accepted with a 2xx and stored as nothing.
+  it("files the brief as a marketing qualified lead", () => {
+    const stage = briefHubspotFields(full).find((f) => f.name === "lifecyclestage")!.value;
+    expect(stage).toBe("marketingqualifiedlead");
+  });
+
+  it("sends only the properties the portal already defines", () => {
     const names = briefHubspotFields(full).map((f) => f.name);
     expect(names).toEqual([
       "firstname",
@@ -89,6 +97,7 @@ describe("briefHubspotFields", () => {
       "phone",
       "company",
       "enquiry_type",
+      "lifecyclestage",
       "message",
     ]);
   });

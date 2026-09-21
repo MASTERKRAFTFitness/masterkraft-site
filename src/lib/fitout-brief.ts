@@ -296,6 +296,19 @@ export function briefHubspotFields(
     { name: "phone", value: brief.phone },
     { name: "company", value: brief.company },
     { name: "enquiry_type", value: portalEnquiryType(ENQUIRY_KIND.fitout) },
+    // MQL on arrival. A completed brief is not a newsletter signup: someone has
+    // named their space, its dimensions, a budget band and a timeline, which is
+    // more qualification than most outbound ever produces.
+    //
+    // `marketingqualifiedlead` is HubSpot's INTERNAL value, read off the
+    // lifecyclestage property definition rather than guessed - "MQL" is the label
+    // and would be silently discarded, exactly as every enquiry_type value was
+    // before 17 September.
+    //
+    // ONLY THE BRIEF. This field lives in briefHubspotFields, which nothing but
+    // /api/fitout-brief calls, so a newsletter signup or a warranty claim is
+    // unaffected.
+    { name: "lifecyclestage", value: "marketingqualifiedlead" },
     { name: "message", value: briefSummary(brief, attachments) },
   ];
 }
