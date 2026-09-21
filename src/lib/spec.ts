@@ -35,6 +35,27 @@ export function normalizeSpecUnits(value: string): string {
     .replace(/(\d)\s*(kg|months?|years?|weeks?|days?)\b/gi, "$1 $2");
 }
 
+// The spec table's seven fields, in RENDER ORDER, paired with the
+// product_content columns that hold an edited version of each.
+//
+// ONE LIST, TWO CONSUMERS: scripts/content.load.ts writes these columns and
+// lib/product-content.ts reads them back. Keeping the pairing here — beside the
+// parser that emits the labels — is what stops a rename in one from silently
+// writing nulls in the other. The order is parseProductDetail's own push order
+// below, which is the order the product page renders.
+export const SPEC_FIELDS = [
+  ["Assembled size", "assembled_size"],
+  ["Colour", "colour"],
+  ["Material", "material"],
+  ["Net weight", "net_weight"],
+  ["Gross weight", "gross_weight"],
+  ["Packing size", "packing_size"],
+  ["Warranty", "warranty"],
+] as const;
+
+export type SpecLabel = (typeof SPEC_FIELDS)[number][0];
+export type SpecColumn = (typeof SPEC_FIELDS)[number][1];
+
 const SPEC_BLOB_LABELS: Record<string, string> = {
   colour: "Colour",
   color: "Colour",

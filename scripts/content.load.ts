@@ -50,8 +50,33 @@ type ProductRow = {
   overview: string | null;
   features: string[];
   package_inclusions: string | null;
+  // The spec table. See 20260921_product_spec_fields.sql for why these live
+  // here rather than as Unleashed attributes: the API cannot write them, cannot
+  // read them back, and caps a value at 50 characters where 19 warranties are
+  // longer. Resolved values — discrete ACF field first, legacy blob second —
+  // which is what the page shows today.
+  assembled_size: string | null;
+  colour: string | null;
+  material: string | null;
+  net_weight: string | null;
+  gross_weight: string | null;
+  packing_size: string | null;
+  warranty: string | null;
   updated_by: string;
 };
+
+// The seven labels lib/spec.ts resolves, mapped to their columns. Keyed by the
+// label the parser emits, so a rename there fails loudly here rather than
+// silently writing nulls.
+const SPEC_COLUMNS = {
+  "Assembled size": "assembled_size",
+  Colour: "colour",
+  Material: "material",
+  "Net weight": "net_weight",
+  "Gross weight": "gross_weight",
+  "Packing size": "packing_size",
+  Warranty: "warranty",
+} as const satisfies Record<string, keyof ProductRow>;
 
 type CategoryRow = {
   group_name: string;
@@ -88,8 +113,15 @@ function productRows(): ProductRow[] {
     if (!code || isObsolete(p)) continue;
     const d = parseProductDetail(p);
     const features = d.features ?? [];
-    const has = d.overviewShort || d.overviewDescription || features.length || d.packageInclusions;
+    const specs = d.specs ?? [];
+    // A product with a spec table but no prose is still worth a row — that is
+    // most of the ex-display and portal stock. Before the spec columns existed
+    // this check was prose-only and skipped them.
+    const has =
+      d.overviewShort || d.overviewDescription || features.length || d.packageInclusions || specs.length;
     if (!has) continue;
+    const spec = (label: keyof typeof SPEC_COLUMNS) =>
+      specs.find((sp) => sp.label === label)?.value.trim() || null;
     rows.push({
       erp_code: code,
       slug: p.slug,
@@ -98,6 +130,13 @@ function productRows(): ProductRow[] {
       features,
       package_inclusions:
         d.packageInclusions?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || null,
+      assembled_size: spec("Assembled size"),
+      colour: spec("Colour"),
+      material: spec("Material"),
+      net_weight: spec("Net weight"),
+      gross_weight: spec("Gross weight"),
+      packing_size: spec("Packing size"),
+      warranty: spec("Warranty"),
       updated_by: LOADER,
     });
   }
@@ -133,6 +172,16 @@ it("load content", { timeout: 300_000 }, async () => {
     `product_content   ${products.length} rows ` +
       `(${products.filter((p) => p.overview).length} with an overview, ` +
       `${products.filter((p) => p.features.length).length} with features)`
+  );
+  // Per-field spec coverage, because "all of it" is the goal and the gap is the
+  // thing worth watching run to run. A field at 0 means the parser stopped
+  // resolving that label, not that the catalogue lost it.
+  const specCoverage = Object.entries(SPEC_COLUMNS)
+    .map(([label, col]) => `${label} ${products.filter((p) => p[col]).length}`)
+    .join(", ");
+  say(`  spec fields       ${specCoverage}`);
+  say(
+    `  no spec at all    ${products.filter((p) => !Object.values(SPEC_COLUMNS).some((c) => p[c])).length}`
   );
   say(
     `category_content  ${cats.length} rows (${withDescription} carry the old store's description)`

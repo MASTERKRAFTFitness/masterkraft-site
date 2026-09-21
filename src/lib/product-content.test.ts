@@ -15,7 +15,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: (...a: unknown[]) => unknown) => fn,
 }));
 
-const { getProductContent, resolveCopy } = await import("@/lib/product-content");
+const { getProductContent, resolveCopy, resolveSpecs } = await import("@/lib/product-content");
 
 /** A product_content row, with the loader's stamp unless told otherwise. */
 const row = (o: Partial<Record<string, unknown>> = {}) => ({
@@ -160,5 +160,67 @@ describe("precedence: database, then the JSON, then the snapshot", () => {
       short: undefined,
       html: undefined,
     });
+  });
+});
+
+// The spec table follows the same rule as the prose, and gets its own cases
+// because its failure looks different: prose that loses an override reads
+// oddly, a spec that loses one states a wrong measurement.
+describe("the spec table, database first", () => {
+  const snapshot = [
+    { label: "Assembled size", value: "L 2,070 × W 1,220 × H 2300 mm" },
+    { label: "Colour", value: "Tungsten (metallic silver gray)" },
+    { label: "Warranty", value: "3 months" },
+  ];
+
+  it("returns the snapshot untouched when nothing is edited", () => {
+    expect(resolveSpecs("functional-trainer-pro", snapshot, {})).toBe(snapshot);
+  });
+
+  it("replaces only the edited field and keeps the rest", () => {
+    const out = resolveSpecs("functional-trainer-pro", snapshot, {
+      "functional-trainer-pro": { specs: { Warranty: "Frame 5yr, cables 6mo" } },
+    });
+    expect(out).toEqual([
+      { label: "Assembled size", value: "L 2,070 × W 1,220 × H 2300 mm" },
+      { label: "Colour", value: "Tungsten (metallic silver gray)" },
+      { label: "Warranty", value: "Frame 5yr, cables 6mo" },
+    ]);
+  });
+
+  // The Functional Trainer's actual gap: no Packing size anywhere on the old
+  // store. An editor filling it should see it in its proper row, not appended.
+  it("inserts a spec the snapshot never had, in render order", () => {
+    const out = resolveSpecs("functional-trainer-pro", snapshot, {
+      "functional-trainer-pro": { specs: { "Packing size": "L 2,100 × W 1,250 × H 400 mm" } },
+    });
+    expect(out.map((r) => r.label)).toEqual([
+      "Assembled size",
+      "Colour",
+      "Packing size",
+      "Warranty",
+    ]);
+  });
+
+  it("ignores an entry for a different slug", () => {
+    const out = resolveSpecs("functional-trainer-pro", snapshot, {
+      "some-other-product": { specs: { Warranty: "wrong product" } },
+    });
+    expect(out).toBe(snapshot);
+  });
+
+  // A loader-owned row never reaches the map, so an unedited catalogue renders
+  // exactly what it renders today. This is the safety property of the change.
+  it("reads no specs off a loader-owned row", async () => {
+    adminDb.mockReturnValue({ from });
+    respond([row({ assembled_size: "L 1 × W 1 × H 1 mm", updated_by: "content.load" })]);
+    expect(await getProductContent()).toEqual({});
+  });
+
+  it("reads specs off a human-edited row", async () => {
+    adminDb.mockReturnValue({ from });
+    respond([row({ warranty: "5 years", updated_by: "michael" })]);
+    const map = await getProductContent();
+    expect(map["olympic-bench"].specs).toEqual({ Warranty: "5 years" });
   });
 });
