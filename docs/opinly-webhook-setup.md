@@ -24,16 +24,16 @@ RSS feed carried zero items.
 
 ## The three steps
 
-Do them in one sitting. **The signing secret does not exist until the webhook is
-created**, so there is no way to load the secret first — there is an unavoidable
-window between step 1 and step 3 where the endpoint rejects deliveries. Keep it
-short rather than trying to design it away.
+**Registering the endpoint is not self-service.** Opinly has not exposed
+webhooks on this account (see below), so step 1 is an email and steps 2 and 3
+wait on the reply.
 
-1. **Create the webhook in Opinly.** Settings → Developers → add a new webhook.
-   Endpoint `https://masterkraft.com/api/opinly`. Subscribe to
+1. **Ask Opinly to register the endpoint.** Email support@opinly.ai with the
+   endpoint `https://masterkraft.com/api/opinly`, subscribed to
    `content.routes-changed` and nothing else — Opinly dual-emits the legacy
    `content.paths-invalidated` for the same change, and the route deliberately
-   ignores it so the work is not done twice. Copy the `whsec_…` secret.
+   ignores it so the work is not done twice. Ask them to confirm webhooks are
+   available on the plan and to send the `whsec_…` signing secret.
 2. **Add the secret to Vercel.** Project `masterkraft-site` → Environment
    Variables → `OPINLY_WEBHOOK_SIGNING_SECRET`, Production. Secret: Vercel only,
    never the repo.
@@ -41,9 +41,11 @@ short rather than trying to design it away.
    deployment carries the environment it was built with, so nothing takes effect
    until a new one goes out.
 
-A post that publishes inside the window is not lost — Opinly retries failed
-deliveries with backoff, so it lands once the redeploy is through. The queue
-publishes at 01:00 UTC on 23, 26 and 29 September, then 2, 5 and 8 October.
+Ask support to say when the endpoint goes active, and do steps 2 and 3 promptly
+after. Between the endpoint existing and the redeploy landing the route answers
+500 to every delivery; Opinly retries with backoff, so a post published in that
+window still lands once the redeploy is through, but keep the gap short. The
+queue publishes at 01:00 UTC on 23, 26 and 29 September, then 2, 5 and 8 October.
 
 ## Verifying
 
@@ -58,21 +60,37 @@ Opinly's webhook screen lists deliveries with response codes:
 End to end: publish or edit a post and watch `/blog`. Seconds means the webhook
 is accepted. An hour means it is not, and the ISR backstop is carrying it.
 
-## The part that is not written down here
+## Why step 1 is an email
 
-**The webhook UI could not be found in the dashboard.** Opinly's docs say
-Settings → Developers, but on the MasterKraft company that page renders only the
-CDN namespace and API Keys, with a section stuck on "Loading…" across repeated
-loads. Settings → Organization shows only General and Members.
+This was an open question when the doc was first written. It is now answered:
+**webhook registration is not available on this account**, so there is no page to
+do it on. Three checks on 21 September, in order:
 
-Three possibilities, and whoever holds admin will know which:
+- The Developers page, fully loaded, shows only the CDN namespace and API Keys.
+  No webhooks section, and nothing hidden behind the slow-loading panel that
+  caused the first, wrong reading of that page.
+- Opinly's own dashboard agent was asked to register the endpoint and replied
+  that it cannot: *"I can't register webhooks or retrieve signing secrets —
+  that's outside what I'm able to do here."*
+- That agent then ran a help-centre lookup and concluded webhooks may not be on
+  the current plan or may not be released yet, directing the request to
+  support@opinly.ai with the endpoint URL and the `content.routes-changed`
+  subscription.
 
-- the section is admin-gated and hidden for the account that looked;
-- that part of the page is failing to render and needs a retry;
-- webhooks are not on this plan, making Opinly support the next step.
+So this is not a UI someone failed to find. Support is the route.
 
-If it is the third, nothing further is needed: the hourly backstop is a working
-state, not a broken one.
+## One trap, already removed
+
+The API Keys table held a key **named** `OPINLY_WEBHOOK_SIGNING_SECRET`, created
+16 September. It was an ordinary Opinly API key wearing the environment
+variable's name — not a signing secret. Pasting it into Vercel would have
+produced a 400 on every delivery and read as a subtly broken integration rather
+than a wrong value.
+
+It was deleted on 21 September, after confirming against Vercel that the live key
+is a different one. If a similarly named key reappears, it is still not the
+secret: the signing secret is issued by Svix when an endpoint is registered, and
+it begins `whsec_`.
 
 ## Related
 
