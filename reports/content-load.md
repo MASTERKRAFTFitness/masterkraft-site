@@ -3,8 +3,8 @@ product_content   414 rows (402 with an overview, 273 with features)
   no spec at all    24
 category_content  11 rows (9 carry the old store's description)
 
-  new rows          11
-  loader-owned      403  (safe to refresh)
+  new rows          0
+  loader-owned      414  (safe to refresh)
   edited by a human 0  — skipped
 
 product_content   414 rows written

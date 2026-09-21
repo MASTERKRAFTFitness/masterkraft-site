@@ -71,7 +71,7 @@ describe("parseProductDetail spec fallback", () => {
       { label: "Colour", value: "Charcoal" },
     ]);
     expect(specs.filter((s) => s.label === "Net weight")).toEqual([
-      { label: "Net weight", value: "40kg" },
+      { label: "Net weight", value: "40 kg" },
     ]);
     // Untouched fields still come from the blob.
     expect(specs).toContainEqual({ label: "Material", value: "Hard wearing vinyl cover" });
@@ -79,6 +79,49 @@ describe("parseProductDetail spec fallback", () => {
 
   it("stays empty when the product has neither source", () => {
     expect(parseProductDetail(product([])).specs).toEqual([]);
+  });
+});
+
+// The discrete ACF fields hold a quantity and leave the unit to whoever renders
+// it: every net/gross weight in the snapshot is a bare number, and so are 120
+// warranties. The blob names its unit, so the same fact used to render two ways
+// depending on which source answered — "10kg" here, "414 kg" there, and a bare
+// "12" where the twin product read "12 months".
+describe("the unit a field's bare numbers are counted in", () => {
+  const specOf = (meta: { key: string; value: unknown }[], label: string) =>
+    parseProductDetail(product(meta)).specs.find((s) => s.label === label)?.value;
+
+  it("gives a discrete weight the same spacing the blob already had", () => {
+    expect(specOf([{ key: "net_weight", value: "10" }], "Net weight")).toBe("10 kg");
+    expect(specOf([{ key: "gross_weight", value: "414" }], "Gross weight")).toBe("414 kg");
+    expect(specOf([{ key: "net_weight", value: "27.5" }], "Net weight")).toBe("27.5 kg");
+  });
+
+  // SEWMBB02 against SEWMBB01: the same wall-mounted rack, one bare, one not.
+  it("names the months a bare warranty is counting", () => {
+    expect(specOf([{ key: "warranty", value: "12" }], "Warranty")).toBe("12 months");
+  });
+
+  it("leaves a value that already names its unit alone", () => {
+    expect(specOf([{ key: "warranty", value: "12 months" }], "Warranty")).toBe("12 months");
+    expect(specOf([{ key: "net_weight", value: "34kg" }], "Net weight")).toBe("34 kg");
+  });
+
+  // A warranty stating what it covers is not a quantity, and "5 Years Frame, 2
+  // Years Non-Wearable Parts months" would be worse than the inconsistency.
+  it("never appends a unit to prose", () => {
+    const prose = "5 Years Frame, 2 Years Non-Wearable Parts";
+    expect(specOf([{ key: "warranty", value: prose }], "Warranty")).toBe(prose);
+    expect(specOf([{ key: "gross_weight", value: "various" }], "Gross weight")).toBe("various");
+    expect(specOf([{ key: "net_weight", value: "10-50 kg" }], "Net weight")).toBe("10-50 kg");
+  });
+
+  // Dimensions carry their own "mm" and are assembled, not stated.
+  it("leaves a field that has no unit of its own untouched", () => {
+    expect(specOf([{ key: "assembled_size_length", value: "2,070" }], "Assembled size")).toBe(
+      "L 2,070 mm"
+    );
+    expect(specOf([{ key: "colour", value: "Black" }], "Colour")).toBe("Black");
   });
 });
 
@@ -137,5 +180,26 @@ describe("normalizeSpecUnits", () => {
   it("leaves correct values alone", () => {
     expect(normalizeSpecUnits("5 years")).toBe("5 years");
     expect(normalizeSpecUnits("(4) Cables- 6 months")).toBe("(4) Cables- 6 months");
+  });
+
+  // The unit is only ever appended to a value that is nothing but a number.
+  it("names the unit of a bare number, and only of a bare number", () => {
+    expect(normalizeSpecUnits("34", "kg")).toBe("34 kg");
+    expect(normalizeSpecUnits("1,200.5", "kg")).toBe("1,200.5 kg");
+    expect(normalizeSpecUnits("12", "months")).toBe("12 months");
+    expect(normalizeSpecUnits("12 months", "months")).toBe("12 months");
+    expect(normalizeSpecUnits("12months", "months")).toBe("12 months");
+    expect(normalizeSpecUnits("10-50 kg", "kg")).toBe("10-50 kg");
+    expect(normalizeSpecUnits("various", "kg")).toBe("various");
+    expect(normalizeSpecUnits("12", "")).toBe("12");
+  });
+
+  // Running it over a value it has already repaired must not change it again:
+  // the blob path normalises on the way out of parseSpecBlob and parseProductDetail
+  // normalises again on the way into the table.
+  it("is idempotent", () => {
+    for (const v of ["34 kg", "12 months", "5 Years Frame, 2 Years Non-Wearable Parts"]) {
+      expect(normalizeSpecUnits(normalizeSpecUnits(v, "kg"), "kg")).toBe(normalizeSpecUnits(v, "kg"));
+    }
   });
 });

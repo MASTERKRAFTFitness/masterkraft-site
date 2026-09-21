@@ -20,7 +20,7 @@ import { it } from "vitest";
 import { categories } from "@/lib/categories";
 import { allProducts, productsInCategory } from "@/lib/catalogue";
 import { decodeEntities, filterBrandSku, filterListable, type WcMeta, type WcProduct } from "@/lib/woocommerce";
-import { parseSpecBlob } from "@/lib/spec";
+import { parseSpecBlob, normalizeSpecUnits, SPEC_UNITS, type SpecLabel } from "@/lib/spec";
 
 const CSV = "reports/wc-spec-gaps.csv";
 const MD = "reports/wc-spec-gaps-summary.md";
@@ -93,22 +93,28 @@ function rawBlobRows(html: string): { key: string; value: string }[] {
   return out;
 }
 
-// parseProductDetail appends a unit to some discrete values and not others, so
-// a like-for-like comparison has to compare what the PAGE RENDERS against the
-// blob, not the raw field. Without this, every "16" vs "16 kg" pair reads as a
-// disagreement when the page in fact shows "16kg" and the two agree.
-const RENDER_UNIT: Record<string, string> = { "Net weight": "kg", "Gross weight": "kg" };
-
-// Space-insensitive: "16kg" and "16 kg" are the same value formatted differently.
+// A like-for-like comparison has to compare what the PAGE RENDERS against the
+// blob, not the raw field -- the discrete fields hold bare numbers and
+// parseProductDetail names the unit. So this renders the discrete value through
+// the REAL function rather than appending a unit of its own; a report that
+// guessed differently from the page would eventually describe a page that does
+// not exist.
+//
+// Space-insensitive too: "16kg" and "16 kg" are the same value formatted
+// differently, and the blob predates the house format.
 const norm = (s: string) =>
   s.toLowerCase().replace(/\s+/g, "").replace(/mm$/, "").trim();
 
-// The discrete field holds a bare number and the renderer adds no unit, while
-// the blob spells one out -- so the page shows "12" where it should read
-// "12 months". A real defect, not a disagreement about the value.
+// The renderer names the unit a bare number is counted in -- kg for the
+// weights, months for a warranty (lib/spec.ts SPEC_UNITS) -- and the blob
+// beside it names a DIFFERENT one: "5" rendered as "5 months" where the source
+// says "5 years". The one half of this the unit rule cannot fix by itself,
+// because only the source knows which was meant, and the half that promises a
+// customer the wrong cover.
 const unitMissing = (discrete: string, blob: string) =>
-  /^\d+(\.\d+)?$/.test(discrete.trim()) &&
-  new RegExp(`^${discrete.trim()}\\s*(month|year|week|day|kg)`, "i").test(blob.trim());
+  /^\d[\d.,]*$/.test(discrete.trim()) &&
+  new RegExp(`^${discrete.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*(month|year|week|day|kg)`, "i")
+    .test(blob.trim());
 const q = (s: string) => `"${String(s ?? "").replace(/"/g, '""')}"`;
 
 type Row = {
@@ -145,11 +151,11 @@ it("writes the spec-reconciliation punch list", () => {
           ? [blob.dims.l, blob.dims.w, blob.dims.h, blob.dims.d].filter(Boolean).join(" x ")
           : blob.rows.find((r) => r.label === f.label)?.value ?? "";
 
-      const rendered = d ? d + (RENDER_UNIT[f.label] ?? "") : "";
+      const rendered = d ? normalizeSpecUnits(d, SPEC_UNITS[f.label as SpecLabel] ?? "") : "";
       if (d && b && norm(rendered) !== norm(b)) {
         if (unitMissing(d, b)) {
           rows.push({ ...base, issue: "unit_missing", priority: 1, field: f.label, discrete: d, blob: b,
-            action: `Page shows "${rendered}" with no unit. Set ${f.acf} to "${b}"` });
+            action: `Page reads "${rendered}"; the source says "${b}". Set ${f.acf} to "${b}"` });
         } else {
           rows.push({ ...base, issue: "conflict", priority: 1, field: f.label, discrete: d, blob: b,
             action: `Decide which is correct, then set the ${f.acf} field to it` });
@@ -206,7 +212,7 @@ it("writes the spec-reconciliation punch list", () => {
 
   const LABEL: Record<string, [string, string]> = {
     conflict: ["Conflict", "The discrete field and the blob both have a value and they genuinely disagree. The page shows the discrete one. Someone has to decide which is right."],
-    unit_missing: ["Unit missing", "The discrete field holds a bare number and the page renders it without a unit, so a warranty reads as `12` instead of `12 months`. The blob has the full value. **Customers see this today.**"],
+    unit_missing: ["Wrong unit", "The discrete field holds a bare number, so the page states it in the field's own unit -- months for a warranty -- and the blob says a different one: `5` renders as `5 months` where the source reads `5 years`. **Customers see this today.**"],
     malformed: ["Malformed source", "The blob value is broken and the site repairs it at render time (this is the `3 monthsmonths` class). Customers see the right thing today; the source is still wrong."],
     blob_not_rendered: ["Not rendered", "Only the blob has it, and this field has no blob fallback, so the page shows nothing at all."],
     blob_unreadable: ["Unreadable row", "A blob row whose label the parser does not recognise. It can never reach the page however it is typed."],
