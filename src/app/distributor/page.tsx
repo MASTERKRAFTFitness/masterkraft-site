@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Become a Distributor",
   description:
     "Partner with MasterKraft. Premium design, custom branding, global logistics and full-service support for distributors worldwide.",
+  alternates: { canonical: "/distributor" },
 };
 
 const advantages = [

@@ -19,10 +19,10 @@
 // RE-RUN THIS when the ERP retires a product, or the site will keep selling it.
 // `npm run check:obsolete` reports drift without writing anything.
 
-import crypto from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fetchAllProducts } from "./lib/erp-products.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "src/lib/obsolete-skus.json");
@@ -42,27 +42,14 @@ function env(name) {
 const API_ID = env("UNLEASHED_API_ID");
 const API_KEY = env("UNLEASHED_API_KEY");
 
-async function page(n) {
-  const query = "pageSize=200&includeObsolete=true";
-  const res = await fetch(`https://api.unleashedsoftware.com/Products/${n}?${query}`, {
-    headers: {
-      "api-auth-id": API_ID,
-      // The signature covers the query string exactly as sent.
-      "api-auth-signature": crypto.createHmac("sha256", API_KEY).update(query).digest("base64"),
-      Accept: "application/json",
-      "User-Agent": "Mozilla/5.0", // Unleashed's WAF rejects some default agents
-    },
-  });
-  if (!res.ok) throw new Error(`Unleashed ${res.status} on Products/${n}`);
-  return res.json();
-}
-
-const first = await page(1);
-const pages = first.Pagination?.NumberOfPages ?? 1;
-const items = [...first.Items];
-for (const p of await Promise.all(Array.from({ length: pages - 1 }, (_, i) => page(i + 2)))) {
-  items.push(...p.Items);
-}
+// Paging moved to scripts/lib/erp-products.mjs on 2026-09-18, sequential and
+// with retries. The parallel version this file used to hold 502'd against a
+// degraded ERP and failed two deploys that had nothing to do with it.
+const { items } = await fetchAllProducts({
+  apiId: API_ID,
+  apiKey: API_KEY,
+  log: (line) => console.error(line),
+});
 
 // Obsolete OR explicitly not sellable: both mean "do not put this in front of a
 // customer", and the two overlap almost entirely in practice.

@@ -64,7 +64,11 @@
     "report:punchlist": "vitest run --config vitest.reports.config.mts scripts/erp-punchlist.report.ts",
     "report:subgroups": "vitest run --config vitest.reports.config.mts scripts/subgroup-pages.report.ts",
     "build:redirects": "vitest run --config vitest.reports.config.mts scripts/legacy-redirects.report.ts",
-    "check:redirects": "CHECK=1 vitest run --config vitest.reports.config.mts scripts/legacy-redirects.report.ts"
+    "check:redirects": "CHECK=1 vitest run --config vitest.reports.config.mts scripts/legacy-redirects.report.ts",
+    "archive:orders": "node scripts/archive-woo-orders.mjs",
+    "archive:wooimages": "node scripts/archive-woo-images.mjs",
+    "check:mirror": "vitest run --config vitest.reports.config.mts scripts/erp-mirror-parity.report.ts",
+    "check:specs": "vitest run --config vitest.reports.config.mts scripts/spec-parity.report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

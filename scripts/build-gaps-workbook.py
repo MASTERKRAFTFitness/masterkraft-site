@@ -1,4 +1,4 @@
-# Builds the Excel workbook Steve and Gaetana actually work in.
+# Builds the Excel workbook Steve actually works in.
 #
 #   npm run report:cartons && npm run report:bulky && npm run report:clearance
 #                                                    (refresh the source data)

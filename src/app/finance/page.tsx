@@ -7,6 +7,7 @@ import Eyebrow from "@/components/ui/Eyebrow";
 export const metadata: Metadata = {
   title: "Equipment Finance | Afterpay, Zip & GRENKE",
   description: "Flexible ways to fund your equipment and fitout — Afterpay, Zip Money and GRENKE.",
+  alternates: { canonical: "/finance" },
 };
 
 type Provider = {

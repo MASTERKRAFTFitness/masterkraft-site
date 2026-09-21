@@ -7,7 +7,30 @@
 // on 5 September. It follows lib/product-gallery.ts deliberately — same caching,
 // same fail-soft — because that file was written as the pattern for this one.
 //
-// ONLY HUMAN-EDITED ROWS WIN, and that is the whole design.
+// PROSE AND SPECS FOLLOW DIFFERENT RULES, and the asymmetry is deliberate.
+//
+//   PROSE   only a human-edited row wins.
+//   SPECS   every row wins, loader-owned included.
+//
+// The difference is that prose has a THIRD source and specs do not.
+// src/data/product-copy.json holds copy improved by hand after the load — the
+// Core Trainer and Rope & Band Rack pairs among them — so a loader-owned row
+// preferred over the JSON would quietly reinstate the duplicate descriptions
+// that file exists to fix. There is no equivalent layer for specs: the snapshot
+// is their only other source, and scripts/spec-parity.report.ts compares the two
+// field by field. It ran clean over 414 products and 2,494 values before this
+// was turned on, which is the whole reason it exists.
+//
+// WHAT THE SPEC FLIP BUYS is that specification_text stops being load-bearing.
+// Until it, every unedited product rendered its spec table from the legacy HTML
+// blob and the database was decoration.
+//
+// IT CANNOT DELETE A SPEC ROW, which is what makes it safe beyond the parity
+// run: resolveSpecs merges the row OVER the snapshot rather than replacing it,
+// so a column the database left null falls through to the snapshot's value. The
+// worst a bad row can do is state something stale, never render a shorter table.
+//
+// ONLY HUMAN-EDITED ROWS WIN — for prose.
 //
 // `content.load` populated 404 of ~512 rows FROM the frozen snapshot. Those rows
 // are the snapshot, copied. Preferring one over the snapshot is a no-op when the
@@ -31,21 +54,27 @@
 //
 // PRECEDENCE, highest first:
 //
-//   1. a human-edited product_content row   — here
-//   2. src/data/product-copy.json           — authored, deploy-time
-//   3. the frozen WooCommerce snapshot      — whatever the page already had
+//   PROSE                                   SPECS
+//   1. a human-edited row                   1. any product_content row
+//   2. src/data/product-copy.json           2. the frozen snapshot, field by
+//   3. the frozen WooCommerce snapshot         field, for anything left null
 //
-// Dropping from 1 to 2 to 3 is what makes this safe to ship: an empty table, an
-// outage, or missing credentials all land on exactly today's behaviour.
+// Both still bottom out at the snapshot, which is what keeps this fail-soft: an
+// empty table, an outage or missing credentials all land on exactly the
+// behaviour the page had before any of this existed.
 import { unstable_cache } from "next/cache";
 import { adminDb } from "@/lib/admin-db";
 import { productCopy, productCopyHtml } from "@/lib/product-copy";
+import { SPEC_FIELDS, type SpecLabel } from "@/lib/spec";
 
 /** The loader's signature in `updated_by`. Must match scripts/content.load.ts. */
 const LOADER = "content.load";
 
-/** What a page needs: the meta sentence, and the Product Overview as HTML. */
-export type ContentEntry = { short?: string; html?: string };
+/** An edited spec value per label. Absent labels fall through to the snapshot. */
+export type SpecOverride = Partial<Record<SpecLabel, string>>;
+
+/** What a page needs: the meta sentence, the Product Overview as HTML, the specs. */
+export type ContentEntry = { short?: string; html?: string; specs?: SpecOverride };
 
 /** Human-edited copy, keyed by SLUG — which is what the page and the URL have. */
 export type ContentMap = Record<string, ContentEntry>;
@@ -79,25 +108,52 @@ async function buildContent(): Promise<ContentMap> {
   // drops NULLs, which would silently discard exactly the rows this is most
   // careful to honour — a person's edit that left no name. 404 rows is one small
   // read an hour; there is nothing to optimise here.
+  // A LITERAL select string, not one built from SPEC_FIELDS. supabase-js infers
+  // the row type from this string, and a computed one collapses `data` to
+  // GenericStringError[] — every field access below becomes a type error. The
+  // seven spec columns are spelled out here and paired with their labels in
+  // SPEC_FIELDS; the pairing is what the loader and the resolver share.
   const { data, error } = await db
     .from("product_content")
-    .select("slug, overview_short, overview, features, updated_by");
+    .select("slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty");
   if (error) throw new Error(`product_content: ${error.message}`);
 
   const out: ContentMap = {};
   for (const row of data ?? []) {
-    if (row.updated_by === LOADER) continue; // the frozen snapshot, copied
     const slug = String(row.slug ?? "").trim();
     if (!slug) continue; // keyed by erp_code; without a slug no page can find it
 
-    const short = String(row.overview_short ?? "").trim() || undefined;
-    const html = htmlFrom(row.overview ?? null, (row.features ?? []) as string[]);
-    // A row that sets neither is not an override of anything. Skipping it keeps
+    // The loader's own rows are the snapshot copied. Their PROSE is therefore
+    // worth nothing and is dropped here — see the note at the top about
+    // product-copy.json. Their SPECS are read, because the snapshot is the only
+    // other source for those and check:specs proves they agree.
+    const edited = row.updated_by !== LOADER;
+
+    const short = edited ? String(row.overview_short ?? "").trim() || undefined : undefined;
+    const html = edited ? htmlFrom(row.overview ?? null, (row.features ?? []) as string[]) : undefined;
+
+    // Specs, field by field. An empty column is not an override — it means
+    // nobody has stated that row of the table, so the snapshot's value stands.
+    // Blanking a spec deliberately is not expressible here, and that is the
+    // right trade: the failure of a missing override is a stale value, the
+    // failure of an accidental one is a spec table that silently loses rows.
+    const specs: SpecOverride = {};
+    for (const [label, col] of SPEC_FIELDS) {
+      const v = String((row as unknown as Record<string, unknown>)[col] ?? "").trim();
+      if (v) specs[label] = v;
+    }
+    const hasSpecs = Object.keys(specs).length > 0;
+
+    // A row that sets nothing is not an override of anything. Skipping it keeps
     // "has an entry" meaning "has something to say", so a caller can test the
     // entry rather than each of its fields.
-    if (!short && !html) continue;
+    if (!short && !html && !hasSpecs) continue;
 
-    out[slug] = { ...(short ? { short } : {}), ...(html ? { html } : {}) };
+    out[slug] = {
+      ...(short ? { short } : {}),
+      ...(html ? { html } : {}),
+      ...(hasSpecs ? { specs } : {}),
+    };
   }
   return out;
 }
@@ -109,7 +165,10 @@ async function buildContent(): Promise<ContentMap> {
 // VERSION THE KEY when the shape or meaning of a value changes: a warm cache
 // serves the old answer for the full hour, and the fix looks like it did not
 // deploy.
-const cachedContent = unstable_cache(buildContent, ["product-content-v1"], {
+// v2: the map now carries specs from loader-owned rows, which v1 discarded. A
+// warm v1 cache would serve spec-less entries for an hour after deploy and the
+// flip would look like it had not shipped.
+const cachedContent = unstable_cache(buildContent, ["product-content-v2"], {
   revalidate: 3600,
   tags: ["product-content"],
 });
@@ -148,4 +207,36 @@ export function resolveCopy(slug: string, content: ContentMap = {}): ContentEntr
     short: row?.short ?? json?.short,
     html: row?.html ?? productCopyHtml(slug),
   };
+}
+
+/**
+ * The spec table a slug should render, database first.
+ *
+ * FIELD BY FIELD, like resolveCopy. An editor who corrects one warranty gets
+ * their warranty and the snapshot's other six rows, not a table with one line.
+ *
+ * Pass the map from getProductContent(); `{}` returns `fallback` untouched,
+ * which is what makes this safe to call before the columns have anything in
+ * them — and is the path every product takes until somebody edits one.
+ */
+export function resolveSpecs(
+  slug: string,
+  fallback: { label: string; value: string }[],
+  content: ContentMap = {}
+): { label: string; value: string }[] {
+  const override = content[slug]?.specs;
+  // No edited row: hand back exactly what the snapshot produced, same array,
+  // same order. This is the path every product takes until somebody edits one.
+  if (!override) return fallback;
+
+  const from = new Map(fallback.map((s) => [s.label, s.value]));
+  const out: { label: string; value: string }[] = [];
+  // SPEC_FIELDS order, not the fallback's, so a spec the snapshot never had —
+  // the Functional Trainer's missing Packing size, say — lands in its proper
+  // place in the table rather than appended after Warranty.
+  for (const [label] of SPEC_FIELDS) {
+    const value = override[label] ?? from.get(label);
+    if (value) out.push({ label, value });
+  }
+  return out;
 }

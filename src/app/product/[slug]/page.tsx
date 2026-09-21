@@ -24,7 +24,7 @@ import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
-import { getProductContent, resolveCopy } from "@/lib/product-content";
+import { getProductContent, resolveCopy, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
 // Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
@@ -218,6 +218,11 @@ export default async function ProductPage({
     .map((c) => siteCategoryFor(c, categoryTerms()))
     .find(Boolean);
   const detail = parseProductDetail(product);
+  // The spec table, human-edited row first. Same map and same rule as
+  // resolveCopy above: a loader-owned row is the snapshot copied and is skipped,
+  // so this is a no-op until somebody edits one — at which point their value
+  // replaces that row and the rest of the table stands.
+  const specs = resolveSpecs(slug, detail.specs, content);
   // A bundle has no price of its own, so label it the same way its card is
   // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
   // than becoming card-payable at the cost of its cheapest item - see enrichCard.
@@ -529,11 +534,11 @@ export default async function ProductPage({
           {/* Specs follow the features in the same column. As a full-width band
               below they were centred in their own max-w-3xl, which lined up with
               neither column and read as a stray block. */}
-          {detail.specs.length > 0 && (
+          {specs.length > 0 && (
             <div className="mt-12">
               <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Specifications</h2>
               <dl className="divide-y divide-line">
-                {detail.specs.map((s, i) => (
+                {specs.map((s, i) => (
                   <div key={i} className="grid grid-cols-3 gap-4 py-3">
                     <dt className="font-mono text-xs uppercase tracking-widest text-ash">
                       {s.label}

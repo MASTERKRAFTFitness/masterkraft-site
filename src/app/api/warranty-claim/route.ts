@@ -3,6 +3,8 @@ import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients } from "@/lib/notify-recipients";
 import { ENQUIRY_KIND, portalEnquiryType } from "@/lib/enquiry-type";
+import { scheduleBlockedLog } from "@/lib/blocked-log";
+import { visitorKey } from "@/lib/agent/rate-limit";
 
 // Warranty claims.
 //
@@ -145,6 +147,18 @@ export async function POST(request: Request) {
   });
   if (!verdict.ok) {
     console.warn("[warranty] blocked", { reason: verdict.reason, detail: verdict.detail });
+    // The three silent verdicts leave no other trace, so a wrongly-blocked
+    // person can be found and answered. Deferred and detached, and it drops
+    // rate_limit itself — see lib/blocked-log.ts.
+    scheduleBlockedLog({
+      form: "warranty",
+      reason: verdict.reason,
+      detail: verdict.detail,
+      visitor: visitorKey(request),
+      name: (body.fullName ?? ""),
+      email: body.email,
+      message: body.fault,
+    });
     if (verdict.reason === "rate_limit") {
       return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
     }

@@ -29,6 +29,7 @@
 // Must come before any fetch: it steers the store hostname while the store has
 // no working DNS name. Inert unless WC_STORE_PIN is set. See the file for why.
 import "./lib/store-dns-pin.mjs";
+import { diffCatalogue, confirmedDrift, driftCount } from "./lib/catalogue-diff.mjs";
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -211,7 +212,49 @@ const GENERATED =
   "Raw WooCommerce data; visibility rules are applied at read time in woocommerce.ts.";
 
 const started = Date.now();
-const { products, reported } = await fetchAllProducts();
+
+// --------------------------------------------------------------------------
+// WHEN THE STORE CANNOT ANSWER, `--check` SAYS SO AND PASSES. Added 2026-09-18.
+//
+// `check:catalogue` is a link in `predeploy`, and the WordPress host it reads
+// is on a certificate that expires 27 Sep and cannot renew: the domain points
+// at Vercel, so the renewal challenge can never reach the box. From the 28th,
+// every `npm run deploy` would have died at a TLS error while checking a store
+// nobody uses, and the fix people reach for at that point is to rip the check
+// out of the chain — losing it for the failures it CAN still catch, and losing
+// the reasoning with it.
+//
+// So the question the check asks is stated honestly instead. "Does the
+// committed snapshot match the store?" has three answers, not two: yes, no, and
+// **cannot be established**. Only the middle one is a reason to stop a deploy.
+// An unreachable store makes the snapshot unverifiable, not wrong — and it is
+// frozen anyway, because `build:catalogue` cannot rebuild it from a host that
+// is gone.
+//
+// This is the same judgement check-deploy-branch.mjs already makes about
+// unpushed commits: worth saying loudly, not worth blocking on.
+//
+// IT IS DELIBERATELY NARROW. Only a failure to REACH the store passes. A store
+// that answers and disagrees with the snapshot still exits 1, exactly as before,
+// and a real rebuild (no `--check`) still throws — writing a catalogue from a
+// store you could not read is how you empty the shop.
+let products, reported;
+try {
+  ({ products, reported } = await fetchAllProducts());
+} catch (e) {
+  if (!checkOnly) throw e;
+  const why = e instanceof Error ? e.message : String(e);
+  console.warn(
+    `\n  check-catalogue: THE STORE DID NOT ANSWER — ${why}\n` +
+      `\n  The snapshot could not be checked against it, which is not the same as the\n` +
+      `  snapshot being wrong. src/data/catalogue.json is frozen: the WordPress host it\n` +
+      `  was built from lost its certificate on 27 Sep 2026 and build:catalogue cannot\n` +
+      `  rebuild it. Deploy is NOT blocked.\n` +
+      `\n  If this is unexpected — if that store is supposed to be reachable — stop and\n` +
+      `  find out why before shipping, because nothing else here is checking it.\n`
+  );
+  process.exit(0);
+}
 
 if (products.length < MIN_PRODUCTS) {
   console.error(
@@ -228,39 +271,10 @@ const [categories, variations] = await Promise.all([
 ]);
 
 const prevProducts = readPrevious(OUT_PRODUCTS);
-const prevBySlug = new Map((prevProducts?.products ?? []).map((p) => [p.slug, p]));
-const nowBySlug = new Map(products.map((p) => [p.slug, p]));
-const added = products.filter((p) => !prevBySlug.has(p.slug));
-const removed = (prevProducts?.products ?? []).filter((p) => !nowBySlug.has(p.slug));
-// WooCommerce does not promise a stable order for a product's `categories`, and
-// it demonstrably reshuffles it for products nobody has edited: on 28 August six
-// rigs came back with the same four terms in a different order, which a
-// whole-object JSON compare reported as drift. That is the gate crying wolf, and
-// a gate that cries wolf gets skipped.
-//
-// The site depends on exactly one thing about that order: product/[slug] takes
-// `categories[0]` as the breadcrumb. So compare position 0 exactly and the rest
-// as a set. Sorting the whole array instead would hide a changed breadcrumb;
-// comparing the whole array in order fails the build over a reshuffle that
-// changes nothing on any page.
-//
-// Only the comparison normalises. What gets written stays in the store's own
-// order, because that is what `categories[0]` reads.
-function comparable(product) {
-  const [primary, ...rest] = product.categories ?? [];
-  return JSON.stringify({
-    ...product,
-    categories: [
-      primary ?? null,
-      ...rest.map((c) => JSON.stringify(c)).sort(),
-    ],
-  });
-}
-
-const changed = products.filter((p) => {
-  const was = prevBySlug.get(p.slug);
-  return was && comparable(was) !== comparable(p);
-});
+// The comparison rules live in ./lib/catalogue-diff.mjs, with the reasoning for
+// each of them and a test that does not need a store to run.
+const drift = diffCatalogue(prevProducts?.products ?? [], products);
+const { added, removed, changed } = drift;
 
 const elapsed = ((Date.now() - started) / 1000).toFixed(1);
 console.log(
@@ -269,21 +283,53 @@ console.log(
 );
 
 if (checkOnly) {
-  const drift = added.length + removed.length + changed.length;
   if (!prevProducts) {
     console.error("No snapshot on disk. Run `npm run build:catalogue`.");
     process.exit(1);
   }
-  if (drift) {
-    console.error(`DRIFT: ${added.length} added, ${removed.length} removed, ${changed.length} changed`);
-    for (const p of added.slice(0, 10)) console.error(`  + ${p.sku || "(no sku)"} ${p.slug}`);
-    for (const p of removed.slice(0, 10)) console.error(`  - ${p.sku || "(no sku)"} ${p.slug}`);
-    for (const p of changed.slice(0, 10)) console.error(`  ~ ${p.sku || "(no sku)"} ${p.slug}`);
-    console.error("Run `npm run build:catalogue` and commit the result.");
-    process.exit(1);
+  const report = (label, d) => {
+    console.error(`${label}: ${d.added.length} added, ${d.removed.length} removed, ${d.changed.length} changed`);
+    for (const p of d.added.slice(0, 10)) console.error(`  + ${p.sku || "(no sku)"} ${p.slug}`);
+    for (const p of d.removed.slice(0, 10)) console.error(`  - ${p.sku || "(no sku)"} ${p.slug}`);
+    // The fields, not just the slug. "218 changed" told nobody anything.
+    for (const p of d.changed.slice(0, 10)) {
+      console.error(`  ~ ${p.sku || "(no sku)"} ${p.slug}  [${(p._fields ?? []).join(", ")}]`);
+    }
+  };
+
+  if (!driftCount(drift)) {
+    console.log("Snapshot matches the store — no drift.");
+    process.exit(0);
   }
-  console.log("Snapshot matches the store — no drift.");
-  process.exit(0);
+
+  // DRIFT HAS TO REPRODUCE BEFORE IT FAILS THE BUILD. See confirmedDrift in
+  // ./lib/catalogue-diff.mjs for the 18 September run this exists for: 218
+  // products "changed" against an unchanged snapshot, then nothing a minute
+  // later, on a deploy that was correct. The second read costs a minute and
+  // only on the path that was about to block a deploy anyway.
+  report("DRIFT (first read)", drift);
+  console.error("\nRe-reading the store to see whether it reproduces...");
+  const second = diffCatalogue(prevProducts.products ?? [], (await fetchAllProducts()).products);
+  const confirmed = confirmedDrift(drift, second);
+
+  if (!driftCount(confirmed)) {
+    // Loud on purpose. A store that does this every time is a problem worth
+    // seeing in the log, even though it is not one worth blocking a deploy for.
+    console.error(
+      `\nNOT CONFIRMED: none of the ${driftCount(drift)} differences appeared in the second read. ` +
+        `Treating them as the store misreporting, not as drift — the snapshot is unchanged and ` +
+        `nothing was written. If this keeps happening, the store is the thing to fix.`
+    );
+    process.exit(0);
+  }
+
+  console.error("");
+  report("CONFIRMED DRIFT (both reads)", confirmed);
+  if (driftCount(confirmed) < driftCount(drift)) {
+    console.error(`  (${driftCount(drift) - driftCount(confirmed)} more appeared in only one of the two reads and were ignored)`);
+  }
+  console.error("Run `npm run build:catalogue` and commit the result.");
+  process.exit(1);
 }
 
 writeFileSync(

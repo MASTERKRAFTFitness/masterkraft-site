@@ -104,8 +104,11 @@ describe("authored product copy", () => {
     // measurement the copy repeats - checked against reports/copy-gaps.json when
     // each was written. Adding to this list means having checked the same way.
     const allowed = new Set([
-      // ERP sizes: 5mm, 10mm, 15mm, 20mm
-      "acoustic-underlay-1m-x-10m",
+      // The acoustic underlay was here for "5mm, 10mm, 15mm and 20mm", read off
+      // an ERP range that no longer exists: the record is now one code named
+      // "Acoustic Underlay" with no size list, so the copy was rewritten without
+      // the thicknesses rather than carried across to the new slug. Its
+      // exemption goes with it — the figures are gone, not re-permitted.
       // ERP sizes: 13mm (Red), 21mm (Grey), 32mm (Black)
       "power-bands",
       // ERP sizes: 55cm, 65cm, 75cm (Anti-Burst)

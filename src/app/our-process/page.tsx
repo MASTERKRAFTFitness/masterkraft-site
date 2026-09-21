@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   // the field on ContentPageData.
   title: data.seoTitle ?? data.title,
   description: data.subtitle,
+  alternates: { canonical: "/our-process" },
 };
 
 export default function Page() {

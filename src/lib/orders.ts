@@ -19,7 +19,7 @@ import {
   createUnleashedOrder,
   ordersEnabled as unleashedOrdersEnabled,
 } from "@/lib/unleashed-orders";
-import { getUnleashedMap, lookupBySku } from "@/lib/unleashed";
+import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 
 /**
  * Kept as a union rather than narrowed to "unleashed": PaymentIntents written
@@ -158,7 +158,9 @@ export async function placeQuote(
 ): Promise<"created" | "skipped"> {
   if (!quoteOrdersEnabled()) return "skipped";
 
-  const erp = await getUnleashedMap().catch(() => ({}));
+  // LIVE, NOT THE MIRROR. A quote commits to a price in writing, so it is held
+  // to the same standard as the charge path.
+  const erp = await getUnleashedMapLive().catch(() => ({}));
   const lines = items
     .filter((i) => !!i.sku)
     .map((i) => {

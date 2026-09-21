@@ -112,6 +112,8 @@ vi.mock("@/lib/catalogue", () => ({
 vi.mock("@/lib/unleashed", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed")>()),
   getUnleashedMap: async () => erp,
+  // Freight reads the live map: a carton becomes the freight amount charged.
+  getUnleashedMapLive: async () => erp,
 }));
 
 const { refsToFreightItems } = await import("@/lib/freight-server");

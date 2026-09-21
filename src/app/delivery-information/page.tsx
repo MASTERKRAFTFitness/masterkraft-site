@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Delivery Information",
   description:
     "How MasterKraft plans site access and schedules delivery of your equipment.",
+  alternates: { canonical: "/delivery-information" },
 };
 
 const NEEDS = [

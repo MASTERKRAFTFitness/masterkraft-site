@@ -19,7 +19,7 @@
 // The payload builder is pure and fully tested, so when both land this is a
 // matter of turning it on rather than writing it.
 import { createHmac, randomUUID } from "node:crypto";
-import { getUnleashedMap, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
+import { getUnleashedMapLive, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
 import type { OrderLine } from "@/lib/order-lines";
 
 const BASE = "https://api.unleashedsoftware.com";
@@ -76,7 +76,7 @@ const freightCode = () => process.env.UNLEASHED_FREIGHT_CODE || "";
 //                 and the most work, with real duplicate risk against 4,108
 //                 existing records that were not deduplicated on email.
 //
-// Steve or Gaetana decides. Until then only "generic" is implemented, and it
+// Steve decides. Until then only "generic" is implemented, and it
 // still needs an account to exist — it will not invent one.
 // ---------------------------------------------------------------------------
 
@@ -338,7 +338,8 @@ export async function createUnleashedOrder(
   }
 
   const [erp, customer] = await Promise.all([
-    getUnleashedMap().catch(() => ({})),
+    // LIVE, NOT THE MIRROR — this writes the order lines that get invoiced.
+    getUnleashedMapLive().catch(() => ({})),
     resolveCustomer(input.billing),
   ]);
 

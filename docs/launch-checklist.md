@@ -36,9 +36,9 @@ This is the real gate on go-live; everything else is quick once decided.
 ## 2. Client sign-offs / content
 - [ ] **Michael/Steve:** confirm the ABN — live Terms says `62 623 086 064`; the
       `84 659 220 274` given earlier was removed. Which is correct?
-- [ ] **Steve/Gaetana:** sign off legal + info copy (real T&Cs/privacy/warranty are
+- [ ] **Steve:** sign off legal + info copy (real T&Cs/privacy/warranty are
       pulled from the live site; a few info pages are placeholder-but-professional).
-- [ ] **Steve/Gaetana:** confirm displayed pricing (RRP = regular_price x1.1 GST).
+- [ ] **Steve:** confirm displayed pricing (RRP = regular_price x1.1 GST).
 - [ ] **Michael:** real resource PDFs (some are request-links).
 - [ ] **Michael:** business address; (nice-to-have) per-page social/OG images.
 - [ ] **Michael:** add the production domain to the HubSpot Delivery form's allowed

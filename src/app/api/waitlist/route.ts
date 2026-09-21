@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients } from "@/lib/notify-recipients";
+import { scheduleBlockedLog } from "@/lib/blocked-log";
+import { visitorKey } from "@/lib/agent/rate-limit";
 import {
   CONTACT_SOURCE,
   NETWORK_OPERATOR_OPTIONS,
@@ -130,6 +132,18 @@ export async function POST(request: Request) {
   });
   if (!verdict.ok) {
     console.warn("[waitlist] blocked", { reason: verdict.reason, detail: verdict.detail });
+    // The three silent verdicts leave no other trace, so a wrongly-blocked
+    // person can be found and answered. Deferred and detached, and it drops
+    // rate_limit itself — see lib/blocked-log.ts.
+    scheduleBlockedLog({
+      form: "waitlist",
+      reason: verdict.reason,
+      detail: verdict.detail,
+      visitor: visitorKey(request),
+      name: (body.firstName ?? "") + " " + (body.lastName ?? ""),
+      email: body.email,
+      message: undefined,
+    });
     if (verdict.reason === "rate_limit") {
       return NextResponse.json({ ok: false, error: RATE_LIMITED_MESSAGE }, { status: 429 });
     }

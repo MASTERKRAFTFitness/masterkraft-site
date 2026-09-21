@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Recovery Roller | Commercial Recovery Machine",
   description:
     "A commercial recovery machine, built by MasterKraft. Register to get the specification and pricing before they go out generally.",
+  alternates: { canonical: "/recovery-roller" },
 };
 
 export default function RecoveryRollerPage() {

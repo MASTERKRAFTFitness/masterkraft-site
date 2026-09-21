@@ -2,11 +2,16 @@
 //
 // This is deliberately a separate list from AGENT_TOOLS in tools.ts, not a
 // filtered view of it. The internal tools were written for staff and are correct
-// for staff: lookup_order returns a customer's name, email, phone and delivery
-// address keyed on an order number alone, and list_recent_orders returns the
-// last 25 orders with no customer scoping at all. Order numbers are sequential
-// (490118), so exposing either of those to anonymous visitors would let anyone
-// count upwards and harvest the customer list.
+// for staff: lookup_order returns the email addresses recorded against an order
+// keyed on its number alone. Order numbers are sequential (490118), so exposing
+// it to anonymous visitors would let anyone count upwards and harvest the
+// customer list.
+//
+// (It returned name, phone and delivery address too, and list_recent_orders
+// returned the last 25 orders unscoped, until both came off WooCommerce on
+// 2026-09-18 — lookup_order now reads the ERP, which carries less, and
+// list_recent_orders is gone. The reasoning is unchanged: less to leak is not
+// nothing to leak, and public-tools.test.ts still bans both names.)
 //
 // The rule for this file: a tool belongs here only if every field it can return
 // is something we would publish on the website anyway. The one exception is

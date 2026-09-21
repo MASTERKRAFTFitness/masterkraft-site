@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { servedCodes } from "@/lib/erp-catalogue";
-import { getUnleashedMap } from "@/lib/unleashed";
+import { getUnleashedMapLive } from "@/lib/unleashed";
 
 // Which lines in a cart are no longer sold.
 //
@@ -47,7 +47,11 @@ export async function POST(request: Request) {
   if (skus.length === 0) return NextResponse.json({ unavailable: [] });
 
   try {
-    const map = await getUnleashedMap();
+    // LIVE, NOT THE MIRROR. This is the gate immediately before payment, and
+    // what it checks must be what the charge path resolves against: a mirror
+    // saying "available" while resolveOrderLines disagrees sends a customer to
+    // a checkout that then refuses them.
+    const map = await getUnleashedMapLive();
     // An empty map means the ERP did not answer. Fail open.
     if (Object.keys(map).length === 0) return NextResponse.json({ unavailable: [] });
 

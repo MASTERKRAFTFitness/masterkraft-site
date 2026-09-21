@@ -2,20 +2,29 @@ import type { NextConfig } from "next";
 import { withOpinlyConfig } from "@opinly/next";
 import legacyRedirects from "./src/data/legacy-redirects.json";
 
-// The Opinly workspace's CDN namespace - a 21-character id, taken from the
-// Next.js setup snippet in the Opinly dashboard. It is a public path segment,
-// not a secret: it is the folder the blog's images are served from, and it ends
-// up in the HTML of every post. Hence a literal here rather than an env var,
-// the same as @opinly/next's own documented setup.
+// The Opinly workspace's CDN namespace - a 21-character id, read from Settings
+// > Developers in the Opinly dashboard on 21 September 2026. It is a public path
+// segment, not a secret: it is the folder the blog's images are served from, and
+// it ends up in the HTML of every post. Hence a literal here rather than an env
+// var, the same as @opinly/next's own documented setup - and necessarily so,
+// since `.env*` is gitignored, so a value living only in .env.local would never
+// reach a Vercel build and /blog would keep 404ing in production.
 //
-// UNSET IS A WORKING STATE, and a deliberate one. Empty means the wrapper below
-// is skipped entirely, `opinlyConfig.blogPrefix` stays undefined, and
-// lib/blog-route reads that as "the blog is not configured" and 404s /blog.
-// Everything else on the site is untouched. The alternative - a placeholder
-// namespace that satisfies the 21-character check - would build clean and serve
-// a blog whose every image 404s from a CDN folder that does not exist, which is
-// the failure you only find in Search Console six weeks later.
-const OPINLY_CDN_NAMESPACE = process.env.OPINLY_CDN_NAMESPACE ?? "";
+// IT IS NOT THE COMPANY ID, though both are 21-character nanoids and the
+// resemblance is inviting. The company is comp_4uxP45Rq6aqaL_5ceX8K3; strip the
+// prefix and you get a string of exactly the right length that is still wrong.
+// Do not check that guess against the CDN either: cdn.opinly.ai answers 403 for
+// an unknown namespace exactly as it does for a missing file, so probing cannot
+// tell a right namespace from a wrong one. The dashboard is the only source.
+//
+// EMPTY IS STILL A WORKING STATE, now reached by setting the env var to "" - the
+// wrapper below is skipped entirely, `opinlyConfig.blogPrefix` stays undefined,
+// and lib/blog-route reads that as "the blog is not configured" and 404s /blog,
+// leaving the rest of the site untouched. What must never go here is a
+// placeholder that merely satisfies the 21-character check: it would build clean
+// and serve a blog whose every image 404s from a CDN folder that does not exist,
+// which is the failure you only find in Search Console six weeks later.
+const OPINLY_CDN_NAMESPACE = process.env.OPINLY_CDN_NAMESPACE ?? "wa6KQsl0oN3tXMVaX7JYL";
 
 const nextConfig: NextConfig = {
   images: {
@@ -45,6 +54,38 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // WWW IS A SECOND COPY OF THE SITE, and until now it answered 200 on every
+      // path. The apex is what the sitemap advertises, what robots.txt names and
+      // what lib/site reports to Opinly — but nothing ever told a crawler that,
+      // because no redirect existed and isIndexableHost (lib/site.ts) allows BOTH
+      // hostnames on purpose, so www served a full, indexable, `Allow: /` copy.
+      //
+      // Most pages survived that on their canonical tag alone: www's copy of a
+      // product or category page points at the apex, so Google folds it back.
+      // The seventeen pages in this commit had no canonical at all, which left
+      // www.masterkraft.com/our-story and masterkraft.com/our-story as two
+      // indexable URLs of one page with nothing to separate them — and Google
+      // picking the wrong one of a pair is exactly what the Search Console
+      // notice of 2026-09-17 reports ("Duplicate, Google chose different
+      // canonical than user").
+      //
+      // FIRST IN THE ARRAY, because redirects match in order and this one
+      // normalises the host for every rule below it. Putting it last would send
+      // www/shop to a relative /all-equipment that is still on www, and only
+      // move it to the apex on the request after that.
+      //
+      // THE HOST IS MATCHED LITERALLY rather than by a /^www\./ pattern. The
+      // same deployment answers on the vercel.app URL and on
+      // web.test.masterkraft.com, which are NOISE, not duplicates: robots.txt
+      // already noindexes them (isIndexableHost), and a broad rule would rewrite
+      // a preview's own hostname out from under whoever is testing on it.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.masterkraft.com" }],
+        destination: "https://masterkraft.com/:path*",
+        permanent: true,
+      },
+
       // WooCommerce used "packages-2"; storefront uses "packages"
       { source: "/equipment/packages-2", destination: "/equipment/packages", permanent: true },
       // Reformers was a category from 2026-08-27 to 2026-09-02 and never held a

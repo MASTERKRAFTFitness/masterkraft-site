@@ -1,10 +1,14 @@
 // The catalogue read layer.
 //
-// Product data comes from the COMMITTED SNAPSHOT in src/data (see lib/catalogue.ts),
-// not from a request-time call to WooCommerce. Only the checkout path -
-// getProductById and getVariation - still talks to the live store; everything a
-// visitor browses is served from the repo. Re-run `npm run build:catalogue`
-// after a content edit in WordPress.
+// Product data comes from the COMMITTED SNAPSHOT in src/data (see lib/catalogue.ts).
+//
+// NOTHING IN THIS FILE TALKS TO WORDPRESS ANY MORE. The last two live readers,
+// getProductById and getVariation, were deleted on 2026-09-18. They existed for
+// the checkout repricing fallback, which came off the order path on 15 Sep, and
+// with WC_STORE_URL pointing at this storefront every call they made 404'd
+// anyway. The snapshot is now the whole of this module's input — and
+// `npm run build:catalogue` can no longer rebuild it, because the store it read
+// is gone. Treat src/data/catalogue.json as frozen until something replaces it.
 //
 // This file owns the four visibility rules (brand SKU, foreign brand,
 // WordPress-hidden, ERP-retired) and applies them at one chokepoint, so the
@@ -25,8 +29,6 @@ import {
 import { isRetiredSku } from "./obsolete";
 import { skuAliases } from "./unleashed-aliases";
 
-const BASE = `${process.env.WC_STORE_URL}/wp-json/wc/v3`;
-
 // A few product lines were shot on an off-shade studio-grey background rather
 // than the shop tile grey. scripts/normalize-product-bg.py recolours those to
 // #e6e6e6 (into /public/product-bg/) and records sku -> local paths here; we swap
@@ -38,12 +40,6 @@ function applyImageOverride(p: WcProduct): WcProduct {
   const paths = sku ? IMAGE_OVERRIDES[sku] : undefined;
   if (!paths?.length) return p;
   return { ...p, images: paths.map((src, i) => ({ src, alt: p.images?.[i]?.alt ?? p.name })) };
-}
-
-function authHeader() {
-  const ck = process.env.WC_CONSUMER_KEY ?? "";
-  const cs = process.env.WC_CONSUMER_SECRET ?? "";
-  return "Basic " + Buffer.from(`${ck}:${cs}`).toString("base64");
 }
 
 export type WcImage = { src: string; alt: string };
@@ -351,29 +347,6 @@ export type Priceable = {
 
 type FetchResult<T> = { data: T; total: number; totalPages: number };
 
-async function wcGet<T>(
-  path: string,
-  params: Record<string, string | number | undefined> = {}
-): Promise<FetchResult<T>> {
-  const url = new URL(BASE + path);
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
-  }
-  const res = await fetch(url, {
-    headers: { Authorization: authHeader() },
-    next: { revalidate: 600 }, // cache product data for 10 minutes
-  });
-  if (!res.ok) throw new Error(`WooCommerce ${res.status} on ${path}`);
-  return {
-    data: (await res.json()) as T,
-    total: Number(res.headers.get("x-wp-total") ?? 0),
-    totalPages: Number(res.headers.get("x-wp-totalpages") ?? 1),
-  };
-}
-
-const PRODUCT_FIELDS =
-  "id,name,slug,sku,type,permalink,price,regular_price,sale_price,on_sale,stock_status,catalog_visibility,bundle_price,weight,dimensions,short_description,description,images,categories";
-
 export async function getProductsByCategory(
   categoryId: number,
   { page = 1, perPage = 24 }: { page?: number; perPage?: number } = {}
@@ -539,38 +512,17 @@ export async function getProductBySlug(slug: string): Promise<WcProduct | null> 
 }
 
 // ---------------------------------------------------------------------------
-// The checkout path still reads WooCommerce LIVE, on purpose.
+// THE CHECKOUT PATH USED TO READ WOOCOMMERCE LIVE FROM HERE. It no longer does.
 //
-// getProductById and getVariation back freight quoting and order creation. They
-// run once per checkout, so the 1.5-2.5s is affordable, and they must never be
-// answered from a snapshot that could be a content edit behind the store: an
-// order priced off stale data is a real loss, where a stale listing is cosmetic.
-// getProductById is also deliberately NOT filtered — an order for an
-// already-bought item must not fail because marketing hid it.
+// getProductById and getVariation priced an order line the cart carried without
+// an ERP code. That fallback was removed from lib/order-lines.ts on 15 Sep —
+// CartProvider drops codeless lines at hydration, so it was already unreachable,
+// and it pointed at WC_STORE_URL, which is this storefront, so it 404'd when it
+// did run. A codeless line now fails immediately, naming the missing code.
+//
+// If a live product read is ever needed again, it reads the ERP. Do not
+// reintroduce a WordPress call here: there is no WordPress behind that hostname.
 // ---------------------------------------------------------------------------
-
-export async function getProductById(id: number): Promise<WcProduct | null> {
-  try {
-    const { data } = await wcGet<WcProduct>(`/products/${id}`, { _fields: PRODUCT_FIELDS });
-    return normalizeProduct(data);
-  } catch {
-    return null;
-  }
-}
-
-export async function getVariation(
-  productId: number,
-  variationId: number
-): Promise<WcVariation | null> {
-  try {
-    const { data } = await wcGet<WcVariation>(`/products/${productId}/variations/${variationId}`, {
-      _fields: "id,sku,price,regular_price,sale_price,stock_status,attributes,image,weight,dimensions",
-    });
-    return data;
-  } catch {
-    return null;
-  }
-}
 
 // Read path (the product page's variant selector and the "From" price on cards),
 // so this one comes off the snapshot.

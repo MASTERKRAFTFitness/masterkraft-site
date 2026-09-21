@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Our Story | The People Behind the Equipment",
   description:
     "The power of passion - expertly engineered gym equipment for commercial and corporate fitouts globally. Made by fitness professionals, for fitness professionals.",
+  alternates: { canonical: "/our-story" },
 };
 
 const values = [
