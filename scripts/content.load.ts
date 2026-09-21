@@ -163,6 +163,55 @@ function categoryRows(): CategoryRow[] {
   return rows;
 }
 
+/**
+ * One revalidation call for the whole run.
+ *
+ * WHY THE LOADER DOES THIS AND THE WEBHOOK DOES NOT. The database trigger in
+ * 20260921_product_content_revalidate_webhook.sql deliberately excludes rows
+ * stamped `content.load` — otherwise a 414-row upsert would fire 414 HTTP
+ * requests at the site in a few seconds, each forcing the next render to
+ * re-read the whole table. So the bulk path is silent by design, and this is
+ * the one call that replaces those four hundred.
+ *
+ * BEST EFFORT, NEVER FATAL. The rows are already written by the time this runs;
+ * a failed revalidation costs an hour of staleness, not data. A local run with
+ * no secret configured is the normal case, not an error — so it says what it
+ * skipped and why, rather than failing a load that worked.
+ */
+async function revalidate(slugs: string[], say: (s?: string) => void): Promise<void> {
+  const secret = env.CONTENT_REVALIDATE_SECRET || process.env.CONTENT_REVALIDATE_SECRET;
+  const site = env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  say("");
+  if (!secret || !site) {
+    say(
+      "Revalidation SKIPPED: " +
+        [!site && "NEXT_PUBLIC_SITE_URL", !secret && "CONTENT_REVALIDATE_SECRET"].filter(Boolean).join(" and ") +
+        " not set. The rows are written; the site will serve them within the hour."
+    );
+    return;
+  }
+  const url = `${site.replace(/\/$/, "")}/api/revalidate/product-content`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
+      body: JSON.stringify({ slugs }),
+    });
+    const body = await res.text();
+    if (!res.ok) {
+      // 401 is the one worth naming: it means this secret and the deployment's
+      // disagree, which is invisible from the database side because the webhook
+      // fires and forgets.
+      say(`Revalidation FAILED ${res.status}: ${body.slice(0, 200)}`);
+      if (res.status === 401) say("  401 means CONTENT_REVALIDATE_SECRET here does not match the deployment's.");
+      return;
+    }
+    say(`Revalidated ${slugs.length} product pages at ${url}`);
+  } catch (e) {
+    say(`Revalidation FAILED: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 it("load content", { timeout: 300_000 }, async () => {
   const products = productRows();
   const cats = categoryRows();
@@ -264,5 +313,7 @@ it("load content", { timeout: 300_000 }, async () => {
     return;
   }
   say(`category_content  ${cats.length} rows written`);
+
+  await revalidate(toWrite.map((r) => r.slug), say);
   flush();
 });
