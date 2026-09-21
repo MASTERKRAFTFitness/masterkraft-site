@@ -212,11 +212,19 @@ export const categories: Category[] = [
     wcId: 275,
   },
 
-  // CLEARANCE IS NOT AN ERP GROUP and is deliberately still listed from the
-  // WooCommerce snapshot. It is ex-display and end-of-line stock on A-prefixed
-  // codes, which is why it is the one category that runs with the brand-SKU
-  // filter OFF. Unleashed has a "Clearance" group holding a single product, and
-  // it is not the same thing.
+  // CLEARANCE IS AN ERP GROUP NOW (2026-09-21), and it is a synthetic one.
+  //
+  // It was listed from the frozen WooCommerce snapshot, with the ERP's own
+  // six-product Clearance group appended — two sources for one page, which is
+  // how the page came to hold a markdown the ERP had overtaken, a price only the
+  // snapshot knew, four dumbbell sizes Unleashed has never carried, and how ten
+  // in-stock ex-display products ended up on no page at all.
+  //
+  // `erpGroup` is now "Clearance", and erpUnits maps BOTH the ERP's own group
+  // and every A-prefixed code onto it (see isExDisplayCode). The snapshot stays
+  // as the fallback every other category has, for when the ERP is unreachable —
+  // and only then. It is still the one category that runs with the brand filter
+  // off, because ex-display is somebody else's equipment by definition.
   {
     slug: "clearance",
     label: "Clearance",
@@ -225,6 +233,7 @@ export const categories: Category[] = [
     meta: "Ex-display and end-of-line gym equipment at reduced prices — commercial-grade stock, limited to what is on hand and not repeatable once it is gone.",
     seoTitle: "Clearance Gym Equipment | Ex-Display Stock",
     productSuffix: "Clearance Gym Equipment",
+    erpGroup: "Clearance",
     wcId: 356,
   },
 ];

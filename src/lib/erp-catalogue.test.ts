@@ -3,10 +3,12 @@
 // shapes in the ERP.
 import { describe, expect, it } from "vitest";
 import {
+  CLEARANCE_GROUP,
   ERP_GROUPS,
   brandDisplayName,
   erpSubgroups,
   erpUnits,
+  erpUnitsInGroup,
   pageCodes,
   searchErpUnits,
   servedCodes,
@@ -346,9 +348,11 @@ describe("a unit describes itself when the snapshot has no words for it", () => 
   });
 });
 
-// CLEARANCE IS SOLD AND IS IN NO UNIT. These lock the gap that emptied live
-// baskets on 2026-09-06: erpUnits is brand-filtered, Clearance is deliberately
-// not, and everything that asked erpUnits alone called live stock retired.
+// CLEARANCE IS SOLD, AND SINCE 2026-09-21 IT IS ALSO IN A UNIT. These still lock
+// the gap that emptied live baskets on 2026-09-06 — everything that asked
+// erpUnits alone called live clearance stock retired — but the fix is no longer
+// "servedCodes knows better than erpUnits". erpUnits now carries the stock
+// itself, so the two agree at the source.
 describe("what the site still sells", () => {
   const clearance = (): UnleashedMap =>
     erp([
@@ -361,17 +365,62 @@ describe("what the site still sells", () => {
       ["MMDBRH02", "Rubber Hex Dumbbell - 2kg", 9, "Mixed Implements"],
     ]);
 
-  it("keeps clearance stock its own brand rule excludes from every unit", () => {
+  it("lists ex-display stock the brand rule would otherwise throw away", () => {
+    // Air Locker is not one of ours, and under the brand allowlist alone this
+    // stock earned no card anywhere - which is how ten in-stock ex-display
+    // products came to sit on no page of the site. A-prefixed codes are exempt
+    // from the allowlist for the same reason the ERP's Clearance group is:
+    // ex-display is somebody else's equipment by definition.
     const map = clearance();
     const units = erpUnits(map);
-    // Air Locker is not one of ours, so it earns no card - that part is correct.
-    expect([...units.values()].some((u) => u.brand === "AIR LOCKER")).toBe(false);
+    expect([...units.values()].some((u) => u.brand === "AIR LOCKER")).toBe(true);
     // It is still on sale at /equipment/clearance, so the cart must not drop it.
     const served = servedCodes(map);
     expect(served.has("AMKBUR01")).toBe(true);
     expect(served.has("AMKBUR06")).toBe(true);
     expect(served.has("MMDBRH01")).toBe(true);
     expect(served.has("MMDBRH99")).toBe(false);
+  });
+
+  it("sends ex-display to clearance, not to the group the ERP files it under", () => {
+    // Unleashed files a used kettlebell under Mixed Implements exactly like a
+    // new one. Leaving it there would put ex-display stock on the category page
+    // beside the equipment we actually sell, with nothing to tell them apart.
+    const map = clearance();
+    const units = erpUnits(map);
+    const exDisplay = [...units.values()].filter((u) => u.brand === "AIR LOCKER");
+    expect(exDisplay.length).toBeGreaterThan(0);
+    expect(exDisplay.every((u) => u.group === CLEARANCE_GROUP)).toBe(true);
+    // And the groups it came from are clean: only the MK dumbbells are left.
+    expect(erpUnitsInGroup(map, "Mixed Implements").map((u) => u.brand)).toEqual(["MK"]);
+    expect(erpUnitsInGroup(map, "Body Weight")).toEqual([]);
+  });
+
+  it("drops ex-display that has sold out, because there is no second one", () => {
+    // A range loses the sold size and keeps the rest; a single disappears. This
+    // is the half of live sourcing that matters most - clearance can no longer
+    // advertise something that is gone.
+    const map = clearance();
+    map["ABPBMS01"] = { ...map["ABPBMS01"], stock: 0 };
+    map["ABPBMS02"] = { ...map["ABPBMS02"], stock: 0 };
+    const box = erpUnitsInGroup(map, CLEARANCE_GROUP).find((u) => u.name.startsWith("Plyometric"));
+    expect(box).toBeUndefined();
+
+    const partial = clearance();
+    partial["AMKBUR01"] = { ...partial["AMKBUR01"], stock: 0 };
+    const kb = erpUnitsInGroup(partial, CLEARANCE_GROUP).find((u) =>
+      u.name.startsWith("Urethane")
+    );
+    expect(kb!.codes).toEqual(["AMKBUR02", "AMKBUR06"]);
+  });
+
+  it("leaves stock we actually sell alone when it runs out", () => {
+    // The sold-out rule is for ex-display only. A dumbbell at zero is restocked,
+    // and hiding it would empty the catalogue every time a size ran down.
+    const map = clearance();
+    map["MMDBRH01"] = { ...map["MMDBRH01"], stock: 0 };
+    map["MMDBRH02"] = { ...map["MMDBRH02"], stock: 0 };
+    expect(erpUnitsInGroup(map, "Mixed Implements").length).toBe(1);
   });
 
   it("reads a container page's sizes off the ERP, not off its own SKU", () => {
