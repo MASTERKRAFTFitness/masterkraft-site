@@ -209,11 +209,23 @@ describe("the spec table, database first", () => {
     expect(out).toBe(snapshot);
   });
 
-  // A loader-owned row never reaches the map, so an unedited catalogue renders
-  // exactly what it renders today. This is the safety property of the change.
-  it("reads no specs off a loader-owned row", async () => {
+  // THE ASYMMETRY, and the reason this file has two rules instead of one. A
+  // loader-owned row's specs are the snapshot and are trusted — check:specs
+  // proves they agree over 414 products. Its PROSE is also the snapshot, and is
+  // worthless, because product-copy.json may have improved on it since.
+  it("reads a loader-owned row's specs but drops its prose", async () => {
     adminDb.mockReturnValue({ from });
     respond([row({ assembled_size: "L 1 × W 1 × H 1 mm", updated_by: "content.load" })]);
+    const map = await getProductContent();
+    expect(map["olympic-bench"]).toEqual({ specs: { "Assembled size": "L 1 × W 1 × H 1 mm" } });
+  });
+
+  // A loader row carrying only prose still says nothing, so it should not
+  // appear at all — otherwise "has an entry" stops meaning "has something to
+  // say" and every caller has to test the fields instead of the entry.
+  it("still drops a loader-owned row with no specs", async () => {
+    adminDb.mockReturnValue({ from });
+    respond([row({ updated_by: "content.load" })]);
     expect(await getProductContent()).toEqual({});
   });
 

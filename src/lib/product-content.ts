@@ -7,7 +7,30 @@
 // on 5 September. It follows lib/product-gallery.ts deliberately — same caching,
 // same fail-soft — because that file was written as the pattern for this one.
 //
-// ONLY HUMAN-EDITED ROWS WIN, and that is the whole design.
+// PROSE AND SPECS FOLLOW DIFFERENT RULES, and the asymmetry is deliberate.
+//
+//   PROSE   only a human-edited row wins.
+//   SPECS   every row wins, loader-owned included.
+//
+// The difference is that prose has a THIRD source and specs do not.
+// src/data/product-copy.json holds copy improved by hand after the load — the
+// Core Trainer and Rope & Band Rack pairs among them — so a loader-owned row
+// preferred over the JSON would quietly reinstate the duplicate descriptions
+// that file exists to fix. There is no equivalent layer for specs: the snapshot
+// is their only other source, and scripts/spec-parity.report.ts compares the two
+// field by field. It ran clean over 414 products and 2,494 values before this
+// was turned on, which is the whole reason it exists.
+//
+// WHAT THE SPEC FLIP BUYS is that specification_text stops being load-bearing.
+// Until it, every unedited product rendered its spec table from the legacy HTML
+// blob and the database was decoration.
+//
+// IT CANNOT DELETE A SPEC ROW, which is what makes it safe beyond the parity
+// run: resolveSpecs merges the row OVER the snapshot rather than replacing it,
+// so a column the database left null falls through to the snapshot's value. The
+// worst a bad row can do is state something stale, never render a shorter table.
+//
+// ONLY HUMAN-EDITED ROWS WIN — for prose.
 //
 // `content.load` populated 404 of ~512 rows FROM the frozen snapshot. Those rows
 // are the snapshot, copied. Preferring one over the snapshot is a no-op when the
@@ -31,12 +54,14 @@
 //
 // PRECEDENCE, highest first:
 //
-//   1. a human-edited product_content row   — here
-//   2. src/data/product-copy.json           — authored, deploy-time
-//   3. the frozen WooCommerce snapshot      — whatever the page already had
+//   PROSE                                   SPECS
+//   1. a human-edited row                   1. any product_content row
+//   2. src/data/product-copy.json           2. the frozen snapshot, field by
+//   3. the frozen WooCommerce snapshot         field, for anything left null
 //
-// Dropping from 1 to 2 to 3 is what makes this safe to ship: an empty table, an
-// outage, or missing credentials all land on exactly today's behaviour.
+// Both still bottom out at the snapshot, which is what keeps this fail-soft: an
+// empty table, an outage or missing credentials all land on exactly the
+// behaviour the page had before any of this existed.
 import { unstable_cache } from "next/cache";
 import { adminDb } from "@/lib/admin-db";
 import { productCopy, productCopyHtml } from "@/lib/product-copy";
@@ -95,17 +120,22 @@ async function buildContent(): Promise<ContentMap> {
 
   const out: ContentMap = {};
   for (const row of data ?? []) {
-    if (row.updated_by === LOADER) continue; // the frozen snapshot, copied
     const slug = String(row.slug ?? "").trim();
     if (!slug) continue; // keyed by erp_code; without a slug no page can find it
 
-    const short = String(row.overview_short ?? "").trim() || undefined;
-    const html = htmlFrom(row.overview ?? null, (row.features ?? []) as string[]);
+    // The loader's own rows are the snapshot copied. Their PROSE is therefore
+    // worth nothing and is dropped here — see the note at the top about
+    // product-copy.json. Their SPECS are read, because the snapshot is the only
+    // other source for those and check:specs proves they agree.
+    const edited = row.updated_by !== LOADER;
 
-    // Specs, field by field. An empty column is not an override — it means the
-    // editor did not touch that row of the table, so the snapshot's value
-    // stands. Blanking a spec deliberately is not expressible here, and that is
-    // the right trade: the failure of a missing override is a stale value, the
+    const short = edited ? String(row.overview_short ?? "").trim() || undefined : undefined;
+    const html = edited ? htmlFrom(row.overview ?? null, (row.features ?? []) as string[]) : undefined;
+
+    // Specs, field by field. An empty column is not an override — it means
+    // nobody has stated that row of the table, so the snapshot's value stands.
+    // Blanking a spec deliberately is not expressible here, and that is the
+    // right trade: the failure of a missing override is a stale value, the
     // failure of an accidental one is a spec table that silently loses rows.
     const specs: SpecOverride = {};
     for (const [label, col] of SPEC_FIELDS) {
@@ -135,7 +165,10 @@ async function buildContent(): Promise<ContentMap> {
 // VERSION THE KEY when the shape or meaning of a value changes: a warm cache
 // serves the old answer for the full hour, and the fix looks like it did not
 // deploy.
-const cachedContent = unstable_cache(buildContent, ["product-content-v1"], {
+// v2: the map now carries specs from loader-owned rows, which v1 discarded. A
+// warm v1 cache would serve spec-less entries for an hour after deploy and the
+// flip would look like it had not shipped.
+const cachedContent = unstable_cache(buildContent, ["product-content-v2"], {
   revalidate: 3600,
   tags: ["product-content"],
 });
