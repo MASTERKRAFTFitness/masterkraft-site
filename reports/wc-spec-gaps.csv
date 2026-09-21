@@ -25,10 +25,10 @@ conflict,1,"AMDBRH","Rubber Hex Dumbbells","Mixed Implements","Gross weight","11
 conflict,1,"AMDEHG","High Grip Dead Ball","Mixed Implements","Assembled size","280 x 280 x 280","230 x 230 x 230","Decide which is correct, then set the assembled_size_length/width/height/depth field to it",/product/high-grip-dead-ball-alt-v
 conflict,1,"AMDEHG","High Grip Dead Ball","Mixed Implements","Net weight","12","9 kg","Decide which is correct, then set the net_weight field to it",/product/high-grip-dead-ball-alt-v
 conflict,1,"AMDEHG","High Grip Dead Ball","Mixed Implements","Gross weight","13","10 kg","Decide which is correct, then set the gross_weight field to it",/product/high-grip-dead-ball-alt-v
-malformed,1,"MRSPSE01","All-In-One Trainer","Rigs & Racks","Warranty","10 years frame, 90 days cables and upholstery","10 years frame, 90 days cables and upholsterymonths","Source reads ""10 years frame, 90 days cables and upholsterymonths"". Fix specification_text, or type the correct value into the discrete field, which overrides it",/product/all-in-one-trainer-2
 conflict,1,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Assembled size","24,400 x 6,100","2,440 x 610 x 1,150","Decide which is correct, then set the assembled_size_length/width/height/depth field to it",/product/c2-rower-model-d-pm5-black
 conflict,1,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Net weight","32.9","30 kg","Decide which is correct, then set the net_weight field to it",/product/c2-rower-model-d-pm5-black
 malformed,1,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Warranty","","5 Years Frame, 2 Years Non-Wearable Partsmonths","Source reads ""5 Years Frame, 2 Years Non-Wearable Partsmonths"". Fix specification_text, or type the correct value into the discrete field, which overrides it",/product/c2-rower-model-d-pm5-black
+malformed,1,"MRSPSE01","All-In-One Trainer","Strength","Warranty","10 years frame, 90 days cables and upholstery","10 years frame, 90 days cables and upholsterymonths","Source reads ""10 years frame, 90 days cables and upholsterymonths"". Fix specification_text, or type the correct value into the discrete field, which overrides it",/product/all-in-one-trainer-2
 malformed,1,"MSBMPL01","T-Bar Row Machine Pro (Incline)","Strength","Warranty","(1) Frame- 5 years (2) Foam, coatings- 1 year (3) Hardware, plastics, upholstery- 3 months","(1) Frame- 5 years (2) Foam, coatings- 1 year (3) Hardware, plastics, upholstery- 3 monthsmonths","Source reads ""(1) Frame- 5 years (2) Foam, coatings- 1 year (3) Hardware, plastics, upholstery- 3 monthsmonths"". Fix specification_text, or type the correct value into the discrete field, which overrides it",/product/t-bar-row-machine-pro-incline
 malformed,1,"MSBMSE04","Lat Pulldown & Seated Row Machine Elite (Selectorize)","Strength","Warranty","(1) Frame- 5 years (2) Blocks, pulleys, plates, rods- 3 years (3) Foam, bearings, coatings- 1 year (4) Cables- 6 months (5) Hardware, plastics, upholstery- 3 months","(1) Frame- 5 years (2) Blocks, pulleys, plates, rods- 3 years (3) Foam, bearings, coatings- 1 year (4) Cables- 6 months (5) Hardware, plastics, upholstery- 3 monthsmonths","Source reads ""(1) Frame- 5 years (2) Blocks, pulleys, plates, rods- 3 years (3) Foam, bearings, coatings- 1 year (4) Cables- 6 months (5) Hardware, plastics, upholstery- 3 monthsmonths"". Fix specification_text, or type the correct value into the discrete field, which overrides it",/product/lat-pulldown-seated-row-machine-elite-selectorize
 malformed,1,"MSCMDU01","Functional Trainer Pro","Strength","Warranty","","(1) Frame- 5 years (2) Blocks, pulleys, plates, rods- 3 years (3) Bearings, coatings- 1 year (4) Cables- 6 months (5) Hardware, plastics- 3 monthsmonths","Source reads ""(1) Frame- 5 years (2) Blocks, pulleys, plates, rods- 3 years (3) Bearings, coatings- 1 year (4) Cables- 6 months (5) Hardware, plastics- 3 monthsmonths"". Fix specification_text, or type the correct value into the discrete field, which overrides it",/product/functional-trainer-pro
@@ -82,18 +82,6 @@ blob_only,3,"ABSUTR01","Suspension Trainer","Body Weight","Material","","Nylon w
 blob_only,3,"ABSUTR01","Suspension Trainer","Body Weight","Net weight","","5 kg","Copy ""5 kg"" into the net_weight field",/product/suspension-trainer
 blob_only,3,"ABSUTR01","Suspension Trainer","Body Weight","Gross weight","","6 kg","Copy ""6 kg"" into the gross_weight field",/product/suspension-trainer
 blob_only,3,"ABSUTR01","Suspension Trainer","Body Weight","Warranty","","6 months","Copy ""6 months"" into the warranty field",/product/suspension-trainer
-blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Assembled size","","1,080 x 420 x 250","Copy ""1,080 x 420 x 250"" into the assembled_size_length/width/height/depth field",/product/group-fitness-step
-blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Colour","","Black/Blue","Copy ""Black/Blue"" into the colour field",/product/group-fitness-step
-blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Material","","PP & TPR","Copy ""PP & TPR"" into the material field",/product/group-fitness-step
-blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Net weight","","19 kg","Copy ""19 kg"" into the net_weight field",/product/group-fitness-step
-blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Gross weight","","19 kg","Copy ""19 kg"" into the gross_weight field",/product/group-fitness-step
-blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/group-fitness-step
-blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Assembled size","","1,200 x 310 x 200-350mm","Copy ""1,200 x 310 x 200-350mm"" into the assembled_size_length/width/height/depth field",/product/group-fitness-step-adjustable
-blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Colour","","Grey/Black","Copy ""Grey/Black"" into the colour field",/product/group-fitness-step-adjustable
-blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Material","","PP & TPE","Copy ""PP & TPE"" into the material field",/product/group-fitness-step-adjustable
-blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Net weight","","12 kg","Copy ""12 kg"" into the net_weight field",/product/group-fitness-step-adjustable
-blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Gross weight","","13 kg","Copy ""13 kg"" into the gross_weight field",/product/group-fitness-step-adjustable
-blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/group-fitness-step-adjustable
 blob_only,3,"MBBSCU01","Balance Cushion","Body Weight","Assembled size","","330 x 60 x 330","Copy ""330 x 60 x 330"" into the assembled_size_length/width/height/depth field",/product/balance-cushion
 blob_only,3,"MBBSCU01","Balance Cushion","Body Weight","Colour","","Blue","Copy ""Blue"" into the colour field",/product/balance-cushion
 blob_only,3,"MBBSCU01","Balance Cushion","Body Weight","Material","","PVC","Copy ""PVC"" into the material field",/product/balance-cushion
@@ -351,6 +339,18 @@ blob_only,3,"AMKBUR-GROUP","Urethane Competition Kettlebells (Single)","Mixed Im
 blob_only,3,"AMKBUR-GROUP","Urethane Competition Kettlebells (Single)","Mixed Implements","Net weight","","10 kg","Copy ""10 kg"" into the net_weight field",/product/urethane-competition-kettlebells-single
 blob_only,3,"AMKBUR-GROUP","Urethane Competition Kettlebells (Single)","Mixed Implements","Gross weight","","11 kg","Copy ""11 kg"" into the gross_weight field",/product/urethane-competition-kettlebells-single
 blob_only,3,"AMKBUR-GROUP","Urethane Competition Kettlebells (Single)","Mixed Implements","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/urethane-competition-kettlebells-single
+blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Assembled size","","1,080 x 420 x 250","Copy ""1,080 x 420 x 250"" into the assembled_size_length/width/height/depth field",/product/group-fitness-step
+blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Colour","","Black/Blue","Copy ""Black/Blue"" into the colour field",/product/group-fitness-step
+blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Material","","PP & TPR","Copy ""PP & TPR"" into the material field",/product/group-fitness-step
+blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Net weight","","19 kg","Copy ""19 kg"" into the net_weight field",/product/group-fitness-step
+blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Gross weight","","19 kg","Copy ""19 kg"" into the gross_weight field",/product/group-fitness-step
+blob_only,3,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/group-fitness-step
+blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Assembled size","","1,200 x 310 x 200-350mm","Copy ""1,200 x 310 x 200-350mm"" into the assembled_size_length/width/height/depth field",/product/group-fitness-step-adjustable
+blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Colour","","Grey/Black","Copy ""Grey/Black"" into the colour field",/product/group-fitness-step-adjustable
+blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Material","","PP & TPE","Copy ""PP & TPE"" into the material field",/product/group-fitness-step-adjustable
+blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Net weight","","12 kg","Copy ""12 kg"" into the net_weight field",/product/group-fitness-step-adjustable
+blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Gross weight","","13 kg","Copy ""13 kg"" into the gross_weight field",/product/group-fitness-step-adjustable
+blob_only,3,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/group-fitness-step-adjustable
 blob_only,3,"MMBRNC01","Battle Rope - 12m","Mixed Implements","Assembled size","","12,000 x 42 x 42","Copy ""12,000 x 42 x 42"" into the assembled_size_length/width/height/depth field",/product/battle-rope-12m
 blob_only,3,"MMBRNC01","Battle Rope - 12m","Mixed Implements","Colour","","Black","Copy ""Black"" into the colour field",/product/battle-rope-12m
 blob_only,3,"MMBRNC01","Battle Rope - 12m","Mixed Implements","Material","","Nylon, steel","Copy ""Nylon, steel"" into the material field",/product/battle-rope-12m
@@ -441,28 +441,28 @@ blob_only,3,"MMWAARM-GROUP","Wall Ball","Mixed Implements","Material","","Split 
 blob_only,3,"MMWAARM-GROUP","Wall Ball","Mixed Implements","Net weight","","7 kg","Copy ""7 kg"" into the net_weight field",/product/wall-ball-3
 blob_only,3,"MMWAARM-GROUP","Wall Ball","Mixed Implements","Gross weight","","7 kg","Copy ""7 kg"" into the gross_weight field",/product/wall-ball-3
 blob_only,3,"MMWAARM-GROUP","Wall Ball","Mixed Implements","Warranty","","3 months","Copy ""3 months"" into the warranty field",/product/wall-ball-3
-blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Assembled size","","2,035 x 1,160 x 2,275","Copy ""2,035 x 1,160 x 2,275"" into the assembled_size_length/width/height/depth field",/product/olympic-power-rack-2-0
-blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/olympic-power-rack-2-0
-blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Material","","Steel","Copy ""Steel"" into the material field",/product/olympic-power-rack-2-0
-blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Net weight","","197 kg","Copy ""197 kg"" into the net_weight field",/product/olympic-power-rack-2-0
-blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Gross weight","","210 kg","Copy ""210 kg"" into the gross_weight field",/product/olympic-power-rack-2-0
-blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-power-rack-2-0
-blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Assembled size","","1,735 x 1,465 x 2,442","Copy ""1,735 x 1,465 x 2,442"" into the assembled_size_length/width/height/depth field",/product/olympic-power-rack-3-0
-blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/olympic-power-rack-3-0
-blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Material","","Steel","Copy ""Steel"" into the material field",/product/olympic-power-rack-3-0
-blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Net weight","","176 kg","Copy ""176 kg"" into the net_weight field",/product/olympic-power-rack-3-0
-blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Gross weight","","196 kg","Copy ""196 kg"" into the gross_weight field",/product/olympic-power-rack-3-0
-blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-power-rack-3-0
-blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Assembled size","","2,047 x 1,735 x 2,442","Copy ""2,047 x 1,735 x 2,442"" into the assembled_size_length/width/height/depth field",/product/olympic-power-rack-4-0
-blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/olympic-power-rack-4-0
-blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Material","","Steel","Copy ""Steel"" into the material field",/product/olympic-power-rack-4-0
-blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Net weight","","204 kg","Copy ""204 kg"" into the net_weight field",/product/olympic-power-rack-4-0
-blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Gross weight","","224 kg","Copy ""224 kg"" into the gross_weight field",/product/olympic-power-rack-4-0
-blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-power-rack-4-0
 blob_only,3,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/c2-rower-model-d-pm5-black
 blob_only,3,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Material","","Aluminium, Steel","Copy ""Aluminium, Steel"" into the material field",/product/c2-rower-model-d-pm5-black
 blob_only,3,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Gross weight","","32.5 kg","Copy ""32.5 kg"" into the gross_weight field",/product/c2-rower-model-d-pm5-black
 blob_only,3,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Warranty","","5 Years Frame, 2 Years Non-Wearable Parts","Copy ""5 Years Frame, 2 Years Non-Wearable Parts"" into the warranty field",/product/c2-rower-model-d-pm5-black
+blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Strength","Assembled size","","2,035 x 1,160 x 2,275","Copy ""2,035 x 1,160 x 2,275"" into the assembled_size_length/width/height/depth field",/product/olympic-power-rack-2-0
+blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Strength","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/olympic-power-rack-2-0
+blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Strength","Material","","Steel","Copy ""Steel"" into the material field",/product/olympic-power-rack-2-0
+blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Strength","Net weight","","197 kg","Copy ""197 kg"" into the net_weight field",/product/olympic-power-rack-2-0
+blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Strength","Gross weight","","210 kg","Copy ""210 kg"" into the gross_weight field",/product/olympic-power-rack-2-0
+blob_only,3,"MRSPFW02","Olympic Power Rack 2.0","Strength","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-power-rack-2-0
+blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Strength","Assembled size","","1,735 x 1,465 x 2,442","Copy ""1,735 x 1,465 x 2,442"" into the assembled_size_length/width/height/depth field",/product/olympic-power-rack-3-0
+blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Strength","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/olympic-power-rack-3-0
+blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Strength","Material","","Steel","Copy ""Steel"" into the material field",/product/olympic-power-rack-3-0
+blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Strength","Net weight","","176 kg","Copy ""176 kg"" into the net_weight field",/product/olympic-power-rack-3-0
+blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Strength","Gross weight","","196 kg","Copy ""196 kg"" into the gross_weight field",/product/olympic-power-rack-3-0
+blob_only,3,"MRSPFW04","Olympic Power Rack 3.0","Strength","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-power-rack-3-0
+blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Strength","Assembled size","","2,047 x 1,735 x 2,442","Copy ""2,047 x 1,735 x 2,442"" into the assembled_size_length/width/height/depth field",/product/olympic-power-rack-4-0
+blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Strength","Colour","","Black/Grey","Copy ""Black/Grey"" into the colour field",/product/olympic-power-rack-4-0
+blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Strength","Material","","Steel","Copy ""Steel"" into the material field",/product/olympic-power-rack-4-0
+blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Strength","Net weight","","204 kg","Copy ""204 kg"" into the net_weight field",/product/olympic-power-rack-4-0
+blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Strength","Gross weight","","224 kg","Copy ""224 kg"" into the gross_weight field",/product/olympic-power-rack-4-0
+blob_only,3,"MRSPFW05","Olympic Power Rack 4.0","Strength","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-power-rack-4-0
 blob_only,3,"MSCMDU01","Functional Trainer Pro","Strength","Assembled size","","2,070 x 1,220 x 2300","Copy ""2,070 x 1,220 x 2300"" into the assembled_size_length/width/height/depth field",/product/functional-trainer-pro
 blob_only,3,"MSCMDU01","Functional Trainer Pro","Strength","Colour","","Tungsten (metallic silver gray)","Copy ""Tungsten (metallic silver gray)"" into the colour field",/product/functional-trainer-pro
 blob_only,3,"MSCMDU01","Functional Trainer Pro","Strength","Material","","Steel, HDPE","Copy ""Steel, HDPE"" into the material field",/product/functional-trainer-pro
@@ -577,13 +577,6 @@ blob_only,3,"MWWPOU-GROUP","Olympic Urethane Weight Plates","Weightlifting","Gro
 blob_only,3,"MWWPOU-GROUP","Olympic Urethane Weight Plates","Weightlifting","Warranty","","12 months","Copy ""12 months"" into the warranty field",/product/olympic-urethane-weight-plates-3
 missing,4,"ABCTFS02","Core Trainer (Landmine) With T Bar Handle","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/core-trainer-landmine-with-t-bar-handle-2
 missing,4,"ABEMMA01","EVA Exercise Mat","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/eva-exercise-mat
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Assembled size","","","No value anywhere. Set assembled_size_length/width/height/depth",/product/plyometric-box-45cm
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Colour","","","No value anywhere. Set colour",/product/plyometric-box-45cm
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Material","","","No value anywhere. Set material",/product/plyometric-box-45cm
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Net weight","","","No value anywhere. Set net_weight",/product/plyometric-box-45cm
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Gross weight","","","No value anywhere. Set gross_weight",/product/plyometric-box-45cm
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/plyometric-box-45cm
-missing,4,"ABPBMS-01-1","Plyometric Box 45cm","Body Weight","Warranty","","","No value anywhere. Set warranty",/product/plyometric-box-45cm
 missing,4,"ABRPBA01","Knitted Resistance Bands (Set of 3)","Body Weight","Colour","","","No value anywhere. Set colour",/product/knitted-resistance-bands-set-of-3-2
 missing,4,"ABRPBA01","Knitted Resistance Bands (Set of 3)","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/knitted-resistance-bands-set-of-3-2
 missing,4,"ABRPPO","Power Bands","Body Weight","Assembled size","","","No value anywhere. Set assembled_size_length/width/height/depth",/product/power-bands-alt-v
@@ -651,8 +644,6 @@ missing,4,"ABSADO08","Station Markers (Set of 15) - Sherpa","Body Weight","Gross
 missing,4,"ABSADO08","Station Markers (Set of 15) - Sherpa","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/station-markers-set-of-15-sherpa
 missing,4,"ABSADO08","Station Markers (Set of 15) - Sherpa","Body Weight","Warranty","","","No value anywhere. Set warranty",/product/station-markers-set-of-15-sherpa
 missing,4,"ABSUTR01","Suspension Trainer","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/suspension-trainer
-missing,4,"MBASADJ-GROUP","Group Fitness Step","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/group-fitness-step
-missing,4,"MBASADJ01","Group Fitness Step (Adjustable)","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/group-fitness-step-adjustable
 missing,4,"MBBSCU01","Balance Cushion","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/balance-cushion
 missing,4,"MBBSTR01","Fitness & Balance Trainer","Body Weight","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/fitness-balance-trainer
 missing,4,"MBCTDI01","Exercise Glider Discs (Pair)","Body Weight","Material","","","No value anywhere. Set material",/product/exercise-glider-discs-pair
@@ -724,6 +715,8 @@ missing,4,"AMBXSY01","Focus Pads","Mixed Implements","Packing size","","","No va
 missing,4,"AMBXSY01","Focus Pads","Mixed Implements","Warranty","","","No value anywhere. Set warranty",/product/focus-pads
 missing,4,"AMDBRH","Rubber Hex Dumbbells","Mixed Implements","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/rubber-hex-dumbbell-alt-v
 missing,4,"AMKBUR-GROUP","Urethane Competition Kettlebells (Single)","Mixed Implements","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/urethane-competition-kettlebells-single
+missing,4,"MBASADJ-GROUP","Group Fitness Step","Mixed Implements","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/group-fitness-step
+missing,4,"MBASADJ01","Group Fitness Step (Adjustable)","Mixed Implements","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/group-fitness-step-adjustable
 missing,4,"MMBRNC01","Battle Rope - 12m","Mixed Implements","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/battle-rope-12m
 missing,4,"MMDBPRH-GROUP","Premium Rubber Hex Dumbbell","Mixed Implements","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/premium-rubber-hex-dumbbell-3
 missing,4,"MMDBRH-GROUP","Rubber Hex Dumbbells","Mixed Implements","Assembled size","","","No value anywhere. Set assembled_size_length/width/height/depth",/product/rubber-hex-dumbbell-group
@@ -756,10 +749,10 @@ missing,4,"MMPACE101","Chrome 110 Dumbbells (1kg-10kg Pairs)","Packages","Net we
 missing,4,"MMPACE101","Chrome 110 Dumbbells (1kg-10kg Pairs)","Packages","Gross weight","","","No value anywhere. Set gross_weight",/product/chrome-110-dumbbells-1kg-10kg-pairs
 missing,4,"MMPACE101","Chrome 110 Dumbbells (1kg-10kg Pairs)","Packages","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/chrome-110-dumbbells-1kg-10kg-pairs
 missing,4,"MMPACE101","Chrome 110 Dumbbells (1kg-10kg Pairs)","Packages","Warranty","","","No value anywhere. Set warranty",/product/chrome-110-dumbbells-1kg-10kg-pairs
-missing,4,"MRSPFW02","Olympic Power Rack 2.0","Rigs & Racks","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-power-rack-2-0
-missing,4,"MRSPFW04","Olympic Power Rack 3.0","Rigs & Racks","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-power-rack-3-0
-missing,4,"MRSPFW05","Olympic Power Rack 4.0","Rigs & Racks","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-power-rack-4-0
 missing,4,"SCRWAR04","C2 Rower Model D PM5 Black","Rowers","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/c2-rower-model-d-pm5-black
+missing,4,"MRSPFW02","Olympic Power Rack 2.0","Strength","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-power-rack-2-0
+missing,4,"MRSPFW04","Olympic Power Rack 3.0","Strength","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-power-rack-3-0
+missing,4,"MRSPFW05","Olympic Power Rack 4.0","Strength","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-power-rack-4-0
 missing,4,"MSCMDU01","Functional Trainer Pro","Strength","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/functional-trainer-pro
 missing,4,"AWBBOL03","Olympic Barbell - 15kg (1500Lb Capacity)","Weightlifting","Packing size","","","No value anywhere. Set packing_size_length/width/height",/product/olympic-barbell-15kg-1500lb-capacity
 missing,4,"AWWLACC02","Olympic Bar Easy Lock Collars (Pair)","Weightlifting","Net weight","","","No value anywhere. Set net_weight",/product/olympic-bar-easy-lock-collars-pair
