@@ -3,7 +3,8 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import ProductCard from "@/components/shop/ProductCard";
 import { searchProducts, type WcProduct } from "@/lib/woocommerce";
-import { getUnleashedMap, enrichCard } from "@/lib/unleashed";
+import { getUnleashedMap, enrichCard, withErpImages } from "@/lib/unleashed";
+import { getGallery } from "@/lib/product-gallery";
 import { searchErpUnits, unitCard } from "@/lib/erp-catalogue";
 
 export const metadata: Metadata = {
@@ -33,7 +34,16 @@ export default async function SearchPage({
   let cards: Card[] | null = null;
 
   if (q) {
-    const unleashed = await getUnleashedMap().catch(() => ({}));
+    const [unleashed, gallery] = await Promise.all([
+      getUnleashedMap().catch(() => ({})),
+      // A CARD CAN BE THE ONLY PLACE A PHOTOGRAPH EXISTS. product_images holds
+      // `kind: 'sole'` rows precisely for products the ERP has no picture of and
+      // cannot be given one — OSCMDU01, the clearance dual adjustable pulley, is
+      // the first. Without this the product page showed its photography and every
+      // search result for it rendered "No image", which reads as a broken
+      // catalogue rather than a missing upload.
+      getGallery(),
+    ]);
     try {
       // Search the ERP, which is the catalogue. It holds 165 units that have no
       // WooCommerce record at all, and a product that is sold but unfindable is
@@ -44,7 +54,13 @@ export default async function SearchPage({
         const hits = searchErpUnits(unleashed, q);
         total = hits.length;
         totalPages = Math.max(1, Math.ceil(total / 24));
-        cards = hits.slice((page - 1) * 24, page * 24).map(unitCard);
+        // unitCard builds from the ERP alone, so the gallery is applied after.
+        // withErpImages returns the SAME OBJECT when there is nothing to add,
+        // which is what makes this safe to apply to every card blind.
+        cards = hits.slice((page - 1) * 24, page * 24).map((u) => {
+          const card = unitCard(u);
+          return { ...card, product: withErpImages(card.product, unleashed, gallery) };
+        });
         products = cards.map((c) => c.product);
       } else {
         const res = await searchProducts(q, { page, perPage: 24 });
@@ -52,7 +68,10 @@ export default async function SearchPage({
         total = res.total;
         totalPages = res.totalPages;
         cards = await Promise.all(
-          products.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
+          products.map(async (product) => {
+            const withImages = withErpImages(product, unleashed, gallery);
+            return { product: withImages, enriched: await enrichCard(withImages, unleashed) };
+          })
         );
       }
     } catch {
