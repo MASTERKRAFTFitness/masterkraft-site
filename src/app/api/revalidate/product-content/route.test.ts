@@ -62,6 +62,20 @@ describe("what it flushes", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/product/functional-trainer-pro");
   });
 
+  // A product page reads two independently cached tables. Dropping only the
+  // copy tag left gallery edits invisible for an hour — the exact failure this
+  // route exists to remove, one table across.
+  it("drops the gallery tag too, not just the copy one", async () => {
+    await call({ slugs: ["functional-trainer-clearance"] });
+    expect(revalidateTag).toHaveBeenCalledWith("product-images", { expire: 0 });
+  });
+
+  it("reports both tags back to the caller", async () => {
+    const res = await call({ slugs: ["x"] });
+    const json = (await res.json()) as { tags?: string[] };
+    expect(json.tags).toEqual(["product-content", "product-images"]);
+  });
+
   // The Google Shopping feed reads the same copy. A title that disagrees with
   // the landing page is a disapproval risk, so it goes with every call.
   it("always revalidates the merchant feed", async () => {
@@ -103,6 +117,7 @@ describe("a caller that gives no slugs is told what it did not get", () => {
     );
     expect(res.status).toBe(200);
     expect(revalidateTag).toHaveBeenCalledWith("product-content", { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith("product-images", { expire: 0 });
   });
 
   it("warns that no product page was re-rendered", async () => {

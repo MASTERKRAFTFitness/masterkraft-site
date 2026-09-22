@@ -1,7 +1,8 @@
 // Make an edit to product_content show up now, instead of within the hour.
 //
 // WHY THIS EXISTS. lib/product-content.ts caches the whole table for 3600s and
-// tags it "product-content". Nothing dropped that tag until this route, so an
+// tags it "product-content", and lib/product-gallery.ts does the same under
+// "product-images". Nothing dropped that tag until this route, so an
 // editor who fixed a warranty in Supabase saw no change for up to an hour. That
 // is not a slow feature, it is a broken one: the realistic reaction to "my edit
 // did nothing" is to edit it again, and now two people disagree about what the
@@ -30,8 +31,27 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
-/** The tag lib/product-content.ts caches under. Must match it exactly. */
-const TAG = "product-content";
+/**
+ * The tags to drop. Must match the cache keys exactly.
+ *
+ * BOTH, because a product page reads TWO independently cached tables and an
+ * edit to either one is invisible until its own tag goes:
+ *
+ *   product-content  lib/product-content.ts  — the copy and the spec table
+ *   product-images   lib/product-gallery.ts  — the gallery
+ *
+ * The second was missed when this route was written, and the gap hid itself:
+ * adding OSCMDU01's photography appeared to work instantly, but only because a
+ * deploy two minutes earlier had reset the cache. An hour later the same write
+ * would have sat invisible for an hour and looked like a failure — which is the
+ * exact complaint this route exists to remove, reappearing one table across.
+ *
+ * They are dropped together rather than selectively. Telling them apart would
+ * mean this route knowing which table the caller edited, and a caller that has
+ * to name the table correctly to get a working cache is a worse design than one
+ * extra read an hour.
+ */
+const TAGS = ["product-content", "product-images"] as const;
 /** The feed also reads product_content, so an edit invalidates it too. */
 const FEED = "/merchant-feed.xml";
 
@@ -99,7 +119,7 @@ export async function POST(req: Request) {
   }
   const slugs = slugsFrom(body);
 
-  revalidateTag(TAG, { expire: 0 });
+  for (const tag of TAGS) revalidateTag(tag, { expire: 0 });
   for (const slug of slugs) revalidatePath(`/product/${slug}`);
   revalidatePath(FEED);
 
@@ -114,10 +134,10 @@ export async function POST(req: Request) {
     : "No slugs given: the data cache was dropped but no product page was re-rendered. Pass { slugs: [...] } to make an edit appear immediately.";
   if (warning) console.warn(`[revalidate/product-content] ${warning}`);
 
-  console.log(`[revalidate/product-content] tag=${TAG} paths=${slugs.length + 1}`);
+  console.log(`[revalidate/product-content] tags=${TAGS.join(",")} paths=${slugs.length + 1}`);
   return NextResponse.json({
     ok: true,
-    tag: TAG,
+    tags: TAGS,
     revalidated: [...slugs.map((s) => `/product/${s}`), FEED],
     ...(warning ? { warning } : {}),
   });
