@@ -70,7 +70,9 @@
     "check:mirror": "vitest run --config vitest.reports.config.mts scripts/erp-mirror-parity.report.ts",
     "check:specs": "vitest run --config vitest.reports.config.mts scripts/spec-parity.report.ts",
     "load:details": "node scripts/catalogue-details.load.mjs",
-    "load:details:write": "DETAILS_LOAD_WRITE=true node scripts/catalogue-details.load.mjs"
+    "load:details:write": "DETAILS_LOAD_WRITE=true node scripts/catalogue-details.load.mjs",
+    "export:copy": "node scripts/catalogue-copy.export.mjs",
+    "export:copy:write": "node scripts/catalogue-copy.export.mjs --write"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
