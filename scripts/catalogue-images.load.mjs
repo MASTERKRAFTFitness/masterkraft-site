@@ -55,8 +55,32 @@ for (let from = 0; ; from += 1000) {
 // --- 2. the pins, and the category each product sits in ---------------------
 const ts = readFileSync(CAT + "/src/lib/catalogue/brands.ts", "utf8");
 const block = ts.match(/const IMAGE_OVERRIDES[^=]*=\s*\{(.*?)\n\};/s)[1];
+
+// Literal "brand:SKU": "/path" pairs.
 const pins = [...block.matchAll(/"([a-z0-9-]+):([A-Z0-9]+)"\s*:\s*"([^"]+)"/g)]
   .map((m) => ({ brand: m[1], sku: m[2], path: m[3] }));
+
+// AND THE SPREADS. IMAGE_OVERRIDES is not a flat literal: it spreads
+// M_KETTLEBELL_PINS and FERNWOOD_KETTLEBELL_PINS, each built as a cross product
+// of a <NAME>_BRANDS array with a <NAME>_PHOTOS map. Reading only the literal
+// pairs missed all 18 Fernwood kettlebell entries - nine re-liveried renders
+// across two brands - and the loader reported a confident 117 while being
+// wrong. Resolve each spread from those two constants.
+const spreads = [...block.matchAll(/\.\.\.([A-Z_][A-Z0-9_]*)/g)].map((m) => m[1]);
+for (const name of spreads) {
+  const stem = name.replace(/_PINS$/, "");
+  const brandsSrc = ts.match(new RegExp(`const ${stem}_BRANDS\\s*=\\s*\\[(.*?)\\]`, "s"));
+  const photosSrc = ts.match(new RegExp(`const ${stem}_PHOTOS[^=]*=\\s*\\{(.*?)\\n\\};`, "s"));
+  // Loud, not silent: an unrecognised spread means pins are being missed, and a
+  // quietly short count is exactly the failure this replaces.
+  if (!brandsSrc || !photosSrc) {
+    throw new Error(`IMAGE_OVERRIDES spreads ...${name}, which this loader cannot resolve. ` +
+      `Expected ${stem}_BRANDS and ${stem}_PHOTOS in brands.ts. Fix the loader before trusting its counts.`);
+  }
+  const brands = [...brandsSrc[1].matchAll(/"([a-z0-9-]+)"/g)].map((m) => m[1]);
+  const photos = [...photosSrc[1].matchAll(/([A-Z0-9]+)\s*:\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]);
+  for (const b of brands) for (const [sku, path] of photos) pins.push({ brand: b, sku, path });
+}
 
 // category comes from the brand's own catalogue JSON, which is where the
 // product actually lives; the pin only knows a SKU and a file.
@@ -127,13 +151,68 @@ const pinKey = new Set(pinRows.map((r) => `${r.brand}|${r.category}|${r.file_nam
 const kept = scanRows.filter((r) => !pinKey.has(`${r.brand}|${r.category}|${r.file_name}`));
 const displaced = scanRows.length - kept.length;
 
-const all = [...kept, ...pinRows];
+// --- 3. brand-images.json, the manifest brandImage() actually resolves -------
+//
+// The third and largest source, and the one whose absence made the first run of
+// this loader wrong. A file reaches a catalogue by one of three routes, not one:
+// a pin, this manifest, or the Dropbox scan. Loading only pins and the scan left
+// 77 files sitting in public/brand-images/fernwood/ with no row at all -
+// FWBBFUR01-08, the MMDBUR dumbbells, the MAACU apparel mockups - several of
+// them Fernwood artwork filed under M-coded names, which is precisely the trap
+// that makes a filename-driven guess unsafe.
+//
+// These rows carry public_path and no dropbox_path: the manifest records what
+// has been imported into the repo, not what Dropbox holds.
+const manifest = JSON.parse(readFileSync(CAT + "/src/data/brand-images.json", "utf8"));
+const claimed = new Set([...pinRows, ...kept.filter((r) => r.is_primary)]
+  .filter((r) => r.sku).map((r) => `${r.brand}:${r.sku}`));
+const seen = new Set([...kept, ...pinRows].map((r) => `${r.brand}|${r.category}|${r.file_name}`));
+
+const manifestRows = [];
+let unfiled = 0;
+for (const [key, entries] of Object.entries(manifest)) {
+  const brand = key === "_shared" ? "shared" : key;
+  for (const [sku, path] of Object.entries(entries)) {
+    const file = basename(path);
+    // The manifest has no category; take the product's own where the catalogue
+    // lists it. "Unfiled" is honest for a shared shot or a SKU this brand does
+    // not stock - it is a real state, not a placeholder to tidy away later.
+    const category = catOf.get(`${brand}:${sku}`) ?? catOf.get(`${key}:${sku}`) ?? "Unfiled";
+    if (category === "Unfiled") unfiled++;
+    const k = `${brand}|${category}|${file}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    manifestRows.push(row({
+      brand, category, file_name: file,
+      // brand-images.json MIXES TWO KINDS OF VALUE. Most entries are repo paths
+      // like /brand-images/fernwood/X.png, but the Unleashed image harvest put
+      // absolute https://unlappcdn.unleashedsoftware.com/... URLs in the same
+      // map. Checking the filesystem for those called 890 perfectly renderable
+      // images "absent". public_path is where a browser gets the file, remote
+      // or local; only a repo path that is genuinely not on disk is null.
+      dropbox_path: null,
+      public_path: /^https?:\/\//.test(path) ? path : (existsSync(PUBLIC + path) ? path : null),
+      sku, sku_stem: sku,
+      is_primary: !claimed.has(`${brand}:${sku}`),
+      source: "brand_images_manifest",
+      notes: "SKU to file mapping resolved by brandImage().",
+    }));
+    if (!claimed.has(`${brand}:${sku}`)) claimed.add(`${brand}:${sku}`);
+  }
+}
+const manifestMissing = manifestRows.filter((r) => !r.public_path).length;
+const manifestRemote = manifestRows.filter((r) => r.public_path && /^https?:/.test(r.public_path)).length;
+
+const all = [...kept, ...pinRows, ...manifestRows];
 const summary = [
   `dropbox scan rows : ${scanRows.length}  (from ${there.SUPABASE_URL ?? there.NEXT_PUBLIC_SUPABASE_URL})`,
-  `pins found        : ${pins.length} entries, ${pinRows.length} placed`,
+  `pins found        : ${pins.length} entries (${spreads.length} spreads resolved), ${pinRows.length} placed`,
   `  unplaced        : ${unplaced.length}${unplaced.length ? " -> " + unplaced.join(", ") : ""}`,
   `scan tiles demoted: ${demoted.length}`,
   `scan rows replaced: ${displaced} (same brand+category+file_name as a pin)`,
+  `manifest rows     : ${manifestRows.length}  (${unfiled} with no category in any catalogue JSON)`,
+  `  remote (ERP CDN) : ${manifestRemote}`,
+  `  file absent      : ${manifestMissing}`,
   `TOTAL to write    : ${all.length}`,
   `renderable now    : ${all.filter((r) => r.public_path).length}  (the rest are Dropbox-only)`,
   `mode              : ${WRITE ? "WRITE" : "report only"}`,

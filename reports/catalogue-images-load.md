@@ -2,15 +2,21 @@
 
 ```
 dropbox scan rows : 1354  (from https://pmydkwszkgjnolrcnenh.supabase.co)
-pins found        : 117 entries, 117 placed
+pins found        : 155 entries (2 spreads resolved), 155 placed
   unplaced        : 0
-scan tiles demoted: 0
+scan tiles demoted: 4
 scan rows replaced: 1 (same brand+category+file_name as a pin)
-TOTAL to write    : 1470
-renderable now    : 387  (the rest are Dropbox-only)
+manifest rows     : 1664  (762 with no category in any catalogue JSON)
+  remote (ERP CDN) : 890
+  file absent      : 0
+TOTAL to write    : 3172
+renderable now    : 2089  (the rest are Dropbox-only)
 mode              : WRITE
 ```
 
-## Tiles a pin took from the Dropbox scan (0)
+## Tiles a pin took from the Dropbox scan (4)
 
-
+- revo:MMKBUR01 (MMKBUR01-1S.jpg)
+- revo:MMKBUR06 (MMKBUR06-1S.jpg)
+- golds:MMKBUR01 (MMKBUR01-1S.jpg)
+- golds:MMKBUR06 (MMKBUR06-1S.jpg)
