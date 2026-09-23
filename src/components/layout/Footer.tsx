@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { equipmentCategories, fitoutLinks, footerLinks } from "@/lib/nav";
 import { blogEnabled, BLOG_PREFIX } from "@/lib/opinly-content";
+import { FRANCHISOR_PORTAL_URL, franchisorLoginEnabled } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -107,6 +108,29 @@ export default function Footer() {
                 </Link>
               </li>
             ))}
+            {/* FRANCHISOR SIGN-IN. Conditional for the same reason as the
+                Journal above: it points at a separate app, and until that app's
+                logins are switched on the link would land head office on a form
+                that cannot sign them in. Unset the env var and the link is
+                simply absent.
+
+                In the footer rather than the header on purpose. The header's
+                Portal Login is for franchisees — hundreds of them, arriving
+                cold. Franchisors are a handful of named people who bookmark it
+                after the first visit, so a quiet link serves them without
+                putting a second, nearly identical "login" next to the first.
+
+                A plain <a>, not <Link>: this leaves the site. */}
+            {franchisorLoginEnabled && (
+              <li>
+                <a
+                  href={FRANCHISOR_PORTAL_URL}
+                  className="text-sm text-white/80 hover:text-accent transition-colors"
+                >
+                  Franchisor Login
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </div>

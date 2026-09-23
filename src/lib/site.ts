@@ -61,6 +61,24 @@ export const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL?.replace(/\/$/, "")
 export const portalLoginHref = PORTAL_URL || "/wholesale-login";
 export const portalIsExternal = !!PORTAL_URL;
 
+// The FRANCHISOR portal is a different app again — head office's view of a whole
+// network, not one gym's. Set NEXT_PUBLIC_FRANCHISOR_PORTAL_URL to the shared
+// franchisor sign-in host (https://hq.portal.masterkraft.com); one link serves
+// every brand, because that host resolves who the person is and sends them to
+// their own brand's portal.
+//
+// Deliberately has NO on-site fallback, unlike PORTAL_URL above. There is no
+// placeholder worth showing: a franchisor is a handful of named people at head
+// office, invited by MasterKraft, and a sign-in form that cannot sign anyone in
+// is worse for them than no link at all. Unset means the footer simply omits it
+// — see Footer.tsx, which does the same for the Journal.
+//
+// Set this only once HQ_AUTH is on in the portal app, or the link lands on a
+// form that tells everyone sign-in is not switched on yet.
+export const FRANCHISOR_PORTAL_URL =
+  process.env.NEXT_PUBLIC_FRANCHISOR_PORTAL_URL?.replace(/\/$/, "") || "";
+export const franchisorLoginEnabled = !!FRANCHISOR_PORTAL_URL;
+
 /**
  * Whether THIS hostname may be indexed.
  *
