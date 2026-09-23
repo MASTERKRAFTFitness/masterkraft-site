@@ -53,8 +53,8 @@
     "report:ranges": "node scripts/range-report.mjs",
     "load:content": "vitest run --config vitest.reports.config.mts scripts/content.load.ts",
     "load:content:write": "CONTENT_LOAD_WRITE=true vitest run --config vitest.reports.config.mts scripts/content.load.ts",
-    "load:images": "vitest run --config vitest.reports.config.mts scripts/product-images.load.ts",
-    "load:images:write": "IMAGES_LOAD_WRITE=true vitest run --config vitest.reports.config.mts scripts/product-images.load.ts",
+    "load:images": "node scripts/catalogue-images.load.mjs",
+    "load:images:write": "IMAGES_LOAD_WRITE=true node scripts/catalogue-images.load.mjs",
     "mirror:erp": "vitest run --config vitest.reports.config.mts scripts/erp-mirror.load.ts",
     "mirror:erp:write": "ERP_MIRROR_WRITE=true vitest run --config vitest.reports.config.mts scripts/erp-mirror.load.ts",
     "report:copy": "vitest run --config vitest.reports.config.mts scripts/erp-copy.report.ts",
@@ -68,7 +68,9 @@
     "archive:orders": "node scripts/archive-woo-orders.mjs",
     "archive:wooimages": "node scripts/archive-woo-images.mjs",
     "check:mirror": "vitest run --config vitest.reports.config.mts scripts/erp-mirror-parity.report.ts",
-    "check:specs": "vitest run --config vitest.reports.config.mts scripts/spec-parity.report.ts"
+    "check:specs": "vitest run --config vitest.reports.config.mts scripts/spec-parity.report.ts",
+    "load:details": "node scripts/catalogue-details.load.mjs",
+    "load:details:write": "DETAILS_LOAD_WRITE=true node scripts/catalogue-details.load.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
