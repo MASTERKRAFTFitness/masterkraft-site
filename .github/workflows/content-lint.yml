@@ -1,0 +1,59 @@
+# House style, checked against what the blog is actually serving.
+#
+# SEPARATE FROM CI ON PURPOSE. This one needs a credential and reaches the
+# network, so it cannot run on a fork and should not gate a pull request. It
+# answers a different question: not "is the code sound" but "is the published
+# writing still saying what we agreed it would say".
+#
+# WHY IT IS SCHEDULED RATHER THAN TRIGGERED. Posts publish themselves on
+# Opinly's schedule, not on a push, so there is no repository event to hang
+# this off. A daily run at 06:00 Sydney means a problem is waiting in the
+# morning rather than found weeks later.
+#
+# The rules are in src/lib/content-rules.ts and every one of them exists
+# because it was broken. See that file.
+name: Content lint
+
+on:
+  schedule:
+    # 20:00 UTC = 06:00 the next day in Sydney, where the people reading it are.
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # CHECK=1 turns the report into a gate: a red run means an `error`-level
+      # finding is live on the site right now. Warnings do not fail it — they
+      # need a human, and failing on them would train everyone to ignore red.
+      #
+      # Without the secret the script logs and returns cleanly rather than
+      # failing, so this stays green until somebody adds the key.
+      - name: Lint published content
+        env:
+          OPINLY_API_KEY: ${{ secrets.OPINLY_API_KEY }}
+          CHECK: "1"
+        run: npm run check:content
+
+      # Uploaded even on failure — the report is the thing worth reading when
+      # the step goes red.
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-lint
+          path: reports/content-lint.md
+          if-no-files-found: ignore
