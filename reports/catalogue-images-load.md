@@ -2,17 +2,17 @@
 
 ```
 dropbox scan rows : 1354  (from https://pmydkwszkgjnolrcnenh.supabase.co)
-pins found        : 155 entries (2 spreads resolved), 155 placed
-  unplaced        : 0
+pins found        : 155 entries (2 spreads resolved), 153 placed
+  unplaced        : 2 -> snap:SWWPCNB, snap-hq:SWWPCNB
 scan tiles demoted: 4
 scan rows replaced: 1 (same brand+category+file_name as a pin)
-manifest rows     : 1664  (762 with no category in any catalogue JSON)
+manifest rows     : 1663  (761 with no category in any catalogue JSON)
   remote (ERP CDN) : 890
   file absent      : 0
-resolved rows     : 3569  (294 render blank)
-family cards      : 204
-TOTAL to write    : 5479
-renderable now    : 4117  (the rest are Dropbox-only)
+resolved rows     : 3521  (294 render blank)
+family cards      : 210
+TOTAL to write    : 5430
+renderable now    : 4068  (the rest are Dropbox-only)
 mode              : WRITE
 ```
 
@@ -22,3 +22,8 @@ mode              : WRITE
 - revo:MMKBUR06 (MMKBUR06-1S.jpg)
 - golds:MMKBUR01 (MMKBUR01-1S.jpg)
 - golds:MMKBUR06 (MMKBUR06-1S.jpg)
+
+## Pins with no product in any catalogue JSON (2)
+
+- snap:SWWPCNB
+- snap-hq:SWWPCNB

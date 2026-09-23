@@ -303,5 +303,74 @@ if (WRITE) {
     const { error } = await dst.from("catalogue_cards").insert(cardRows.slice(i, i + 200));
     if (error) throw error;
   }
-  console.log(`\ndone. catalogue_images ${count} rows, catalogue_cards ${cardRows.length} rows`);
+  // What each brand actually lists, and at what rate.
+  //
+  // THE SET OF CODES COMES FROM THE RESOLVED EXPORT, not from the catalogue
+  // JSONs. A pinned ladder card carries an INVENTED stem - Fernwood's barbell
+  // cards are FWBBFUS and FWBBFUZ - which exists in LADDER_PINS and in no JSON
+  // file, so seeding from the files listed 13 of Fernwood's 15 cards and left
+  // the two a customer actually clicks with no row at all. The export knows
+  // every code the app renders, cards and rungs alike.
+  //
+  // Price and category still come from the JSON, which is where they live; a
+  // card takes the span its own family advertises.
+  const listings = [];
+  for (const b of ["fernwood","fernwood-hq","golds","jetts","jetts-hq","revo","snap","snap-hq","strong"]) {
+    let j;
+    try { j = JSON.parse(readFileSync(`${CAT}/src/data/${b}.json`, "utf8")); } catch { continue; }
+    const hq = b.endsWith("-hq");
+    const meta = j.brand ?? {};
+    const priceOf = new Map(), catOfSku = new Map(), subOf = new Map();
+    for (const c of j.categories) for (const it of c.items) {
+      priceOf.set(it.sku.toUpperCase(), it.price ?? null);
+      catOfSku.set(it.sku.toUpperCase(), c.name);
+      subOf.set(it.sku.toUpperCase(), it.subcategory ?? null);
+      for (const v of it.variants ?? []) {
+        priceOf.set(v.sku.toUpperCase(), v.price ?? null);
+        catOfSku.set(v.sku.toUpperCase(), c.name);
+      }
+    }
+    const cards = new Map(liveCards.filter((c) => c.brand === b).map((c) => [c.sku.toUpperCase(), c]));
+
+    // THE UNION OF BOTH, because neither source is complete on its own. The
+    // export misses a DECLARED variant - Snap spells its ladders out in the
+    // JSON, so getFlatCatalogue returns the card and never the rungs, and
+    // seeding from the export alone listed 253 of Snap's 422 codes. The JSON
+    // misses a PINNED card stem. A quote line can name either, so both are rows.
+    const fromExport = new Map(resolvedRows.filter((x) => x.brand === b).map((r) => [r.sku.toUpperCase(), r]));
+    for (const code of priceOf.keys()) {
+      if (!fromExport.has(code)) fromExport.set(code, { sku: code, category: catOfSku.get(code), card_sku: null });
+    }
+    // A declared variant's card, which the export could not tell us.
+    for (const c of j.categories) for (const it of c.items)
+      for (const v of it.variants ?? []) {
+        const r = fromExport.get(v.sku.toUpperCase());
+        if (r && !r.card_sku) r.card_sku = it.sku.toUpperCase();
+      }
+
+    for (const r of fromExport.values()) {
+      const code = r.sku.toUpperCase();
+      const card = cards.get(code);
+      listings.push({
+        brand: b, erp_code: code,
+        audience: hq ? "hq" : "franchisee",
+        brand_family: hq ? b.slice(0, -3) : b,
+        brand_label: meta.label ?? b,
+        price_column: meta.priceColumn ?? null,
+        price: card ? (card.price ?? null) : (priceOf.get(code) ?? null),
+        category: r.category ?? catOfSku.get(code) ?? "Other",
+        subcategory: subOf.get(code) ?? null,
+        is_card: !!card,
+        card_sku: r.card_sku ?? null,
+        published: true,
+      });
+    }
+  }
+  const { error: wipeL } = await dst.from("catalogue_listings").delete().neq("erp_code", "");
+  if (wipeL) throw wipeL;
+  for (let i = 0; i < listings.length; i += 250) {
+    const { error } = await dst.from("catalogue_listings").insert(listings.slice(i, i + 250));
+    if (error) throw error;
+  }
+  console.log(`\ndone. catalogue_images ${count} rows, catalogue_cards ${cardRows.length} rows, catalogue_listings ${listings.length} rows`);
 }
