@@ -1,0 +1,58 @@
+# The checks a contributor runs locally, run again where nobody can forget them.
+#
+# WHY THIS DID NOT EXIST UNTIL NOW is worth stating: the repo had 677 tests, a
+# typecheck, a linter and a snapshot gate, and no workflow ran any of them. The
+# only automated check on a pull request was Vercel's preview deploy, which
+# proves the app builds and nothing else. A push that broke every test went
+# green.
+#
+# NO BUILD STEP, DELIBERATELY. Vercel already builds every push and every
+# preview; running `next build` here would take minutes to prove the same
+# thing twice. What Vercel does not do is run the tests.
+#
+# NO SECRETS. Every step is offline and pure — `npm test` is kept that way on
+# purpose (see vitest.reports.config.mts), and check-snapshot reads a committed
+# file. That means this workflow runs identically on a fork.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# A second push supersedes the first; there is no value in finishing a run
+# against a commit nobody is looking at any more.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Ordered cheapest-first, so an obvious break reports in seconds rather
+      # than after the full suite.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # The prebuild gate. It catches a snapshot that has drifted from what the
+      # app expects, which is a failure mode the tests cannot see.
+      - name: Snapshot integrity
+        run: node scripts/check-snapshot.mjs
+
+      - name: Tests
+        run: npm test
