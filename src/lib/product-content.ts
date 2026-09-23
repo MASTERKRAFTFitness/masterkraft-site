@@ -121,20 +121,45 @@ async function buildContent(): Promise<ContentMap> {
 
   // The whole table, filtered in JS rather than with .neq(). A Postgres `neq`
   // drops NULLs, which would silently discard exactly the rows this is most
-  // careful to honour — a person's edit that left no name. 404 rows is one small
-  // read an hour; there is nothing to optimise here.
+  // careful to honour — a person's edit that left no name.
+  //
+  // PAGED, because PostgREST caps a response at 1,000 rows and this table went
+  // past it. This comment used to read "404 rows is one small read an hour;
+  // there is nothing to optimise here" — true when it was written, and it became
+  // a silent truncation on 2026-09-23 when the catalogue's copy was loaded in
+  // and the count reached 1,258.
+  //
+  // THE FAILURE MODE IS THE BAD KIND. A truncated read is not an error: the map
+  // is missing its tail, and every product in that tail falls back to the
+  // snapshot with nothing in the UI or the logs to say so. An edit to one of
+  // those rows does nothing at all — which is how a corrected barbell weight
+  // came to be written, verified in the database, and still not on the page.
+  //
   // A LITERAL select string, not one built from SPEC_FIELDS. supabase-js infers
   // the row type from this string, and a computed one collapses `data` to
   // GenericStringError[] — every field access below becomes a type error. The
   // seven spec columns are spelled out here and paired with their labels in
   // SPEC_FIELDS; the pairing is what the loader and the resolver share.
-  const { data, error } = await db
-    .from("product_content")
-    .select("slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty, description, short_description");
-  if (error) throw new Error(`product_content: ${error.message}`);
+  const PAGE = 1000;
+  const readPage = (from: number) =>
+    db
+      .from("product_content")
+      .select(
+        "slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty, description, short_description",
+      )
+      .range(from, from + PAGE - 1);
+
+  const first = await readPage(0);
+  if (first.error) throw new Error(`product_content: ${first.error.message}`);
+  const rows = [...(first.data ?? [])];
+  for (let from = PAGE; rows.length === from; from += PAGE) {
+    const next = await readPage(from);
+    if (next.error) throw new Error(`product_content: ${next.error.message}`);
+    rows.push(...(next.data ?? []));
+  }
 
   const out: ContentMap = {};
-  for (const row of data ?? []) {
+  for (const row of rows) {
     const slug = String(row.slug ?? "").trim();
     if (!slug) continue; // keyed by erp_code; without a slug no page can find it
 

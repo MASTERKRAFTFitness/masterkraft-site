@@ -27,8 +27,17 @@ const row = (o: Partial<Record<string, unknown>> = {}) => ({
   ...o,
 });
 
+// The read is PAGED, so this stub slices the way PostgREST does rather than
+// handing back the whole array on the first call. The slicing is what makes the
+// "reads past the first page" case below mean anything: a stub that ignored the
+// range would pass whether the paging loop existed or not.
 const respond = (data: unknown[], error: unknown = null) => {
-  from.mockReturnValue({ select: () => Promise.resolve({ data, error }) });
+  from.mockReturnValue({
+    select: () => ({
+      range: (start: number, end: number) =>
+        Promise.resolve({ data: error ? null : data.slice(start, end + 1), error }),
+    }),
+  });
   adminDb.mockReturnValue({ from });
 };
 
@@ -288,5 +297,29 @@ describe("the WooCommerce description fields, and where they rank", () => {
     respond([row({ overview_short: null, overview: null, features: [], description: "<p>Only this.</p>", updated_by: "content.load" })]);
     const map = await getProductContent();
     expect(map["olympic-bench"]?.description).toBe("<p>Only this.</p>");
+  });
+});
+
+describe("the whole table is read, not the first page of it", () => {
+  // REGRESSION, 2026-09-23. PostgREST caps a response at 1,000 rows. This table
+  // held 404 when the read was written and 1,258 after the catalogue's copy was
+  // loaded into it, so an unpaged select silently returned a map missing its
+  // tail. Every product in that tail fell back to the snapshot, and an edit to
+  // one of those rows did nothing at all — no error, nothing in the logs.
+  it("reads past the first page", async () => {
+    const rows = Array.from({ length: 1001 }, (_, i) =>
+      row({ slug: `product-${i}`, updated_by: "michael", overview_short: `Short ${i}` }),
+    );
+    respond(rows);
+    const map = await getProductContent();
+    expect(Object.keys(map)).toHaveLength(1001);
+    // The row that a single unpaged request would have dropped.
+    expect(map["product-1000"].short).toBe("Short 1000");
+  });
+
+  it("stops at the end rather than looping forever on a short page", async () => {
+    respond([row({ slug: "only-one", updated_by: "michael" })]);
+    const map = await getProductContent();
+    expect(Object.keys(map)).toEqual(["only-one"]);
   });
 });
