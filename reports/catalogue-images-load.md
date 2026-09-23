@@ -10,6 +10,7 @@ manifest rows     : 1664  (762 with no category in any catalogue JSON)
   remote (ERP CDN) : 890
   file absent      : 0
 resolved rows     : 3569  (294 render blank)
+family cards      : 204
 TOTAL to write    : 5479
 renderable now    : 4117  (the rest are Dropbox-only)
 mode              : WRITE

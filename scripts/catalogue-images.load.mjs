@@ -94,6 +94,7 @@ const TEMPLATE = {
   brand: null, category: null, file_name: null, dropbox_path: null, public_path: null,
   sku_stem: null, sku: null, view_suffix: null, is_primary: false,
   include_in_catalogue: true, sort_order: null, needs_review: false, notes: null, source: null,
+  card_sku: null,
 };
 const row = (o) => ({ ...TEMPLATE, ...o });
 
@@ -221,17 +222,20 @@ const manifestRemote = manifestRows.filter((r) => r.public_path && /^https?:/.te
 // app's own answer rather than this loader's opinion of it.
 const MAP_URL = process.env.IMAGE_MAP_URL ?? "http://localhost:3200/api/internal/image-map";
 let resolvedRows = [];
+let liveCards = [];
 try {
   const r = await fetch(MAP_URL);
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  const { rows: live } = await r.json();
+  const payload = await r.json();
+  const { rows: live } = payload;
+  liveCards = payload.cards ?? [];
   for (const it of live) {
     const url = it.imageUrl;
     resolvedRows.push(row({
       brand: it.brand, category: it.category,
       file_name: url ? basename(url.split("?")[0]) : "(none)",
       dropbox_path: null, public_path: url,
-      sku: it.sku, sku_stem: it.sku, is_primary: true,
+      sku: it.sku, sku_stem: it.sku, is_primary: true, card_sku: it.cardSku ?? null,
       source: "resolved",
       notes: (it.grouped ? "Grouped card. " : "Ladder rung, absorbed into a card. ")
         + (url ? "" : "No image resolves; renders Photography pending."),
@@ -261,6 +265,7 @@ const summary = [
   `  remote (ERP CDN) : ${manifestRemote}`,
   `  file absent      : ${manifestMissing}`,
   `resolved rows     : ${resolvedRows.length}  (${resolvedRows.filter((r) => !r.public_path).length} render blank)`,
+  `family cards      : ${liveCards.length}`,
   `TOTAL to write    : ${all.length}`,
   `renderable now    : ${all.filter((r) => r.public_path).length}  (the rest are Dropbox-only)`,
   `mode              : ${WRITE ? "WRITE" : "report only"}`,
@@ -283,5 +288,20 @@ if (WRITE) {
     process.stdout.write(`inserted ${Math.min(i + 250, all.length)}/${all.length}\r`);
   }
   const { count } = await dst.from("catalogue_images").select("*", { count: "exact", head: true });
-  console.log(`\ndone. catalogue_images holds ${count} rows`);
+
+  // Families, rebuilt wholesale for the same reason the images are: a card that
+  // has stopped existing must not linger.
+  const { error: wipeCards } = await dst.from("catalogue_cards").delete().neq("card_sku", "");
+  if (wipeCards) throw wipeCards;
+  const cardRows = liveCards.map((c) => ({
+    brand: c.brand, card_sku: c.sku, name: c.name, category: c.category,
+    subcategory: c.subcategory ?? null, image_url: c.imageUrl ?? null,
+    price_min: c.price ?? null, price_max: c.priceMax ?? null,
+    variant_count: c.variants.length, variants: c.variants,
+  }));
+  for (let i = 0; i < cardRows.length; i += 200) {
+    const { error } = await dst.from("catalogue_cards").insert(cardRows.slice(i, i + 200));
+    if (error) throw error;
+  }
+  console.log(`\ndone. catalogue_images ${count} rows, catalogue_cards ${cardRows.length} rows`);
 }
