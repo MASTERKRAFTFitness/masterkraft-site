@@ -9,8 +9,9 @@ scan rows replaced: 1 (same brand+category+file_name as a pin)
 manifest rows     : 1664  (762 with no category in any catalogue JSON)
   remote (ERP CDN) : 890
   file absent      : 0
-TOTAL to write    : 3172
-renderable now    : 2089  (the rest are Dropbox-only)
+resolved rows     : 3569  (294 render blank)
+TOTAL to write    : 5479
+renderable now    : 4117  (the rest are Dropbox-only)
 mode              : WRITE
 ```
 

@@ -203,7 +203,54 @@ for (const [key, entries] of Object.entries(manifest)) {
 const manifestMissing = manifestRows.filter((r) => !r.public_path).length;
 const manifestRemote = manifestRows.filter((r) => r.public_path && /^https?:/.test(r.public_path)).length;
 
-const all = [...kept, ...pinRows, ...manifestRows];
+// --- 4. WHAT EACH TILE ACTUALLY RESOLVES TO -------------------------------
+//
+// The authoritative source, and the only one that is not a reconstruction.
+// /api/internal/image-map in the catalogues app answers with the output of the
+// very code that decides what renders, for all nine catalogues, cards and rungs
+// alike.
+//
+// It exists because reimplementing that chain here was wrong in a way the other
+// three sources cannot reveal. Per-SKU resolution is easy to mirror; a GROUPED
+// CARD is not. A ladder's tile takes its photo from a pin, or from whichever
+// rung first has one, so FMDEHG01 shows MMDEHG06.png and FWWPOU08 shows
+// MWWPOU14.jpg. A spot check put 7 of 18 group cards wrong.
+//
+// These rows take is_primary for their (brand, sku) and everything else stands
+// down, so catalogue_selection_v answers "what does this tile show" with the
+// app's own answer rather than this loader's opinion of it.
+const MAP_URL = process.env.IMAGE_MAP_URL ?? "http://localhost:3200/api/internal/image-map";
+let resolvedRows = [];
+try {
+  const r = await fetch(MAP_URL);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const { rows: live } = await r.json();
+  for (const it of live) {
+    const url = it.imageUrl;
+    resolvedRows.push(row({
+      brand: it.brand, category: it.category,
+      file_name: url ? basename(url.split("?")[0]) : "(none)",
+      dropbox_path: null, public_path: url,
+      sku: it.sku, sku_stem: it.sku, is_primary: true,
+      source: "resolved",
+      notes: (it.grouped ? "Grouped card. " : "Ladder rung, absorbed into a card. ")
+        + (url ? "" : "No image resolves; renders Photography pending."),
+    }));
+  }
+} catch (e) {
+  throw new Error(`Could not read ${MAP_URL} (${e.message}). Start the catalogues dev ` +
+    `server, or set IMAGE_MAP_URL. Refusing to write a mirror rebuilt from ` +
+    `reconstruction alone - that is what got grouped cards wrong.`);
+}
+
+// Everything else stands down for any (brand, sku) the app has answered for,
+// and loses any duplicate of a resolved row's exact identity.
+const resolvedSku = new Set(resolvedRows.map((r) => `${r.brand}:${r.sku}`));
+const resolvedKey = new Set(resolvedRows.map((r) => `${r.brand}|${r.category}|${r.file_name}`));
+const standDown = (rs) => rs.filter((r) => !resolvedKey.has(`${r.brand}|${r.category}|${r.file_name}`))
+  .map((r) => (r.sku && resolvedSku.has(`${r.brand}:${r.sku}`) ? { ...r, is_primary: false } : r));
+
+const all = [...standDown(kept), ...standDown(pinRows), ...standDown(manifestRows), ...resolvedRows];
 const summary = [
   `dropbox scan rows : ${scanRows.length}  (from ${there.SUPABASE_URL ?? there.NEXT_PUBLIC_SUPABASE_URL})`,
   `pins found        : ${pins.length} entries (${spreads.length} spreads resolved), ${pinRows.length} placed`,
@@ -213,6 +260,7 @@ const summary = [
   `manifest rows     : ${manifestRows.length}  (${unfiled} with no category in any catalogue JSON)`,
   `  remote (ERP CDN) : ${manifestRemote}`,
   `  file absent      : ${manifestMissing}`,
+  `resolved rows     : ${resolvedRows.length}  (${resolvedRows.filter((r) => !r.public_path).length} render blank)`,
   `TOTAL to write    : ${all.length}`,
   `renderable now    : ${all.filter((r) => r.public_path).length}  (the rest are Dropbox-only)`,
   `mode              : ${WRITE ? "WRITE" : "report only"}`,
