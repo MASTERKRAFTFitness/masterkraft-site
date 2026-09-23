@@ -72,7 +72,9 @@
     "load:details": "node scripts/catalogue-details.load.mjs",
     "load:details:write": "DETAILS_LOAD_WRITE=true node scripts/catalogue-details.load.mjs",
     "export:copy": "node scripts/catalogue-copy.export.mjs",
-    "export:copy:write": "node scripts/catalogue-copy.export.mjs --write"
+    "export:copy:write": "node scripts/catalogue-copy.export.mjs --write",
+    "upload:images": "node scripts/product-images.upload.mjs",
+    "upload:images:write": "IMAGES_UPLOAD_WRITE=true node scripts/product-images.upload.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
