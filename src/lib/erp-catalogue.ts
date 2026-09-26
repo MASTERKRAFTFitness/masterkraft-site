@@ -101,6 +101,26 @@ export const ERP_GROUPS = [
  */
 export const CLEARANCE_GROUP = "Clearance";
 
+/**
+ * EX-DISPLAY IS AN A-PREFIXED CODE, because the ERP gives us nothing better.
+ *
+ * Unleashed has no flag for ex-display stock. Its `Clearance` ProductGroup holds
+ * six products, and every OTHER product the site clears sits in the ERP under
+ * its ordinary group — a used spin bike is filed under Cardio exactly like a new
+ * one. The only thing separating them is the code: ex-display carries an
+ * A prefix, which is the rule `scripts/clearance-gaps.report.ts` has always used
+ * to find this stock, and the rule the WooCommerce clearance category was built
+ * on before it.
+ *
+ * THIS IS A CONVENTION, NOT A CONSTRAINT. Nothing in Unleashed enforces it, so
+ * an ex-display unit filed on a non-A code will not appear on clearance and a
+ * new product given an A code will. If that starts happening the answer is a
+ * field in the ERP, not a cleverer regex here.
+ */
+export function isExDisplayCode(code: string): boolean {
+  return /^A/.test(code);
+}
+
 const EXCLUDED_GROUPS = new Set(["Other Costs", "Storage"]);
 
 // Brands the site sells, in preference order. SNAP, REVL, FERNWOOD, AIR LOCKER
@@ -340,21 +360,43 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
 
   for (const [code, entry] of Object.entries(map)) {
     if (entry.sellable === false || !entry.name || !entry.group) continue;
-    // CLEARANCE RUNS WITH THE BRAND FILTER OFF, exactly as its snapshot half
-    // does (lib/categories.ts). Ex-display stock is somebody else's equipment by
-    // definition — four of the six carry the ERP brand "OLD" and one "CLEARANCE"
-    // — so the brand allowlist, which is about what MasterKraft SELLS, would
-    // throw away all but one of them.
-    if (entry.group !== CLEARANCE_GROUP && !OUR_BRANDS.has(entry.brand ?? "")) continue;
+    // CLEARANCE RUNS WITH THE BRAND FILTER OFF. Ex-display stock is somebody
+    // else's equipment by definition — four of the six ERP-group units carry the
+    // brand "OLD" and one "CLEARANCE", and the A-prefixed stock carries whatever
+    // the original manufacturer was — so the brand allowlist, which is about what
+    // MasterKraft SELLS, would throw nearly all of it away.
+    //
+    // IT IS ONE SET NOW, NOT TWO (2026-09-21). Clearance used to list from the
+    // frozen WooCommerce snapshot with the ERP's Clearance group appended, so
+    // the two halves could disagree: a markdown that the ERP had overtaken, a
+    // price only the snapshot held, sizes Unleashed never carried, and ten
+    // in-stock ex-display products on no page of the site at all. Both halves
+    // now come from the ERP, which is the only source that can go stale in the
+    // right direction — stock that arrives lists itself, stock that sells out
+    // delists itself, and clearance can no longer advertise something gone.
+    const exDisplay = entry.group === CLEARANCE_GROUP || isExDisplayCode(code);
+    if (!exDisplay && !OUR_BRANDS.has(entry.brand ?? "")) continue;
+    // EX-DISPLAY IS NEVER RESTOCKED, so nothing keeps a sold-out one listable.
+    // A range drops the sold size and keeps the rest, exactly as the shipping
+    // rule below does.
+    if (exDisplay && entry.stock <= 0) continue;
     if (EXCLUDED_GROUPS.has(entry.group)) continue;
     // Drop the individual SIZE, not the whole range: a rack that is measured in
     // three sizes and not in a fourth should still sell the three.
     if (hideUnshippable() && !codeIsShippable(code, entry) && !worthAnEnquiry(entry.price)) continue;
     const { name, size } = splitUnitName(entry.name, entry.brand);
     if (!name) continue;
+    // EX-DISPLAY IS GROUPED ONTO CLEARANCE, not onto the group the ERP files it
+    // under. A used spin bike sits in Cardio in Unleashed, and leaving it there
+    // would put ex-display stock on /equipment/cardio beside the new machines —
+    // mixed in, brand-filtered out of nothing, and impossible for a buyer to
+    // tell apart. The group is what decides which page a unit appears on
+    // (lib/categories.ts), so this is the line that sends it to clearance. Its
+    // `subgroup` is untouched, so the facets still say Treadmills and Rowers.
+    const group = exDisplay ? CLEARANCE_GROUP : entry.group;
     // NUL-joined, not space-joined: "Mixed Implements" and "Rubber Hex
     // Dumbbell" both contain spaces, which would split the key wrongly.
-    const key = [entry.brand, entry.group, name].join("\u0000");
+    const key = [entry.brand, group, name].join("\u0000");
     const bucket = groups.get(key);
     if (bucket) bucket.push({ entry, code, size });
     else groups.set(key, [{ entry, code, size }]);
