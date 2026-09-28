@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { estimatedDeliveryDate } from "@/lib/delivery-estimate";
+import { legalContent } from "@/lib/legal-content";
+import {
+  DISPATCH_BUSINESS_DAYS,
+  REGIONAL_ALLOWANCE_DAYS,
+  TRANSIT_BUSINESS_DAYS,
+  estimatedDeliveryDate,
+} from "@/lib/delivery-estimate";
 
 // Monday 28 Sep 2026, local time.
 const monday = new Date(2026, 8, 28, 10);
@@ -24,5 +30,27 @@ describe("estimated delivery date", () => {
   it("skips a weekend order to the working week", () => {
     const saturday = new Date(2026, 9, 3, 10);
     expect(estimatedDeliveryDate("VIC", saturday)).toBe("2026-10-13");
+  });
+});
+
+describe("the /shipping page", () => {
+  const text = legalContent.shipping.flatMap((s) => s.body).join("\n");
+
+  it("states every state's transit range exactly as the table holds it", () => {
+    for (const [state, t] of Object.entries(TRANSIT_BUSINESS_DAYS)) {
+      expect(text).toContain(`${t.city} (${state}) ${t.min}-${t.max}`);
+    }
+  });
+
+  it("states the dispatch window and the regional allowance the table holds", () => {
+    expect(text).toContain(`within ${DISPATCH_BUSINESS_DAYS.min}-${DISPATCH_BUSINESS_DAYS.max} business days of payment`);
+    expect(text).toContain(`an extra 1-${REGIONAL_ALLOWANCE_DAYS} business days`);
+  });
+
+  it("gives worked examples that add up", () => {
+    const span = (s: string) =>
+      `${DISPATCH_BUSINESS_DAYS.min + TRANSIT_BUSINESS_DAYS[s].min}-${DISPATCH_BUSINESS_DAYS.max + TRANSIT_BUSINESS_DAYS[s].max}`;
+    expect(text).toContain(`to Melbourne metro is expected ${span("VIC")} business days`);
+    expect(text).toContain(`to Perth metro ${span("WA")} business days`);
   });
 });
