@@ -39,6 +39,7 @@ import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, absoluteUrl, priceValidUntil } from "@/lib/site";
+import { merchantReturnPolicy } from "@/lib/return-policy";
 
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
@@ -304,6 +305,11 @@ export default async function ProductPage({
   );
 
   const validUntil = priceValidUntil();
+  // Read by Merchant Center's store quality score, and checked by Google
+  // against /returns - see lib/return-policy. No shippingDetails beside it:
+  // freight is quoted per address, and a flat rate here would be a claim the
+  // checkout contradicts. Shipping is configured in the Merchant Center account.
+  const returnPolicy = merchantReturnPolicy();
   const offerUrl = `${SITE_URL}/product/${product.slug}`;
 
   const offers = usesVariants
@@ -324,6 +330,7 @@ export default async function ProductPage({
               ? "https://schema.org/InStock"
               : "https://schema.org/PreOrder",
             itemCondition: "https://schema.org/NewCondition",
+            hasMerchantReturnPolicy: returnPolicy,
           },
         }
       : {}
@@ -339,6 +346,7 @@ export default async function ProductPage({
               ? "https://schema.org/InStock"
               : "https://schema.org/PreOrder",
             itemCondition: "https://schema.org/NewCondition",
+            hasMerchantReturnPolicy: returnPolicy,
           },
         }
       : {};

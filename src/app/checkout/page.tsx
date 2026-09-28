@@ -6,7 +6,8 @@ import { useCart } from "@/components/cart/CartProvider";
 import { identifyUser, trackBeginCheckout, trackLead } from "@/lib/analytics";
 import { cartSellableByCard } from "@/lib/cart-eligibility";
 import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
-import StripeCheckout from "@/components/shop/StripeCheckout";
+import StripeCheckout, { type PaidBuyer } from "@/components/shop/StripeCheckout";
+import CustomerReviewsOptIn from "@/components/shop/CustomerReviewsOptIn";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -30,6 +31,8 @@ export default function CheckoutPage() {
   // Card order number, once paid. Held at the page level so the confirmation
   // survives the cart being cleared (which unmounts StripeCheckout).
   const [paidOrder, setPaidOrder] = useState<string | null>(null);
+  // Who paid, for the Google Customer Reviews offer on the confirmation.
+  const [paidBuyer, setPaidBuyer] = useState<PaidBuyer | null>(null);
 
   // Fire GA4 `begin_checkout` once, when the cart has loaded with items.
   const beganCheckout = useRef(false);
@@ -126,9 +129,15 @@ export default function CheckoutPage() {
             <Link href="/all-equipment" className="btn btn-accent mt-8">
               Keep Shopping
             </Link>
+            {paidBuyer && <CustomerReviewsOptIn orderId={paidOrder} email={paidBuyer.email} state={paidBuyer.state} />}
           </div>
         ) : canPay ? (
-          <StripeCheckout onPaid={(num) => setPaidOrder(num)} />
+          <StripeCheckout
+            onPaid={(num, buyer) => {
+              setPaidOrder(num);
+              setPaidBuyer(buyer);
+            }}
+          />
         ) : done ? (
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
             <p className="font-display uppercase tracking-wide text-2xl">Quote requested</p>
