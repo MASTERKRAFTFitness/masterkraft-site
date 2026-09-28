@@ -292,6 +292,9 @@ export function buildSalesOrderPayload(
     DeliveryStreetAddress: ship.address_1 || "",
     DeliveryStreetAddress2: ship.address_2 || "",
     DeliverySuburb: ship.city || "",
+    // The checkout's one locality field is a suburb, but some Unleashed screens
+    // and dispatch labels read City, which was left null (SO-00000858).
+    DeliveryCity: ship.city || "",
     DeliveryRegion: ship.state || "",
     DeliveryPostCode: ship.postcode || "",
     DeliveryCountry: ship.country || "Australia",

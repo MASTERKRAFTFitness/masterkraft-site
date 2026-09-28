@@ -4,6 +4,7 @@ import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/order-lines";
 import { placeOrder, orderingEnabled, orderMetadata, existingOrderOn } from "@/lib/orders";
 import { reportPurchase } from "@/lib/opinly-server";
+import { notifyOrderPlaced } from "@/lib/order-notify";
 
 // Called after the customer pays. Verifies the PaymentIntent succeeded and that
 // the paid amount matches the SERVER-repriced total, then places the order.
@@ -155,6 +156,24 @@ export async function POST(request: Request) {
   } catch (e) {
     console.warn("[order] could not tag PaymentIntent with order id", e);
   }
+
+  // Confirmation email, team email and HubSpot contact. AFTER the intent is
+  // tagged, so a retry arriving while these run short-circuits instead of
+  // placing a second order. Cannot fail the request — see lib/order-notify.
+  const notified = await notifyOrderPlaced({
+    orderNumber: order.orderNumber,
+    billing,
+    shipping,
+    lines,
+    freight: {
+      amount: freightAmount,
+      service: intent.metadata?.freight_service || "",
+      carrier: intent.metadata?.freight_carrier || "",
+    },
+    chargedTotal,
+    customerNote,
+  });
+  console.log("[order] placed", { orderNumber: order.orderNumber, ...notified });
 
   return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.orderNumber });
 }
