@@ -772,7 +772,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "heading": "Australia Wide Shipping and Delivery Information",
       "body": [
         "MasterKraft supplies an extensive range of premium gym and fitness equipment to large customers globally. However, for clarity, unless you are a MasterKraft partner and have a Supply Agreement in place with MasterKraft, delivery of any products found on this website are for delivery to Australia only, and Australian residents.",
-        "Generally, orders are shipped from our Melbourne warehouse within 48-72 hours from order receipt on weekdays only (Monday – Friday) subject to stock availability."
+        "Generally, orders are dispatched from our Melbourne warehouse within 1-3 business days of payment (Monday – Friday, excluding public holidays), subject to stock availability."
       ]
     },
     {
@@ -780,8 +780,10 @@ export const legalContent: Record<string, ContentSection[]> = {
       "body": [
         "We ship Australia wide and aim to deliver your order as promptly as possible. Delivery times vary subject to the carrier selected.",
         "Please see below our standard transit times to the major cities around Australia. Note this is a guide only, not a guarantee. MasterKraft will not offer compensation for deliveries that do not arrive within the specified time frames.",
-        "Melbourne: 1-2 days Sydney: 2-3 days Adelaide: 2-3 days Brisbane: 3-4 days Perth: 4-6 days Darwin: 5-7 days",
-        "*Please note that locations outside capital cities will take an extra day or two. Deliveries to home addresses may take longer than to a business address.",
+        "Expected delivery is the dispatch time plus the transit time for your state. Parcels travel by Australia Post Parcel Post; transit times, in business days after dispatch: Melbourne (VIC) 1-2, Sydney (NSW) 2-4, Canberra (ACT) 2-4, Adelaide (SA) 2-4, Brisbane (QLD) 3-5, Hobart (TAS) 4-6, Perth (WA) 4-6, Darwin (NT) 4-6.",
+        "For example, a parcel to Melbourne metro is expected 2-5 business days after payment, and to Perth metro 5-9 business days.",
+        "*Please note that locations outside capital cities will take an extra 1-2 business days. Deliveries to home addresses may take longer than to a business address.",
+        "Pre-order items are dispatched when stock arrives. Large or palletised orders are booked with the carrier after dispatch, and the carrier will contact you to arrange delivery.",
         "You will receive an email notification from the carrier with a tracking number and delivery details.",
         "Please note, some carriers will require you to sign for your delivery. If you are not available during delivery hours you will be liable to pay any re-delivery or out of hours delivery fees.",
         "Should your purchase be deemed as undeliverable and returned to our warehouse, you may be charged with the return postage cost and a 20% restocking fee.",
