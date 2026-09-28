@@ -780,7 +780,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "body": [
         "We ship Australia wide and aim to deliver your order as promptly as possible. Delivery times vary subject to the carrier selected.",
         "Please see below our standard transit times to the major cities around Australia. Note this is a guide only, not a guarantee. MasterKraft will not offer compensation for deliveries that do not arrive within the specified time frames.",
-        "Expected delivery is the dispatch time plus the transit time for your state. Transit times, in business days after dispatch: Melbourne (VIC) 1-2, Sydney (NSW) 2-3, Canberra (ACT) 2-3, Adelaide (SA) 2-3, Brisbane (QLD) 3-4, Hobart (TAS) 3-4, Perth (WA) 4-6, Darwin (NT) 5-7.",
+        "Expected delivery is the dispatch time plus the transit time for your state. Parcels travel by Australia Post Parcel Post; transit times, in business days after dispatch: Melbourne (VIC) 1-2, Sydney (NSW) 2-4, Canberra (ACT) 2-4, Adelaide (SA) 2-4, Brisbane (QLD) 3-5, Hobart (TAS) 4-6, Perth (WA) 4-6, Darwin (NT) 4-6.",
         "For example, a parcel to Melbourne metro is expected 2-5 business days after payment, and to Perth metro 5-9 business days.",
         "*Please note that locations outside capital cities will take an extra 1-2 business days. Deliveries to home addresses may take longer than to a business address.",
         "Pre-order items are dispatched when stock arrives. Large or palletised orders are booked with the carrier after dispatch, and the carrier will contact you to arrange delivery.",

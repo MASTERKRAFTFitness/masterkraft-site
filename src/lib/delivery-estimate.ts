@@ -18,16 +18,24 @@ export const DISPATCH_BUSINESS_DAYS = { min: 1, max: 3 };
 /** Extra business days for an address outside a capital city. */
 export const REGIONAL_ALLOWANCE_DAYS = 2;
 
-/** Business days in transit after dispatch, by state, to the capital city. */
+/**
+ * Business days in transit after dispatch, by state, to the capital city.
+ *
+ * AUSTRALIA POST PARCEL POST FROM MELBOURNE, as published (supplied 28 Sep
+ * 2026): Sydney, Adelaide and Canberra 2-4; Brisbane 3-5; Perth, Darwin and
+ * Hobart 4-6. Victoria is not in that list and keeps the store's own 1-2.
+ * Every paid Shopping product is a parcel under 22kg and ships this way;
+ * bulky and pallet freight goes by road carrier and can take longer.
+ */
 export const TRANSIT_BUSINESS_DAYS: Record<string, { city: string; min: number; max: number }> = {
   VIC: { city: "Melbourne", min: 1, max: 2 },
-  NSW: { city: "Sydney", min: 2, max: 3 },
-  ACT: { city: "Canberra", min: 2, max: 3 },
-  SA: { city: "Adelaide", min: 2, max: 3 },
-  QLD: { city: "Brisbane", min: 3, max: 4 },
-  TAS: { city: "Hobart", min: 3, max: 4 },
+  NSW: { city: "Sydney", min: 2, max: 4 },
+  ACT: { city: "Canberra", min: 2, max: 4 },
+  SA: { city: "Adelaide", min: 2, max: 4 },
+  QLD: { city: "Brisbane", min: 3, max: 5 },
+  TAS: { city: "Hobart", min: 4, max: 6 },
   WA: { city: "Perth", min: 4, max: 6 },
-  NT: { city: "Darwin", min: 5, max: 7 },
+  NT: { city: "Darwin", min: 4, max: 6 },
 };
 const UNKNOWN_STATE_DAYS = 7;
 

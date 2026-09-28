@@ -24,7 +24,10 @@ describe("estimated delivery date", () => {
   });
 
   it("falls back to the slowest case for a state it does not know", () => {
-    expect(estimatedDeliveryDate("", monday)).toBe(estimatedDeliveryDate("NT", monday));
+    const unknown = estimatedDeliveryDate("", monday);
+    for (const state of Object.keys(TRANSIT_BUSINESS_DAYS)) {
+      expect(unknown >= estimatedDeliveryDate(state, monday)).toBe(true);
+    }
   });
 
   it("skips a weekend order to the working week", () => {
