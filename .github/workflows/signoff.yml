@@ -1,0 +1,62 @@
+# Carry the sign-off package to the portal, on a schedule, so nobody has to
+# remember to.
+#
+# WHY THIS EXISTS. The approval order is: content ready → PTCMO website →
+# Steve signs off → published via Opinly. Opinly's `scheduled_review` holds
+# everything until that has happened, and it works. What broke in September
+# was this step. The pack Steve needed sat in a repo for five days because a
+# person had to carry it, and two scheduled slots passed while it did.
+#
+# WEEKLY, NOT DAILY. A reviewer who gets the same list every morning stops
+# opening it. Monday morning is when a week's content gets looked at, so that
+# is when it arrives. The lint runs daily because a machine reads that one.
+#
+# IT DELIVERS, IT DOES NOT APPROVE. Nothing here publishes or releases. The
+# decision is made in the portal by the person whose byline is on the posts.
+#
+# INERT UNTIL CONFIGURED. Without PTCMO_SIGNOFF_URL the job writes the package
+# and stops. Without OPINLY_API_KEY it does not even do that. Neither is a
+# failure — a workflow should not go red over a credential it was never given,
+# and it should certainly not send a client's content anywhere by default.
+name: Sign-off package
+
+on:
+  schedule:
+    # Sunday 20:00 UTC = Monday 06:00 in Sydney.
+    - cron: "0 20 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build and deliver
+        env:
+          OPINLY_API_KEY: ${{ secrets.OPINLY_API_KEY }}
+          PTCMO_SIGNOFF_URL: ${{ secrets.PTCMO_SIGNOFF_URL }}
+          PTCMO_SIGNOFF_TOKEN: ${{ secrets.PTCMO_SIGNOFF_TOKEN }}
+        run: npm run signoff
+
+      # Kept even when delivery fails — if the POST did not land, this is the
+      # copy somebody can send by hand rather than regenerate.
+      - name: Upload package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sign-off-package
+          path: |
+            reports/sign-off-package.json
+            reports/sign-off-package.md
+          if-no-files-found: ignore
