@@ -19,10 +19,15 @@ vi.mock("@/lib/catalogue", () => ({
       : undefined,
 }));
 
+// Empty unless a test puts something on hold, so the rest of the suite reads
+// the feed as it would be with no policy flag open.
+const HELD = new Set<string>();
+
 // Only the slugs under test are advertised, so the fixtures below do not have
 // to be kept in step with the real allowlist.
 vi.mock("@/lib/merchant-feed-allowlist", () => ({
   FREIGHT_VERIFIED_SLUGS: new Set(["change-plates", "speed-rope", "gone-cold"]),
+  POLICY_HOLD_SLUGS: HELD,
 }));
 
 const { buildFeed, feedToXml, feedTitle, feedPrice } = await import("@/lib/merchant-feed");
@@ -123,6 +128,20 @@ describe("building the feed", () => {
     });
     expect(items.map((i) => i.id)).not.toContain("MZZUNK01");
     expect(items.map((i) => i.id)).toContain("MWWPCP01");
+  });
+
+  it("leaves a policy-held unit out entirely, verified or not", () => {
+    // Not merely unbid: an account-level policy flag holds every other item in
+    // review, so a held unit must not be listed for free either.
+    HELD.add("speed-rope");
+    try {
+      const { items, rejected } = buildFeed(map());
+      expect(items.map((i) => i.id)).not.toContain("MBSARO01");
+      expect(items.map((i) => i.id)).toContain("MWWPCP01");
+      expect(rejected).toContainEqual({ code: "MBSARO01", unit: "speed-rope", reason: "held: Merchant Center policy" });
+    } finally {
+      HELD.clear();
+    }
   });
 
   it("puts the label in the XML where Merchant Center reads it", () => {

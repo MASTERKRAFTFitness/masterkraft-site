@@ -71,3 +71,28 @@ export const FREIGHT_VERIFIED_SLUGS = new Set<string>([
   "speed-rope-elite", // at market · $10.10
   "wall-ball-armatex", // +6% · $13.41
 ]);
+
+// Which units must not be in the feed AT ALL — not merely not bid on.
+//
+// THIS IS THE OPPOSITE LEVER TO THE ONE ABOVE, and it costs more. Leaving a
+// unit off FREIGHT_VERIFIED_SLUGS only stops spend; it still gets a free
+// listing. A unit here gets nothing. It exists for one case: a product that
+// trips an ACCOUNT-LEVEL Merchant Center policy flag, because Google approves
+// nothing on an account with one open — so a $25 accessory can hold 125 other
+// products in review.
+//
+// Chalk, Sep 2026: the account carried a "dangerous products" flag against the
+// two chalk items, and all 127 items sat "Under review" behind it for four days.
+// Magnesium carbonate is not a dangerous good, but a request for review is
+// Google's to decide, and neither item is worth the catalogue. Every chalk slug
+// in the snapshot is listed, not just the two live ones, so a size coming back
+// into stock cannot re-trip the flag. Remove an entry only once the account is
+// clear AND the review of that product has been won.
+export const POLICY_HOLD_SLUGS = new Set<string>([
+  "chalk-bowl",
+  "chalk-bowl-2",
+  "chalk-bowl-2-sf",
+  "weightlifting-chalk-box",
+  "weightlifting-chalk-box-2",
+  "weightlifting-chalk-box-2-sf",
+]);

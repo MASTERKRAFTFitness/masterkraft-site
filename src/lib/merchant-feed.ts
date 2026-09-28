@@ -26,7 +26,7 @@ import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
 import { resolveCopy, type ContentMap } from "@/lib/product-content";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
-import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
+import { FREIGHT_VERIFIED_SLUGS, POLICY_HOLD_SLUGS } from "@/lib/merchant-feed-allowlist";
 
 export type FeedItem = {
   id: string;
@@ -272,6 +272,12 @@ export function buildFeed(
   const verified = FREIGHT_VERIFIED_SLUGS;
 
   for (const unit of erpUnits(map).values()) {
+    // Before anything else: a held unit is off the feed whatever else is true
+    // of it. See POLICY_HOLD_SLUGS for why this is not the same as unverified.
+    if (POLICY_HOLD_SLUGS.has(unit.slug)) {
+      rejected.push({ code: unit.codes[0], unit: unit.slug, reason: "held: Merchant Center policy" });
+      continue;
+    }
     const isVerified = verified.has(unit.slug);
     if (opts.verifiedOnly && !isVerified) {
       rejected.push({ code: unit.codes[0], unit: unit.slug, reason: "not freight-verified" });
