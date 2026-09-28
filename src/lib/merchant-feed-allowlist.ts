@@ -8,7 +8,7 @@
 // was then quoted for real freight through /api/freight/quote to Melbourne,
 // Sydney and Perth.
 //
-// THE FREIGHT BAND IS THE REASON THIS LIST IS 26 AND NOT 40. Fourteen more
+// THE FREIGHT BAND IS WHY THIS LIST IS NOT FOURTEEN LONGER. Fourteen more
 // products are priced at or below market and are excluded on freight class:
 //
 //   Bulky parcel ($35–65 to Melbourne, tripling interstate) — modular storage
@@ -36,6 +36,10 @@
 // that unit still in stock and measurable is the 37.5kg at $295, and it lands on
 // a page named for the 17.5kg set, so the item and its landing page disagree.
 // Either fault alone is enough to keep it out.
+//
+// WALL BALL (ARMATEX) WAS DROPPED on 28 Sep 2026, before any spend. It was
+// the one entry priced ABOVE the market (+6%), and paying for a click on a
+// product a competitor sells cheaper sends the shopper to the competitor.
 //
 // HOW TO CHANGE IT. Re-run the comparison before adding anything: a competitor
 // price cut turns a winner into paid traffic to somebody else's cheaper product,
@@ -69,5 +73,4 @@ export const FREIGHT_VERIFIED_SLUGS = new Set<string>([
   "foam-roller-v", // −8% · $11.80
   "micro-bands-pack-of-4", // at market · $10.10
   "speed-rope-elite", // at market · $10.10
-  "wall-ball-armatex", // +6% · $13.41
 ]);
