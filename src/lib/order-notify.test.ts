@@ -35,7 +35,7 @@ beforeEach(() => {
   process.env.RESEND_API_KEY = "re_test";
   process.env.QUOTE_FROM_EMAIL = "MasterKraft <orders@masterkraft.com>";
   process.env.QUOTE_TO_EMAIL = "hello@masterkraft.com,ops@masterkraft.com";
-  delete process.env.HUBSPOT_FORM_ORDER;
+  process.env.HUBSPOT_FORM_ORDER = "order-guid";
   process.env.HUBSPOT_FORM_QUOTE = "quote-guid";
 });
 afterEach(() => {
@@ -62,14 +62,24 @@ describe("notifyOrderPlaced", () => {
     expect(team.reply_to).toBe("sam@example.com");
 
     const [guid, fields] = submitHubspotForm.mock.calls[0];
-    expect(guid).toBe("quote-guid");
+    expect(guid).toBe("order-guid");
     expect(fields).toContainEqual({ name: "email", value: "sam@example.com" });
+    // Only fields the HubSpot form defines.
+    expect(fields.map((f: { name: string }) => f.name)).toEqual([
+      "firstname", "lastname", "email", "phone", "message",
+    ]);
   });
 
-  it("prefers a dedicated order form in HubSpot when one is configured", async () => {
-    process.env.HUBSPOT_FORM_ORDER = "order-guid";
+  it("puts the company in the message, since the form has no company field", async () => {
+    await notifyOrderPlaced({ ...order, billing: { ...order.billing, company: "Acme Gym" } });
+    const fields = submitHubspotForm.mock.calls[0][1] as { name: string; value: string }[];
+    expect(fields.find((f) => f.name === "message")?.value).toContain("Company: Acme Gym.");
+  });
+
+  it("never falls back to the quote form, which has no email field", async () => {
+    delete process.env.HUBSPOT_FORM_ORDER;
     await notifyOrderPlaced(order);
-    expect(submitHubspotForm.mock.calls[0][0]).toBe("order-guid");
+    expect(submitHubspotForm.mock.calls[0][0]).toBeUndefined();
   });
 
   it("never throws when every side effect fails", async () => {

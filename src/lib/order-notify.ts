@@ -93,20 +93,26 @@ async function sendTeamEmail(o: PlacedOrderNotice): Promise<"sent" | "skipped"> 
   });
 }
 
-// The order form's GUID when one exists; the quote form's until then, because
-// it takes exactly these fields and is already proven to create contacts.
+// HubSpot's "Website Order (API)" form, built for this on 2026-09-28. It holds
+// exactly these five fields, so company rides in the message rather than as a
+// field the form does not define. NOT the quote form as a fallback: in HubSpot
+// that is a club fit-out form with no email field, so it cannot make a contact.
 async function submitOrderToHubspot(o: PlacedOrderNotice): Promise<"sent" | "skipped"> {
   const b = o.billing;
   const items = o.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ");
   const r = await submitHubspotForm(
-    process.env.HUBSPOT_FORM_ORDER || process.env.HUBSPOT_FORM_QUOTE,
+    process.env.HUBSPOT_FORM_ORDER,
     [
       { name: "firstname", value: b.first_name ?? "" },
       { name: "lastname", value: b.last_name ?? "" },
       { name: "email", value: b.email ?? "" },
       { name: "phone", value: b.phone ?? "" },
-      { name: "company", value: b.company ?? "" },
-      { name: "message", value: `Web order #${o.orderNumber} (paid ${aud.format(o.chargedTotal)}): ${items}.` },
+      {
+        name: "message",
+        value:
+          `Web order #${o.orderNumber} (paid ${aud.format(o.chargedTotal)}): ${items}.` +
+          (b.company ? ` Company: ${b.company}.` : ""),
+      },
     ],
     { pageName: "Web Order" },
   );
