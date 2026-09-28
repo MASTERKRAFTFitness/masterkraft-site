@@ -45,7 +45,10 @@ function refsFrom(items: CartItem[]) {
 
 type OrderRef = { productId: number; variationId?: number; quantity: number; sku?: string };
 
-export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: string) => void }) {
+/** What the confirmation screen needs to offer the Google Customer Reviews survey. */
+export type PaidBuyer = { email: string; state: string };
+
+export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: string, buyer: PaidBuyer) => void }) {
   const { items, subtotal, lock, unlock } = useCart();
   const [phase, setPhase] = useState<"details" | "payment">("details");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -332,7 +335,7 @@ function PayForm({
   subtotal: number;
   serverTotal: number | null;
   serverGoods: number | null;
-  onPaid?: (orderNumber: string) => void;
+  onPaid?: (orderNumber: string, buyer: PaidBuyer) => void;
   onBack: () => void;
 }) {
   const stripe = useStripe();
@@ -412,7 +415,7 @@ function PayForm({
       // Hand the confirmation up to the page BEFORE clearing the cart: clearing
       // flips the page's canPay gate and unmounts this component, so the page
       // must own the "order confirmed" screen for it to survive.
-      onPaid?.(String(data.orderNumber));
+      onPaid?.(String(data.orderNumber), { email: billing.email, state: billing.state });
       clear();
       setDone({ number: data.orderNumber });
     } catch (err) {
