@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scheduleCheckoutLead } from "@/lib/checkout-leads";
 import { stripe } from "@/lib/stripe";
 import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/order-lines";
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
     // window.opinly.anonId, forwarded by the browser so the sale can be joined
     // to the visit (and therefore the campaign) that produced it.
     anonId?: string;
+    // The checkout's follow-up id (lib/checkout-leads), so a paid checkout is
+    // never reported to the team as abandoned.
+    checkoutId?: string;
   };
   try {
     payload = await request.json();
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 
-  const { items, billing, shipping, paymentIntentId, customerNote, anonId } = payload;
+  const { items, billing, shipping, paymentIntentId, customerNote, anonId, checkoutId } = payload;
   if (!Array.isArray(items) || items.length === 0 || !billing?.email) {
     return NextResponse.json({ ok: false, error: "Missing items or billing email" }, { status: 400 });
   }
@@ -174,6 +178,7 @@ export async function POST(request: Request) {
     customerNote,
   });
   console.log("[order] placed", { orderNumber: order.orderNumber, ...notified });
+  scheduleCheckoutLead(checkoutId, { status: "paid", orderNumber: String(order.orderNumber) });
 
   return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.orderNumber });
 }
