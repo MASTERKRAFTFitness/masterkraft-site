@@ -77,7 +77,7 @@ const TO_PORTAL: Record<EnquiryKind, PortalEnquiryType> = {
 };
 
 /**
- * The topic select on /contact/enquiry.
+ * The topic select on /contact.
  *
  * `label` is prose and free to be reworded. `value` is an EnquiryKind slug, and
  * is carried on the <option> explicitly rather than inferred from the text - so

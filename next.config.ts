@@ -216,6 +216,10 @@ const nextConfig: NextConfig = {
       // are matched BEFORE routing. See scripts/legacy-redirects.report.ts for
       // the ERP-rescue trap that makes that a live risk.
       ...legacyRedirects.redirects.map((r) => ({ ...r, permanent: true })),
+
+      // The general enquiry form lived here while /contact was the fitout
+      // wizard. /contact is the form again; the wizard is /fitout-solution.
+      { source: "/contact/enquiry", destination: "/contact", permanent: true },
     ];
   },
 };

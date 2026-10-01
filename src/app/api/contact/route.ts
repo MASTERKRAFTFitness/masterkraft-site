@@ -6,7 +6,7 @@ import { internalRecipients } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
 import { visitorKey } from "@/lib/agent/rate-limit";
 
-// The general enquiry form on /contact/enquiry.
+// The general enquiry form on /contact.
 //
 // THIS ROUTE NOW EMAILS, AND ON EVERY ACCEPTED SUBMISSION.
 //

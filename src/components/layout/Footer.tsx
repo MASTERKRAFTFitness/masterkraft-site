@@ -70,7 +70,7 @@ export default function Footer() {
                 centimetres away. */}
             <li>
               <Link
-                href="/contact#brief"
+                href="/fitout-solution#brief"
                 className="text-sm text-white/80 hover:text-accent transition-colors"
               >
                 Fitout Solution

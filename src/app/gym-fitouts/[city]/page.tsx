@@ -200,7 +200,7 @@ export default async function LocationPage({
             <p className="mt-3 text-ash leading-relaxed">{loc.delivery}</p>
           </div>
           <div>
-            <Link href="/contact" className="btn btn-accent w-full">
+            <Link href="/fitout-solution" className="btn btn-accent w-full">
               Request {/^[AEIOU]/i.test(loc.city) ? "an" : "a"} {loc.city} Fitout{" "}
               <span aria-hidden>→</span>
             </Link>

@@ -17,7 +17,7 @@ import {
   type FitoutBrief,
 } from "@/lib/fitout-brief";
 
-// The fitout brief from /contact's wizard.
+// The fitout brief from /fitout-solution's wizard.
 //
 // TWO DESTINATIONS, AND BOTH ARE LOAD-BEARING:
 //
@@ -269,7 +269,7 @@ export async function POST(request: Request) {
   const hubspot = await submitHubspotForm(
     process.env.HUBSPOT_FORM_CONTACT,
     briefHubspotFields(brief, kept),
-    { pageName: "Fitout Brief", pageUri: "/contact" }
+    { pageName: "Fitout Brief", pageUri: "/fitout-solution" }
   ).catch((e) => {
     console.error("[fitout-brief] hubspot failed", e);
     return "error" as const;

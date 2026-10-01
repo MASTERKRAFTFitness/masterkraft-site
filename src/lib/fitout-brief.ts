@@ -1,4 +1,4 @@
-// The fitout brief: the shape of what /contact's wizard collects, the options it
+// The fitout brief: the shape of what /fitout-solution's wizard collects, the options it
 // offers, and how the answers are rendered back out as prose.
 //
 // Shared by the client wizard and /api/fitout-brief ON PURPOSE. The option lists

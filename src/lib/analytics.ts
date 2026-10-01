@@ -205,7 +205,7 @@ export function trackSignUp(source: string, email?: string) {
  * average deal size the fitout funnel is judged on.
  *
  * IT DOES FIRE THE ADS CONVERSION, without a value. The fitout brief is the
- * conversion /contact exists to produce — it is where the header's primary CTA
+ * conversion /fitout-solution exists to produce — it is where the header's primary CTA
  * lands — so an Ads campaign pointed at that page has to be able to see it, or
  * the bidder is optimising toward clicks it cannot score. Sharing ADS_LEAD_LABEL
  * with trackLead is deliberate: both are leads, and Ads should count them

@@ -68,7 +68,7 @@ export default async function RevlSitePage({
           <Link href="/revl-fitouts" className="btn btn-out !text-ink">
             ← All REVL Fitouts
           </Link>
-          <Link href="/contact" className="btn btn-accent">
+          <Link href="/fitout-solution" className="btn btn-accent">
             Start Your Fitout
           </Link>
         </div>

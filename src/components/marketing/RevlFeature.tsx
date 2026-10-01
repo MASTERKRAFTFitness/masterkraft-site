@@ -23,7 +23,7 @@ export default function RevlFeature() {
             <Link href="/revl-fitouts" className="btn btn-accent">
               See the REVL fitouts <span aria-hidden>→</span>
             </Link>
-            <Link href="/contact" className="btn btn-out !text-white">
+            <Link href="/fitout-solution" className="btn btn-out !text-white">
               Start your studio
             </Link>
           </div>
