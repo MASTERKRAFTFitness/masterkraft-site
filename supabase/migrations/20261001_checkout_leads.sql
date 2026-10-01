@@ -109,13 +109,19 @@ as $$
     postcode       = coalesce(excluded.postcode, checkout_leads.postcode),
     items          = case when p_items is null then checkout_leads.items else excluded.items end,
     subtotal       = coalesce(excluded.subtotal, checkout_leads.subtotal),
-    -- A re-quote replaces the freight outright, including a price going to null.
-    freight_price  = case when p_status = 'quoted' then excluded.freight_price else checkout_leads.freight_price end,
-    freight_label  = case when p_status = 'quoted' then excluded.freight_label else checkout_leads.freight_label end,
-    freight_reason = case when p_status = 'quoted' then excluded.freight_reason else checkout_leads.freight_reason end,
+    -- A re-quote replaces the freight outright, including a price going to null -
+    -- but only on a checkout that is still open. A stray re-quote after payment
+    -- must not wipe the freight the customer actually paid.
+    freight_price  = case when p_status = 'quoted' and checkout_leads.status not in ('paid', 'quote_requested')
+                          then excluded.freight_price else checkout_leads.freight_price end,
+    freight_label  = case when p_status = 'quoted' and checkout_leads.status not in ('paid', 'quote_requested')
+                          then excluded.freight_label else checkout_leads.freight_label end,
+    freight_reason = case when p_status = 'quoted' and checkout_leads.status not in ('paid', 'quote_requested')
+                          then excluded.freight_reason else checkout_leads.freight_reason end,
     order_number   = coalesce(excluded.order_number, checkout_leads.order_number),
     -- Back in the checkout after a follow-up was sent counts as a fresh attempt.
-    notified_at    = case when p_status = 'quoted' then null else checkout_leads.notified_at end,
+    notified_at    = case when p_status = 'quoted' and checkout_leads.status not in ('paid', 'quote_requested')
+                          then null else checkout_leads.notified_at end,
     updated_at     = now();
 $$;
 
