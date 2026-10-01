@@ -188,6 +188,9 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
         depth_cm: num(p.Depth),
         height_cm: num(p.Height),
         synced_at: now,
+        // NEVER add `tags` here. It is hand-set (FIIT30), Unleashed has no
+        // source for it, and the upsert leaves a column alone only while no
+        // row sends it. See 20261001_erp_products_tags.sql.
       };
     });
 
