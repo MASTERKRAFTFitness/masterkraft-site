@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import Eyebrow from "@/components/ui/Eyebrow";
 
-// Case study for the Franchise Gym page: Fernwood Fitness Pakenham (VIC), a new
-// club in one of Australia's largest women's fitness franchise networks.
+// Case study shown on the Franchise Gym and Commercial Gym pages: Fernwood Fitness
+// Pakenham (VIC), a club in one of Australia's largest women's fitness franchise networks.
 //
 // Scope and quantities are taken from Unleashed sales order SO-00000806 (customer
 // FERN-VIC-Pakenham, Completed). The F-prefixed lines on it are Fernwood's own
@@ -80,7 +80,7 @@ const GALLERY = [
 export default function FernwoodPakenhamCaseStudy() {
   return (
     <>
-      <section className="bg-cloud border-t border-line">
+      <section id="fernwood-pakenham" className="bg-cloud border-t border-line scroll-mt-24">
         <div className="container-mk py-20 lg:py-24 grid lg:grid-cols-2 gap-14 items-start">
           <div>
             <Eyebrow className="mb-5">Case Study</Eyebrow>
