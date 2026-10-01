@@ -40,6 +40,13 @@
 // the option id and never the price. Option ids are therefore namespaced by
 // carrier and must stay stable for identical inputs, or the re-quote fails to
 // match and the order is refused after the card is captured.
+//
+// A FREIGHT MATRIX SITS BESIDE THE CARRIERS. Zone x weight-band rates held in
+// Supabase (lib/freight-matrix.ts), and a mode there - api, matrix,
+// matrix_then_api, api_then_matrix, pooled - that decides which source prices
+// a delivery. The default is `api`, which is everything above,
+// unchanged. The matrix plugs in per consignment, so splitting, caching and the
+// payment-intent re-quote treat its options like any carrier's.
 
 import { reportCarrierFailure } from "@/lib/freight-alert";
 import {
@@ -48,6 +55,17 @@ import {
   getCached,
   setCached,
 } from "@/lib/freight-cache";
+import {
+  loadMatrixConfig,
+  matrixCarriesOversize,
+  matrixHasRates,
+  quoteMatrices,
+  quoteOneMatrix,
+  usesApi,
+  usesMatrix,
+  type FreightSource,
+  type MatrixConfig,
+} from "@/lib/freight-matrix";
 
 const SERVICE_URL = "https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json";
 const EASYSHIP_RATES_URL = "https://public-api.easyship.com/2024-09/rates";
@@ -274,6 +292,19 @@ export function freightConfigured(): boolean {
     (on.has("auspost") && process.env.AUSPOST_API_KEY) ||
       (on.has("easyship") && process.env.EASYSHIP_API_TOKEN)
   );
+}
+
+/**
+ * freightConfigured, widened to the freight matrix: an origin, and either a
+ * carrier with credentials or a matrix that some mode actually reads and that
+ * holds a price. What freight-server.ts gates on, so a matrix-only deployment
+ * with no carrier keys still charges freight rather than skipping it.
+ */
+export async function freightAvailable(): Promise<boolean> {
+  if (freightConfigured()) return true;
+  if (collectionAddress() === null) return false;
+  const matrix = await loadMatrixConfig();
+  return usesMatrix(matrix.source) && matrixHasRates(matrix);
 }
 
 // ONE PARCEL PER UNIT. Each product carries the dimensions of ITS OWN carton, so
@@ -787,14 +818,24 @@ async function quoteEasyship(
  * their address - keying on it would miss on every keystroke and cost exactly
  * the calls this exists to save. If a carrier is ever added that prices off the
  * street, this is the line that has to change.
+ *
+ * `route` is the freight source and matrix version for keys whose answer can
+ * come from the matrix, so a rate edit or a mode switch is never served stale.
+ * The carriers' own per-consignment entries omit it: their answer does not
+ * depend on the matrix, and keeping them shared saves metered calls.
  */
-function cacheKey(parcels: Parcel[], collection: FreightAddress, delivery: FreightAddress): string {
+function cacheKey(
+  parcels: Parcel[],
+  collection: FreightAddress,
+  delivery: FreightAddress,
+  route = ""
+): string {
   const boxes = boxSignature(parcels);
   const to = [delivery.postcode, delivery.city, delivery.state ?? "", delivery.country]
     .map((v) => v.trim().toLowerCase())
     .join("|");
   const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}|${[...enabledCarriers()].sort().join("+")}`;
-  return `${collection.postcode}>${to}>${boxes}>${config}`;
+  return `${collection.postcode}>${to}>${boxes}>${config}${route ? `>${route}` : ""}`;
 }
 
 /**
@@ -871,6 +912,58 @@ type ConsignmentResult =
   | { ok: true; options: FreightOption[] }
   | { ok: false; reason: "oversize" | "error" | "no_services"; detail?: string };
 
+/** Where one delivery's price comes from: decided once per quote, by zone. */
+type Route = { source: FreightSource; matrix: MatrixConfig };
+
+/**
+ * Price ONE consignment from whichever source the route names.
+ *
+ * The matrix is a local lookup and costs nothing, so it is asked first whenever
+ * it could answer; the carriers are only called when the mode needs them. In
+ * `api_then_matrix` the carriers' failure is still reported by quoteCarriers
+ * before the matrix covers for it - falling back is not a reason to go quiet.
+ */
+async function quoteConsignment(
+  parcels: Parcel[],
+  collection: FreightAddress,
+  delivery: FreightAddress,
+  route: Route
+): Promise<ConsignmentResult> {
+  const oversize = parcels.some((p) => isOversize(p));
+  const fromMatrix = (): ConsignmentResult | null => {
+    const options = quoteMatrices(route.matrix, {
+      parcels,
+      oversize,
+      postcode: delivery.postcode,
+      marginPercent: marginPercent(),
+    });
+    return options ? { ok: true, options } : null;
+  };
+  // The matrix could not price it and nothing else will be asked.
+  const uncovered: ConsignmentResult = oversize
+    ? { ok: false, reason: "oversize" }
+    : { ok: false, reason: "no_services" };
+
+  switch (route.source) {
+    case "api":
+      return quoteCarriers(parcels, collection, delivery);
+    case "matrix":
+      return fromMatrix() ?? uncovered;
+    case "matrix_then_api":
+      return fromMatrix() ?? quoteCarriers(parcels, collection, delivery);
+    case "api_then_matrix": {
+      const api = await quoteCarriers(parcels, collection, delivery);
+      return api.ok ? api : (fromMatrix() ?? api);
+    }
+    case "pooled": {
+      const api = await quoteCarriers(parcels, collection, delivery);
+      const m = fromMatrix();
+      if (!m || !m.ok) return api;
+      return api.ok ? { ok: true, options: [...api.options, ...m.options] } : m;
+    }
+  }
+}
+
 /**
  * Price ONE consignment with every carrier that can carry it.
  *
@@ -886,7 +979,7 @@ type ConsignmentResult =
  * selectOptions are applied once to the COMBINED answer, because "the cheapest
  * option" is only meaningful across the whole order.
  */
-async function quoteConsignment(
+async function quoteCarriers(
   parcels: Parcel[],
   collection: FreightAddress,
   delivery: FreightAddress
@@ -1024,6 +1117,37 @@ function combineConsignments(groups: FreightOption[][]): FreightOption[] {
 }
 
 /**
+ * The whole cart as ONE consignment, priced by every consolidating matrix.
+ *
+ * WHY. partitionConsignments sends each bulky carton alone because TNT will
+ * take nothing else. A line-haul carrier charges a MINIMUM per consignment -
+ * Mainfreight's is ~$100 on most lanes, and it decides the price of almost
+ * everything under 100kg - so the same split would charge that minimum once per
+ * carton: three barbells at $308 instead of $103. Asking the consolidating
+ * matrices about the whole cart as well, and letting the cheaper answer win, is
+ * what keeps the TNT workaround from costing us on every other carrier.
+ *
+ * Ids are prefixed `whole:` so they can never collide with a single-consignment
+ * option carrying the same matrix rate.
+ */
+function wholeCartOptions(
+  parcels: Parcel[],
+  delivery: FreightAddress,
+  matrix: MatrixConfig
+): FreightOption[] {
+  const input = {
+    parcels,
+    oversize: parcels.some((p) => isOversize(p)),
+    postcode: delivery.postcode,
+    marginPercent: marginPercent(),
+  };
+  return matrix.matrices
+    .filter((m) => m.consolidate)
+    .flatMap((m) => quoteOneMatrix(m, input))
+    .map((o) => ({ ...o, id: `whole:${o.id}` }));
+}
+
+/**
  * Price a cart with every carrier that can carry it, and return the best of the
  * pooled options.
  *
@@ -1042,7 +1166,17 @@ export async function quoteFreight(
   delivery: FreightAddress
 ): Promise<FreightQuote> {
   const collection = collectionAddress();
-  if (!collection || !freightConfigured()) return { ok: false, reason: "not_configured" };
+  if (!collection) return { ok: false, reason: "not_configured" };
+
+  // WHICH SOURCE PRICES THIS DELIVERY: the mode in freight_matrix_settings.
+  // With no database or no migration this is `api` and everything below behaves
+  // exactly as it did before the matrix existed. See lib/freight-matrix.ts.
+  const matrix = await loadMatrixConfig();
+  const source = matrix.source;
+  const route: Route = { source, matrix };
+  const apiReady = usesApi(source) && freightConfigured();
+  const matrixReady = usesMatrix(source) && matrixHasRates(matrix);
+  if (!apiReady && !matrixReady) return { ok: false, reason: "not_configured" };
 
   const { parcels, missing } = itemsToParcels(items);
   // Fail the WHOLE cart, not just the line: quoting part of an order and
@@ -1057,8 +1191,8 @@ export async function quoteFreight(
 
   // Checked AFTER the local validations, so a key is only ever built for a cart
   // that would actually reach a carrier. This is the WHOLE-CART entry; each
-  // consignment caches itself separately inside quoteConsignment.
-  const key = cacheKey(parcels, collection, delivery);
+  // consignment caches itself separately inside quoteCarriers.
+  const key = cacheKey(parcels, collection, delivery, `${source}|${matrix.version}`);
   const cached = getCached<FreightQuote>(key);
   if (cached) return cached;
 
@@ -1078,19 +1212,27 @@ export async function quoteFreight(
   // it the parcel-sized group of a cart carrying an unshippable rack would go to
   // a carrier on its own, and with Easyship enabled that is a METERED call spent
   // on an answer that cannot be used.
-  const carriesOversize = enabledCarriers().has("easyship") && Boolean(process.env.EASYSHIP_API_TOKEN);
+  const carriesOversize =
+    (usesApi(source) && enabledCarriers().has("easyship") && Boolean(process.env.EASYSHIP_API_TOKEN)) ||
+    (usesMatrix(source) && matrixCarriesOversize(matrix, delivery.postcode));
   if (!carriesOversize && groups.some((g) => g.some((p) => isOversize(p)))) {
     return { ok: false, reason: "oversize", oversize: oversizeSkus(items) };
   }
 
   const results = await Promise.all(
-    groups.map((g) => quoteConsignment(g, collection, delivery))
+    groups.map((g) => quoteConsignment(g, collection, delivery, route))
   );
 
   const failures = results.filter((r): r is Extract<ConsignmentResult, { ok: false }> => !r.ok);
 
+  // A split cart is ALSO offered to each consolidating matrix as one
+  // consignment - see `consolidate` in the migration. It can rescue a cart whose
+  // split could not be carried, and it competes on price with one that could.
+  const whole =
+    groups.length > 1 && usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
+
   let quote: FreightQuote;
-  if (failures.length > 0) {
+  if (failures.length > 0 && whole.length === 0) {
     // One unshippable consignment is an unshippable cart. Report the most
     // explanatory reason rather than the first: "oversize" tells the customer
     // this is freight and a person will price it, which is both true and
@@ -1103,7 +1245,12 @@ export async function quoteFreight(
         ? { ok: false, reason: "error", detail: errors.join("; ") }
         : { ok: false, reason: "no_services" };
   } else {
-    const options = combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options));
+    const options = [
+      ...(failures.length === 0
+        ? combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options))
+        : []),
+      ...whole,
+    ];
     // Applied BEFORE selectOptions, so an over-ceiling express service is never
     // offered as the "faster" second option either. The cheapest is what decides
     // whether this cart can be sold online at all.

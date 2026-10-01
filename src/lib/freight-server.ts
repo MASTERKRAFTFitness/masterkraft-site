@@ -10,7 +10,7 @@ import {
   quoteFreight,
   cartonsContradict,
   defaultCartonFor,
-  freightConfigured,
+  freightAvailable,
   isPlausibleCarton,
   type FreightItem,
   type FreightOption,
@@ -195,7 +195,7 @@ export async function quoteFreightForRefs(
   delivery?: DeliveryInput,
   chosenServiceId?: string
 ): Promise<FreightDecision> {
-  if (!freightConfigured()) {
+  if (!(await freightAvailable())) {
     return { required: false, selected: null, options: [], reason: "not_configured" };
   }
 
