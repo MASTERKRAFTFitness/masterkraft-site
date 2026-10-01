@@ -718,7 +718,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "body": [
         "We design our gym and fitness products to help you perform at your best so if you are not happy, we have you covered. Our Returns Policy has been determined to make this process as easy as possible.",
         "Please note that the benefits provided by our Returns Policy are in addition to other rights you may have as a consumer under the Australian Consumer Law.",
-        "You may return or exchange an unused item in new condition within 14 days of delivery.",
+        "You may return or exchange an unused item in new, resellable condition within 30 days of delivery.",
         "All items must include the original packaging.",
         "Items that are used or damaged may be denied a refund or exchange.",
         "Items returned that are incomplete or missing parts may be denied a refund or exchange.",
@@ -733,15 +733,14 @@ export const legalContent: Record<string, ContentSection[]> = {
     {
       "heading": "Change of Mind Purchase",
       "body": [
-        "If you change your mind about a product you have purchased, we can offer a store credit however please note the following conditions:",
-        "All returned products must be unused.",
+        "If you change your mind about a product you have purchased, we will refund it to your original form of payment, provided the following conditions are met:",
+        "All returned products must be unused and in new, resellable condition.",
         "All products must be in their original packaging.",
-        "A return form must be submitted within 14 days of delivery.",
+        "A return form must be submitted within 30 days of delivery.",
         "All freight costs are at the expense of the customer.",
         "There are no returns or exchanges on sale items for change of mind purchases. All sales are final.",
-        "A 20% restocking fee applies for all change of mind returns",
         "Please do not send a product for return unless it has been approved by our team.",
-        "You will receive an email notification when this stage of the return has been completed and the total credit value will be added to your online account. Any credit is valid for 12 months and can be used in part or as a whole against your next purchase."
+        "You will receive an email notification once your return has been received and inspected, and your refund will be processed to your original form of payment within 5-7 business days."
       ]
     },
     {
@@ -763,7 +762,7 @@ export const legalContent: Record<string, ContentSection[]> = {
         "Phone: 03 9044 9575 Email: admin@masterkraft.com",
         "You may return the items to the address below:",
         "MasterKraft Attn: Returns Department 8/337-339 Settlement Rd, Thomastown, Vic. 3074 AUSTRALIA",
-        "*Please note there are no returns or exchanges on sale items for change of mind purchases. All sales are final. **A 20% restocking fee applies for all change of mind returns."
+        "*Please note there are no returns or exchanges on sale items for change of mind purchases. All sales are final."
       ]
     }
   ],

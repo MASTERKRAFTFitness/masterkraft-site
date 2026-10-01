@@ -7,11 +7,13 @@
 // the page text is tested against these constants (return-policy.test.ts) and
 // the account setting has to be typed in to match by hand.
 //
-// 14 DAYS, CUSTOMER PAYS RETURN POSTAGE. Google's benchmark is 30 days and
-// free returns; both were considered on 28 Sep 2026 and declined, so this
-// scores below the benchmark on returns by choice. Raising it means changing
-// the /returns text, this number and the Merchant Center setting together.
-export const RETURN_WINDOW_DAYS = 14;
+// 30 DAYS, REFUND TO THE ORIGINAL PAYMENT, NO RESTOCKING FEE (decided 1 Oct
+// 2026, replacing 14 days, store credit and a 20% restocking fee). Items must
+// come back new and resellable. The customer still pays return postage, which
+// is the one place this sits below Google's benchmark of free returns. Changing
+// any of it means changing the /returns text, these values and the Merchant
+// Center setting together.
+export const RETURN_WINDOW_DAYS = 30;
 
 /** schema.org MerchantReturnPolicy for an Offer's `hasMerchantReturnPolicy`. */
 export function merchantReturnPolicy() {
@@ -22,5 +24,7 @@ export function merchantReturnPolicy() {
     merchantReturnDays: RETURN_WINDOW_DAYS,
     returnMethod: "https://schema.org/ReturnByMail",
     returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+    refundType: "https://schema.org/FullRefund",
+    itemCondition: "https://schema.org/NewCondition",
   };
 }
