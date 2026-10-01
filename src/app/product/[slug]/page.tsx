@@ -27,14 +27,9 @@ import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCa
 import { getProductContent, resolveCopy, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
-// Stable positive hash of an ERP code, negated for use as a cart key. Sizes the
-// old store never listed have no WooCommerce variation id, and the cart keys on
-// a number; a negative one can never collide with a real WooCommerce id.
-function hashCode(code: string): number {
-  let h = 0;
-  for (let i = 0; i < code.length; i++) h = (h * 31 + code.charCodeAt(i)) | 0;
-  return Math.abs(h) || 1;
-}
+// The cart key for a size with no WooCommerce variation id. Shared with the
+// Merchant Center checkout link so both build the same line; see lib/checkout-link.
+import { hashCode } from "@/lib/checkout-link";
 import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";

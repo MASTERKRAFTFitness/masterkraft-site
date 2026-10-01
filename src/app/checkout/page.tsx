@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
-import { identifyUser, trackBeginCheckout, trackLead } from "@/lib/analytics";
+import { identifyUser, trackAddToCart, trackBeginCheckout, trackLead } from "@/lib/analytics";
+import type { CheckoutLine } from "@/lib/checkout-link";
 import { cartSellableByCard } from "@/lib/cart-eligibility";
 import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout, { type PaidBuyer } from "@/components/shop/StripeCheckout";
@@ -17,13 +18,17 @@ const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
 export default function CheckoutPage() {
-  const { items, subtotal, clear, ready, removed, dismissRemoved } = useCart();
+  const { items, subtotal, add, clear, closeDrawer, ready, removed, dismissRemoved } = useCart();
+  // True until any Merchant Center checkout-link item has been added (below).
+  const [linkPending, setLinkPending] = useState(true);
   // Card checkout when Stripe is configured AND every item has a real price.
   // Carts containing "Contact for pricing" items fall back to the quote flow.
   // Every line must be re-pricable server-side before a card is charged. That
   // rule lives in lib/cart-eligibility, which explains why it is now the ERP
   // ProductCode that decides it and no longer the WooCommerce product id.
-  const canPay = paymentsConfigured && ready && cartSellableByCard(items);
+  // Not while a checkout-link item is still being added: the payment form prices
+  // the cart when it mounts, and must see the cart the shopper came for.
+  const canPay = paymentsConfigured && ready && !linkPending && cartSellableByCard(items);
   const elapsed = useFillTimer();
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -34,16 +39,57 @@ export default function CheckoutPage() {
   // Who paid, for the Google Customer Reviews offer on the confirmation.
   const [paidBuyer, setPaidBuyer] = useState<PaidBuyer | null>(null);
 
-  // Fire GA4 `begin_checkout` once, when the cart has loaded with items.
+  // GOOGLE MERCHANT CENTER'S CHECKOUT LINK: /checkout?id={id}, where {id} is
+  // the feed item's ERP code. The shopper clicked "Checkout" on a Google listing
+  // and expects that item already in the cart. See lib/checkout-link.ts.
+  //
+  // Read from location rather than useSearchParams so the page needs no Suspense
+  // boundary, and only once the cart has hydrated: adding before then is
+  // overwritten by the hydration reading localStorage. The param is stripped
+  // afterwards so a refresh does not add the item again, and an item already in
+  // the cart is left at its quantity for the same reason.
+  const linkHandled = useRef(false);
+  useEffect(() => {
+    if (!ready || linkHandled.current) return;
+    linkHandled.current = true;
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("id")?.trim();
+    if (!code) {
+      // The URL cannot be read during server render, so this has to be decided
+      // in an effect; the same reasoning as CartProvider's hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLinkPending(false);
+      return;
+    }
+    url.searchParams.delete("id");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    fetch(`/api/cart/line?id=${encodeURIComponent(code)}`)
+      .then((r) => r.json())
+      .then((d: { line?: CheckoutLine | null }) => {
+        const line = d.line;
+        if (!line || items.some((i) => i.id === line.id)) return;
+        add(line, 1);
+        // add() slides the mini-cart open, which is noise on the checkout itself.
+        closeDrawer();
+        trackAddToCart({ id: line.id, name: line.name, price: line.price }, 1);
+      })
+      // An unknown or unsellable code lands on the checkout as it was; the
+      // shopper is no worse off than following the product link.
+      .catch(() => {})
+      .finally(() => setLinkPending(false));
+  }, [ready, items, add, closeDrawer]);
+
+  // Fire GA4 `begin_checkout` once, when the cart has loaded with items — after
+  // any checkout-link item has been added, so the event carries it.
   const beganCheckout = useRef(false);
   useEffect(() => {
-    if (beganCheckout.current || !ready || items.length === 0) return;
+    if (beganCheckout.current || !ready || linkPending || items.length === 0) return;
     beganCheckout.current = true;
     trackBeginCheckout(
       items.map((i) => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
       subtotal,
     );
-  }, [ready, items, subtotal]);
+  }, [ready, linkPending, items, subtotal]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -149,7 +195,7 @@ export default function CheckoutPage() {
               Keep Browsing
             </Link>
           </div>
-        ) : !ready ? null : items.length === 0 ? (
+        ) : !ready || linkPending ? null : items.length === 0 ? (
           <div className="max-w-md mx-auto text-center py-10">
             <p className="text-ash text-lg">Your cart is empty.</p>
             <Link href="/all-equipment" className="btn btn-accent mt-8">
