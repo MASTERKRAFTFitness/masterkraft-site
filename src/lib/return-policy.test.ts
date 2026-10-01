@@ -22,4 +22,11 @@ describe("return policy", () => {
     expect(merchantReturnPolicy().returnFees).toBe("https://schema.org/ReturnFeesCustomerResponsibility");
     expect(returnsText).toContain("Customers will be responsible for return shipping costs.");
   });
+
+  it("refunds to the original payment and charges no restocking fee", () => {
+    expect(merchantReturnPolicy().refundType).toBe("https://schema.org/FullRefund");
+    expect(merchantReturnPolicy()).not.toHaveProperty("restockingFee");
+    expect(returnsText).not.toMatch(/restocking/i);
+    expect(returnsText).not.toMatch(/store credit/i);
+  });
 });
