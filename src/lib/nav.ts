@@ -120,6 +120,7 @@ export const fitoutLinks: NavLink[] = [
   { label: "Boutique Fitness", href: "/fitout/boutique-fitness-fitout" },
   { label: "Commercial Gym", href: "/fitout/commercial-gym-fitout" },
   { label: "Elite Sports Clubs", href: "/fitout/elite-sports-clubs-fitout" },
+  { label: "Franchise Gym", href: "/fitout/franchise-gym-fitout" },
   { label: "Home Gym", href: "/fitout/home-gym-fitout" },
   { label: "PT Studio", href: "/fitout/pt-studio-fitout" },
   { label: "Schools & University", href: "/fitout/schools-university-fitout" },

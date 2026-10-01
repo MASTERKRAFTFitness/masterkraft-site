@@ -7,6 +7,7 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodFeature from "@/components/marketing/FernwoodFeature";
+import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { withQualifier } from "@/lib/page-title";
 
@@ -104,6 +105,9 @@ export default async function FitoutTypePage({
 
       {/* Commercial gym: showcase Fernwood custom-branded equipment as proof. */}
       {f.slug === "commercial-gym-fitout" && <FernwoodFeature />}
+
+      {/* Franchise gym: a real franchise club, Fernwood Pakenham, as proof. */}
+      {f.slug === "franchise-gym-fitout" && <FernwoodPakenhamCaseStudy />}
     </>
   );
 }
