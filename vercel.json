@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/erp-mirror",
       "schedule": "17 * * * *"
+    },
+    {
+      "path": "/api/cron/abandoned-checkouts",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

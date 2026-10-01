@@ -5,6 +5,7 @@ import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
 import { visitorKey } from "@/lib/agent/rate-limit";
+import { scheduleCheckoutLead } from "@/lib/checkout-leads";
 
 // Quote request handler. Does two things when configured:
 //   1. Emails the team (via Resend) — needs RESEND_API_KEY + QUOTE_FROM_EMAIL.
@@ -39,10 +40,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 
-  const { contact, items, subtotal } = (payload ?? {}) as {
+  const { contact, items, subtotal, checkoutId } = (payload ?? {}) as {
     contact?: QuoteContact;
     items?: QuoteItem[];
     subtotal?: number;
+    // Set when the request comes from a card checkout whose freight could not
+    // be priced, so that checkout is not also reported as abandoned.
+    checkoutId?: string;
   };
 
   if (!contact?.name || !contact?.email || !Array.isArray(items) || items.length === 0) {
@@ -113,6 +117,7 @@ export async function POST(request: Request) {
     }),
   };
 
+  scheduleCheckoutLead(checkoutId, { status: "quote_requested" });
   console.log("[quote] processed", { customer: contact.email, items: items.length, ...results });
   return NextResponse.json({ ok: true, ...results });
 }

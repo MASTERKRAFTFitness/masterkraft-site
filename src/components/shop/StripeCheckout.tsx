@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
-import { identifyUser, trackPurchase } from "@/lib/analytics";
+import { identifyUser, trackLead, trackPurchase } from "@/lib/analytics";
 import { opinlyAnonId } from "@/lib/opinly";
 import { freightMessage } from "@/lib/freight-message";
+import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
@@ -43,13 +44,55 @@ function refsFrom(items: CartItem[]) {
   }));
 }
 
+// One id per cart, kept across reloads, so every step of the same checkout
+// lands on the same follow-up row (lib/checkout-leads). Cleared once paid.
+// Storage can throw (private mode, blocked site data); a fresh id per mount is
+// the harmless fallback - at worst one checkout becomes two rows.
+const CHECKOUT_ID_KEY = "mk-checkout-id";
+function checkoutIdFor(): string {
+  const fresh = () =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  try {
+    const kept = localStorage.getItem(CHECKOUT_ID_KEY);
+    if (kept) return kept;
+    const id = fresh();
+    localStorage.setItem(CHECKOUT_ID_KEY, id);
+    return id;
+  } catch {
+    return fresh();
+  }
+}
+function forgetCheckoutId() {
+  try {
+    localStorage.removeItem(CHECKOUT_ID_KEY);
+  } catch {
+    /* nothing to forget */
+  }
+}
+
 type OrderRef = { productId: number; variationId?: number; quantity: number; sku?: string };
 
 /** What the confirmation screen needs to offer the Google Customer Reviews survey. */
 export type PaidBuyer = { email: string; state: string };
 
-export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: string, buyer: PaidBuyer) => void }) {
-  const { items, subtotal, lock, unlock } = useCart();
+export default function StripeCheckout({
+  onPaid,
+  onQuoted,
+}: {
+  onPaid?: (orderNumber: string, buyer: PaidBuyer) => void;
+  // Called when freight could not be priced and the customer asked for a quote
+  // instead. Called BEFORE the cart is cleared, for the same reason as onPaid:
+  // clearing unmounts this component, so the page owns the thank-you screen.
+  onQuoted?: () => void;
+}) {
+  const { items, subtotal, lock, unlock, clear } = useCart();
+  const [checkoutId] = useState(checkoutIdFor);
+  const formRef = useRef<HTMLFormElement>(null);
+  const elapsed = useFillTimer();
+  // The quote fallback, for when freight cannot be priced (see below).
+  const [quoteSending, setQuoteSending] = useState(false);
   const [phase, setPhase] = useState<"details" | "payment">("details");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   // Snapshot of the cart taken when the PaymentIntent was created. The order is
@@ -127,7 +170,22 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
     const fq = await fetch("/api/freight/quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: refsFrom(items), delivery: deliveryFrom(b), serviceId: freightServiceId }),
+      body: JSON.stringify({
+        items: refsFrom(items),
+        delivery: deliveryFrom(b),
+        serviceId: freightServiceId,
+        // For following up if they leave now - see lib/checkout-leads. The
+        // server prices from `items` above, never from these.
+        checkoutId,
+        contact: {
+          name: `${b.first_name} ${b.last_name}`.trim(),
+          email: b.email,
+          phone: b.phone,
+          company: b.company,
+        },
+        cart: items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, price: i.price })),
+        subtotal,
+      }),
     })
       .then((r) => r.json())
       .catch(() => null);
@@ -153,7 +211,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
     const res = await fetch("/api/payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: refs, delivery, freightServiceId }),
+      body: JSON.stringify({ items: refs, delivery, freightServiceId, checkoutId }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
@@ -187,6 +245,53 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
     }
   }
 
+  /**
+   * THE WAY OUT when freight cannot be priced. The notice has always said
+   * "request a quote", but this form had no quote button - the only button left
+   * was Calculate Freight, which asks the same question again and gets the same
+   * answer. A customer who had typed every detail and wanted to buy was left
+   * with nothing to press. This sends what they already typed, and the cart,
+   * through the ordinary quote route, so the team receives it like any other.
+   */
+  async function requestQuote() {
+    const form = formRef.current;
+    if (!form || !form.reportValidity()) return;
+    const b = billingFrom(form);
+    setQuoteSending(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact: {
+            name: `${b.first_name} ${b.last_name}`.trim(),
+            email: b.email,
+            phone: b.phone,
+            company: b.company,
+            location: [b.address_1, b.city, b.state, b.postcode].filter(Boolean).join(", "),
+            notes: `From the card checkout: freight could not be priced automatically${freightReason ? ` (${freightReason})` : ""}.`,
+          },
+          items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
+          subtotal,
+          checkoutId,
+          ...guardValues(new FormData(form), elapsed()),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
+      identifyUser(b.email);
+      trackLead(subtotal, items.length);
+      forgetCheckoutId();
+      onQuoted?.();
+      clear();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setQuoteSending(false);
+    }
+  }
+
   // A quote belongs to the address it was quoted for. Any edit throws it away
   // rather than letting a stale price sit above a changed postcode.
   function invalidateQuote() {
@@ -203,7 +308,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
     <div className="grid lg:grid-cols-[1.4fr_1fr] gap-12">
       <div>
         {phase === "details" && (
-          <form onSubmit={onSubmit} onChange={invalidateQuote} className="space-y-4">
+          <form ref={formRef} onSubmit={onSubmit} onChange={invalidateQuote} className="relative space-y-4">
             <h2 className="font-display uppercase tracking-wide text-lg mb-2">Billing & Delivery</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <input name="first_name" required aria-label="First name" placeholder="First name" className={fieldClass} />
@@ -230,6 +335,25 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
             {(error || freightNotice) && (
               <p className="text-accent-600 text-sm">{error ?? freightNotice}</p>
             )}
+            <HoneypotField />
+            {freightNotice ? (
+              // Freight could not be priced, so there is no card path. Offer the
+              // quote, and keep Calculate Freight as the secondary action for a
+              // customer who wants to correct the address and try again.
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={requestQuote}
+                  disabled={quoteSending}
+                  className="btn btn-accent w-full sm:w-auto disabled:opacity-60"
+                >
+                  {quoteSending ? "Sending…" : "Request a Quote"} <span aria-hidden>→</span>
+                </button>
+                <button type="submit" disabled={loading || quoteSending} className="btn btn-out !text-ink w-full sm:w-auto disabled:opacity-60">
+                  {loading ? "Calculating…" : "Recalculate Freight"}
+                </button>
+              </div>
+            ) : (
             <button type="submit" disabled={loading} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
               {loading
                 ? canContinue
@@ -240,6 +364,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
                   : "Calculate Freight"}{" "}
               <span aria-hidden>→</span>
             </button>
+            )}
             {canContinue && (
               <p className="text-xs text-ash">
                 Delivery is priced for the address above. Change any detail and it is
@@ -257,6 +382,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
             <PayForm
               billing={billing}
               orderRefs={orderRefs}
+              checkoutId={checkoutId}
               subtotal={subtotal}
               serverTotal={serverTotal}
               serverGoods={serverGoods}
@@ -324,6 +450,7 @@ export default function StripeCheckout({ onPaid }: { onPaid?: (orderNumber: stri
 function PayForm({
   billing,
   orderRefs,
+  checkoutId,
   subtotal,
   serverTotal,
   serverGoods,
@@ -332,6 +459,7 @@ function PayForm({
 }: {
   billing: Billing;
   orderRefs: OrderRef[];
+  checkoutId: string;
   subtotal: number;
   serverTotal: number | null;
   serverGoods: number | null;
@@ -407,6 +535,7 @@ function PayForm({
           // Undefined when the pixel never loaded (cookies declined, blocker) —
           // the server falls back to the billing email.
           anonId: opinlyAnonId(),
+          checkoutId,
         }),
       });
       const data = await res.json();
@@ -416,6 +545,7 @@ function PayForm({
       // flips the page's canPay gate and unmounts this component, so the page
       // must own the "order confirmed" screen for it to survive.
       onPaid?.(String(data.orderNumber), { email: billing.email, state: billing.state });
+      forgetCheckoutId();
       clear();
       setDone({ number: data.orderNumber });
     } catch (err) {

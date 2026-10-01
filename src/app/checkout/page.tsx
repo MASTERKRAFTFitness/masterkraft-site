@@ -183,6 +183,7 @@ export default function CheckoutPage() {
               setPaidOrder(num);
               setPaidBuyer(buyer);
             }}
+            onQuoted={() => setDone(true)}
           />
         ) : done ? (
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">

@@ -4,6 +4,7 @@ import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef } from "@/lib/order-lines";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 import { freightMessage } from "@/lib/freight-message";
+import { scheduleCheckoutLead } from "@/lib/checkout-leads";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
@@ -28,8 +29,9 @@ export async function POST(request: Request) {
   let items: CartRef[];
   let delivery: DeliveryInput | undefined;
   let freightServiceId: string | undefined;
+  let checkoutId: unknown;
   try {
-    ({ items, delivery, freightServiceId } = await request.json());
+    ({ items, delivery, freightServiceId, checkoutId } = await request.json());
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
@@ -101,6 +103,7 @@ export async function POST(request: Request) {
     );
   }
 
+  scheduleCheckoutLead(checkoutId, { status: "payment_started" });
   return NextResponse.json({
     ok: true,
     clientSecret: intent.client_secret,

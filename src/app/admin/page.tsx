@@ -37,6 +37,9 @@ export default async function AdminPage() {
               <Link href="/admin/dead-links" className="underline underline-offset-2 hover:text-ink transition-colors">
                 Dead links
               </Link>
+              <Link href="/admin/checkouts" className="underline underline-offset-2 hover:text-ink transition-colors">
+                Checkouts
+              </Link>
             </>
           )}
           {session?.email && <span className="font-mono">{session.email}</span>}
