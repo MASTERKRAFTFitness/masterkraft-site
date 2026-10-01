@@ -24,7 +24,7 @@
 import { allProducts, variationsFor } from "@/lib/catalogue";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
 import { anchorCodes, compareSizeLabels, getRange } from "@/lib/ranges";
-import { defaultCartonFor } from "@/lib/freight";
+import { cartonsContradict, defaultCartonFor, isOversize } from "@/lib/freight";
 import { productCopy, productCopyHtml } from "@/lib/product-copy";
 import { filterListable, formatPrice, isBrandSku, type WcProduct } from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
@@ -221,6 +221,45 @@ export function codeIsShippable(code: string, entry: UnleashedEntry): boolean {
   if (plausible(cartonNum(snap?.dimensions?.length), cartonNum(snap?.dimensions?.width), cartonNum(snap?.dimensions?.height))) return true;
   // The ERP's own axis order.
   return plausible(cartonNum(entry.widthCm), cartonNum(entry.depthCm), cartonNum(entry.heightCm));
+}
+
+/**
+ * Does this code go by Australia Post parcel, or as pallet freight? null when
+ * it has no usable carton.
+ *
+ * FOR LABELLING, NOT FOR PRICING. The Merchant Center feed tags each item with
+ * it (custom_label_2) so a Shopping campaign can bid differently on a parcel and
+ * a rack. The freight quote never reads this; it resolves its own carton in
+ * lib/freight-server, with the variation and parent cartons as well.
+ *
+ * Resolved in the same order as that path, so the two agree for every code
+ * whose carton is set at the code: the snapshot's carton first, the ERP's when
+ * the snapshot's is impossible, and the ERP's again when the two flatly
+ * contradict, because the ERP is the record still being corrected.
+ */
+export function shipsAsParcel(code: string, entry: UnleashedEntry): boolean | null {
+  const satchel = defaultCartonFor(entry.group);
+  const snap = wooPages().get(code.toUpperCase());
+  const weight = cartonNum(snap?.weight) || cartonNum(entry.weightKg) || satchel?.weight || 0;
+  const fromSnap = {
+    weight,
+    length: cartonNum(snap?.dimensions?.length),
+    width: cartonNum(snap?.dimensions?.width),
+    height: cartonNum(snap?.dimensions?.height),
+  };
+  // The ERP's own axis order, mapped as lib/freight-server maps it.
+  const fromErp = {
+    weight,
+    length: cartonNum(entry.widthCm),
+    width: cartonNum(entry.depthCm),
+    height: cartonNum(entry.heightCm),
+  };
+  const ok = (c: typeof fromSnap) => plausible(c.length, c.width, c.height);
+  let carton = ok(fromSnap) ? fromSnap : ok(fromErp) ? fromErp : null;
+  if (carton === fromSnap && ok(fromErp) && cartonsContradict(fromSnap, fromErp)) carton = fromErp;
+  if (!carton) return satchel ? true : null;
+  if (!weight) return null;
+  return !isOversize(carton);
 }
 
 const hideUnshippable = () => process.env.HIDE_UNSHIPPABLE === "true";
