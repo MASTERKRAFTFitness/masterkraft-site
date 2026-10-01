@@ -6,7 +6,6 @@ import { recordNotFound } from "@/lib/not-found-log";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
-import FernwoodFeature from "@/components/marketing/FernwoodFeature";
 import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { withQualifier } from "@/lib/page-title";
@@ -103,11 +102,10 @@ export default async function FitoutTypePage({
       {/* Boutique fitness: showcase the real REVL studio fitout as proof. */}
       {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
 
-      {/* Commercial gym: showcase Fernwood custom-branded equipment as proof. */}
-      {f.slug === "commercial-gym-fitout" && <FernwoodFeature />}
-
-      {/* Franchise gym: a real franchise club, Fernwood Pakenham, as proof. */}
-      {f.slug === "franchise-gym-fitout" && <FernwoodPakenhamCaseStudy />}
+      {/* Commercial and franchise gyms: a real club, Fernwood Pakenham, as proof. */}
+      {(f.slug === "commercial-gym-fitout" || f.slug === "franchise-gym-fitout") && (
+        <FernwoodPakenhamCaseStudy />
+      )}
     </>
   );
 }

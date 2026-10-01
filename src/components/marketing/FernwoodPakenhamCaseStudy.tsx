@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import Eyebrow from "@/components/ui/Eyebrow";
 
-// Case study for the Franchise Gym page: Fernwood Fitness Pakenham (VIC), a new
-// club in one of Australia's largest women's fitness franchise networks.
+// Case study shown on the Franchise Gym and Commercial Gym pages: Fernwood Fitness
+// Pakenham (VIC), a club in one of Australia's largest women's fitness franchise networks.
 //
 // Scope and quantities are taken from Unleashed sales order SO-00000806 (customer
 // FERN-VIC-Pakenham, Completed). The F-prefixed lines on it are Fernwood's own

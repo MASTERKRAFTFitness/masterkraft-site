@@ -116,7 +116,7 @@ export const zoneOptions: Choice[] = [
  * Step 3 - branding. Asked as "do you want this in your own colours", NOT as
  * "which brand do you prefer": MasterKraft manufactures the equipment, so a
  * competitor-brand question invites the wrong answer, and custom branding is the
- * thing that actually changes the build (see FernwoodFeature - their whole range
+ * thing that actually changes the build (see FernwoodPakenhamCaseStudy - their whole range
  * is produced in their magenta). Copy guardrail: never say "cheap".
  */
 export const brandingOptions: Choice[] = [
