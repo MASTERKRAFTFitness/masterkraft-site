@@ -26,11 +26,10 @@ Everything that could be finished without the domain switchover has been.
 
 **Blockers, all waiting on the domain (§2):**
 1. ~~⚙️ **Stripe is in TEST mode.**~~ **Live keys are in** (Michael, 2026-09-06).
-   Not independently confirmed by reading the bundle, because it cannot be: the
-   site is in quote mode, so no publishable key is shipped to the browser at all
-   (12 chunks checked 2026-09-06, no `pk_live` and no `pk_test`). Vercel's own
-   dashboard is the only place this is visible. **Stripe is no longer the gate —
-   see the checkout-mode line below.**
+   Not independently confirmed by reading the bundle at the time, because the
+   site was then in quote mode and shipped no publishable key (12 chunks checked
+   2026-09-06, no `pk_live` and no `pk_test`). Quote mode has since been switched
+   off — see "Card checkout" below.
 2. ⚙️ `NEXT_PUBLIC_SITE_URL` is `https://web.test.masterkraft.com`, so every
    canonical, sitemap entry and share link points at a test subdomain.
 3. ⚙️ `NEXT_PUBLIC_ALLOW_INDEX` is **not set at all**, so `robots.txt` is
@@ -138,7 +137,23 @@ Resend. If the vars below are absent the submission is accepted but **goes nowhe
 confirm (a) the email lands and (b) a HubSpot contact/submission appears. (This
 creates a real contact + email, so do it deliberately as the final check.)
 
-### Card checkout — the one remaining gate ⚙️🔎
+### Card checkout ✅ OPEN since 2026-09-06
+
+**Card mode is on in production.** `NEXT_PUBLIC_CHECKOUT_MODE` was removed from
+Vercel Production on 2026-09-06 (HANDOFF §0g), so `checkoutMode` is `card`,
+`paymentsConfigured` is true wherever the Stripe keys are set, and freight is
+quoted live. Everything below in this section is history, kept because it
+explains the shape of the code. To put the site back into quote-only mode, set
+`NEXT_PUBLIC_CHECKOUT_MODE=quote` in Vercel Production **and redeploy** — it is a
+`NEXT_PUBLIC_` variable, so it is baked into the build.
+
+🔎 To check which mode is live: open `/checkout` with an item in the cart. Card
+mode shows the heading **Checkout** and a **Calculate Freight** button; quote mode
+shows **Request a Quote** and the banner "Card payment is briefly unavailable".
+
+Google Merchant Center's checkout link is `/checkout?id={id}` on the domain the
+feed's product links use (`NEXT_PUBLIC_SITE_URL`); it adds that ERP code to the
+cart. See `src/lib/checkout-link.ts`.
 
 **Superseded (2026-09-06).** The 2026-08-20 correction below said
 `paymentsConfigured` was "simply a publishable key is present", so quote-only
@@ -146,7 +161,7 @@ meant removing the Stripe keys. **That is no longer how the code works.** It now
 reads `!!key && checkoutMode === "card"`, and `payment-intent` refuses with a 503
 on the server as well, so the flag is a real rule rather than a hidden form.
 
-**Production is in QUOTE MODE right now.** Verified 2026-09-06 by fetching
+**Historical: production WAS in quote mode until 2026-09-06.** Verified then by fetching
 `https://masterkraft.com/checkout`: it serves the banner "Card payment is briefly
 unavailable while we move our systems", which renders only when
 `checkoutMode === "quote"`.
@@ -156,7 +171,7 @@ unavailable while we move our systems", which renders only when
 renders, so `/api/freight/quote` is never called. Both carriers, the cache and
 the alerting are all correct and all dormant until this flag changes.
 
-To enable live card payment, now that the keys are in:
+What enabling live card payment took (done 2026-09-06):
 - 🧠 the decision that bulky products should be card-buyable at a freight price
   no invoice has yet validated. See `docs/easyship-evaluation.md`.
 - ⚙️ **remove `NEXT_PUBLIC_CHECKOUT_MODE` from Vercel Production** (or set it to
@@ -282,7 +297,7 @@ does nothing in production.
 | `RESEND_API_KEY`, `QUOTE_FROM_EMAIL` | ✅ set | needed for the alert to email rather than only log |
 | `FREIGHT_CARRIERS` | optional | allowlist, defaults to **both**. `easyship` or `auspost` narrows it. See below before narrowing it. |
 | `FREIGHT_MAX_AUTO_QUOTE` | optional | ceiling in dollars; **unset means no cap** |
-| `NEXT_PUBLIC_CHECKOUT_MODE` | ⚙️ `quote` | **remove it to switch card checkout, and therefore freight, back on** |
+| `NEXT_PUBLIC_CHECKOUT_MODE` | ✅ removed 2026-09-06 | unset means card checkout and live freight. Set to `quote` (and redeploy) only to go back to quote-only |
 
 Set the two MISSING ones and redeploy — a Vercel env change does not reach a
 build that already shipped.
@@ -382,8 +397,8 @@ than weight**, at a mean 1.41x their actual. The tail is far worse: a 16kg
 medicine ball rack bills as 175kg. Racks and rigs are large, light and mostly
 air, so any volume-priced carrier does this.
 
-**Decide this before removing `NEXT_PUBLIC_CHECKOUT_MODE`**, because that is the
-moment those products become card-buyable at these rates. TNT also notes on the
+**`NEXT_PUBLIC_CHECKOUT_MODE` has been removed (2026-09-06), so these products are
+card-buyable at these rates now** unless `FREIGHT_MAX_AUTO_QUOTE` caps them. TNT also notes on the
 quote that "additional handling fees may occur for the oversize & DG shipment",
 and the customer having already been charged means we absorb the difference.
 
@@ -534,8 +549,8 @@ problem, since that is what they are built for.
 **Option B was not needed and option A was not taken either.** The apex was
 pointed at Vercel while WordPress stayed exactly where it was, because only the
 buy path reads the live store. The site launched as browse-and-quote via
-`NEXT_PUBLIC_CHECKOUT_MODE=quote`. WooCommerce still needs to move for card
-checkout to return; it is no longer a launch blocker. See `docs/dns-cutover.md`
+`NEXT_PUBLIC_CHECKOUT_MODE=quote`; card checkout returned on 2026-09-06 once orders
+were written to Unleashed instead of WooCommerce (§1a). See `docs/dns-cutover.md`
 and HANDOFF section 0.
 
 <details><summary>Original plan, kept for the reasoning</summary>
@@ -600,4 +615,5 @@ are still open.
 ## Who owns what
 - **Michael / dev:** env vars, redeploys, test pass, sitemap submit.
 - **Steve / host:** domain + DNS + WordPress-backend move decision (§2).
-- **Decisions needed:** card checkout now or later (§1); domain option A vs B (§2).
+- **Decisions needed:** domain option A vs B (§2). Card checkout was decided and
+  opened on 2026-09-06 (§1).
