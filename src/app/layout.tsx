@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Inter, Oswald, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
@@ -7,10 +6,10 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CookieConsent from "@/components/layout/CookieConsent";
+import OpinlyPixel from "@/components/layout/OpinlyPixel";
 import ChatWidget from "@/components/chat/ChatWidget";
 import NavProgress from "@/components/layout/NavProgress";
 import { SITE_URL, ALLOW_INDEX } from "@/lib/site";
-import { OPINLY_KEY, OPINLY_SRC } from "@/lib/opinly";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -83,12 +82,8 @@ export default function RootLayout({
               clicks and form-submission capture start before a visitor has answered
               the banner. If that banner or the privacy policy is ever rewritten to
               enumerate what loads when, this is the exception to describe. */}
-          <Script
-            id="opinly-pixel"
-            strategy="afterInteractive"
-            src={OPINLY_SRC}
-            data-key={OPINLY_KEY}
-          />
+          {/* Public domain only - see lib/live-host. */}
+          <OpinlyPixel />
         </CartProvider>
       </body>
     </html>

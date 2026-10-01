@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useState } from "react";
+import { isLiveHost } from "@/lib/live-host";
 
 const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -13,6 +14,9 @@ const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 export default function CookieConsent() {
   const [choice, setChoice] = useState<"accepted" | "declined" | null>(null);
   const [ready, setReady] = useState(false);
+  // Tags load on the public domain only, so a local or preview test cannot
+  // report itself as a customer - see lib/live-host. The banner still shows.
+  const [live, setLive] = useState(false);
 
   // The stored choice is in localStorage, which the server cannot read, so the
   // first render has to be "undecided" and the real answer has to arrive in an
@@ -22,6 +26,7 @@ export default function CookieConsent() {
     const stored = localStorage.getItem(KEY) as "accepted" | "declined" | null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoice(stored);
+    setLive(isLiveHost());
     setReady(true);
   }, []);
 
@@ -30,10 +35,12 @@ export default function CookieConsent() {
     setChoice(v);
   };
 
+  const tracking = ready && live && choice === "accepted";
+
   return (
     <>
       {/* Analytics load only after explicit consent, and only if IDs are configured */}
-      {ready && choice === "accepted" && (GA_ID || ADS_ID) && (
+      {tracking && (GA_ID || ADS_ID) && (
         <>
           {/* ONE gtag.js serves both properties — loading it twice would double
               every event. The src id only has to be one of them; what actually
@@ -55,7 +62,7 @@ export default function CookieConsent() {
           PageView fires here. The `Lead` conversion does NOT - it fires from
           lib/analytics.ts where the brief actually submits, so Meta counts a
           completed brief rather than a page that merely loaded. */}
-      {ready && choice === "accepted" && META_PIXEL_ID && (
+      {tracking && META_PIXEL_ID && (
         <Script id="meta-pixel" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?` +
             `n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;` +
@@ -66,7 +73,7 @@ export default function CookieConsent() {
         </Script>
       )}
 
-      {ready && choice === "accepted" && HS_ID && (
+      {tracking && HS_ID && (
         <Script id="hs-script-loader" strategy="afterInteractive" src={`https://js-ap1.hs-scripts.com/${HS_ID}.js`} />
       )}
 
