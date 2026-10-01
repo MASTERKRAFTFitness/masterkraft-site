@@ -24,7 +24,7 @@ export default function RevlLanding() {
       />
 
       <section className="container-mk py-20">
-        <Eyebrow className="mb-10">Featured Studios</Eyebrow>
+        <Eyebrow className="mb-10">Studio Fit Outs</Eyebrow>
         <div className="grid md:grid-cols-2 gap-6">
           {revlSites.map((s) => (
             <Link key={s.slug} href={`/revl-fitouts/${s.slug}`} className="group">
@@ -36,6 +36,11 @@ export default function RevlLanding() {
                   className="object-cover opacity-70 transition-all duration-500 group-hover:opacity-90 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
+                {s.caseStudy && (
+                  <span className="absolute left-4 top-4 bg-accent px-2.5 py-1 font-mono text-[10px] tracking-widest uppercase text-ink">
+                    Case Study
+                  </span>
+                )}
               </div>
               <div className="mt-4">
                 <p className="font-mono text-xs tracking-widest text-accent uppercase">{s.location}</p>
