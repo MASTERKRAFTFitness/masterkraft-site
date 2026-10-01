@@ -102,6 +102,11 @@ export const locations: Location[] = [
     ],
     delivery:
       "Your whole fitout arrives in Brisbane as a single coordinated container and is installed to schedule, so a long supply chain never holds up your opening.",
+    project: {
+      name: "REVL Loganholme",
+      href: "/revl-fitouts/revl-loganholme",
+      blurb: "A full REVL performance studio delivered end to end in Brisbane's south.",
+    },
     faqs: [
       {
         q: "Do you deliver gym fitouts to Brisbane?",

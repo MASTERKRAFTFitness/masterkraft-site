@@ -11,9 +11,12 @@ export type RevlSite = {
   gallery: string[];
   // The studio's own Instagram handle (no @), if it has an account.
   instagram?: string;
+  // Every studio page is a fit out; the ones with their own photo gallery are
+  // also written up as case studies and badged as such.
+  caseStudy: boolean;
 };
 
-type RawRevlSite = Omit<RevlSite, "gallery">;
+type RawRevlSite = Omit<RevlSite, "gallery" | "caseStudy">;
 
 const rawSites: RawRevlSite[] = [
   {
@@ -69,6 +72,50 @@ const rawSites: RawRevlSite[] = [
     body: [
       "As REVL expanded, Campbelltown needed the same identical, repeatable fitout delivered to a new footprint on schedule.",
       "MasterKraft specified the equipment once and delivered it identically - the same spec sheet, the same quality, the same branding - so members get a consistent REVL experience across locations.",
+    ],
+  },
+  {
+    slug: "revl-mordialloc",
+    name: "REVL Mordialloc",
+    location: "Mordialloc, VIC",
+    blurb: "A REVL studio on Melbourne's bayside, fitted out end-to-end by MasterKraft.",
+    image: "/revl/wide-studio.jpg",
+    body: [
+      "REVL Mordialloc brought the REVL floor to Melbourne's south-east bayside. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
+    ],
+  },
+  {
+    slug: "revl-port-melbourne",
+    name: "REVL Port Melbourne",
+    location: "Port Melbourne, VIC",
+    blurb: "REVL's Port Melbourne studio, delivered complete by MasterKraft.",
+    image: "/revl/full-studio.jpg",
+    body: [
+      "MasterKraft fitted out REVL Port Melbourne to REVL's repeatable specification - rigs, Concept2 conditioning, functional zones, storage and flooring, installed and ready to train.",
+      "Another Melbourne REVL floor from a local team: the same equipment, the same branding and the same quality members get at every REVL club.",
+    ],
+  },
+  {
+    slug: "revl-neutral-bay",
+    name: "REVL Neutral Bay",
+    location: "Neutral Bay, NSW",
+    blurb: "A complete REVL fitout on Sydney's lower north shore.",
+    image: "/revl/gallery/shot-2.png",
+    body: [
+      "REVL Neutral Bay took the REVL model to Sydney's lower north shore. MasterKraft delivered the full floor to REVL's exact specification, shipped as one coordinated fitout and installed ready for classes.",
+      "One spec sheet and one accountable partner, so the studio matches every other REVL floor in Sydney and beyond.",
+    ],
+  },
+  {
+    slug: "revl-loganholme",
+    name: "REVL Loganholme",
+    location: "Loganholme, QLD",
+    blurb: "REVL's Loganholme studio in Brisbane's south, fitted out by MasterKraft.",
+    image: "/revl/gallery/shot-4.jpg",
+    body: [
+      "MasterKraft supplied and installed REVL Loganholme's full performance floor - rigs, conditioning gear, storage and flooring - to the same spec REVL runs across South East Queensland and its wider network.",
+      "A hard-wearing, cohesive studio delivered on schedule, built for high-intensity group training all day.",
     ],
   },
   {
@@ -140,7 +187,8 @@ const IG_PHOTOS: Record<string, string[]> = {
   "revl-bondi": igPhotos("revl-bondi", 5),
   "revl-burleigh": igPhotos("revl-burleigh", 5),
   "revl-collingwood": igPhotos("revl-collingwood", 5),
-  "revl-campbelltown": igPhotos("revl-campbelltown", 5),
+  // The page slug carries "-aus"; the photo folder does not.
+  "revl-campbelltown-aus": igPhotos("revl-campbelltown", 5),
   "revl-singapore": igPhotos("revl-singapore", 4),
   "revl-lower-pierce": igPhotos("revl-lower-pierce", 5),
   "revl-kuala-lumpur": igPhotos("revl-kuala-lumpur", 4),
@@ -153,7 +201,7 @@ const IG_HANDLES: Record<string, string> = {
   "revl-bondi": "revltraining.bondi",
   "revl-burleigh": "revltraining.burleigh",
   "revl-collingwood": "revl.training.collingwood",
-  "revl-campbelltown": "revl.training.campbelltown",
+  "revl-campbelltown-aus": "revl.training.campbelltown",
   "revl-singapore": "revl.training.cityhall",
   "revl-lower-pierce": "revl.training.lowerpeirce",
   "revl-kuala-lumpur": "revl.training.klcc",
@@ -164,6 +212,7 @@ export const revlSites: RevlSite[] = rawSites.map((s) => ({
   ...s,
   gallery: IG_PHOTOS[s.slug] ?? [],
   instagram: IG_HANDLES[s.slug],
+  caseStudy: (IG_PHOTOS[s.slug] ?? []).length > 0,
 }));
 
 export function getRevlSite(slug: string) {
@@ -187,26 +236,28 @@ export type RevlClub = {
   region?: string;
   // Regional rather than metro - listed separately on the city page.
   regional?: boolean;
+  // Slug of this club's /revl-fitouts/[slug] page, where one exists.
+  fitout?: string;
 };
 
 export const revlClubsAu: RevlClub[] = [
   // New South Wales
   { name: "Albury", suburb: "Thurgoona", state: "NSW", region: "sydney", regional: true },
-  { name: "Bondi", suburb: "Bondi Beach", state: "NSW", region: "sydney" },
+  { name: "Bondi", suburb: "Bondi Beach", state: "NSW", region: "sydney", fitout: "revl-bondi" },
   { name: "Brookvale", suburb: "Brookvale", state: "NSW", region: "sydney" },
-  { name: "Neutral Bay", suburb: "Neutral Bay", state: "NSW", region: "sydney" },
+  { name: "Neutral Bay", suburb: "Neutral Bay", state: "NSW", region: "sydney", fitout: "revl-neutral-bay" },
   { name: "Erina", suburb: "Erina", state: "NSW", region: "central-coast" },
   { name: "Kincumber", suburb: "Kincumber", state: "NSW", region: "central-coast" },
   // Queensland
   { name: "Greenslopes", suburb: "Greenslopes", state: "QLD", region: "brisbane" },
-  { name: "Loganholme", suburb: "Loganholme", state: "QLD", region: "brisbane" },
-  { name: "Burleigh", suburb: "Burleigh Heads", state: "QLD", region: "gold-coast" },
+  { name: "Loganholme", suburb: "Loganholme", state: "QLD", region: "brisbane", fitout: "revl-loganholme" },
+  { name: "Burleigh", suburb: "Burleigh Heads", state: "QLD", region: "gold-coast", fitout: "revl-burleigh" },
   { name: "Caloundra", suburb: "Caloundra", state: "QLD", region: "sunshine-coast" },
   { name: "Maroochydore", suburb: "Maroochydore", state: "QLD", region: "sunshine-coast" },
   { name: "Sippy Downs", suburb: "Sippy Downs", state: "QLD", region: "sunshine-coast" },
   // South Australia
-  { name: "Brighton", suburb: "Hove", state: "SA", region: "adelaide" },
-  { name: "Campbelltown", suburb: "Campbelltown", state: "SA", region: "adelaide" },
+  { name: "Brighton", suburb: "Hove", state: "SA", region: "adelaide", fitout: "revl-brighton" },
+  { name: "Campbelltown", suburb: "Campbelltown", state: "SA", region: "adelaide", fitout: "revl-campbelltown-aus" },
   { name: "Mile End", suburb: "Torrensville", state: "SA", region: "adelaide" },
   { name: "Norwood", suburb: "Norwood", state: "SA", region: "adelaide" },
   { name: "Plympton", suburb: "North Plympton", state: "SA", region: "adelaide" },
@@ -216,10 +267,10 @@ export const revlClubsAu: RevlClub[] = [
   { name: "Mount Barker", suburb: "Aston Hills", state: "SA", region: "adelaide", regional: true },
   { name: "Mount Gambier", suburb: "Mount Gambier", state: "SA", region: "adelaide", regional: true },
   // Victoria
-  { name: "Collingwood", suburb: "Collingwood", state: "VIC", region: "melbourne" },
+  { name: "Collingwood", suburb: "Collingwood", state: "VIC", region: "melbourne", fitout: "revl-collingwood" },
   { name: "Frankston", suburb: "Frankston", state: "VIC", region: "melbourne" },
-  { name: "Mordialloc", suburb: "Mordialloc", state: "VIC", region: "melbourne" },
-  { name: "Port Melbourne", suburb: "Port Melbourne", state: "VIC", region: "melbourne" },
+  { name: "Mordialloc", suburb: "Mordialloc", state: "VIC", region: "melbourne", fitout: "revl-mordialloc" },
+  { name: "Port Melbourne", suburb: "Port Melbourne", state: "VIC", region: "melbourne", fitout: "revl-port-melbourne" },
   { name: "Prahran", suburb: "Prahran", state: "VIC", region: "melbourne" },
 ];
 
@@ -227,6 +278,7 @@ export const revlClubsAu: RevlClub[] = [
 export function revlClubsForRegion(slug: string): RevlClub[] {
   return revlClubsAu.filter((c) => c.region === slug);
 }
+
 
 // REVL studio + training photography (used under MasterKraft's collateral
 // agreement with REVL). Sourced from REVL's own marketing imagery.

@@ -142,7 +142,16 @@ export default async function LocationPage({
                       <li key={c.name} className="flex gap-3 text-ash leading-relaxed">
                         <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden />
                         <span>
-                          REVL {c.name}
+                          {c.fitout ? (
+                            <Link
+                              href={`/revl-fitouts/${c.fitout}`}
+                              className="text-ink underline decoration-line underline-offset-4 hover:text-accent-600"
+                            >
+                              REVL {c.name}
+                            </Link>
+                          ) : (
+                            <>REVL {c.name}</>
+                          )}
                           {c.suburb !== c.name && (
                             <span className="text-ash/70"> ({c.suburb})</span>
                           )}
@@ -162,7 +171,16 @@ export default async function LocationPage({
                       <li key={c.name} className="flex gap-3 text-ash leading-relaxed">
                         <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden />
                         <span>
-                          REVL {c.name}
+                          {c.fitout ? (
+                            <Link
+                              href={`/revl-fitouts/${c.fitout}`}
+                              className="text-ink underline decoration-line underline-offset-4 hover:text-accent-600"
+                            >
+                              REVL {c.name}
+                            </Link>
+                          ) : (
+                            <>REVL {c.name}</>
+                          )}
                           {c.suburb !== c.name && (
                             <span className="text-ash/70"> ({c.suburb})</span>
                           )}

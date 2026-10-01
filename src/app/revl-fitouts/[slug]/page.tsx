@@ -21,7 +21,7 @@ export async function generateMetadata({
   const s = getRevlSite(slug);
   if (!s) return { title: "REVL Fitouts" };
   return {
-    title: `${s.name} | REVL Fitout`,
+    title: `${s.name} | REVL ${s.caseStudy ? "Case Study" : "Fitout"}`,
     description: s.blurb,
     alternates: { canonical: `/revl-fitouts/${s.slug}` },
   };
@@ -45,7 +45,7 @@ export default async function RevlSitePage({
   return (
     <>
       <PageHero
-        eyebrow={s.location}
+        eyebrow={`${s.caseStudy ? "Case Study" : "Fit Out"} · ${s.location}`}
         title={s.name}
         subtitle={s.blurb}
         image={s.image}
