@@ -150,7 +150,7 @@ export default function FitoutLanding() {
             If you require premium-quality, high-performance gym and fitness equipment, we
             invite you to get in touch today.
           </p>
-          <Link href="/contact" className="btn btn-accent mt-8">
+          <Link href="/fitout-solution" className="btn btn-accent mt-8">
             Get in Touch
           </Link>
         </div>

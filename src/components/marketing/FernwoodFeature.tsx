@@ -32,7 +32,7 @@ export default function FernwoodFeature() {
             ))}
           </ul>
           <div className="mt-9">
-            <Link href="/contact" className="btn btn-accent">
+            <Link href="/fitout-solution" className="btn btn-accent">
               Brand your fitout <span aria-hidden>→</span>
             </Link>
           </div>

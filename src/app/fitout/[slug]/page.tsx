@@ -75,7 +75,7 @@ export default async function FitoutTypePage({
               </li>
             ))}
           </ul>
-          <Link href="/contact" className="btn btn-accent mt-10">
+          <Link href="/fitout-solution" className="btn btn-accent mt-10">
             Enquire About a {f.name} Fitout
           </Link>
         </div>

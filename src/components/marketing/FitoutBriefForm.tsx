@@ -1,6 +1,6 @@
 "use client";
 
-// The fitout brief wizard - the conversion path on /contact, and where the
+// The fitout brief wizard - the conversion path on /fitout-solution, and where the
 // header's "Fitout Solution" CTA lands.
 //
 // WHY FIVE STEPS AND NOT ONE LONG FORM: this asks for eleven things. Shown at
