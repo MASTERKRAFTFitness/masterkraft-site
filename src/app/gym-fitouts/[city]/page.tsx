@@ -175,19 +175,23 @@ export default async function LocationPage({
             </div>
           )}
 
-          {loc.project && (
-            <div className="mt-12 border border-line p-6 sm:p-7">
-              <p className="font-mono text-[11px] tracking-widest uppercase text-accent-600">
-                Recent project near you
-              </p>
-              <h3 className="mt-2 text-xl font-bold">{loc.project.name}</h3>
-              <p className="mt-2 text-ash leading-relaxed">{loc.project.blurb}</p>
-              <Link
-                href={loc.project.href}
-                className="mt-4 inline-flex items-center gap-2 font-mono text-xs tracking-widest uppercase text-accent-600 hover:text-accent"
-              >
-                View the fitout <span aria-hidden>→</span>
-              </Link>
+          {loc.projects && loc.projects.length > 0 && (
+            <div className="mt-12 space-y-4">
+              {loc.projects.map((project, i) => (
+                <div key={project.href} className="border border-line p-6 sm:p-7">
+                  <p className="font-mono text-[11px] tracking-widest uppercase text-accent-600">
+                    {i === 0 ? "Recent project near you" : `Also in ${loc.city}`}
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold">{project.name}</h3>
+                  <p className="mt-2 text-ash leading-relaxed">{project.blurb}</p>
+                  <Link
+                    href={project.href}
+                    className="mt-4 inline-flex items-center gap-2 font-mono text-xs tracking-widest uppercase text-accent-600 hover:text-accent"
+                  >
+                    View the fitout <span aria-hidden>→</span>
+                  </Link>
+                </div>
+              ))}
             </div>
           )}
         </div>

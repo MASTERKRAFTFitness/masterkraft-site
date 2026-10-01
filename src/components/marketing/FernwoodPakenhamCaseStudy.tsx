@@ -80,7 +80,7 @@ const GALLERY = [
 export default function FernwoodPakenhamCaseStudy() {
   return (
     <>
-      <section className="bg-cloud border-t border-line">
+      <section id="fernwood-pakenham" className="bg-cloud border-t border-line scroll-mt-24">
         <div className="container-mk py-20 lg:py-24 grid lg:grid-cols-2 gap-14 items-start">
           <div>
             <Eyebrow className="mb-5">Case Study</Eyebrow>

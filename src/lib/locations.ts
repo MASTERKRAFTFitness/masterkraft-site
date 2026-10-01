@@ -20,8 +20,8 @@ export type Location = {
   intro: string[];
   // City-specific delivery / logistics line.
   delivery: string;
-  // Real, named local project (only where one genuinely exists).
-  project?: { name: string; href: string; blurb: string };
+  // Real, named local projects (only where they genuinely exist), newest first.
+  projects?: { name: string; href: string; blurb: string }[];
   faqs: LocationFaq[];
 };
 
@@ -34,15 +34,22 @@ export const locations: Location[] = [
     meta: "Gym fitouts in Melbourne, designed, supplied and installed by MasterKraft. Complete commercial and boutique fitouts across metro Melbourne and regional Victoria.",
     intro: [
       "Melbourne is MasterKraft's home ground. We design, supply and install complete gym fitouts right across the metro area and regional Victoria, from boutique studios in the inner suburbs to full commercial floors.",
-      "It is where a lot of our work lives. We delivered the entire fitout for REVL's Collingwood studio and we produce the custom-branded equipment used across Fernwood's Victorian clubs. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",
+      "It is where a lot of our work lives. We delivered the entire fitout for REVL's Collingwood studio, and we produce the custom-branded equipment used across Fernwood's Victorian clubs, most recently the strength and conditioning floor at Fernwood Pakenham. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",
     ],
     delivery:
       "Fast delivery and installation across Melbourne and regional Victoria, with your whole floor arriving coordinated and on schedule.",
-    project: {
-      name: "REVL Collingwood",
-      href: "/revl-fitouts/revl-collingwood",
-      blurb: "A full boutique performance fitout delivered floor to ceiling in Collingwood.",
-    },
+    projects: [
+      {
+        name: "Fernwood Fitness Pakenham",
+        href: "/fitout/franchise-gym-fitout#fernwood-pakenham",
+        blurb: "Fernwood-branded free weights, three power racks and lifting platforms, Concept2 and storage for a full-format women's club in Melbourne's south-east.",
+      },
+      {
+        name: "REVL Collingwood",
+        href: "/revl-fitouts/revl-collingwood",
+        blurb: "A full boutique performance fitout delivered floor to ceiling in Collingwood.",
+      },
+    ],
     faqs: [
       {
         q: "Do you install gyms in Melbourne?",
@@ -50,7 +57,7 @@ export const locations: Location[] = [
       },
       {
         q: "Can I see a MasterKraft fitout near me?",
-        a: "REVL Collingwood is one of our Melbourne fitouts, delivered floor to ceiling. We also produce the custom-branded equipment used across Fernwood's Victorian clubs.",
+        a: "REVL Collingwood is one of our Melbourne fitouts, delivered floor to ceiling. In the south-east, Fernwood Pakenham trains on our Fernwood-branded free weights, power racks, lifting platforms and Concept2 machines, and we produce the custom-branded equipment used across Fernwood's other Victorian clubs.",
       },
       {
         q: "How quickly can you complete a Melbourne gym fitout?",
@@ -70,11 +77,13 @@ export const locations: Location[] = [
     ],
     delivery:
       "Your entire fitout ships to Sydney in a single container and is installed by one coordinated crew, so there is no juggling separate suppliers across the build.",
-    project: {
-      name: "REVL Bondi",
-      href: "/revl-fitouts/revl-bondi",
-      blurb: "A premium REVL studio delivered end to end in Sydney's eastern suburbs.",
-    },
+    projects: [
+      {
+        name: "REVL Bondi",
+        href: "/revl-fitouts/revl-bondi",
+        blurb: "A premium REVL studio delivered end to end in Sydney's eastern suburbs.",
+      },
+    ],
     faqs: [
       {
         q: "Do you deliver gym fitouts in Sydney?",
@@ -210,11 +219,13 @@ export const locations: Location[] = [
     ],
     delivery:
       "Your whole floor ships to Adelaide as a single coordinated container and is installed on schedule, with one team accountable from design to handover.",
-    project: {
-      name: "REVL Brighton",
-      href: "/revl-fitouts/revl-brighton",
-      blurb: "A full boutique performance fitout delivered floor to ceiling at Brighton.",
-    },
+    projects: [
+      {
+        name: "REVL Brighton",
+        href: "/revl-fitouts/revl-brighton",
+        blurb: "A full boutique performance fitout delivered floor to ceiling at Brighton.",
+      },
+    ],
     faqs: [
       {
         q: "Do you deliver gym fitouts to Adelaide?",
