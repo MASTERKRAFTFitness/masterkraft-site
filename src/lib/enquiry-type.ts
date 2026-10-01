@@ -85,6 +85,9 @@ const TO_PORTAL: Record<EnquiryKind, PortalEnquiryType> = {
  * bug survived a rename sweep unnoticed.
  */
 export const ENQUIRY_TOPICS: { label: string; value: EnquiryKind }[] = [
+  // First, because /contact is where customer service runs: an order, a
+  // delivery, a return. Without it those filed as General, not Support.
+  { label: "Customer service: an order, delivery or return", value: ENQUIRY_KIND.support },
   { label: "Equipment purchase", value: ENQUIRY_KIND.equipment },
   { label: "A fitout solution", value: ENQUIRY_KIND.fitout },
   { label: "Becoming a distributor", value: ENQUIRY_KIND.distributor },
