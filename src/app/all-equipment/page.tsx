@@ -49,12 +49,17 @@ export default async function AllEquipmentPage({
     // Category order, then name — so the page reads down the catalogue the way
     // the navigation does rather than in WooCommerce's old menu_order.
     const order = new Map(categories.map((c, i) => [c.erpGroup, i]));
-    // CLEARANCE IS NOT PART OF THE RANGE. Its units became listable on
-    // 2026-09-07 (see CLEARANCE_GROUP), but the 35 snapshot clearance pages have
-    // never appeared here and these are the same kind of thing: one-off
-    // ex-display stock, not equipment MasterKraft sells. Including only the ERP
-    // half would advertise six pieces of somebody else's used gear inside the
-    // catalogue while the other thirty-five stayed on their own page.
+    // CLEARANCE IS NOT PART OF THE RANGE. One-off ex-display stock is not
+    // equipment MasterKraft sells, and it has never belonged in the catalogue
+    // listing — it belongs on /equipment/clearance, where a buyer knows what
+    // they are looking at.
+    //
+    // THIS FILTER CARRIES MORE WEIGHT SINCE 2026-09-21. It used to exclude only
+    // the ERP's own six-product Clearance group, because the A-prefixed
+    // ex-display stock was brand-filtered out of erpUnits entirely and could not
+    // reach this page anyway. That stock is now listable and grouped onto
+    // Clearance (see isExDisplayCode), so this one line is what keeps a used
+    // spin bike out of the range.
     units = [...erpUnits(unleashed).values()]
       .filter((u) => u.group !== CLEARANCE_GROUP)
       .sort(

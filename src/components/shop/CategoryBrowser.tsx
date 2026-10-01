@@ -25,7 +25,7 @@ import {
   type WcProduct,
 } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
-import { CLEARANCE_GROUP, erpSubgroups, erpUnitsInGroup, unitCard } from "@/lib/erp-catalogue";
+import { erpSubgroups, erpUnitsInGroup, unitCard } from "@/lib/erp-catalogue";
 
 export const PER_PAGE = 24;
 
@@ -97,12 +97,16 @@ export default async function CategoryBrowser({
   try {
     let enrichedAll: { product: WcProduct; enriched: EnrichedProduct }[];
 
-    // CLEARANCE IS THE CARVE-OUT, and so is an unreachable ERP. Clearance is
-    // ex-display stock on A-prefixed codes, listed from the snapshot with the
-    // brand filter off, because nothing in the ERP marks a product as
-    // ex-display. And if the ERP map came back empty — the API is down, or
-    // throttling — every category falls back to the snapshot rather than
-    // telling a visitor we sell nothing.
+    // AN UNREACHABLE ERP IS THE ONLY CARVE-OUT LEFT. If the ERP map came back
+    // empty — the API is down, or throttling — every category falls back to the
+    // snapshot rather than telling a visitor we sell nothing.
+    //
+    // CLEARANCE USED TO BE THE OTHER ONE (until 2026-09-21). It had no
+    // `erpGroup`, so it always took the snapshot branch below and appended the
+    // ERP's six-product Clearance group to it. It now carries `erpGroup:
+    // "Clearance"` and erpUnits maps the A-prefixed ex-display stock onto that
+    // group, so it resolves here like every other category and the two halves
+    // cannot disagree. See lib/erp-catalogue isExDisplayCode.
     const erpUsable = !!c.erpGroup && Object.keys(unleashed).length > 0;
     if (erpUsable) {
       let units = erpUnitsInGroup(unleashed, c.erpGroup!);
@@ -116,14 +120,11 @@ export default async function CategoryBrowser({
         all.map(async (product) => ({ product, enriched: await enrichCard(product, unleashed) }))
       );
 
-      // AND THE ERP'S OWN CLEARANCE GROUP, WHICH IS A SECOND SET (2026-09-07).
-      // Unleashed groups six products under "Clearance" and they are not the
-      // 35 the snapshot lists — zero overlap, different codes, different
-      // brands. They were sellable stock that no page offered, so they are
-      // APPENDED here rather than replacing anything.
-      if (c.slug === "clearance") {
-        enrichedAll = [...enrichedAll, ...erpUnitsInGroup(unleashed, CLEARANCE_GROUP).map(unitCard)];
-      }
+      // NO ERP APPEND HERE. This branch is reached only when the ERP map is
+      // empty, and erpUnitsInGroup on an empty map returns nothing — so the
+      // append that used to sit here could only ever add zero units once
+      // clearance started resolving through the ERP above. The snapshot is the
+      // whole fallback, as it is for every other category.
     }
 
     if (priceMin !== undefined) {
