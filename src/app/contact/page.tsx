@@ -5,7 +5,9 @@ import ContactForm from "@/components/marketing/ContactForm";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { portalLoginHref } from "@/lib/site";
 
-// THE CONTACT PAGE: the nav's "Contact", the footer's "Contact us", "can't find
+// THE CONTACT PAGE, and the customer service channel: orders, delivery,
+// returns and anything else after the sale come in through this form. The
+// nav's "Contact", the footer's "Contact us", "can't find
 // what you're looking for" on search, the enquire button on an out-of-stock
 // product. None of those are fitout links, and someone with a one-line question
 // about a barbell will not fill in a five-step fitout brief - that wizard lives
@@ -16,7 +18,7 @@ import { portalLoginHref } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Ask MasterKraft about equipment, an existing order, wholesale access or distribution. Tell us what you need and a person comes back to you.",
+    "Contact MasterKraft customer service about an order, delivery or return, or ask about equipment, wholesale access or distribution. A person reads every message.",
   alternates: { canonical: "/contact" },
 };
 
@@ -26,7 +28,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Contact Us"
         title="Ask us anything"
-        subtitle="Equipment, an order already in flight, wholesale access, or something we have not thought of. Send it here and a person reads it."
+        subtitle="Customer service for an order, a delivery or a return, plus equipment, wholesale access, or something we have not thought of. Send it here and a person reads it."
         breadcrumbs={[{ name: "Contact", href: "/contact" }]}
       />
 
