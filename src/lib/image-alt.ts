@@ -63,6 +63,9 @@ const HERO_ALT: Record<string, string> = {
   "/fitout/school-gym.jpg":
     "School sports hall with a basketball hoop, timber floor and tiered seating",
 
+  "/fernwood/pakenham/01.jpg":
+    "Fernwood Pakenham's FIIT30 studio with MasterKraft kettlebells, barbells, bumper plates and dumbbells",
+
   "/revl/full-studio.jpg":
     "REVL studio fitted out by MasterKraft — Concept2 RowErgs, benches, dumbbells and a rig",
   "/revl/wide-studio.jpg":

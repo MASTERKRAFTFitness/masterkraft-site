@@ -35,6 +35,19 @@ export const fitouts: Fitout[] = [
     ],
   },
   {
+    slug: "franchise-gym-fitout",
+    name: "Franchise Gym",
+    blurb: "Brand-matched fitouts for franchise networks - specified once, rolled out club by club.",
+    image: "/fernwood/pakenham/01.jpg",
+    intro:
+      "A franchise network is only as strong as its weakest club. We work with head office to lock in one equipment spec in the network's own colours, then supply each new club and refit against that spec, so every member walks into the same brand wherever they train.",
+    points: [
+      "Free weights produced in your network's colours and logo",
+      "One approved spec, supplied identically to every club",
+      "Franchisee ordering against head-office pricing, club by club",
+    ],
+  },
+  {
     slug: "elite-sports-clubs-fitout",
     name: "Elite Sports Clubs",
     blurb: "Performance environments for professional athletes and high-performance programs.",
