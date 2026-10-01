@@ -142,6 +142,7 @@ const ENV = [
   "FREIGHT_COLLECTION_POSTCODE",
   "FREIGHT_SOURCE",
   "FREIGHT_MARGIN_PERCENT",
+  "FREIGHT_MARGIN_OVERSIZE_PERCENT",
 ];
 beforeEach(() => {
   for (const k of ENV) delete process.env[k];
@@ -404,6 +405,7 @@ describe("the router, by source", () => {
   it("offers a consolidating matrix the whole cart as one consignment", async () => {
     useDb("matrix", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
     process.env.FREIGHT_MARGIN_PERCENT = "0";
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "0";
     const q = await quoteFreight([{ ...barbell, quantity: 3 }], to("3074"));
     const once = Math.round(102.7 * 1.1 * 1.1 * 100) / 100;
     expect(q.ok && q.options[0]).toMatchObject({ id: "whole:matrix:MF:MELBOURNE:20", price: once });
