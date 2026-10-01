@@ -108,6 +108,17 @@ const rawSites: RawRevlSite[] = [
     ],
   },
   {
+    slug: "revl-brookvale",
+    name: "REVL Brookvale",
+    location: "Brookvale, NSW",
+    blurb: "A complete REVL fitout on Sydney's northern beaches.",
+    image: "/revl/gallery/shot-3.png",
+    body: [
+      "REVL Brookvale brought the REVL floor to Sydney's northern beaches. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout, so the studio matches every other REVL floor in Sydney and beyond from opening day.",
+    ],
+  },
+  {
     slug: "revl-loganholme",
     name: "REVL Loganholme",
     location: "Loganholme, QLD",
@@ -116,6 +127,127 @@ const rawSites: RawRevlSite[] = [
     body: [
       "MasterKraft supplied and installed REVL Loganholme's full performance floor - rigs, conditioning gear, storage and flooring - to the same spec REVL runs across South East Queensland and its wider network.",
       "A hard-wearing, cohesive studio delivered on schedule, built for high-intensity group training all day.",
+    ],
+  },
+  {
+    slug: "revl-frankston",
+    name: "REVL Frankston",
+    location: "Frankston, VIC",
+    blurb: "A complete REVL fitout at the gateway to the Mornington Peninsula.",
+    image: "/revl/gallery/skierg.jpg",
+    body: [
+      "REVL Frankston brought the REVL floor to the gateway of the Mornington Peninsula. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
+    ],
+  },
+  {
+    slug: "revl-prahran",
+    name: "REVL Prahran",
+    location: "Prahran, VIC",
+    blurb: "REVL's Prahran studio in Melbourne's inner south-east, delivered complete by MasterKraft.",
+    image: "/revl/gallery/shot-1.jpg",
+    body: [
+      "MasterKraft fitted out REVL Prahran to REVL's repeatable specification - rigs, Concept2 conditioning, functional zones, storage and flooring, installed and ready to train.",
+      "One spec sheet and one accountable partner, so the studio matches every other REVL floor in Australia and beyond.",
+    ],
+  },
+  {
+    slug: "revl-greenslopes",
+    name: "REVL Greenslopes",
+    location: "Greenslopes, QLD",
+    blurb: "A complete REVL fitout in Brisbane's inner south.",
+    image: "/revl/full-studio.jpg",
+    body: [
+      "REVL Greenslopes brought the REVL floor to Brisbane's inner south. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
+    ],
+  },
+  {
+    slug: "revl-kincumber",
+    name: "REVL Kincumber",
+    location: "Kincumber, NSW",
+    blurb: "REVL's Kincumber studio on the NSW Central Coast, delivered complete by MasterKraft.",
+    image: "/revl/gallery/shot-6.jpg",
+    body: [
+      "MasterKraft fitted out REVL Kincumber to REVL's repeatable specification - rigs, Concept2 conditioning, functional zones, storage and flooring, installed and ready to train.",
+      "One spec sheet and one accountable partner, so the studio matches every other REVL floor in Australia and beyond.",
+    ],
+  },
+  {
+    slug: "revl-mile-end",
+    name: "REVL Mile End",
+    location: "Mile End, SA",
+    blurb: "A complete REVL fitout in Adelaide's inner west.",
+    image: "/revl/gallery/shot-4.jpg",
+    body: [
+      "REVL Mile End brought the REVL floor to Adelaide's inner west. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
+    ],
+  },
+  {
+    slug: "revl-norwood",
+    name: "REVL Norwood",
+    location: "Norwood, SA",
+    blurb: "REVL's Norwood studio in Adelaide's eastern suburbs, delivered complete by MasterKraft.",
+    image: "/revl/wide-studio.jpg",
+    body: [
+      "MasterKraft fitted out REVL Norwood to REVL's repeatable specification - rigs, Concept2 conditioning, functional zones, storage and flooring, installed and ready to train.",
+      "One spec sheet and one accountable partner, so the studio matches every other REVL floor in Australia and beyond.",
+    ],
+  },
+  {
+    slug: "revl-plympton",
+    name: "REVL Plympton",
+    location: "Plympton, SA",
+    blurb: "A complete REVL fitout in Adelaide's western suburbs.",
+    image: "/revl/gallery/shot-2.png",
+    body: [
+      "REVL Plympton brought the REVL floor to Adelaide's western suburbs. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
+    ],
+  },
+  {
+    slug: "revl-prospect",
+    name: "REVL Prospect",
+    location: "Prospect, SA",
+    blurb: "REVL's Prospect studio in Adelaide's inner north, delivered complete by MasterKraft.",
+    image: "/revl/gallery/shot-3.png",
+    body: [
+      "MasterKraft fitted out REVL Prospect to REVL's repeatable specification - rigs, Concept2 conditioning, functional zones, storage and flooring, installed and ready to train.",
+      "One spec sheet and one accountable partner, so the studio matches every other REVL floor in Australia and beyond.",
+    ],
+  },
+  {
+    slug: "revl-st-marys",
+    name: "REVL St Marys",
+    location: "St Marys, SA",
+    blurb: "A complete REVL fitout in Adelaide's southern suburbs.",
+    image: "/revl/gallery/skierg.jpg",
+    body: [
+      "REVL St Marys brought the REVL floor to Adelaide's southern suburbs. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
+    ],
+  },
+  {
+    slug: "revl-unley",
+    name: "REVL Unley",
+    location: "Unley, SA",
+    blurb: "REVL's Unley studio on the edge of the Adelaide CBD, delivered complete by MasterKraft.",
+    image: "/revl/gallery/shot-1.jpg",
+    body: [
+      "MasterKraft fitted out REVL Unley to REVL's repeatable specification - rigs, Concept2 conditioning, functional zones, storage and flooring, installed and ready to train.",
+      "One spec sheet and one accountable partner, so the studio matches every other REVL floor in Australia and beyond.",
+    ],
+  },
+  {
+    slug: "revl-mount-barker",
+    name: "REVL Mount Barker",
+    location: "Mount Barker, SA",
+    blurb: "A complete REVL fitout in the Adelaide Hills.",
+    image: "/revl/full-studio.jpg",
+    body: [
+      "REVL Mount Barker brought the REVL floor to the Adelaide Hills. MasterKraft supplied and installed the full studio - rigs, conditioning equipment, storage and flooring - to the same spec REVL runs across its network.",
+      "Delivered as one coordinated fitout and built for back-to-back classes from opening day.",
     ],
   },
   {
@@ -244,12 +376,12 @@ export const revlClubsAu: RevlClub[] = [
   // New South Wales
   { name: "Albury", suburb: "Thurgoona", state: "NSW", region: "sydney", regional: true },
   { name: "Bondi", suburb: "Bondi Beach", state: "NSW", region: "sydney", fitout: "revl-bondi" },
-  { name: "Brookvale", suburb: "Brookvale", state: "NSW", region: "sydney" },
+  { name: "Brookvale", suburb: "Brookvale", state: "NSW", region: "sydney", fitout: "revl-brookvale" },
   { name: "Neutral Bay", suburb: "Neutral Bay", state: "NSW", region: "sydney", fitout: "revl-neutral-bay" },
   { name: "Erina", suburb: "Erina", state: "NSW", region: "central-coast" },
-  { name: "Kincumber", suburb: "Kincumber", state: "NSW", region: "central-coast" },
+  { name: "Kincumber", suburb: "Kincumber", state: "NSW", region: "central-coast", fitout: "revl-kincumber" },
   // Queensland
-  { name: "Greenslopes", suburb: "Greenslopes", state: "QLD", region: "brisbane" },
+  { name: "Greenslopes", suburb: "Greenslopes", state: "QLD", region: "brisbane", fitout: "revl-greenslopes" },
   { name: "Loganholme", suburb: "Loganholme", state: "QLD", region: "brisbane", fitout: "revl-loganholme" },
   { name: "Burleigh", suburb: "Burleigh Heads", state: "QLD", region: "gold-coast", fitout: "revl-burleigh" },
   { name: "Caloundra", suburb: "Caloundra", state: "QLD", region: "sunshine-coast" },
@@ -258,20 +390,20 @@ export const revlClubsAu: RevlClub[] = [
   // South Australia
   { name: "Brighton", suburb: "Hove", state: "SA", region: "adelaide", fitout: "revl-brighton" },
   { name: "Campbelltown", suburb: "Campbelltown", state: "SA", region: "adelaide", fitout: "revl-campbelltown-aus" },
-  { name: "Mile End", suburb: "Torrensville", state: "SA", region: "adelaide" },
-  { name: "Norwood", suburb: "Norwood", state: "SA", region: "adelaide" },
-  { name: "Plympton", suburb: "North Plympton", state: "SA", region: "adelaide" },
-  { name: "Prospect", suburb: "Prospect", state: "SA", region: "adelaide" },
-  { name: "St Marys", suburb: "Melrose Park", state: "SA", region: "adelaide" },
-  { name: "Unley", suburb: "Parkside", state: "SA", region: "adelaide" },
-  { name: "Mount Barker", suburb: "Aston Hills", state: "SA", region: "adelaide", regional: true },
+  { name: "Mile End", suburb: "Torrensville", state: "SA", region: "adelaide", fitout: "revl-mile-end" },
+  { name: "Norwood", suburb: "Norwood", state: "SA", region: "adelaide", fitout: "revl-norwood" },
+  { name: "Plympton", suburb: "North Plympton", state: "SA", region: "adelaide", fitout: "revl-plympton" },
+  { name: "Prospect", suburb: "Prospect", state: "SA", region: "adelaide", fitout: "revl-prospect" },
+  { name: "St Marys", suburb: "Melrose Park", state: "SA", region: "adelaide", fitout: "revl-st-marys" },
+  { name: "Unley", suburb: "Parkside", state: "SA", region: "adelaide", fitout: "revl-unley" },
+  { name: "Mount Barker", suburb: "Aston Hills", state: "SA", region: "adelaide", regional: true, fitout: "revl-mount-barker" },
   { name: "Mount Gambier", suburb: "Mount Gambier", state: "SA", region: "adelaide", regional: true },
   // Victoria
   { name: "Collingwood", suburb: "Collingwood", state: "VIC", region: "melbourne", fitout: "revl-collingwood" },
-  { name: "Frankston", suburb: "Frankston", state: "VIC", region: "melbourne" },
+  { name: "Frankston", suburb: "Frankston", state: "VIC", region: "melbourne", fitout: "revl-frankston" },
   { name: "Mordialloc", suburb: "Mordialloc", state: "VIC", region: "melbourne", fitout: "revl-mordialloc" },
   { name: "Port Melbourne", suburb: "Port Melbourne", state: "VIC", region: "melbourne", fitout: "revl-port-melbourne" },
-  { name: "Prahran", suburb: "Prahran", state: "VIC", region: "melbourne" },
+  { name: "Prahran", suburb: "Prahran", state: "VIC", region: "melbourne", fitout: "revl-prahran" },
 ];
 
 // The REVL clubs shown on a given /gym-fitouts/[city] page.
