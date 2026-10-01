@@ -20,7 +20,7 @@
 // - Out-of-stock and preorder items. Merchant Center accepts them; a campaign
 //   budget should not. 162 of the 285 live products are PreOrder, and paying
 //   for a click on one buys a customer a wait, not a sale.
-import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
+import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
@@ -45,6 +45,10 @@ export type FeedItem = {
   shippingWeightKg?: number;
   /** custom_label_0 — what a paid campaign filters on. See FREIGHT_VERIFIED_LABEL. */
   customLabel0: string;
+  /** custom_label_1 — price band. See priceBand. */
+  customLabel1: string;
+  /** custom_label_2 — "parcel" or "freight". Absent when the carton is unknown. */
+  customLabel2?: string;
 };
 
 /**
@@ -186,10 +190,33 @@ function descriptionFor(unit: ErpUnit, content: ContentMap | undefined): string 
   return (text || unitDescription(unit)).slice(0, 5000);
 }
 
+/**
+ * custom_label_1. Bands in GST-inclusive dollars, wide enough that a campaign
+ * can bid on each separately: a $40 band and a $6,000 rack should not share a
+ * cost-per-click ceiling. Changing a boundary moves items between bands, which
+ * resets any bidding history Google has built for them, so change it rarely.
+ */
+export function priceBand(price: number): string {
+  if (price < 100) return "under-100";
+  if (price < 500) return "100-499";
+  if (price < 2000) return "500-1999";
+  return "2000-plus";
+}
+
 /** The taxonomy id for a unit: subgroup first, then the always-valid parent. */
 export function googleCategory(unit: ErpUnit): string {
   const key = unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group;
   return CATEGORY_BY_SUBGROUP[key] ?? EXERCISE_AND_FITNESS;
+}
+
+/**
+ * custom_label_2. Parcel freight is cheap and quoted instantly; pallet freight
+ * is where the oversize surcharges live (LAUNCH.md), so a campaign may want to
+ * bid less on it, or not at all.
+ */
+function freightLabel(code: string, entry: UnleashedEntry): string | undefined {
+  const parcel = shipsAsParcel(code, entry);
+  return parcel === null ? undefined : parcel ? "parcel" : "freight";
 }
 
 function itemFor(
@@ -220,6 +247,8 @@ function itemFor(
     productType: unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group,
     shippingWeightKg: entry.weightKg,
     customLabel0: isVerified ? FREIGHT_VERIFIED_LABEL : UNVERIFIED_LABEL,
+    customLabel1: priceBand(entry.price),
+    customLabel2: freightLabel(code, entry),
   };
 }
 
@@ -361,6 +390,8 @@ export function feedToXml(items: FeedItem[], now = new Date()): string {
         tag("g:product_type", it.productType),
         it.shippingWeightKg ? tag("g:shipping_weight", `${it.shippingWeightKg} kg`) : "",
         tag("g:custom_label_0", it.customLabel0),
+        tag("g:custom_label_1", it.customLabel1),
+        tag("g:custom_label_2", it.customLabel2),
         "  </item>",
       ]
         .filter(Boolean)

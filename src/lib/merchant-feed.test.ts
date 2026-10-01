@@ -25,7 +25,7 @@ vi.mock("@/lib/merchant-feed-allowlist", () => ({
   FREIGHT_VERIFIED_SLUGS: new Set(["change-plates", "speed-rope", "gone-cold"]),
 }));
 
-const { buildFeed, feedToXml, feedTitle, feedPrice } = await import("@/lib/merchant-feed");
+const { buildFeed, feedToXml, feedTitle, feedPrice, priceBand } = await import("@/lib/merchant-feed");
 
 const measured = { widthCm: 30, depthCm: 30, heightCm: 12, weightKg: 8 };
 
@@ -229,9 +229,28 @@ describe("serialising", () => {
         googleProductCategory: "Sporting Goods > Exercise & Fitness",
         productType: "Equipment Storage",
         customLabel0: "freight-verified",
+        customLabel1: "under-100",
       },
     ]);
     expect(xml).toContain("Rope &amp; Band Rack &lt;&quot;small&quot;&gt;");
     expect(xml).not.toContain('<"small">');
+  });
+});
+
+describe("campaign labels", () => {
+  it("bands each item by its own price", () => {
+    expect([99.99, 100, 499, 500, 1999, 2000].map(priceBand)).toEqual([
+      "under-100", "100-499", "100-499", "500-1999", "500-1999", "2000-plus",
+    ]);
+    const xml = feedToXml(buildFeed(map()).items);
+    expect(xml).toContain("<g:custom_label_1>under-100</g:custom_label_1>");
+  });
+
+  it("tags a parcel as a parcel and a pallet item as freight", () => {
+    const rack = entry("Big Rack", { group: "Rigs & Racks", subgroup: "Squat & Power Racks", price: 2500, weightKg: 60, widthCm: 150, depthCm: 60, heightCm: 40 });
+    const { items } = buildFeed(map({ MRRACK01: rack }));
+    const label = Object.fromEntries(items.map((i) => [i.id, i.customLabel2]));
+    expect(label.MWWPCP01).toBe("parcel");
+    expect(label.MRRACK01).toBe("freight");
   });
 });
