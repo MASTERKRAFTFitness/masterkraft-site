@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { submitHubspotForm } from "@/lib/hubspot";
+import { cleanHutk, cleanPageUri, submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
@@ -269,7 +269,13 @@ export async function POST(request: Request) {
   const hubspot = await submitHubspotForm(
     process.env.HUBSPOT_FORM_CONTACT,
     briefHubspotFields(brief, kept),
-    { pageName: "Fitout Brief", pageUri: "/fitout-solution" }
+    {
+      pageName: "Fitout Brief",
+      // The visitor's cookie and real URL, so a paid-social lead arrives with
+      // its source and UTM tags. See the attribution note in lib/hubspot.ts.
+      pageUri: cleanPageUri(form.get("pageUri"), "/fitout-solution"),
+      hutk: cleanHutk(form.get("hutk")),
+    }
   ).catch((e) => {
     console.error("[fitout-brief] hubspot failed", e);
     return "error" as const;

@@ -228,6 +228,11 @@ export default function FitoutBriefForm() {
       if (value !== undefined) body.append(key, String(value));
     }
     files.forEach((file) => body.append("plans", file, file.name));
+    // Attribution for HubSpot: the page URL with its UTM tags, and the HubSpot
+    // visitor cookie when consent has let it be set. The route checks both.
+    body.append("pageUri", window.location.href);
+    const hutk = document.cookie.match(/(?:^|;\s*)hubspotutk=([^;]+)/)?.[1];
+    if (hutk) body.append("hutk", hutk);
 
     try {
       const res = await fetch("/api/fitout-brief", { method: "POST", body });
