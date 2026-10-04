@@ -228,6 +228,9 @@ export default function FitoutBriefForm() {
       if (value !== undefined) body.append(key, String(value));
     }
     files.forEach((file) => body.append("plans", file, file.name));
+    // The page's query string, so the route can record which ad or campaign
+    // sent this visitor. The route reads only the UTM tags out of it.
+    body.append("landing", window.location.search);
 
     try {
       const res = await fetch("/api/fitout-brief", { method: "POST", body });

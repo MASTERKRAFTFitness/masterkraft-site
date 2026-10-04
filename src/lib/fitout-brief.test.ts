@@ -4,6 +4,9 @@
 // sales team reading a blank enquiry, not a cosmetic bug.
 import { describe, it, expect } from "vitest";
 import {
+  attributionLines,
+  attributionQuery,
+  briefAttribution,
   briefHubspotFields,
   briefLines,
   briefSummary,
@@ -119,6 +122,53 @@ describe("briefHubspotFields", () => {
   it("files the lead against the fitout funnel", () => {
     const type = briefHubspotFields(full).find((f) => f.name === "enquiry_type")!.value;
     expect(type).toBe(portalEnquiryType(ENQUIRY_KIND.fitout));
+  });
+});
+
+describe("briefAttribution", () => {
+  const ad =
+    "?utm_source=instagram&utm_medium=paid_social&utm_campaign=fitout_3d&utm_content=C1&fbclid=IwAR0abc";
+
+  it("reads the UTM tags and notes the Meta click", () => {
+    expect(briefAttribution(ad)).toEqual({
+      source: "instagram",
+      medium: "paid_social",
+      campaign: "fitout_3d",
+      content: "C1",
+      term: "",
+      clickFrom: "Meta",
+    });
+  });
+
+  it("is empty for a visitor who arrived untagged", () => {
+    const a = briefAttribution("");
+    expect(attributionLines(a)).toEqual([]);
+    expect(attributionQuery(a)).toBe("");
+  });
+
+  it("cleans what the client sent before it reaches the CRM", () => {
+    const a = briefAttribution(`?utm_source=${"x".repeat(500)}&utm_medium=a%0Ab`);
+    expect(a.source).toHaveLength(100);
+    expect(a.medium).toBe("ab");
+  });
+
+  it("rebuilds only the UTM tags for HubSpot's page URL, never the click id", () => {
+    const q = attributionQuery(briefAttribution(ad));
+    expect(q).toBe(
+      "?utm_source=instagram&utm_medium=paid_social&utm_campaign=fitout_3d&utm_content=C1"
+    );
+    expect(q).not.toContain("fbclid");
+  });
+
+  it("lands in HubSpot's message after the brief", () => {
+    const fields = briefHubspotFields(full, [], briefAttribution(ad));
+    const message = fields.find((f) => f.name === "message")!.value;
+    expect(message).toContain("Fitout type: Commercial Gym");
+    expect(message).toMatch(/\n\nSource: instagram \/ paid_social\nCampaign: fitout_3d\nAd: C1\nAd click: Meta$/);
+  });
+
+  it("leaves the message untouched for an untagged visitor", () => {
+    expect(briefHubspotFields(full, [], briefAttribution(""))).toEqual(briefHubspotFields(full));
   });
 });
 

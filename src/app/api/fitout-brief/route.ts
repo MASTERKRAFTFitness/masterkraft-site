@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { submitHubspotForm } from "@/lib/hubspot";
+import { hubspotUtk, submitHubspotForm } from "@/lib/hubspot";
+import { SITE_URL } from "@/lib/site";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
@@ -8,12 +9,16 @@ import {
   MAX_FILES,
   MAX_FILE_BYTES,
   MAX_TOTAL_BYTES,
+  attributionLines,
+  attributionQuery,
+  briefAttribution,
   briefFullName,
   briefHubspotFields,
   briefLines,
   emptyBrief,
   humanBytes,
   type BriefAttachment,
+  type BriefAttribution,
   type FitoutBrief,
 } from "@/lib/fitout-brief";
 
@@ -148,9 +153,10 @@ function internalNotification(
   brief: FitoutBrief,
   attachments: Attachment[],
   dropped: string[],
-  hubspot: string
+  hubspot: string,
+  attribution: BriefAttribution
 ): string {
-  const rows = briefLines(brief, attachments)
+  const rows = [...briefLines(brief, attachments), ...attributionLines(attribution)]
     .map(
       ([label, value]) =>
         `<tr><td valign="top"><strong>${escape(label)}</strong></td><td valign="top" style="white-space:pre-wrap">${escape(value)}</td></tr>`
@@ -266,10 +272,21 @@ export async function POST(request: Request) {
   const plans = form.getAll("plans").filter((p): p is File => p instanceof File && p.size > 0);
   const { kept, dropped } = await readPlans(plans);
 
+  // The page's query string, sent by the wizard as `landing` - see
+  // briefAttribution for why the brief carries it and how it is cleaned.
+  const attribution = briefAttribution(String(form.get("landing") ?? ""));
+
   const hubspot = await submitHubspotForm(
     process.env.HUBSPOT_FORM_CONTACT,
-    briefHubspotFields(brief, kept),
-    { pageName: "Fitout Brief", pageUri: "/fitout-solution" }
+    briefHubspotFields(brief, kept, attribution),
+    {
+      pageName: "Fitout Brief",
+      // Absolute and tagged, so HubSpot's conversion page names the campaign.
+      // Rebuilt from the cleaned tags rather than taken from the client, so it
+      // can only ever name this page.
+      pageUri: `${SITE_URL}/fitout-solution${attributionQuery(attribution)}`,
+      hutk: hubspotUtk(request),
+    }
   ).catch((e) => {
     console.error("[fitout-brief] hubspot failed", e);
     return "error" as const;
@@ -286,7 +303,7 @@ export async function POST(request: Request) {
   // Resend rate limit.
   const notified = await sendEmail(
     subject,
-    internalNotification(brief, kept, dropped, hubspot),
+    internalNotification(brief, kept, dropped, hubspot, attribution),
     to,
     { replyTo: brief.email, attachments: kept }
   );
@@ -304,6 +321,7 @@ export async function POST(request: Request) {
     email: brief.email,
     type: brief.projectType,
     budget: brief.budget,
+    source: attribution.source,
     plans: kept.length,
     dropped: dropped.length,
     hubspot,

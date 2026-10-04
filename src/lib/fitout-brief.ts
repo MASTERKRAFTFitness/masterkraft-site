@@ -267,6 +267,90 @@ export function briefLines(
 }
 
 /**
+ * Where the visitor came from, read off the URL they submitted on: the five
+ * standard UTM tags, plus whether an ad platform appended its click id.
+ *
+ * WHY IN THE BRIEF AS WELL AS HUBSPOT'S OWN TRACKING: HubSpot's original source
+ * only works for a visitor who accepted cookies (see hubspotUtk in lib/hubspot).
+ * The tags in the URL need no cookie, so writing them into the brief means a
+ * salesperson can still see "instagram / paid_social, ad C1" on a lead from
+ * someone who declined - and the paid campaign can be judged on every lead it
+ * produced, not just the consenting share.
+ *
+ * Click ids are recorded as PRESENCE only. The id itself identifies one click,
+ * is no use to a salesperson, and is not ours to store.
+ */
+export type BriefAttribution = {
+  source: string;
+  medium: string;
+  campaign: string;
+  content: string;
+  term: string;
+  /** "Meta" or "Google" when the ad platform tagged the click, else "". */
+  clickFrom: string;
+};
+
+const UTM_KEYS = {
+  source: "utm_source",
+  medium: "utm_medium",
+  campaign: "utm_campaign",
+  content: "utm_content",
+  term: "utm_term",
+} as const;
+
+/** UTM values are ours to choose, so anything past this is not one of ours. */
+const MAX_UTM = 100;
+
+/**
+ * Parsed from a raw query string. Runs on the SERVER against what the client
+ * sent, so it is the trust boundary: every value is trimmed, length-capped and
+ * stripped of control characters before it reaches HubSpot or an email.
+ */
+export function briefAttribution(search: string): BriefAttribution {
+  const params = new URLSearchParams(search.slice(0, 2000));
+  const read = (key: string) =>
+    (params.get(key) ?? "")
+      .replace(/[\u0000-\u001f\u007f]/g, "")
+      .trim()
+      .slice(0, MAX_UTM);
+  return {
+    source: read(UTM_KEYS.source),
+    medium: read(UTM_KEYS.medium),
+    campaign: read(UTM_KEYS.campaign),
+    content: read(UTM_KEYS.content),
+    term: read(UTM_KEYS.term),
+    clickFrom: params.has("fbclid") ? "Meta" : params.has("gclid") ? "Google" : "",
+  };
+}
+
+/** The UTM tags back as a query string, for HubSpot's pageUri. "" when there are none. */
+export function attributionQuery(a: BriefAttribution): string {
+  const params = new URLSearchParams();
+  for (const [field, key] of Object.entries(UTM_KEYS)) {
+    const value = a[field as keyof typeof UTM_KEYS];
+    if (value) params.set(key, value);
+  }
+  const q = params.toString();
+  return q ? `?${q}` : "";
+}
+
+/**
+ * The attribution as labelled lines, for the internal email and HubSpot's
+ * `message`. NOT part of briefLines: that also renders the customer's own
+ * receipt, and "utm_medium: paid_social" has no business in it.
+ */
+export function attributionLines(a: BriefAttribution): [string, string][] {
+  const rows: [string, string][] = [
+    ["Source", [a.source, a.medium].filter(Boolean).join(" / ")],
+    ["Campaign", a.campaign],
+    ["Ad", a.content],
+    ["Keyword", a.term],
+    ["Ad click", a.clickFrom],
+  ];
+  return rows.filter(([, value]) => value !== "");
+}
+
+/**
  * The brief as one plain-text block, for HubSpot's `message` field.
  *
  * Plain text, not HTML: this lands in a CRM textarea a salesperson reads, and
@@ -274,11 +358,16 @@ export function briefLines(
  */
 export function briefSummary(
   brief: FitoutBrief,
-  attachments: BriefAttachment[] = []
+  attachments: BriefAttachment[] = [],
+  attribution?: BriefAttribution
 ): string {
-  return briefLines(brief, attachments)
-    .map(([label, value]) => `${label}: ${value}`)
-    .join("\n");
+  const text = (rows: [string, string][]) =>
+    rows.map(([label, value]) => `${label}: ${value}`).join("\n");
+  const body = text(briefLines(brief, attachments));
+  const from = attribution ? text(attributionLines(attribution)) : "";
+  // Its own paragraph, after the brief: the brief is what the customer said,
+  // this is what we know about how they arrived.
+  return from ? `${body}\n\n${from}` : body;
 }
 
 /**
@@ -287,7 +376,8 @@ export function briefSummary(
  */
 export function briefHubspotFields(
   brief: FitoutBrief,
-  attachments: BriefAttachment[] = []
+  attachments: BriefAttachment[] = [],
+  attribution?: BriefAttribution
 ): { name: string; value: string }[] {
   return [
     { name: "firstname", value: brief.firstName },
@@ -309,6 +399,6 @@ export function briefHubspotFields(
     // /api/fitout-brief calls, so a newsletter signup or a warranty claim is
     // unaffected.
     { name: "lifecyclestage", value: "marketingqualifiedlead" },
-    { name: "message", value: briefSummary(brief, attachments) },
+    { name: "message", value: briefSummary(brief, attachments, attribution) },
   ];
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { submitHubspotForm } from "@/lib/hubspot";
+import { hubspotUtk, submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients } from "@/lib/notify-recipients";
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
         { name: "company", value: contact.company ?? "" },
         { name: "message", value: `Quote request: ${items.map((i) => `${i.qty}× ${i.name}`).join(", ")}. Subtotal ${subtotal ?? 0}.${contact.notes ? ` Notes: ${contact.notes}` : ""}` },
       ],
-      { pageName: "Quote Request" }
+      { pageName: "Quote Request", hutk: hubspotUtk(request) }
     ).catch((e) => {
       console.error("[quote] hubspot failed", e);
       return "error" as const;

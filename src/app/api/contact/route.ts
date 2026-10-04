@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { submitHubspotForm } from "@/lib/hubspot";
+import { hubspotUtk, submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { ENQUIRY_TOPICS, hubspotEnquiryType, toEnquiryKind } from "@/lib/enquiry-type";
 import { internalRecipients } from "@/lib/notify-recipients";
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
       { name: "enquiry_type", value: hubspotEnquiryType(enquiry.topic) },
       { name: "message", value: enquiry.message },
     ],
-    { pageName: "Contact" }
+    { pageName: "Contact", hutk: hubspotUtk(request) }
   ).catch((e) => {
     console.error("[contact] hubspot failed", e);
     return "error" as const;
