@@ -61,7 +61,7 @@ Alternatives:
 > Commercial and home gym equipment, complete gym fitouts and wholesale supply.
 > Designed, supplied and installed Australia-wide from Melbourne.
 
-(147 characters)
+(141 characters)
 
 ## 5. Full description
 
