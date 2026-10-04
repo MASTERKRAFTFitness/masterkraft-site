@@ -137,7 +137,7 @@ export default function Footer() {
 
       <div className="border-t border-white/10">
         <div className="container-mk py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} MasterKraft Pty Ltd. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} MasterKraft Pty Ltd · ABN 84 659 220 274 · ACN 659 220 274. All rights reserved.</p>
           <p className="font-display tracking-widest text-white/70">Engineered for Fitness</p>
         </div>
       </div>

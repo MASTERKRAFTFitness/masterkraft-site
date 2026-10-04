@@ -34,8 +34,9 @@ This is the real gate on go-live; everything else is quick once decided.
       add_to_cart / begin_checkout / generate_lead / purchase.
 
 ## 2. Client sign-offs / content
-- [ ] **Michael/Steve:** confirm the ABN — live Terms says `62 623 086 064`; the
-      `84 659 220 274` given earlier was removed. Which is correct?
+- [x] **Michael (2026-10-05):** ABN confirmed as `84 659 220 274`, ACN `659 220 274`
+      (the `62 623 086 064` copied from the old live Terms was wrong). Shown in
+      Terms, privacy contact, footer and the Organization schema.
 - [ ] **Steve:** sign off legal + info copy (real T&Cs/privacy/warranty are
       pulled from the live site; a few info pages are placeholder-but-professional).
 - [ ] **Steve:** confirm displayed pricing (RRP = regular_price x1.1 GST).
