@@ -69,8 +69,12 @@ Alternatives:
 screenshot, 4 Oct):
 
 - **Introduction** ("shown beside your logo"): only the first ~250
-  characters show in the preview before it cuts off. Keep the ~740-character
-  paragraph already pasted there (the same text as the GBP description).
+  characters show in the preview before it cuts off, so it leads with what we
+  do and where. Paste `docs/gyms1-introduction.txt` (425 characters). It
+  replaces the GBP description pasted earlier, so the two listings don't
+  carry identical text.
+- **About your business**: paste `docs/gyms1-about-your-business.txt` (the
+  long-form introduction below, as plain text).
 - **About your business** ("the longer description further down the page"):
   turn **Synced automatically off** and paste the long-form introduction below.
 - **Location:** the preview shows **"Laverton North, VIC 3074". That's wrong.**
@@ -100,9 +104,7 @@ headings can be bold text if the editor has no heading style.
 > clinics and corporate facilities. We also supply commercial-grade equipment
 > for home gyms.
 >
-> To date we have fitted out 229 sites across 12 countries. Our Thomastown
-> premises are open to customers, so you can see the equipment in person
-> before you commit to a fitout.
+> To date we have fitted out 229 sites across 12 countries. Our Thomastown premises are open to customers Monday to Friday, 9am to 5pm.
 >
 > **What we do**
 >
