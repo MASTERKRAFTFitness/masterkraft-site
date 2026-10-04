@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 // Keep name, address and phone character-for-character identical to the GBP
 // listing (docs/seo-google-business-profile-copy.md); a mismatch weakens the
 // match rather than strengthening it. Once the GBP is live, add its share URL to
-// `sameAs` and as `hasMap`. Opening hours are left out until confirmed.
+// `sameAs` and as `hasMap`. Hours confirmed by the client 4 Oct 2026.
 const orgSchema = {
   "@context": "https://schema.org",
   "@type": "SportingGoodsStore",
@@ -44,6 +44,14 @@ const orgSchema = {
     postalCode: "3074",
     addressCountry: "AU",
   },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "09:00",
+      closes: "17:00",
+    },
+  ],
   areaServed: [
     { "@type": "Country", name: "Australia" },
     { "@type": "Place", name: "Asia-Pacific" },

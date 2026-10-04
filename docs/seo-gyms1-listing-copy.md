@@ -31,7 +31,7 @@ Fitness", a different phone format) dilutes it. Use exactly:
 | Website | https://masterkraft.com |
 | Instagram | https://www.instagram.com/masterkraft.equipment/ |
 | LinkedIn | https://www.linkedin.com/company/masterkraft-pty-ltd/ |
-| Opening hours | *Confirm with the team — not published on the site* |
+| Opening hours | Mon–Fri 9am–5pm, Sat–Sun closed *(confirmed 4 Oct)* |
 
 [address/phone: `src/lib/legal-content.ts:478`, `src/components/layout/Footer.tsx`]
 

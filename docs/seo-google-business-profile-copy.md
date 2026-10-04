@@ -58,7 +58,7 @@ the wrong category gets the listing in front of the wrong searchers.
 | Website | `https://masterkraft.com/?utm_source=google&utm_medium=organic&utm_campaign=gbp` |
 | Appointment / enquiry link | `https://masterkraft.com/fitout-solution?utm_source=google&utm_medium=organic&utm_campaign=gbp-enquiry` |
 | Social profiles | Instagram `https://www.instagram.com/masterkraft.equipment/` · LinkedIn `https://www.linkedin.com/company/masterkraft-pty-ltd/` |
-| Opening hours | Mon–Fri 9am–5pm, Sat–Sun closed *(as on the Gyms1 listing — confirm these are the real hours, not a Facebook default)* |
+| Opening hours | Mon–Fri 9am–5pm, Sat–Sun closed *(confirmed 4 Oct)* |
 
 The UTM tags make GBP traffic show up separately in Google Analytics, so you
 can see what the profile actually drives.
@@ -237,4 +237,4 @@ Suggested request message:
 ✅ Done 4 Oct: the home page's JSON-LD is now a `SportingGoodsStore` (a
 LocalBusiness type) with the Thomastown address and phone (`src/app/page.tsx`).
 **Once the GBP is live**, add its share link to `sameAs` and `hasMap` there.
-Once the hours are confirmed, add `openingHoursSpecification` too.
+Opening hours (Mon–Fri 9am–5pm) were added to the same schema on 4 Oct.
