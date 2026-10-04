@@ -6,6 +6,10 @@ export const SITE_URL =
 
 export const SITE_NAME = "MASTERKRAFT";
 
+// The home page's business entity. Other pages' JSON-LD points at it with
+// `{ "@id": ORG_ID }` so search engines read one MasterKraft, not several.
+export const ORG_ID = `${SITE_URL}/#organization`;
+
 /**
  * A site-relative path made absolute, for the places a bare "/foo.jpg" is wrong.
  *

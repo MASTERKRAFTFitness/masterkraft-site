@@ -9,16 +9,23 @@ import UspGrid from "@/components/marketing/UspGrid";
 import StatsBand from "@/components/marketing/StatsBand";
 import NewsletterForm from "@/components/marketing/NewsletterForm";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, ORG_ID } from "@/lib/site";
 import { shopByCategory } from "@/lib/nav";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// SportingGoodsStore is a LocalBusiness subtype (and so still an Organization),
+// which lets the address and phone tie this site to the Google Business Profile.
+// Keep name, address and phone character-for-character identical to the GBP
+// listing (docs/seo-google-business-profile-copy.md); a mismatch weakens the
+// match rather than strengthening it. Once the GBP is live, add its share URL to
+// `sameAs` and as `hasMap`. Opening hours are left out until confirmed.
 const orgSchema = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "SportingGoodsStore",
+  "@id": ORG_ID,
   name: "MasterKraft",
   legalName: "MasterKraft Pty Ltd",
   alternateName: "MasterKraft Fitness",
@@ -28,6 +35,15 @@ const orgSchema = {
   slogan: "Engineered for Fitness",
   description:
     "MasterKraft designs, engineers and supplies commercial and home gym equipment and delivers complete custom gym fitouts across Australia and the Asia-Pacific.",
+  telephone: "+61-3-9044-9575",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "8/337-339 Settlement Rd",
+    addressLocality: "Thomastown",
+    addressRegion: "VIC",
+    postalCode: "3074",
+    addressCountry: "AU",
+  },
   areaServed: [
     { "@type": "Country", name: "Australia" },
     { "@type": "Place", name: "Asia-Pacific" },

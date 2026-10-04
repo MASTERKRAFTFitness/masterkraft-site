@@ -8,7 +8,7 @@ import RevlFeature from "@/components/marketing/RevlFeature";
 import FitoutBriefForm from "@/components/marketing/FitoutBriefForm";
 import { heroAlt } from "@/lib/image-alt";
 import { fitouts } from "@/lib/fitouts";
-import { SITE_URL, portalLoginHref } from "@/lib/site";
+import { SITE_URL, ORG_ID, portalLoginHref } from "@/lib/site";
 
 // THE FITOUT LANDING PAGE, at its own URL.
 //
@@ -135,6 +135,7 @@ export default function FitoutSolutionPage() {
           areaServed: { "@type": "Place", name: "Australia and international" },
           provider: {
             "@type": "Organization",
+            "@id": ORG_ID,
             name: "MasterKraft",
             url: SITE_URL,
             telephone: "+61390449575",

@@ -6,7 +6,7 @@ import { recordNotFound } from "@/lib/not-found-log";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, ORG_ID } from "@/lib/site";
 import { locations, getLocation } from "@/lib/locations";
 import { withQualifier } from "@/lib/page-title";
 import { revlClubsForRegion } from "@/lib/revl";
@@ -67,7 +67,7 @@ export default async function LocationPage({
     name: `Gym Fitouts ${loc.city}`,
     description: loc.meta,
     areaServed: { "@type": "Place", name: areaName },
-    provider: { "@type": "Organization", name: "MasterKraft", url: SITE_URL },
+    provider: { "@type": "Organization", "@id": ORG_ID, name: "MasterKraft", url: SITE_URL },
   };
 
   const faqSchema = {
