@@ -16,20 +16,12 @@ it is worth doing properly.
 
 ---
 
-## 0. Decide first: storefront or service-area business?
+## 0. Storefront: confirmed
 
-This is the one decision that can get the profile suspended if it is wrong.
-
-- **Do customers come to Thomastown?** This means a showroom, click-and-collect,
-  or staffed visits during set hours. If so, **show the address** and set
-  opening hours.
-- **If Thomastown is a warehouse/office only** and the team goes to the
-  customer, **hide the address** and set it up as a **service-area business**
-  (section 7). Google suspends profiles that show an address customers can't
-  visit.
-
-The site doesn't say either way (no showroom or pickup mention), so the team
-needs to confirm.
+**Confirmed 4 Oct: customers visit the Thomastown premises and staff are there.**
+So set it up as a **storefront**: show the address, set opening hours, and
+optionally add service areas as well (section 7). Google will usually verify a
+storefront by video or postcard to the address.
 
 ## 1. Business name
 
@@ -48,7 +40,7 @@ anything else on the profile.**
 
 | | Category | Why |
 | --- | --- | --- |
-| **Primary** | **Exercise equipment store** | Closest match to "gym equipment" searches. If Thomastown isn't open to the public, use **Fitness equipment wholesaler** as primary instead. |
+| **Primary** | **Exercise equipment store** | Closest match to "gym equipment" searches, and right for a storefront customers visit. |
 | Secondary | Fitness equipment wholesaler | Trade / wholesale supply |
 | Secondary | Sporting goods wholesaler | Broader equipment searches |
 | Secondary | Flooring store *(or "Rubber products supplier")* | Commercial gym flooring |
@@ -66,7 +58,7 @@ the wrong category gets the listing in front of the wrong searchers.
 | Website | `https://masterkraft.com/?utm_source=google&utm_medium=organic&utm_campaign=gbp` |
 | Appointment / enquiry link | `https://masterkraft.com/fitout-solution?utm_source=google&utm_medium=organic&utm_campaign=gbp-enquiry` |
 | Social profiles | Instagram `https://www.instagram.com/masterkraft.equipment/` · LinkedIn `https://www.linkedin.com/company/masterkraft-pty-ltd/` |
-| Opening hours | *Confirm with the team* |
+| Opening hours | Mon–Fri 9am–5pm, Sat–Sun closed *(as on the Gyms1 listing — confirm these are the real hours, not a Facebook default)* |
 
 The UTM tags make GBP traffic show up separately in Google Analytics, so you
 can see what the profile actually drives.
@@ -150,7 +142,7 @@ approvals and monthly or quarterly repayments.
 Trade and wholesale supply of commercial gym equipment for facilities,
 distributors and multi-site operators.
 
-## 7. Service areas (up to 20, if a service-area business)
+## 7. Service areas (up to 20, optional alongside the storefront)
 
 Melbourne · Geelong · Sydney · Central Coast · Newcastle · Wollongong ·
 Brisbane · Gold Coast · Sunshine Coast · Perth · Adelaide · Canberra · Hobart ·
@@ -240,9 +232,9 @@ Suggested request message:
 > fitout. If you have a minute, a short Google review would really help other
 > gym owners find us: [review link]. Thanks!
 
-## 13. Website follow-up (separate task)
+## 13. Website follow-up
 
-The site has no `LocalBusiness` structured data. Adding it to `layout.tsx`
-with the same name, address, phone and `sameAs` links to the GBP profile,
-Instagram and LinkedIn would tie the website and the profile together for
-Google.
+✅ Done 4 Oct: the home page's JSON-LD is now a `SportingGoodsStore` (a
+LocalBusiness type) with the Thomastown address and phone (`src/app/page.tsx`).
+**Once the GBP is live**, add its share link to `sameAs` and `hasMap` there.
+Once the hours are confirmed, add `openingHoursSpecification` too.
