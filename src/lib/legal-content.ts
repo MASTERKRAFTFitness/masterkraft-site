@@ -8,7 +8,7 @@ export const legalContent: Record<string, ContentSection[]> = {
     {
       "heading": "MASTERKRAFT TERMS & CONDITIONS OF SALE",
       "body": [
-        "These Terms and Conditions of Trade (“Terms and Conditions”) apply to all products and services supplied by MasterKraft Pty Ltd (ABN 62 623 086 064) (“the Company”, “Seller”, “we” or “us”) for you (“the Customer”, “Buyer” or “you”), unless otherwise agreed in writing. These Terms and Conditions (which can only be waived in writing by the Company) shall prevail over the Terms and Conditions of the Customer’s order to the extent of any inconsistency.",
+        "These Terms and Conditions of Trade (“Terms and Conditions”) apply to all products and services supplied by MasterKraft Pty Ltd (ABN 84 659 220 274, ACN 659 220 274) (“the Company”, “Seller”, “we” or “us”) for you (“the Customer”, “Buyer” or “you”), unless otherwise agreed in writing. These Terms and Conditions (which can only be waived in writing by the Company) shall prevail over the Terms and Conditions of the Customer’s order to the extent of any inconsistency.",
         "1.1 Seller – MasterKraft Pty Ltd, its successors and any person acting on behalf of and with the authority of MasterKraft Pty Ltd.",
         "1.2 Buyer – Any person or company buying the Products and Services as specified in any quotation, order, invoice or document. If there is more than one Buyer, Buyer is a reference to each Buyer jointly and severally.",
         "1.3 Products & Services – All Products and Services supplied by the Seller to the Buyer at the Buyer’s request as specified in the quotation, order and/or invoice.",
@@ -475,7 +475,7 @@ export const legalContent: Record<string, ContentSection[]> = {
     {
       "heading": "The Privacy Officer",
       "body": [
-        "MasterKraft Pty Ltd Address: 8/337-339 Settlement Rd, Thomastown, Vic. 3074 Telephone: (03) 9044 9575 Email: admin@masterkraft.com",
+        "MasterKraft Pty Ltd (ABN 84 659 220 274, ACN 659 220 274) Address: 8/337-339 Settlement Rd, Thomastown, Vic. 3074 Telephone: (03) 9044 9575 Email: admin@masterkraft.com",
         "With any request that is made we will need to authenticate your identity to ensure the correct person is requesting the information. We will not charge you for making the request, however, if reasonable we may charge you with the costs associated with your request. You will only be granted access to your personal information where we are permitted or required by law to grant access. We are unable to provide you with access that is unlawful. Further we are not required to, and will not, give access to personal information to the extent that:",
         "We reasonably believe that giving access would pose a serious threat to the life, health, or safety of any individual, or to public health or public safety; or",
         "Giving access would have an unreasonable impact on the privacy of other individuals; or",
