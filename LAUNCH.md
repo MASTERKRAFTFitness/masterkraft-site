@@ -104,23 +104,31 @@ missing var fails **silently** — that's why each must be checked deliberately.
   collapse into one sale rather than double-counting revenue. Secret: it lives in Vercel,
   never in the repo. Optional companion `NEXT_PUBLIC_OPINLY_KEY` overrides the built-in
   publishable key if the property is ever swapped.
-- ⚠️ `OPINLY_CDN_NAMESPACE` — **not set, and until it is, `/blog` 404s.** The
-  21-character namespace from the Opinly dashboard's Next.js setup snippet. It is
-  a public path segment, not a secret — it ends up in the `src` of every blog
-  image — so it can live in the repo, but it is read in `next.config.ts` at build
-  time and therefore needs a redeploy, not just a Vercel save. With it unset,
-  `withOpinlyConfig` is skipped entirely: no OPINLY_* env vars, `blogEnabled()`
-  returns false, `/blog` and `/blog/rss.xml` return 404, the footer's Journal link
-  is not rendered, and the sitemap omits the blog. Nothing else on the site is
-  affected. **Do not substitute a placeholder to make the build go green** — any
-  21 characters satisfy the validator, and the result is a blog that serves with
-  every image 404ing from a CDN folder that does not exist.
-- ⚠️ `OPINLY_WEBHOOK_SIGNING_SECRET` — **not set.** The `whsec_…` secret from the
-  Opinly webhook that posts `content.routes-changed` to `/api/opinly`. Without it
-  that route answers 500 and every publish waits for the one-hour ISR backstop
-  instead of going live in seconds. Secret: Vercel only, never the repo. The route
-  refuses rather than trusting an unsigned request, so an absent secret is a
-  delayed publish, never an open cache-invalidation endpoint.
+- ✅ `OPINLY_CDN_NAMESPACE` — **set and live.** The 21-character namespace was
+  read from Settings > Developers in the Opinly dashboard on 21 Sep 2026 and is
+  committed as the fallback literal in `next.config.ts` (`299f930`), so no Vercel
+  env var is needed and `vercel env ls` will not show one — that is expected, not
+  a gap. Verified 5 Oct 2026: `/blog` and `/blog/rss.xml` return 200, published
+  posts render, and header images load through `/blog-images/`. It is a public
+  path segment, not a secret. Setting the env var overrides the literal (it is
+  read at build time, so that needs a redeploy); setting it to `""` turns the
+  blog off cleanly — `withOpinlyConfig` is skipped, `blogEnabled()` returns
+  false, `/blog` 404s, the footer's Journal link and the sitemap entries
+  disappear, and nothing else changes. **Never replace it with a placeholder** —
+  any 21 characters satisfy the validator, and the result is a blog that serves
+  with every image 404ing from a CDN folder that does not exist. It is also not
+  the company id (`comp_…` with the prefix stripped), however similar it looks.
+- ✅ `OPINLY_WEBHOOK_SIGNING_SECRET` — **set in production.** The `whsec_…` secret
+  from the Opinly webhook that posts `content.routes-changed` to `/api/opinly`.
+  Verified 5 Oct 2026 by an unsigned POST to the route: it answered 400
+  ("Invalid request"), which is the check *after* the secret is read — an unset
+  secret answers 500 ("Not configured") before getting that far. That proves the
+  variable exists, not that it matches Opinly's: the proof of a match is the
+  webhook's delivery log in Opinly showing 200s, or a published post appearing on
+  `/blog` within seconds rather than on the one-hour ISR backstop. Secret: Vercel
+  only, never the repo. The route refuses rather than trusting an unsigned
+  request, so a missing or wrong secret is a delayed publish, never an open
+  cache-invalidation endpoint.
 
 ### Forms — verify these are set (enquiries are the point of the site) 🔎
 The enquiry/quote/newsletter forms post to HubSpot (server-side) and email via
