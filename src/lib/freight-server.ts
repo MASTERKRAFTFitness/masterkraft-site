@@ -9,6 +9,7 @@ import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 import {
   quoteFreight,
   cartonsContradict,
+  CONTRADICTION_RATIO,
   defaultCartonFor,
   freightAvailable,
   isPlausibleCarton,
@@ -79,8 +80,21 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
     const code = (ref.sku || variation?.sku || product?.sku || "").trim();
     const unit = code ? lookupBySku(erp, code) : null;
 
+    // WEIGHT FOLLOWS THE SAME RULE AS THE CARTON BELOW: the snapshot first, the
+    // ERP when the two flatly contradict each other. This was not needed until
+    // 6 Oct 2026, when Unleashed's 124 "(Pair)" fixed dumbbells were corrected
+    // from ONE dumbbell's weight to two. The snapshot froze the old figure, so a
+    // 10kg pair kept going out declared at 11kg - half the consignment, which
+    // the carrier weighs and we absorb. Measured before writing: of the 773
+    // codes holding a weight in both systems, exactly the 51 pairs the snapshot
+    // carries differ by CONTRADICTION_RATIO or more; the rest agree.
+    const snapshotWeight = num(variation?.weight) || num(product?.weight);
+    const erpWeight = num(unit?.weightKg);
     const weightKg =
-      num(variation?.weight) || num(product?.weight) || num(unit?.weightKg);
+      snapshotWeight && erpWeight &&
+      Math.max(snapshotWeight / erpWeight, erpWeight / snapshotWeight) >= CONTRADICTION_RATIO
+        ? erpWeight
+        : snapshotWeight || erpWeight;
 
     // WHOLE CARTONS, IN ORDER, AND ONLY IF THEY COULD BE REAL.
     //
@@ -131,8 +145,8 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
     // 631 codes holding a complete carton in both systems, this changes exactly
     // the two the density guard cannot see. The other 67 disagreements are
     // already rejected as implausible and never reach here, and the remaining
-    // 562 agree inside 5%. Weights are untouched: none of the 632 codes holding
-    // one in both differ by so much as half again.
+    // 562 agree inside 5%. (Weights were untouched when this was written; see
+    // the weight rule above for when that stopped being true.)
     const found =
       first && first !== erpCarton && usable(erpCarton) &&
       cartonsContradict(
