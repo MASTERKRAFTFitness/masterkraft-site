@@ -46,6 +46,14 @@
 // at market, were removed. A shopper comparing two equal prices has no reason
 // to pick the one we paid to show them.
 //
+// LANDED PRICE, 5 Oct 2026. Every unit was then re-measured against Little
+// Bloke Fitness on product price PLUS delivery to Melbourne, Sydney and Perth
+// (lib/landed-price.ts). Nine lost in all three cities and were removed:
+// gymnastic rings, knitted bands, battle rope storage, spotter arms, change
+// plates, competition bumper plates, dip belt and collars, plus the interval
+// timer, which Little Bloke lists $25 cheaper (out of stock there on the day).
+// Units that won in some cities stay here; landed-price.ts says where.
+//
 // HOW TO CHANGE IT. Re-run the comparison before adding anything: a competitor
 // price cut turns a winner into paid traffic to somebody else's cheaper product,
 // and nothing in the app notices. Removing an entry is always safe.
@@ -58,22 +66,13 @@ export const FREIGHT_VERIFIED_SLUGS = new Set<string>([
   "rope-band-rack-wall-mounted-small", // −71% · $10.10
   "rope-band-rack-wall-mounted", // −67% · $10.10
   "bench-rower-rack-wall-mounted", // −64% · $11.48
-  "change-plates", // −64% · $10.10
   "dead-ball-2", // −64% · $12.43
-  "battle-rope-storage-wall-mounted", // −63% · $10.10
   "coloured-bumper-plates", // −56% · $14.35
-  "olympic-bar-easy-lock-collars-pair-3", // −50% · $10.10
   "olympic-urethane-weight-plates-3", // −47% · $12.76
   "barbell-squat-pad-3", // −43% · $10.10
-  "competition-bumper-plates-3", // −39% · $14.35
   "olympic-premium-rubber-weight-plates-2", // −36% · $12.76
-  "gymnastic-rings-wooden-2", // −35% · $10.10
-  "dip-pull-up-belt-2", // −32% · $10.10
   "medicine-ball-2", // −25% · $11.48
   "rig-core-trainer-landmine", // −24% · $10.10
-  "rig-spotter-arms-pair", // −18% · $15.31
   "competition-kettlebells", // −14% · $15.31
-  "knitted-resistance-bands-set-of-3", // −14% · $10.10
-  "digital-interval-timer", // −10% · $10.10
   "foam-roller-v", // −8% · $11.80
 ]);

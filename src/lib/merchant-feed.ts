@@ -27,6 +27,7 @@ import { decodeEntities, plainText } from "@/lib/woocommerce";
 import { resolveCopy, type ContentMap } from "@/lib/product-content";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
+import { regionLabel } from "@/lib/landed-price";
 
 export type FeedItem = {
   id: string;
@@ -49,6 +50,12 @@ export type FeedItem = {
   customLabel1: string;
   /** custom_label_2 — "parcel" or "freight". Absent when the carton is unknown. */
   customLabel2?: string;
+  /**
+   * custom_label_3 — where a paid campaign may show it: "national", or the
+   * states it wins in on landed price, e.g. "vic-nsw". Absent unless
+   * customLabel0 is freight-verified. See lib/landed-price.ts.
+   */
+  customLabel3?: string;
 };
 
 /**
@@ -246,9 +253,12 @@ function itemFor(
     googleProductCategory: googleCategory(unit),
     productType: unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group,
     shippingWeightKg: entry.weightKg,
-    customLabel0: isVerified ? FREIGHT_VERIFIED_LABEL : UNVERIFIED_LABEL,
+    // A unit on the allowlist can still hold sizes that lost on landed price
+    // everywhere; those are listed for free but not advertised.
+    customLabel0: isVerified && regionLabel(code) ? FREIGHT_VERIFIED_LABEL : UNVERIFIED_LABEL,
     customLabel1: priceBand(entry.price),
     customLabel2: freightLabel(code, entry),
+    customLabel3: isVerified ? regionLabel(code) : undefined,
   };
 }
 
@@ -392,6 +402,7 @@ export function feedToXml(items: FeedItem[], now = new Date()): string {
         tag("g:custom_label_0", it.customLabel0),
         tag("g:custom_label_1", it.customLabel1),
         tag("g:custom_label_2", it.customLabel2),
+        tag("g:custom_label_3", it.customLabel3),
         "  </item>",
       ]
         .filter(Boolean)
