@@ -92,6 +92,10 @@ export async function POST(request: Request) {
         freight_amount: freightCost.toFixed(2),
         freight_service: freight.selected?.service ?? "",
         freight_carrier: freight.selected?.carrier ?? "",
+        // WHICH option was bought, not just its name: easyship-shipments reads it
+        // to preselect the same courier on the Easyship shipment. Stripe caps a
+        // metadata value at 500 characters; a split id is a few UUIDs long.
+        freight_option_id: (freight.selected?.id ?? "").slice(0, 500),
         freight: freight.selected ? `${freight.selected.service} ${freightCost}` : "quoted separately",
       },
     });

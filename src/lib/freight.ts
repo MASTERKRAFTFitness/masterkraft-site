@@ -901,7 +901,7 @@ function boxSignature(parcels: Parcel[]): string {
  * exactly as it was before this existed. That is the common case and it must
  * stay a single metered call.
  */
-export function partitionConsignments(parcels: Parcel[]): Parcel[][] {
+export function partitionConsignments<P extends Parcel>(parcels: P[]): P[][] {
   const bulky = parcels.filter((p) => isOversize(p));
   if (bulky.length === 0) return [parcels];
   const rest = parcels.filter((p) => !isOversize(p));

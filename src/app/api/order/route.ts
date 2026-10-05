@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { scheduleCheckoutLead } from "@/lib/checkout-leads";
 import { stripe } from "@/lib/stripe";
 import { quoteOnly } from "@/lib/checkout-mode";
@@ -6,6 +6,8 @@ import { resolveOrderLines, type CartRef, type OrderAddress } from "@/lib/order-
 import { placeOrder, orderingEnabled, orderMetadata, existingOrderOn } from "@/lib/orders";
 import { reportPurchase } from "@/lib/opinly-server";
 import { notifyOrderPlaced } from "@/lib/order-notify";
+import { refsToFreightItems } from "@/lib/freight-server";
+import { shipmentSyncEnabled, syncShipmentsToEasyship, type ShipmentOrder } from "@/lib/easyship-shipments";
 
 // Called after the customer pays. Verifies the PaymentIntent succeeded and that
 // the paid amount matches the SERVER-repriced total, then places the order.
@@ -180,5 +182,43 @@ export async function POST(request: Request) {
   console.log("[order] placed", { orderNumber: order.orderNumber, ...notified });
   scheduleCheckoutLead(checkoutId, { status: "paid", orderNumber: String(order.orderNumber) });
 
+  // The order into Easyship's "To Ship" list, label NOT bought - see
+  // lib/easyship-shipments. After the response, so a slow Easyship never holds
+  // a paid customer's confirmation screen, and it cannot fail the order.
+  const freightLabel =
+    [intent.metadata?.freight_carrier, intent.metadata?.freight_service].filter(Boolean).join(" ") ||
+    undefined;
+  scheduleShipmentSync(items, {
+    orderNumber: String(order.orderNumber),
+    billing,
+    shipping,
+    lines,
+    freightOptionId: intent.metadata?.freight_option_id || undefined,
+    freightLabel,
+    customerNote,
+  });
+
   return NextResponse.json({ ok: true, orderId: order.id, orderNumber: order.orderNumber });
+}
+
+function scheduleShipmentSync(refs: CartRef[], order: Omit<ShipmentOrder, "items">): void {
+  // Checked here as well as in the sync, so a switched-off sync does not cost a
+  // live Unleashed lookup for cartons it will never use.
+  if (!shipmentSyncEnabled()) return;
+  const run = async () => {
+    try {
+      const items = await refsToFreightItems(refs);
+      const result = await syncShipmentsToEasyship({ ...order, items });
+      console.log("[order] easyship", { orderNumber: order.orderNumber, ...result });
+    } catch (e) {
+      console.error("[order] easyship sync crashed", { orderNumber: order.orderNumber, e });
+    }
+  };
+  // `after()` throws outside a request scope (route tests call the handler
+  // directly), which degrades to a detached promise - same as scheduleCheckoutLead.
+  try {
+    after(run);
+  } catch {
+    void run();
+  }
 }
