@@ -431,12 +431,8 @@ export default async function ProductPage({
         />
         <ProductGallery images={galleryImages} name={product.name} labels={galleryLabels} />
 
-        {/* RIGHT: name, price, picker, then the words.
-            row-span-2 so this column occupies BOTH rows rather than making the
-            first one as tall as itself. Without it the row stretches to this
-            column's height and the size table lands 300px below the thumbnails
-            with nothing in between. */}
-        <div className="lg:row-span-2">
+        {/* RIGHT: name, price, picker, every size, then the words. */}
+        <div>
           {cat && (
             <p className="font-mono text-xs tracking-widest text-accent-600 uppercase">{cat.name}</p>
           )}
@@ -505,6 +501,19 @@ export default async function ProductPage({
             pricing, freight and lead times for your order.
           </p>
 
+          {/* Every size under the buy controls, in the same column, so a gym
+              comparing weights reads the table beside the picker it drives
+              rather than under the photos. */}
+          {usesVariants && (
+            <div className="mt-10">
+              <SizeTable
+                productName={unit?.name ?? range?.name ?? product.name}
+                productSlug={product.slug}
+                variants={variants}
+              />
+            </div>
+          )}
+
           {/* The overview reads directly under the price rather than as a
               full-width band below the fold, so the copy that sells the thing
               is beside the control that buys it. */}
@@ -562,20 +571,6 @@ export default async function ProductPage({
             </div>
           )}
         </div>
-
-        {/* A THIRD GRID CHILD, not a child of the gallery, and the order is
-            what makes both layouts right. On desktop it lands in row 2 of the
-            left column — under the thumbnails, left-justified, filling a column
-            that would otherwise stop at the strip while the buy column runs on.
-            On a phone the grid is one column, so it falls AFTER the price and
-            the picker rather than shoving them below 26 rows. */}
-        {usesVariants && (
-          <SizeTable
-            productName={unit?.name ?? range?.name ?? product.name}
-            productSlug={product.slug}
-            variants={variants}
-          />
-        )}
       </section>
       </VariantSelectionProvider>
 
