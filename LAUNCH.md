@@ -118,12 +118,17 @@ missing var fails **silently** — that's why each must be checked deliberately.
   any 21 characters satisfy the validator, and the result is a blog that serves
   with every image 404ing from a CDN folder that does not exist. It is also not
   the company id (`comp_…` with the prefix stripped), however similar it looks.
-- ⚠️ `OPINLY_WEBHOOK_SIGNING_SECRET` — **not set.** The `whsec_…` secret from the
-  Opinly webhook that posts `content.routes-changed` to `/api/opinly`. Without it
-  that route answers 500 and every publish waits for the one-hour ISR backstop
-  instead of going live in seconds. Secret: Vercel only, never the repo. The route
-  refuses rather than trusting an unsigned request, so an absent secret is a
-  delayed publish, never an open cache-invalidation endpoint.
+- ✅ `OPINLY_WEBHOOK_SIGNING_SECRET` — **set in production.** The `whsec_…` secret
+  from the Opinly webhook that posts `content.routes-changed` to `/api/opinly`.
+  Verified 5 Oct 2026 by an unsigned POST to the route: it answered 400
+  ("Invalid request"), which is the check *after* the secret is read — an unset
+  secret answers 500 ("Not configured") before getting that far. That proves the
+  variable exists, not that it matches Opinly's: the proof of a match is the
+  webhook's delivery log in Opinly showing 200s, or a published post appearing on
+  `/blog` within seconds rather than on the one-hour ISR backstop. Secret: Vercel
+  only, never the repo. The route refuses rather than trusting an unsigned
+  request, so a missing or wrong secret is a delayed publish, never an open
+  cache-invalidation endpoint.
 
 ### Forms — verify these are set (enquiries are the point of the site) 🔎
 The enquiry/quote/newsletter forms post to HubSpot (server-side) and email via
