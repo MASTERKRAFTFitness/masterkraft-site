@@ -293,6 +293,11 @@ does nothing in production.
 | `FREIGHT_CACHE_TTL_SECONDS` | optional | defaults **900**; `0` disables |
 | `FREIGHT_CACHE_ERROR_TTL_SECONDS` | optional | defaults **60** |
 | `FREIGHT_ALERT_EMAIL` | optional | falls back to `QUOTE_TO_EMAIL` |
+| `EASYSHIP_SHIPMENT_SYNC` | optional, **off** | `true` creates an Easyship shipment for every paid web order (label NOT bought). See "Easyship shipments" below |
+| `EASYSHIP_ORIGIN_PHONE` | required for the sync | sender phone on the shipment. Easyship rejects an origin without one |
+| `EASYSHIP_ORIGIN_EMAIL` | optional | sender email; falls back to the first `QUOTE_TO_EMAIL` |
+| `EASYSHIP_ORIGIN_CONTACT` | optional | sender contact name; defaults to `MasterKraft` |
+| `FREIGHT_COLLECTION_LINE1` | required for the sync | the warehouse street line, used as the shipment's origin |
 | `FREIGHT_ALERT_COOLDOWN_MINUTES` | optional | defaults **360** |
 | `RESEND_API_KEY`, `QUOTE_FROM_EMAIL` | ✅ set | needed for the alert to email rather than only log |
 | `FREIGHT_CARRIERS` | optional | allowlist, defaults to **both**. `easyship` or `auspost` narrows it. See below before narrowing it. |
@@ -617,3 +622,24 @@ are still open.
 - **Steve / host:** domain + DNS + WordPress-backend move decision (§2).
 - **Decisions needed:** domain option A vs B (§2). Card checkout was decided and
   opened on 2026-09-06 (§1).
+
+## Easyship shipments (added 2026-10-05)
+
+Every paid web order can be put into Easyship's **To Ship** list automatically, so
+nobody re-keys the address (the first order was typed in by hand and Easyship
+guessed the wrong suburb). `src/lib/easyship-shipments.ts`, called from
+`/api/order` after the response is sent.
+
+- **The label is never bought.** `buy_label: false`. A person opens the shipment
+  in Easyship, checks it and clicks Ship.
+- **The customer's courier is preselected** when they paid for an Easyship
+  service (`freight_option_id` on the PaymentIntent), with fallback allowed. Split
+  carts become one shipment per consignment, numbered `SO-… (1/2)`. Australia
+  Post and matrix-priced orders go in with no courier preselected.
+- **It cannot fail an order.** If Easyship refuses, the team gets an email titled
+  "Add web order #… to Easyship by hand", with Easyship's reason.
+- **Switching it on:** set `EASYSHIP_SHIPMENT_SYNC=true`, `EASYSHIP_ORIGIN_PHONE`
+  and `FREIGHT_COLLECTION_LINE1` in Vercel Production and redeploy. The existing
+  `EASYSHIP_API_TOKEN` needs the `public.shipment:write` scope as well as rates.
+  Orders paid before the deploy that added `freight_option_id` have no courier to
+  preselect, which only means Easyship picks one.
