@@ -21,6 +21,11 @@ const orgSchema = {
   "@type": "Organization",
   name: "MasterKraft",
   legalName: "MasterKraft Pty Ltd",
+  taxID: "84659220274",
+  identifier: [
+    { "@type": "PropertyValue", propertyID: "ABN", value: "84659220274" },
+    { "@type": "PropertyValue", propertyID: "ACN", value: "659220274" },
+  ],
   alternateName: "MasterKraft Fitness",
   url: SITE_URL,
   logo: `${SITE_URL}/brand/logo-circle.svg`,
