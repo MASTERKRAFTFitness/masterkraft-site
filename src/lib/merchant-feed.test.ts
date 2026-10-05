@@ -22,7 +22,7 @@ vi.mock("@/lib/catalogue", () => ({
 // Only the slugs under test are advertised, so the fixtures below do not have
 // to be kept in step with the real allowlist.
 vi.mock("@/lib/merchant-feed-allowlist", () => ({
-  FREIGHT_VERIFIED_SLUGS: new Set(["change-plates", "speed-rope", "gone-cold"]),
+  FREIGHT_VERIFIED_SLUGS: new Set(["change-plates", "speed-rope", "gone-cold", "coloured-bumper-plates"]),
 }));
 
 const { buildFeed, feedToXml, feedTitle, feedPrice, priceBand } = await import("@/lib/merchant-feed");
@@ -252,5 +252,32 @@ describe("campaign labels", () => {
     const label = Object.fromEntries(items.map((i) => [i.id, i.customLabel2]));
     expect(label.MWWPCP01).toBe("parcel");
     expect(label.MRRACK01).toBe("freight");
+  });
+});
+
+describe("landed-price regions", () => {
+  // MWWPCB01 won Melbourne only; MWWPCB03 lost in all three cities. Both are
+  // sizes of an allowlisted unit, which is exactly the case the label exists for.
+  const bumpers = () =>
+    map({
+      MWWPCB01: entry("Coloured Bumper Plates - 5kg", { price: 45 }),
+      MWWPCB03: entry("Coloured Bumper Plates - 15kg", { price: 85 }),
+    });
+
+  it("labels a partial winner with the states it won", () => {
+    const item = buildFeed(bumpers()).items.find((i) => i.id === "MWWPCB01");
+    expect(item?.customLabel0).toBe("freight-verified");
+    expect(item?.customLabel3).toBe("vic");
+  });
+
+  it("lists a size that lost everywhere for free, but not as advertisable", () => {
+    const item = buildFeed(bumpers()).items.find((i) => i.id === "MWWPCB03");
+    expect(item).toBeDefined();
+    expect(item?.customLabel0).toBe("unverified");
+    expect(item?.customLabel3).toBeUndefined();
+  });
+
+  it("writes the region into the XML", () => {
+    expect(feedToXml(buildFeed(bumpers()).items)).toContain("<g:custom_label_3>vic</g:custom_label_3>");
   });
 });
