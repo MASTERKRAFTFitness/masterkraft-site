@@ -4,7 +4,7 @@
 // in stock, photographed and freight-quotable — but so are others that are not
 // here. The filter is competitive: each of these was priced against the full
 // public catalogues of Verve Fitness (452 products) and Little Bloke Fitness
-// (1,010) on 17 Sep 2026 and came back at or below the market rate, and each
+// (1,010) on 17 Sep 2026 and came back below the market rate, and each
 // was then quoted for real freight through /api/freight/quote to Melbourne,
 // Sydney and Perth.
 //
@@ -41,6 +41,11 @@
 // the one entry priced ABOVE the market (+6%), and paying for a click on a
 // product a competitor sells cheaper sends the shopper to the competitor.
 //
+// AT MARKET IS NOT ENOUGH (5 Oct 2026). Spend goes only to products with a
+// price ADVANTAGE, so micro-bands-pack-of-4 and speed-rope-elite, both measured
+// at market, were removed. A shopper comparing two equal prices has no reason
+// to pick the one we paid to show them.
+//
 // HOW TO CHANGE IT. Re-run the comparison before adding anything: a competitor
 // price cut turns a winner into paid traffic to somebody else's cheaper product,
 // and nothing in the app notices. Removing an entry is always safe.
@@ -71,6 +76,4 @@ export const FREIGHT_VERIFIED_SLUGS = new Set<string>([
   "knitted-resistance-bands-set-of-3", // −14% · $10.10
   "digital-interval-timer", // −10% · $10.10
   "foam-roller-v", // −8% · $11.80
-  "micro-bands-pack-of-4", // at market · $10.10
-  "speed-rope-elite", // at market · $10.10
 ]);
