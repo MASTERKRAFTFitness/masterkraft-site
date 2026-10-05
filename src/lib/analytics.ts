@@ -71,9 +71,8 @@ function adsConversion(label: string | undefined, params: Params = {}): void {
  * accepts cookies - see CookieConsent - so this is a no-op for anyone who has
  * declined or not yet answered. That is the intended behaviour, not a gap.
  *
- * NO PIXEL ID CONFIGURED IS A WORKING STATE. With none set, `fbq` never exists
- * and this does nothing, which is what lets the Lead event ship before the Meta
- * account is ready - the same deal as the Google Ads labels above.
+ * NO PIXEL LOADED IS A WORKING STATE. Off masterkraft.com, or before consent,
+ * `fbq` never exists and this does nothing - the Lead event is simply not sent.
  */
 function metaConversion(event: string, params: Params = {}): void {
   if (typeof window === "undefined") return;

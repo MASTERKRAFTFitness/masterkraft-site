@@ -9,7 +9,12 @@ const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const HS_ID = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID;
 const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+// IN CODE, NOT AN ENV VAR. A pixel ID is public by design - Meta's own snippet
+// prints it into every page's source - so there is nothing to keep out of the
+// repo, and pinning it here means the pixel cannot silently go missing because
+// a Vercel variable was unset, misnamed or saved without a redeploy (which is
+// exactly how it went missing before). Change the pixel by changing this line.
+const META_PIXEL_ID = "517991158551582";
 
 export default function CookieConsent() {
   const [choice, setChoice] = useState<"accepted" | "declined" | null>(null);
