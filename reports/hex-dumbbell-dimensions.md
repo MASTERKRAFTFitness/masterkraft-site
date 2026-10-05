@@ -20,6 +20,8 @@ across the corners, C = head length, D = handle length, E = handle diameter.
 | Height | B | Head width again. Across the flats would be about 13% less, but a dumbbell's dead weight is always far above its cubic weight, so overstating it costs nothing. |
 | Weight | Current Unleashed weight | Unchanged. 42.5kg and 45kg Premium had none, so they take the standard range's 44kg and 46kg. |
 
+The file carries `*Product Description` as well as the code, exactly as Unleashed names each product, because Unleashed's product import requires it. A first import without it did not apply.
+
 Values are rounded up to 0.1cm. Every row passes the site's plausibility check and
 ships as a parcel.
 
