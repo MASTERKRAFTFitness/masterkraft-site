@@ -169,7 +169,7 @@ describe("the Meta pixel conversion", () => {
   });
 
   // fbq only exists after the visitor accepts cookies (see CookieConsent), and
-  // with no NEXT_PUBLIC_META_PIXEL_ID it never loads at all. Both are ordinary
+  // off masterkraft.com it never loads at all. Both are ordinary
   // states, not failures: the GA4 event must still fire and nothing may throw.
   it("is a no-op when the pixel never loaded", async () => {
     const calls = gtagSpy();
