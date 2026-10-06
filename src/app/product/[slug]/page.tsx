@@ -23,7 +23,7 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
-import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
+import { brandDisplayName, copySlugFor, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 import { getProductContent, resolveCopy, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
@@ -116,7 +116,7 @@ export async function generateMetadata({
   // A human-edited product_content row now outranks both. resolveCopy applies
   // that order and degrades to exactly this line's old behaviour on an empty
   // map, so the metadata and the body cannot disagree about which words won.
-  const authored = resolveCopy(slug, content);
+  const authored = resolveCopy(slug, content, unit && copySlugFor(unit));
   return {
     title: productTitle(p),
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
@@ -187,7 +187,10 @@ export default async function ProductPage({
   // the snapshot; the SAME call and the same map as generateMetadata, so the
   // meta description and the rendered overview can never come from different
   // sources.
-  const resolved = resolveCopy(slug, content);
+  // A generated unit page has no row under its own slug; it reads the row of
+  // the snapshot record its words came from, so an edit there reaches it.
+  const copySlug = !wooProduct && unit ? copySlugFor(unit) : undefined;
+  const resolved = resolveCopy(slug, content, copySlug);
   const authoredCopy = resolved.short ? { short: resolved.short } : undefined;
   const authoredHtml = resolved.html;
   const product =
@@ -218,7 +221,7 @@ export default async function ProductPage({
   // resolveCopy above: a loader-owned row is the snapshot copied and is skipped,
   // so this is a no-op until somebody edits one — at which point their value
   // replaces that row and the rest of the table stands.
-  const specs = resolveSpecs(slug, detail.specs, content);
+  const specs = resolveSpecs(slug, detail.specs, content, copySlug);
   // A bundle has no price of its own, so label it the same way its card is
   // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
   // than becoming card-payable at the cost of its cheapest item - see enrichCard.
@@ -431,12 +434,8 @@ export default async function ProductPage({
         />
         <ProductGallery images={galleryImages} name={product.name} labels={galleryLabels} />
 
-        {/* RIGHT: name, price, picker, then the words.
-            row-span-2 so this column occupies BOTH rows rather than making the
-            first one as tall as itself. Without it the row stretches to this
-            column's height and the size table lands 300px below the thumbnails
-            with nothing in between. */}
-        <div className="lg:row-span-2">
+        {/* RIGHT: name, price, picker, every size, then the words. */}
+        <div>
           {cat && (
             <p className="font-mono text-xs tracking-widest text-accent-600 uppercase">{cat.name}</p>
           )}
@@ -505,6 +504,19 @@ export default async function ProductPage({
             pricing, freight and lead times for your order.
           </p>
 
+          {/* Every size under the buy controls, in the same column, so a gym
+              comparing weights reads the table beside the picker it drives
+              rather than under the photos. */}
+          {usesVariants && (
+            <div className="mt-10">
+              <SizeTable
+                productName={unit?.name ?? range?.name ?? product.name}
+                productSlug={product.slug}
+                variants={variants}
+              />
+            </div>
+          )}
+
           {/* The overview reads directly under the price rather than as a
               full-width band below the fold, so the copy that sells the thing
               is beside the control that buys it. */}
@@ -562,20 +574,6 @@ export default async function ProductPage({
             </div>
           )}
         </div>
-
-        {/* A THIRD GRID CHILD, not a child of the gallery, and the order is
-            what makes both layouts right. On desktop it lands in row 2 of the
-            left column — under the thumbnails, left-justified, filling a column
-            that would otherwise stop at the strip while the buy column runs on.
-            On a phone the grid is one column, so it falls AFTER the price and
-            the picker rather than shoving them below 26 rows. */}
-        {usesVariants && (
-          <SizeTable
-            productName={unit?.name ?? range?.name ?? product.name}
-            productSlug={product.slug}
-            variants={variants}
-          />
-        )}
       </section>
       </VariantSelectionProvider>
 

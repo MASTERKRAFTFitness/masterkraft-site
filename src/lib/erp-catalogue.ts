@@ -26,7 +26,14 @@ import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
 import { anchorCodes, compareSizeLabels, getRange } from "@/lib/ranges";
 import { cartonsContradict, defaultCartonFor, isOversize } from "@/lib/freight";
 import { productCopy, productCopyHtml } from "@/lib/product-copy";
-import { filterListable, formatPrice, isBrandSku, type WcProduct } from "@/lib/woocommerce";
+import {
+  filterListable,
+  formatPrice,
+  isBrandSku,
+  isObsolete,
+  plainText,
+  type WcProduct,
+} from "@/lib/woocommerce";
 import type { EnrichedProduct } from "@/lib/unleashed";
 
 export type ErpUnit = {
@@ -365,6 +372,75 @@ function wooPageFor(codes: string[]): WcProduct | undefined {
   return undefined;
 }
 
+// ERP code -> the snapshot record whose WORDS describe it, listable or not.
+//
+// wooPages() is the router and has to be strict: a hidden, retired or (with
+// HIDE_UNSHIPPABLE on) unmeasured record must not hand out its URL. The copy has
+// no such problem. `MMDBRH-GROUP` drops out of the router on the live site for
+// want of a carton, so the 26 rubber hex dumbbells moved to a generated
+// /product/rubber-hex-dumbbell with no description - while the snapshot held
+// 765 characters written about exactly those codes. Of the snapshot's 484
+// records with copy, 287 are not listable, so this is not one product.
+//
+// Every record is indexed, whatever its visibility, but only records with
+// something to say.
+let WOO_COPY: Map<string, WcProduct> | null = null;
+
+function wooCopyIndex(): Map<string, WcProduct> {
+  if (WOO_COPY) return WOO_COPY;
+  const m = new Map<string, WcProduct>();
+  for (const p of allProducts()) {
+    if (!plainText(p.description) && !plainText(p.short_description)) continue;
+    const sku = p.sku?.trim().toUpperCase();
+    if (sku && !m.has(sku)) m.set(sku, p);
+    for (const v of variationsFor(p.id)) {
+      const vs = v.sku?.trim().toUpperCase();
+      if (vs && !m.has(vs)) m.set(vs, p);
+    }
+  }
+  WOO_COPY = m;
+  return m;
+}
+
+/**
+ * The snapshot copy for a unit with no page of its own, or undefined.
+ *
+ * Same lookup order as wooPageFor, with one guard it does not need: the record
+ * must have SOLD one of the unit's codes. A stem is shared - MWBBFUR is a
+ * straight barbell and a curl barbell - and the curl barbell lost the page
+ * contest precisely because that page never sold it, so it must not take the
+ * straight barbell's words either.
+ */
+export function wooCopyFor(codes: string[]): WcProduct | undefined {
+  if (!codes.length) return undefined;
+  const index = wooCopyIndex();
+  const mine = new Set(codes.map((c) => c.toUpperCase()));
+  const stem = stemOf(codes[0]);
+  let fallback: WcProduct | undefined;
+  for (const key of [`${stem}-GROUP`, `${stem}-1`, stem, ...mine]) {
+    const hit = index.get(key);
+    if (!hit) continue;
+    const sold = [hit.sku?.trim().toUpperCase() ?? "", ...anchorCodes(hit)];
+    if (!sold.some((c) => mine.has(c))) continue;
+    // A live record over a hidden or retired one. A range is usually both - a
+    // visible `-GROUP` bundle and its hidden variable twin, carrying the same
+    // words - and only the live one is in product_content (the loader skips
+    // obsolete records), so it is the one an editor can change.
+    if (!isObsolete(hit)) return hit;
+    fallback ??= hit;
+  }
+  return fallback;
+}
+
+/**
+ * The slug a generated unit page should read product_content under, when its
+ * own slug has no row: the snapshot record its words came from. Undefined for a
+ * unit that owns its page, which already reads under its own slug.
+ */
+export function copySlugFor(unit: ErpUnit): string | undefined {
+  return unit.wooSlug ? undefined : wooCopyFor(unit.codes)?.slug;
+}
+
 /**
  * Every unit the site sells, keyed by slug. Empty if the ERP is unreachable,
  * which every caller must treat as "fall back to the snapshot" rather than as
@@ -560,13 +636,21 @@ export function unitAsProduct(unit: ErpUnit, opts?: { withCopy?: boolean }): WcP
     // listing page - measured at ~10 KB of markup nothing rendered, on pages
     // whose loading behaviour we had just spent effort fixing. The product page
     // asks for it; the grids do not.
-    ...(opts?.withCopy
-      ? {
-          short_description: productCopy(unit.slug)?.short ?? "",
-          description: productCopyHtml(unit.slug) ?? "",
-        }
-      : {}),
+    //
+    // Authored copy first, then whatever the snapshot wrote about these codes
+    // under a record that no longer routes here (see wooCopyFor).
+    ...(opts?.withCopy ? unitCopy(unit) : {}),
   } as WcProduct;
+}
+
+function unitCopy(unit: ErpUnit): { short_description: string; description: string } {
+  const authored = productCopy(unit.slug)?.short;
+  const body = productCopyHtml(unit.slug);
+  const woo = authored && body ? undefined : wooCopyFor(unit.codes);
+  return {
+    short_description: authored ?? woo?.short_description ?? "",
+    description: body ?? woo?.description ?? "",
+  };
 }
 
 /**
