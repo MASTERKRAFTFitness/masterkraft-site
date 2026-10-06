@@ -1,0 +1,1267 @@
+[
+ {
+  "code": "MBGYRI01",
+  "title": "MasterKraft Gymnastic Rings (Wooden)",
+  "price": "75.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 85.42,
+    "lbf": 82.0,
+    "pct": 4.2
+   },
+   "Sydney": {
+    "ours": 93.58,
+    "lbf": 87.0,
+    "pct": 7.6
+   },
+   "Perth": {
+    "ours": 98.29,
+    "lbf": 87.0,
+    "pct": 13.0
+   }
+  },
+  "lbf": "Wooden Gymnastics Rings - Timber",
+  "note": "exact",
+  "label": "vic"
+ },
+ {
+  "code": "MBRMRL01",
+  "title": "MasterKraft Foam Roller 45cm",
+  "price": "33.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 43.42,
+    "lbf": 48.1,
+    "pct": -9.7
+   },
+   "Sydney": {
+    "ours": 54.49,
+    "lbf": 61.0,
+    "pct": -10.7
+   },
+   "Perth": {
+    "ours": 61.12,
+    "lbf": 60.11,
+    "pct": 1.7
+   }
+  },
+  "lbf": "360 Strength 45cm EVA Foam Roller - Firm",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MBRMRL03",
+  "title": "MasterKraft Foam Roller 33cm (TPT)",
+  "price": "35.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 45.42,
+    "lbf": 82.1,
+    "pct": -44.7
+   },
+   "Sydney": {
+    "ours": 53.4,
+    "lbf": 95.0,
+    "pct": -43.8
+   },
+   "Perth": {
+    "ours": 53.4,
+    "lbf": 94.11,
+    "pct": -43.3
+   }
+  },
+  "lbf": "Trigger Point GRID 1.0 Foam Roller",
+  "note": "approx: branded grid roller vs our 33cm TPT roller",
+  "label": "national"
+ },
+ {
+  "code": "MBRPBA01",
+  "title": "MasterKraft Knitted Resistance Bands (Set of 3)",
+  "price": "30.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 40.42,
+    "lbf": 37.5,
+    "pct": 7.8
+   },
+   "Sydney": {
+    "ours": 47.81,
+    "lbf": 40.5,
+    "pct": 18.0
+   },
+   "Perth": {
+    "ours": 48.4,
+    "lbf": 40.5,
+    "pct": 19.5
+   }
+  },
+  "lbf": "360 Strength Fabric Micro Activation Band, Medium (Green)",
+  "note": "approx: 3 single fabric bands vs our set of 3",
+  "label": null
+ },
+ {
+  "code": "MEWMACC01",
+  "title": "MasterKraft Rope & Band Rack (Wall Mounted) (Small)",
+  "price": "60.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 70.42,
+    "lbf": 118.1,
+    "pct": -40.4
+   },
+   "Sydney": {
+    "ours": 81.49,
+    "lbf": 131.0,
+    "pct": -37.8
+   },
+   "Perth": {
+    "ours": 88.12,
+    "lbf": 142.07,
+    "pct": -38.0
+   }
+  },
+  "lbf": "Wall Mount Skipping Rope & Power Band Storage Rack",
+  "note": "approx: their one size vs our small",
+  "label": "national"
+ },
+ {
+  "code": "MEWMACC02",
+  "title": "MasterKraft Rope & Band Rack (Wall Mounted)",
+  "price": "70.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 80.42,
+    "lbf": 118.1,
+    "pct": -31.9
+   },
+   "Sydney": {
+    "ours": 91.49,
+    "lbf": 131.0,
+    "pct": -30.2
+   },
+   "Perth": {
+    "ours": 98.12,
+    "lbf": 142.07,
+    "pct": -30.9
+   }
+  },
+  "lbf": "Wall Mount Skipping Rope & Power Band Storage Rack",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MEWMBER01",
+  "title": "MasterKraft Bench & Rower Rack (Wall Mounted)",
+  "price": "75.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MEWMMA01",
+  "title": "MasterKraft Exercise Mat Hanging Rack (Wall Mounted)",
+  "price": "55.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MEWMRO01",
+  "title": "MasterKraft Battle Rope Storage (Wall Mounted)",
+  "price": "50.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 60.42,
+    "lbf": 53.1,
+    "pct": 13.8
+   },
+   "Sydney": {
+    "ours": 71.49,
+    "lbf": 66.0,
+    "pct": 8.3
+   },
+   "Perth": {
+    "ours": 73.29,
+    "lbf": 65.11,
+    "pct": 12.6
+   }
+  },
+  "lbf": "1RM Battle Rope / Band Storage Hook",
+  "note": "approx: storage hook vs our wall storage",
+  "label": null
+ },
+ {
+  "code": "MMDESH04",
+  "title": "MasterKraft Dead Balls 9kg",
+  "price": "32.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 44.87,
+    "lbf": 58.1,
+    "pct": -22.8
+   },
+   "Sydney": {
+    "ours": 59.08,
+    "lbf": 71.0,
+    "pct": -16.8
+   },
+   "Perth": {
+    "ours": 80.09,
+    "lbf": 75.2,
+    "pct": 6.5
+   }
+  },
+  "lbf": "9kg Slam Ball",
+  "note": "approx: slam ball vs our dead ball",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMDESH06",
+  "title": "MasterKraft Dead Balls 12kg",
+  "price": "40.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 53.85,
+    "lbf": 63.1,
+    "pct": -14.7
+   },
+   "Sydney": {
+    "ours": 74.05,
+    "lbf": 76.0,
+    "pct": -2.6
+   },
+   "Perth": {
+    "ours": 105.94,
+    "lbf": 87.07,
+    "pct": 21.7
+   }
+  },
+  "lbf": "12kg Slam Ball",
+  "note": "approx: slam ball vs our dead ball",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMDESH07",
+  "title": "MasterKraft Dead Balls 15kg",
+  "price": "52.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 66.84,
+    "lbf": 73.1,
+    "pct": -8.6
+   },
+   "Sydney": {
+    "ours": 86.05,
+    "lbf": 86.0,
+    "pct": 0.1
+   },
+   "Perth": {
+    "ours": 124.57,
+    "lbf": 103.92,
+    "pct": 19.9
+   }
+  },
+  "lbf": "15kg Slam Ball",
+  "note": "approx: slam ball vs our dead ball",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMDESH08",
+  "title": "MasterKraft Dead Balls 20kg",
+  "price": "76.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 92.48,
+    "lbf": 88.1,
+    "pct": 5.0
+   },
+   "Sydney": {
+    "ours": 110.05,
+    "lbf": 101.0,
+    "pct": 9.0
+   },
+   "Perth": {
+    "ours": 148.57,
+    "lbf": 130.34,
+    "pct": 14.0
+   }
+  },
+  "lbf": "20kg Slam Ball",
+  "note": "approx: slam ball vs our dead ball",
+  "label": "vic"
+ },
+ {
+  "code": "MMGFACC01",
+  "title": "MasterKraft Digital Interval Timer",
+  "price": "345.00 AUD",
+  "status": "excluded",
+  "regions": [],
+  "why": "Little Bloke out of stock; their list price is 7.8% lower, landed price not measurable",
+  "label": null
+ },
+ {
+  "code": "MMKBPGC01",
+  "title": "MasterKraft Competition Kettlebells 6kg (Aluminium)",
+  "price": "60.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MMKBPGC02",
+  "title": "MasterKraft Competition Kettlebells 8kg",
+  "price": "70.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 82.54,
+    "lbf": 88.1,
+    "pct": -6.3
+   },
+   "Sydney": {
+    "ours": 97.08,
+    "lbf": 101.0,
+    "pct": -3.9
+   },
+   "Perth": {
+    "ours": 118.09,
+    "lbf": 102.92,
+    "pct": 14.7
+   }
+  },
+  "lbf": "8kg (18lb) Hollow Competition Steel Kettlebell",
+  "note": "exact",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMKBPGC03",
+  "title": "MasterKraft Competition Kettlebells 10kg",
+  "price": "80.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 93.19,
+    "lbf": 100.1,
+    "pct": -6.9
+   },
+   "Sydney": {
+    "ours": 114.05,
+    "lbf": 113.0,
+    "pct": 0.9
+   },
+   "Perth": {
+    "ours": 139.87,
+    "lbf": 119.49,
+    "pct": 17.1
+   }
+  },
+  "lbf": "10kg (22lb) Hollow Competition Steel Kettlebell",
+  "note": "exact",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMKBPGC04",
+  "title": "MasterKraft Competition Kettlebells 12kg",
+  "price": "90.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 103.85,
+    "lbf": 112.1,
+    "pct": -7.4
+   },
+   "Sydney": {
+    "ours": 124.05,
+    "lbf": 125.0,
+    "pct": -0.8
+   },
+   "Perth": {
+    "ours": 155.94,
+    "lbf": 136.07,
+    "pct": 14.6
+   }
+  },
+  "lbf": "12kg (26lb) Hollow Competition Steel Kettlebell",
+  "note": "exact",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMKBPGC05",
+  "title": "MasterKraft Competition Kettlebells 16kg",
+  "price": "110.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 125.17,
+    "lbf": 138.1,
+    "pct": -9.4
+   },
+   "Sydney": {
+    "ours": 144.05,
+    "lbf": 151.0,
+    "pct": -4.6
+   },
+   "Perth": {
+    "ours": 182.57,
+    "lbf": 171.21,
+    "pct": 6.6
+   }
+  },
+  "lbf": "16kg (35lb) Hollow Competition Steel Kettlebell",
+  "note": "exact",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMKBPGC06",
+  "title": "MasterKraft Competition Kettlebells 18kg",
+  "price": "120.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MMKBPGC07",
+  "title": "MasterKraft Competition Kettlebells 20kg",
+  "price": "130.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 146.48,
+    "lbf": 153.1,
+    "pct": -4.3
+   },
+   "Sydney": {
+    "ours": 164.05,
+    "lbf": 166.0,
+    "pct": -1.2
+   },
+   "Perth": {
+    "ours": 202.57,
+    "lbf": 195.34,
+    "pct": 3.7
+   }
+  },
+  "lbf": "20kg (44lb) Hollow Competition Steel Kettlebell",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MMMBPR01",
+  "title": "MasterKraft Medicine Ball 2kg",
+  "price": "44.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 54.42,
+    "lbf": 63.1,
+    "pct": -13.8
+   },
+   "Sydney": {
+    "ours": 62.58,
+    "lbf": 76.0,
+    "pct": -17.7
+   },
+   "Perth": {
+    "ours": 67.29,
+    "lbf": 75.11,
+    "pct": -10.4
+   }
+  },
+  "lbf": "Rubber Medicine Ball 2kg",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MMMBPR02",
+  "title": "MasterKraft Medicine Ball 4kg",
+  "price": "52.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 62.42,
+    "lbf": 73.1,
+    "pct": -14.6
+   },
+   "Sydney": {
+    "ours": 73.49,
+    "lbf": 86.0,
+    "pct": -14.5
+   },
+   "Perth": {
+    "ours": 80.12,
+    "lbf": 85.11,
+    "pct": -5.9
+   }
+  },
+  "lbf": "Rubber Medicine Ball 4kg",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MMMBPR03",
+  "title": "MasterKraft Medicine Ball 6kg",
+  "price": "64.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 75.86,
+    "lbf": 83.1,
+    "pct": -8.7
+   },
+   "Sydney": {
+    "ours": 91.08,
+    "lbf": 96.0,
+    "pct": -5.1
+   },
+   "Perth": {
+    "ours": 103.62,
+    "lbf": 95.64,
+    "pct": 8.3
+   }
+  },
+  "lbf": "Rubber Medicine Ball 6kg",
+  "note": "exact",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MMMBPR04",
+  "title": "MasterKraft Medicine Ball 8kg",
+  "price": "75.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 87.54,
+    "lbf": 103.1,
+    "pct": -15.1
+   },
+   "Sydney": {
+    "ours": 102.08,
+    "lbf": 116.0,
+    "pct": -12.0
+   },
+   "Perth": {
+    "ours": 123.09,
+    "lbf": 117.92,
+    "pct": 4.4
+   }
+  },
+  "lbf": "Rubber Medicine Ball 8kg",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MMMBPR05",
+  "title": "MasterKraft Medicine Ball 10kg",
+  "price": "90.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 103.19,
+    "lbf": 123.1,
+    "pct": -16.2
+   },
+   "Sydney": {
+    "ours": 124.05,
+    "lbf": 136.0,
+    "pct": -8.8
+   },
+   "Perth": {
+    "ours": 149.87,
+    "lbf": 142.49,
+    "pct": 5.2
+   }
+  },
+  "lbf": "Rubber Medicine Ball 10kg",
+  "note": "exact",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MRCTATT01",
+  "title": "MasterKraft Rig Core Trainer (Landmine)",
+  "price": "105.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 115.42,
+    "lbf": 162.1,
+    "pct": -28.8
+   },
+   "Sydney": {
+    "ours": 126.49,
+    "lbf": 175.0,
+    "pct": -27.7
+   },
+   "Perth": {
+    "ours": 133.12,
+    "lbf": 174.11,
+    "pct": -23.5
+   }
+  },
+  "lbf": "1RM Rig Single Landmine",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MRWAATT01",
+  "title": "MasterKraft Rig Spotter Arms (Pair)",
+  "price": "295.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 310.82,
+    "lbf": 292.1,
+    "pct": 6.4
+   },
+   "Sydney": {
+    "ours": 329.05,
+    "lbf": 305.0,
+    "pct": 7.9
+   },
+   "Perth": {
+    "ours": 367.57,
+    "lbf": 322.92,
+    "pct": 13.8
+   }
+  },
+  "lbf": "1RM Premium Spotter Arm (PAIR)",
+  "note": "exact",
+  "label": null
+ },
+ {
+  "code": "MWWAACC02",
+  "title": "MasterKraft Dip & Pull Up Belt",
+  "price": "65.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 75.42,
+    "lbf": 72.0,
+    "pct": 4.8
+   },
+   "Sydney": {
+    "ours": 83.4,
+    "lbf": 77.0,
+    "pct": 8.3
+   },
+   "Perth": {
+    "ours": 83.4,
+    "lbf": 77.0,
+    "pct": 8.3
+   }
+  },
+  "lbf": "Harbinger Poly Pro Dip Belt",
+  "note": "approx: their cheapest dip belt",
+  "label": "vic"
+ },
+ {
+  "code": "MWWLACC01",
+  "title": "MasterKraft Barbell Squat Pad",
+  "price": "20.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 30.42,
+    "lbf": 48.1,
+    "pct": -36.8
+   },
+   "Sydney": {
+    "ours": 38.4,
+    "lbf": 61.0,
+    "pct": -37.0
+   },
+   "Perth": {
+    "ours": 38.4,
+    "lbf": 60.11,
+    "pct": -36.1
+   }
+  },
+  "lbf": "360 Strength Barbell Squat Pad (Covered)",
+  "note": "exact",
+  "label": "national"
+ },
+ {
+  "code": "MWWLACC02",
+  "title": "MasterKraft Olympic Bar Easy Lock Collars (Pair)",
+  "price": "25.00 AUD",
+  "status": "measured",
+  "regions": [
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 35.42,
+    "lbf": 32.5,
+    "pct": 9.0
+   },
+   "Sydney": {
+    "ours": 36.73,
+    "lbf": 35.5,
+    "pct": 3.5
+   },
+   "Perth": {
+    "ours": 36.73,
+    "lbf": 35.5,
+    "pct": 3.5
+   }
+  },
+  "lbf": "360 Strength Nylon Olympic Locking Collar",
+  "note": "exact",
+  "label": "nsw-wa"
+ },
+ {
+  "code": "MWWPCB01",
+  "title": "MasterKraft Coloured Bumper Plates 5kg",
+  "price": "45.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 110.37,
+    "lbf": 113.1,
+    "pct": -2.4
+   },
+   "Sydney": {
+    "ours": 132.48,
+    "lbf": 126.0,
+    "pct": 5.1
+   },
+   "Perth": {
+    "ours": 157.74,
+    "lbf": 132.49,
+    "pct": 19.1
+   }
+  },
+  "lbf": "5kg PRO HG Bumper Plates (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": "vic"
+ },
+ {
+  "code": "MWWPCB02",
+  "title": "MasterKraft Coloured Bumper Plates 10g",
+  "price": "65.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 150.37,
+    "lbf": 163.1,
+    "pct": -7.8
+   },
+   "Sydney": {
+    "ours": 184.49,
+    "lbf": 176.0,
+    "pct": 4.8
+   },
+   "Perth": {
+    "ours": 244.31,
+    "lbf": 205.34,
+    "pct": 19.0
+   }
+  },
+  "lbf": "10kg PRO HG Bumper Plates (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": "vic-nsw"
+ },
+ {
+  "code": "MWWPCB03",
+  "title": "MasterKraft Coloured Bumper Plates 15kg",
+  "price": "85.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 209.2,
+    "lbf": 193.1,
+    "pct": 8.3
+   },
+   "Sydney": {
+    "ours": 236.49,
+    "lbf": 208.27,
+    "pct": 13.5
+   },
+   "Perth": {
+    "ours": 308.87,
+    "lbf": 258.19,
+    "pct": 19.6
+   }
+  },
+  "lbf": "15kg PRO HG Bumper Plates (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": null
+ },
+ {
+  "code": "MWWPCB04",
+  "title": "MasterKraft Coloured Bumper Plates 20kg",
+  "price": "105.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 249.2,
+    "lbf": 253.1,
+    "pct": -1.5
+   },
+   "Sydney": {
+    "ours": 288.51,
+    "lbf": 274.33,
+    "pct": 5.2
+   },
+   "Perth": {
+    "ours": 373.42,
+    "lbf": 341.04,
+    "pct": 9.5
+   }
+  },
+  "lbf": "20kg PRO HG Bumper Plates (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": "vic"
+ },
+ {
+  "code": "MWWPCNB03",
+  "title": "MasterKraft Competition Bumper Plates 15kg",
+  "price": "185.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 409.2,
+    "lbf": 303.1,
+    "pct": 35.0
+   },
+   "Sydney": {
+    "ours": 436.49,
+    "lbf": 316.0,
+    "pct": 38.1
+   },
+   "Perth": {
+    "ours": 508.87,
+    "lbf": 333.92,
+    "pct": 52.4
+   }
+  },
+  "lbf": "15kg Calibrated Competition Bumper Plate (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": null
+ },
+ {
+  "code": "MWWPCNB04",
+  "title": "MasterKraft Competition Bumper Plates 20kg",
+  "price": "225.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 489.2,
+    "lbf": 372.1,
+    "pct": 31.5
+   },
+   "Sydney": {
+    "ours": 528.51,
+    "lbf": 393.33,
+    "pct": 34.4
+   },
+   "Perth": {
+    "ours": 613.42,
+    "lbf": 460.04,
+    "pct": 33.3
+   }
+  },
+  "lbf": "20kg Calibrated Competition Bumper Plate (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": null
+ },
+ {
+  "code": "MWWPCP01",
+  "title": "MasterKraft Change Plates 1.25kg",
+  "price": "26.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 72.37,
+    "lbf": 34.6,
+    "pct": 109.2
+   },
+   "Sydney": {
+    "ours": 86.05,
+    "lbf": 47.5,
+    "pct": 81.2
+   },
+   "Perth": {
+    "ours": 98.58,
+    "lbf": 46.61,
+    "pct": 111.5
+   }
+  },
+  "lbf": "1.25kg Olympic Rubber Coated Weight Plate (PAIR)",
+  "note": "approx: their rubber-coated iron pair vs 2 of our change plates",
+  "label": null
+ },
+ {
+  "code": "MWWPCP02",
+  "title": "MasterKraft Change Plates 2.5kg",
+  "price": "46.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 112.37,
+    "lbf": 103.1,
+    "pct": 9.0
+   },
+   "Sydney": {
+    "ours": 127.27,
+    "lbf": 116.0,
+    "pct": 9.7
+   },
+   "Perth": {
+    "ours": 138.58,
+    "lbf": 115.11,
+    "pct": 20.4
+   }
+  },
+  "lbf": "2.5kg Premium Rubber Change Plates (Pair)",
+  "note": "exact: pair vs 2 of ours",
+  "label": null
+ },
+ {
+  "code": "MWWPOPR02",
+  "title": "MasterKraft Olympic Premium Rubber Weight Plates 2.5kg",
+  "price": "14.00 AUD",
+  "status": "measured",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "cities": {
+   "Melbourne": {
+    "ours": 48.37,
+    "lbf": 46.1,
+    "pct": 4.9
+   },
+   "Sydney": {
+    "ours": 54.91,
+    "lbf": 59.0,
+    "pct": -6.9
+   },
+   "Perth": {
+    "ours": 54.91,
+    "lbf": 58.11,
+    "pct": -5.5
+   }
+  },
+  "lbf": "2.5kg Olympic Rubber Coated Weight Plate (PAIR)",
+  "note": "approx: rubber-coated iron pair vs 2 of our premium rubber",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOPR03",
+  "title": "MasterKraft Olympic Premium Rubber Weight Plates 5kg",
+  "price": "28.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 76.37,
+    "lbf": 68.1,
+    "pct": 12.1
+   },
+   "Sydney": {
+    "ours": 98.48,
+    "lbf": 81.0,
+    "pct": 21.6
+   },
+   "Perth": {
+    "ours": 123.74,
+    "lbf": 92.07,
+    "pct": 34.4
+   }
+  },
+  "lbf": "5kg Olympic Rubber Coated Weight Plate (PAIR)",
+  "note": "approx: rubber-coated iron pair vs 2 of our premium rubber",
+  "label": null
+ },
+ {
+  "code": "MWWPOPR04",
+  "title": "MasterKraft Olympic Premium Rubber Weight Plates 10kg",
+  "price": "56.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 132.37,
+    "lbf": 111.1,
+    "pct": 19.1
+   },
+   "Sydney": {
+    "ours": 166.49,
+    "lbf": 124.0,
+    "pct": 34.3
+   },
+   "Perth": {
+    "ours": 226.31,
+    "lbf": 153.34,
+    "pct": 47.6
+   }
+  },
+  "lbf": "10kg Olympic Rubber Coated Weight Plate (PAIR)",
+  "note": "approx: rubber-coated iron pair vs 2 of our premium rubber",
+  "label": null
+ },
+ {
+  "code": "MWWPOPR06",
+  "title": "MasterKraft Olympic Premium Rubber Weight Plates 20kg",
+  "price": "112.00 AUD",
+  "status": "measured",
+  "regions": [],
+  "cities": {
+   "Melbourne": {
+    "ours": 263.2,
+    "lbf": 199.1,
+    "pct": 32.2
+   },
+   "Sydney": {
+    "ours": 302.51,
+    "lbf": 220.33,
+    "pct": 37.3
+   },
+   "Perth": {
+    "ours": 387.42,
+    "lbf": 287.04,
+    "pct": 35.0
+   }
+  },
+  "lbf": "20kg Olympic Rubber Coated Weight Plate (PAIR)",
+  "note": "approx: rubber-coated iron pair vs 2 of our premium rubber",
+  "label": null
+ },
+ {
+  "code": "MWWPOU01",
+  "title": "MasterKraft Olympic Urethane Weight Plates 1.5kg",
+  "price": "10.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOU02",
+  "title": "MasterKraft Olympic Urethane Weight Plates 2.5kg",
+  "price": "20.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOU03",
+  "title": "MasterKraft Olympic Urethane Weight Plates 5kg",
+  "price": "40.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOU04",
+  "title": "MasterKraft Olympic Urethane Weight Plates 10kg",
+  "price": "80.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOU05",
+  "title": "MasterKraft Olympic Urethane Weight Plates 15kg",
+  "price": "120.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOU06",
+  "title": "MasterKraft Olympic Urethane Weight Plates 20kg",
+  "price": "160.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ },
+ {
+  "code": "MWWPOU07",
+  "title": "MasterKraft Olympic Urethane Weight Plates 25kg",
+  "price": "200.00 AUD",
+  "status": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "No Little Bloke equivalent; kept on 17 Sep product-price advantage",
+  "label": "national"
+ }
+]
