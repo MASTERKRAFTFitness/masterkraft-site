@@ -23,7 +23,7 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
-import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
+import { brandDisplayName, copySlugFor, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 import { getProductContent, resolveCopy, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
@@ -116,7 +116,7 @@ export async function generateMetadata({
   // A human-edited product_content row now outranks both. resolveCopy applies
   // that order and degrades to exactly this line's old behaviour on an empty
   // map, so the metadata and the body cannot disagree about which words won.
-  const authored = resolveCopy(slug, content);
+  const authored = resolveCopy(slug, content, unit && copySlugFor(unit));
   return {
     title: productTitle(p),
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
@@ -187,7 +187,10 @@ export default async function ProductPage({
   // the snapshot; the SAME call and the same map as generateMetadata, so the
   // meta description and the rendered overview can never come from different
   // sources.
-  const resolved = resolveCopy(slug, content);
+  // A generated unit page has no row under its own slug; it reads the row of
+  // the snapshot record its words came from, so an edit there reaches it.
+  const copySlug = !wooProduct && unit ? copySlugFor(unit) : undefined;
+  const resolved = resolveCopy(slug, content, copySlug);
   const authoredCopy = resolved.short ? { short: resolved.short } : undefined;
   const authoredHtml = resolved.html;
   const product =
@@ -218,7 +221,7 @@ export default async function ProductPage({
   // resolveCopy above: a loader-owned row is the snapshot copied and is skipped,
   // so this is a no-op until somebody edits one — at which point their value
   // replaces that row and the rest of the table stands.
-  const specs = resolveSpecs(slug, detail.specs, content);
+  const specs = resolveSpecs(slug, detail.specs, content, copySlug);
   // A bundle has no price of its own, so label it the same way its card is
   // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
   // than becoming card-payable at the cost of its cheapest item - see enrichCard.

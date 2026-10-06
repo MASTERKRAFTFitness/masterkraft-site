@@ -30,6 +30,7 @@ import {
   filterListable,
   formatPrice,
   isBrandSku,
+  isObsolete,
   plainText,
   type WcProduct,
 } from "@/lib/woocommerce";
@@ -415,13 +416,29 @@ export function wooCopyFor(codes: string[]): WcProduct | undefined {
   const index = wooCopyIndex();
   const mine = new Set(codes.map((c) => c.toUpperCase()));
   const stem = stemOf(codes[0]);
-  for (const key of [...mine, `${stem}-GROUP`, `${stem}-1`, stem]) {
+  let fallback: WcProduct | undefined;
+  for (const key of [`${stem}-GROUP`, `${stem}-1`, stem, ...mine]) {
     const hit = index.get(key);
     if (!hit) continue;
     const sold = [hit.sku?.trim().toUpperCase() ?? "", ...anchorCodes(hit)];
-    if (sold.some((c) => mine.has(c))) return hit;
+    if (!sold.some((c) => mine.has(c))) continue;
+    // A live record over a hidden or retired one. A range is usually both - a
+    // visible `-GROUP` bundle and its hidden variable twin, carrying the same
+    // words - and only the live one is in product_content (the loader skips
+    // obsolete records), so it is the one an editor can change.
+    if (!isObsolete(hit)) return hit;
+    fallback ??= hit;
   }
-  return undefined;
+  return fallback;
+}
+
+/**
+ * The slug a generated unit page should read product_content under, when its
+ * own slug has no row: the snapshot record its words came from. Undefined for a
+ * unit that owns its page, which already reads under its own slug.
+ */
+export function copySlugFor(unit: ErpUnit): string | undefined {
+  return unit.wooSlug ? undefined : wooCopyFor(unit.codes)?.slug;
 }
 
 /**

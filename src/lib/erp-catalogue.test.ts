@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   ERP_GROUPS,
   brandDisplayName,
+  copySlugFor,
   erpSubgroups,
   erpUnits,
   pageCodes,
@@ -368,6 +369,17 @@ describe("a unit without its old page keeps the old page's words", () => {
 
   it("finds the copy by the codes it sold, listable or not", () => {
     expect(wooCopyFor(dumbbells.codes)?.description).toContain("High grade dumbbells");
+  });
+
+  it("prefers the live record, which is the one product_content holds", () => {
+    // MMDBRH01 is a variation of the HIDDEN twin rubber-hex-dumbbell-v; the
+    // loader skips that one, so its row would never be found.
+    expect(wooCopyFor(dumbbells.codes)?.slug).toBe("rubber-hex-dumbbell-group");
+    expect(copySlugFor(dumbbells)).toBe("rubber-hex-dumbbell-group");
+  });
+
+  it("gives a unit that owns its page no alias", () => {
+    expect(copySlugFor({ ...dumbbells, slug: "rubber-hex-dumbbell-group", wooSlug: "rubber-hex-dumbbell-group" })).toBeUndefined();
   });
 
   it("puts that copy on the generated page", () => {

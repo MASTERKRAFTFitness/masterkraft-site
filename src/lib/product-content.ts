@@ -248,8 +248,15 @@ export async function getProductContent(): Promise<ContentMap> {
  * Pass the map from getProductContent(); `{}` gives exactly today's behaviour,
  * which is what makes this safe to call before the table has anything in it.
  */
-export function resolveCopy(slug: string, content: ContentMap = {}): ContentEntry {
-  const row = content[slug];
+export function resolveCopy(
+  slug: string,
+  content: ContentMap = {},
+  // The row to read when the page's own slug has none - for a generated unit
+  // page, the snapshot record its words came from (erp-catalogue copySlugFor).
+  // The authored JSON stays keyed by the page's own slug.
+  alias?: string
+): ContentEntry {
+  const row = content[slug] ?? (alias ? content[alias] : undefined);
   const json = productCopy(slug);
   // FOUR LEVELS, and the order is the whole contract:
   //
@@ -281,9 +288,10 @@ export function resolveCopy(slug: string, content: ContentMap = {}): ContentEntr
 export function resolveSpecs(
   slug: string,
   fallback: { label: string; value: string }[],
-  content: ContentMap = {}
+  content: ContentMap = {},
+  alias?: string
 ): { label: string; value: string }[] {
-  const override = content[slug]?.specs;
+  const override = (content[slug] ?? (alias ? content[alias] : undefined))?.specs;
   // No edited row: hand back exactly what the snapshot produced, same array,
   // same order. This is the path every product takes until somebody edits one.
   if (!override) return fallback;

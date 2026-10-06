@@ -20,7 +20,7 @@
 // - Out-of-stock and preorder items. Merchant Center accepts them; a campaign
 //   budget should not. 162 of the 285 live products are PreOrder, and paying
 //   for a click on one buys a customer a wait, not a sale.
-import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
+import { copySlugFor, erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, wooCopyFor, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
@@ -184,13 +184,17 @@ export function feedTitle(unit: ErpUnit, size: string | undefined): string {
  * wants prose, and markup in a description is a disapproval.
  */
 function descriptionFor(unit: ErpUnit, content: ContentMap | undefined): string {
-  const resolved = resolveCopy(unit.slug, content ?? {});
+  const resolved = resolveCopy(unit.slug, content ?? {}, copySlugFor(unit));
   // Keyed on unit.slug — the slug `link` points at — rather than wooSlug. They
   // are the same string whenever a snapshot page exists (erpUnits sets both
-  // from page.slug), and for an ERP-only unit the lookup simply misses. Using
-  // the slug we advertise is what guarantees the description belongs to the
-  // page the shopper lands on.
-  const snapshot = productBySlug(unit.slug)?.short_description;
+  // from page.slug). An ERP-only unit has no row under its own slug and reads
+  // the row of the record that sold its codes - the same one its page reads -
+  // so the description still belongs to the page the shopper lands on.
+  // An ERP-only unit has no record under its own slug; fall back to the one
+  // that sold its codes, as its page does (erp-catalogue wooCopyFor).
+  const snapshot = (
+    productBySlug(unit.slug) ?? (unit.wooSlug ? undefined : wooCopyFor(unit.codes))
+  )?.short_description;
   const text = plainText(resolved.short ?? "") || plainText(snapshot ?? "");
   // 5000 is Merchant Center's limit. Nothing in this catalogue is close, but a
   // description that silently overruns is rejected rather than truncated.
