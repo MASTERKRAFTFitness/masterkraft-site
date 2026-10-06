@@ -9,6 +9,7 @@ import {
   briefAttribution,
   briefHubspotFields,
   briefLines,
+  briefPropertyFields,
   briefSummary,
   emptyBrief,
   humanBytes,
@@ -122,6 +123,36 @@ describe("briefHubspotFields", () => {
   it("files the lead against the fitout funnel", () => {
     const type = briefHubspotFields(full).find((f) => f.name === "enquiry_type")!.value;
     expect(type).toBe(portalEnquiryType(ENQUIRY_KIND.fitout));
+  });
+});
+
+describe("briefPropertyFields", () => {
+  // These must match the Instagram lead form's HubSpot properties name for name,
+  // or the two paths can't be counted in one "qualified" list.
+  it("sends the five lead-form answers as fitout_* properties", () => {
+    expect(briefPropertyFields(full)).toEqual([
+      { name: "fitout_project_type", value: "Commercial Gym" },
+      { name: "fitout_stage", value: "Ready to quote" },
+      { name: "fitout_branding", value: "I'd like custom branded" },
+      { name: "fitout_budget", value: "$50k - $150k" },
+      { name: "fitout_timeline", value: "1-3 months" },
+    ]);
+  });
+
+  // HubSpot rejects an unknown dropdown value, so one stray answer would cost
+  // every property on the brief. Skipped and off-list answers are left out.
+  it("leaves out answers that are blank or not one of the options", () => {
+    const fields = briefPropertyFields({ ...full, stage: "", budget: "a lot" });
+    expect(fields.map((f) => f.name)).toEqual([
+      "fitout_project_type",
+      "fitout_branding",
+      "fitout_timeline",
+    ]);
+  });
+
+  it("stays out of the fields that must always land", () => {
+    const names = briefHubspotFields(full).map((f) => f.name);
+    expect(names.some((n) => n.startsWith("fitout_"))).toBe(false);
   });
 });
 

@@ -13,8 +13,13 @@
 // lib/hubspot.ts - a non-2xx throws), and none of these qualification answers
 // exist as HubSpot properties yet. Composing them into the one `message` field
 // that DOES exist means the brief reaches the CRM today, with no portal config
-// and no risk of a lead bouncing. Promoting them to real properties later is a
-// HubSpot-side job plus a line each in `briefHubspotFields`.
+// and no risk of a lead bouncing.
+//
+// The five answers the Instagram lead form also asks are ADDITIONALLY sent as
+// their own `fitout_*` properties (briefPropertyFields), so a website brief and
+// a lead-form lead land in the same HubSpot list. The route sends them on a
+// first attempt only and resends without them if HubSpot refuses - so until the
+// properties exist in the portal, nothing changes and no lead bounces.
 
 import { ENQUIRY_KIND, portalEnquiryType } from "@/lib/enquiry-type";
 
@@ -368,6 +373,34 @@ export function briefSummary(
   // Its own paragraph, after the brief: the brief is what the customer said,
   // this is what we know about how they arrived.
   return from ? `${body}\n\n${from}` : body;
+}
+
+/**
+ * The qualification answers as their own HubSpot contact properties - the same
+ * five the Instagram lead form asks, so both paths can be counted in one list
+ * (see docs/instagram-fitout-campaign-build.md, section 2).
+ *
+ * The values sent are the `value`s above, so each HubSpot dropdown's INTERNAL
+ * values must be exactly these strings. Anything not in the option list is left
+ * out rather than sent: HubSpot rejects an unknown dropdown value, and the route
+ * would then fall back to sending none of them.
+ *
+ * Kept OUT of briefHubspotFields on purpose: those must always land, these are
+ * best-effort until the portal defines them.
+ */
+export const BRIEF_PROPERTIES = [
+  { name: "fitout_project_type", field: "projectType", options: projectTypes },
+  { name: "fitout_stage", field: "stage", options: projectStages },
+  { name: "fitout_branding", field: "branding", options: brandingOptions },
+  { name: "fitout_budget", field: "budget", options: budgetOptions },
+  { name: "fitout_timeline", field: "timeline", options: timelineOptions },
+] as const;
+
+export function briefPropertyFields(brief: FitoutBrief): { name: string; value: string }[] {
+  return BRIEF_PROPERTIES.flatMap(({ name, field, options }) => {
+    const value = brief[field];
+    return options.some((o) => o.value === value) ? [{ name, value }] : [];
+  });
 }
 
 /**

@@ -48,7 +48,7 @@ multiple choice.
 
 | # | Question | Options (exact text) |
 |---|---|---|
-| Q1 | What are you fitting out? | Commercial Gym · Boutique Studio · Home Gym · PT Studio · Elite / High Performance · School or University |
+| Q1 | What are you fitting out? | Commercial Gym · Boutique Studio · Home Gym · PT Studio · Elite Sports · School or University |
 | Q2 | Where is the project up to? | Ready to quote · Planning a build · Gathering concepts |
 | Q3 | Would you like the equipment in your own colours? | I'd like custom branded · Standard finishes are fine · Not sure - show me both |
 | Q4 | Rough budget for the equipment? | Under $10k · $10k - $50k · $50k - $150k · $150k+ · Not sure yet |
@@ -77,7 +77,10 @@ never "cheap", "fitout" as one word.
 
 HubSpot drops answers to custom questions unless each one maps to a contact property.
 Create these first in HubSpot → Settings → Properties → Contact, group "Fitout brief".
-Make each one a **dropdown** whose options match section 1 exactly:
+Make each one a **dropdown select**. For every option, the **internal value must be
+the exact text from section 1**, including the plain hyphens in "$10k - $50k" and
+"1-3 months". The website brief sends those exact strings too. A mismatch makes HubSpot
+drop the website brief's properties (the brief itself still lands; see below).
 
 | Property label | Internal name | Maps from |
 |---|---|---|
@@ -97,10 +100,11 @@ Then go to HubSpot → Marketing → **Lead Capture → Lead Ads** → Connect a
 `fitout_budget` is $10k - $50k, $50k - $150k or $150k+. Make this a HubSpot active list
 called "Fitout 3D – Qualified". Its size is the number used in the week 3–4 review.
 
-The website brief can't fill these properties yet. Its answers arrive as prose in
-`message` (see the header comment in `src/lib/fitout-brief.ts`). Once the properties
-exist, that is a one-line change per field in `briefHubspotFields`, so both paths can
-report from the same list. Raise it as a follow-up if wanted.
+**The website brief fills the same five properties**, so the "Qualified" list counts
+both paths. Until the properties exist, HubSpot refuses them. The site then resends the
+brief without them, so no lead is lost, and the full brief is always in `message` as
+well. Once the properties are created, check the next website brief shows all five
+filled. If not, compare the dropdown internal values with section 1.
 
 Test the sync with Meta's **Lead Ads Testing Tool**
 (developers.facebook.com/tools/lead-ads-testing). Submit a test lead, confirm it lands
