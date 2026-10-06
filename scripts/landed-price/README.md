@@ -22,3 +22,11 @@ handle here.
 Center fetches daily from https://masterkraft.com/merchant-center-promotion.csv.
 It refuses to publish while any quote is missing, so a throttled run can't drop
 products from the campaigns. Re-run with the same `--out` to fill the gaps.
+
+## Batches (October 2026)
+
+The list went live in two steps. **Batch 1** (6 Oct, `public/merchant-center-promotion.csv`)
+is only the sizes measured at least 5% *cheaper* landed than Little Bloke in
+every region they are shown: 20 sizes. **Batch 2** is the first scheduled re-run,
+which proposes the full rule (within 5%, plus sizes Little Bloke doesn't sell) as
+a pull request; the additions in that PR are the second batch to approve.

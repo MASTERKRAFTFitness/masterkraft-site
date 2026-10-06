@@ -13,8 +13,9 @@ through their own Shopify checkout shipping calculator. Plates compare their pai
 against two of ours (ourQty 2, theirQty 1). Little Bloke prices are re-read from
 their catalogue on every run; ours come from ours.json (see INPUT).
 
-INPUT. ours.json, a list of {"code", "price" (A$ inc GST), "stock"} for the codes
-in matches.json, taken from the Unleashed mirror the same day:
+INPUT. By default our prices and stock come from the live site (see
+site_prices). Or pass --ours, a list of {"code", "price" (A$ inc GST), "stock"}
+for the codes in matches.json, taken from the Unleashed mirror the same day:
     select erp_code as code, round(price * 1.1, 2) as price, stock
     from erp_products where erp_code in (<codes>);
 (Supabase project masterkraft-site, table erp_products.)
@@ -114,6 +115,36 @@ def lbf_quote(variant_id, qty, city, state, postcode, jar):
     return None
 
 
+def site_prices(matches):
+    """Our price and stock straight from the live site.
+
+    /api/cart/line is what the Google checkout link uses: it returns a cart line
+    with the current price only for a code that is in stock, priced and
+    freight-quotable, and 404 otherwise. That is exactly the bar for promoting a
+    product, so a 404 is recorded as stock 0. A network failure is not: it stops
+    the run rather than quietly marking everything out of stock.
+    """
+    ours = {}
+    for m in matches:
+        code = m["code"]
+        for attempt in range(3):
+            r = subprocess.run(["curl", "-sS", "-m", "60", "-w", "\n%{http_code}",
+                                f"{OURS_QUOTE.rsplit('/api/', 1)[0]}/api/cart/line?id={code}"],
+                               capture_output=True, text=True).stdout.rsplit("\n", 1)
+            status = r[-1] if r else ""
+            if status == "200":
+                ours[code] = {"code": code, "price": json.loads(r[0])["line"]["price"], "stock": 1}
+                break
+            if status == "404":
+                ours[code] = {"code": code, "price": 0, "stock": 0}
+                break
+            time.sleep(10)
+        else:
+            sys.exit(f"could not read our price for {code} from the site (HTTP {status})")
+    print(f"our prices: {sum(1 for o in ours.values() if o['stock'])} of {len(ours)} in stock", flush=True)
+    return ours
+
+
 def label(regions):
     if not regions:
         return None
@@ -122,7 +153,7 @@ def label(regions):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--ours", required=True, help="ours.json: [{code, price, stock}]")
+    ap.add_argument("--ours", help="ours.json: [{code, price, stock}]. Omit to read the live site instead")
     ap.add_argument("--out", default=os.path.join("reports", "landed-price", datetime.date.today().strftime("%Y-%m")))
     ap.add_argument("--only", help="comma-separated codes, for a quick test")
     ap.add_argument("--publish", action="store_true",
@@ -133,7 +164,7 @@ def main():
     if args.only:
         keep = set(args.only.upper().split(","))
         matches = [m for m in matches if m["code"] in keep]
-    ours = {o["code"].upper(): o for o in json.load(open(args.ours))}
+    ours = {o["code"].upper(): o for o in json.load(open(args.ours))} if args.ours else site_prices(matches)
     os.makedirs(args.out, exist_ok=True)
     res_path = os.path.join(args.out, "results.json")
     results = json.load(open(res_path)) if os.path.exists(res_path) else {}
