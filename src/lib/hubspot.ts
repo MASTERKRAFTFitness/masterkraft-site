@@ -59,3 +59,84 @@ export async function submitHubspotForm(
   if (!res.ok) throw new Error(`HubSpot ${res.status}`);
   return "submitted";
 }
+
+// ---------------------------------------------------------------------------
+// A paid web order as a HubSpot DEAL, through the CRM API.
+//
+// WHY A DEAL AS WELL AS THE FORM. The order form makes the buyer a contact, but
+// a contact carries no money, so HubSpot's ad and campaign reports could say
+// which ad found a buyer and never what they spent. A closed-won deal with the
+// amount is what those reports total.
+//
+// The Forms API above needs no credentials; this does: a private app token
+// (HubSpot → Settings → Integrations → Private apps) with the scopes
+// crm.objects.contacts.write and crm.objects.deals.write. Without it, skipped.
+//
+// The contact is UPSERTED by email rather than searched for, because the order
+// form submission runs alongside and HubSpot processes it asynchronously, so a
+// search here would usually find no one. Email is HubSpot's contact key, so the
+// form and the upsert land on the same contact whichever arrives first.
+const CRM = "https://api.hubapi.com/crm/v3/objects";
+const DEAL_TO_CONTACT = 3; // HubSpot-defined association type: deal → contact
+const CRM_TIMEOUT_MS = 8000;
+
+export type HubspotOrderDeal = {
+  orderNumber: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  /** What the customer paid, GST and freight included. */
+  amount: number;
+  description?: string;
+};
+
+export async function createHubspotOrderDeal(d: HubspotOrderDeal): Promise<"submitted" | "skipped"> {
+  const token = process.env.HUBSPOT_ACCESS_TOKEN;
+  if (!token || !d.email) return "skipped";
+
+  const contact = await crm<{ results: { id: string }[] }>(token, "/contacts/batch/upsert", {
+    inputs: [
+      {
+        idProperty: "email",
+        id: d.email,
+        properties: {
+          email: d.email,
+          // Omitted when empty, so a blank never overwrites a name already held.
+          ...(d.firstName ? { firstname: d.firstName } : {}),
+          ...(d.lastName ? { lastname: d.lastName } : {}),
+        },
+      },
+    ],
+  });
+  const contactId = contact.results?.[0]?.id;
+  if (!contactId) throw new Error("HubSpot contact upsert returned no id");
+
+  await crm(token, "/deals", {
+    properties: {
+      dealname: `Web order #${d.orderNumber}`,
+      amount: d.amount.toFixed(2),
+      pipeline: process.env.HUBSPOT_ORDER_PIPELINE || "default",
+      dealstage: process.env.HUBSPOT_ORDER_DEALSTAGE || "closedwon",
+      closedate: new Date().toISOString(),
+      ...(d.description ? { description: d.description } : {}),
+    },
+    associations: [
+      {
+        to: { id: contactId },
+        types: [{ associationCategory: "HUBSPOT_DEFINED", associationTypeId: DEAL_TO_CONTACT }],
+      },
+    ],
+  });
+  return "submitted";
+}
+
+async function crm<T = unknown>(token: string, path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${CRM}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(CRM_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`HubSpot CRM ${res.status}`);
+  return (await res.json()) as T;
+}

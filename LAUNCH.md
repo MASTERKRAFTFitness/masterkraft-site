@@ -130,6 +130,13 @@ Resend. If the vars below are absent the submission is accepted but **goes nowhe
   Marketing → Forms → each form's embed/share code).
 - 🔎 `NEXT_PUBLIC_HUBSPOT_PORTAL_ID` — loads HubSpot's tracking script after consent.
 - 🔎 `NEXT_PUBLIC_HUBSPOT_FORM_DELIVERY` — the delivery-page form.
+- ⚙️ `HUBSPOT_ACCESS_TOKEN` — a HubSpot private app token (Settings → Integrations →
+  Private apps) with `crm.objects.contacts.write` and `crm.objects.deals.write`.
+  With it, every paid card order also becomes a **closed-won deal** on the buyer's
+  contact, for the amount paid, so HubSpot's ad and campaign reports show revenue.
+  Without it the deal step is skipped and the order is unaffected. Optional:
+  `HUBSPOT_ORDER_PIPELINE` and `HUBSPOT_ORDER_DEALSTAGE` (internal ids) to file
+  orders somewhere other than the default pipeline's "Closed won".
 - 🔎 `RESEND_API_KEY`, `QUOTE_FROM_EMAIL` (a verified Resend sender), `QUOTE_TO_EMAIL`
   (defaults to `hello@masterkraft.com`) — the team-notification email on a quote.
 
