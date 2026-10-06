@@ -33,8 +33,7 @@ Paste this into a new chat to continue. Repo: `MASTERKRAFTFitness/masterkraft-si
 ## Open items
 
 1. **T6-STANDARD tier on MMPADB01:** 1390.0909 ex GST (10% off, $1,529.10 including GST). This has to be entered in Unleashed. It's wholesale-only and isn't shown on the site.
-2. **11 WooCommerce-only products still serving old WooCommerce prices:**
-   - **Concept2 (3):** SCRWAR04, SCSTAR03 and SCSTACC04 should be linked in `src/lib/unleashed-aliases.ts` to C2ROWERG, C2SKIERG and C2SKIERGFS. Confirm each mapping first.
+2. **8 WooCommerce-only products still serving old WooCommerce prices.** The three Concept2 items were wrongly listed here at first: they have been linked to C2ROWERG, C2SKIERG and C2SKIERGFS since 20 August (`manualAliases` in `src/lib/unleashed-aliases.ts`) and price from Unleashed at $1,705, $1,650 and $440.
    - **MasterKraft cardio (8):**
      - Air Bike Classic (MCBIAR01)
      - Air Bike Pro (MCBIAR02)
