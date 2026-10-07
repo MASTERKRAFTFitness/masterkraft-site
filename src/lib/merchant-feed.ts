@@ -142,7 +142,25 @@ export function displayName(unit: ErpUnit): string {
   // that for XML without decoding it first produces "&amp;amp;", and Merchant
   // Center advertises a product with a literal "&amp;" in its name. Same
   // decoder the category names go through; see woocommerce.ts.
-  return page?.name ? decodeEntities(page.name).trim() : unit.name;
+  const name = page?.name ? decodeEntities(page.name).trim() : unit.name;
+  return unit.isRange ? withoutSizeSuffix(name, unit.sizes) : name;
+}
+
+/**
+ * A RANGE'S NAME MUST NOT CARRY ONE OF ITS OWN SIZES. The old store sometimes
+ * named a whole range after the size it was first created for: the Olympic
+ * barbell page is "Olympic Barbell - 7ft Chrome (1000Lb Capacity)", and every
+ * size of it then advertised as "Olympic Barbell - 7ft Chrome (1000Lb
+ * Capacity) 15kg (1500Lb Capacity)" - two sizes in one title, one of them
+ * wrong. Only a suffix that IS one of the range's size labels is removed, so a
+ * name like "Rope & Band Rack (Small)" is never touched.
+ */
+export function withoutSizeSuffix(name: string, sizes: string[]): string {
+  const i = name.lastIndexOf(" - ");
+  if (i <= 0) return name;
+  const norm = (x: string) => x.toLowerCase().replace(/\s+/g, " ").trim();
+  const tail = norm(name.slice(i + 3));
+  return sizes.some((sz) => norm(sz) === tail) ? name.slice(0, i).trim() : name;
 }
 
 /**

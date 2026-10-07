@@ -25,7 +25,7 @@ vi.mock("@/lib/merchant-feed-allowlist", () => ({
   FREIGHT_VERIFIED_SLUGS: new Set(["change-plates", "speed-rope", "gone-cold", "coloured-bumper-plates"]),
 }));
 
-const { buildFeed, feedToXml, feedTitle, feedPrice, priceBand } = await import("@/lib/merchant-feed");
+const { buildFeed, feedToXml, feedTitle, feedPrice, priceBand, withoutSizeSuffix } = await import("@/lib/merchant-feed");
 
 const measured = { widthCm: 30, depthCm: 30, heightCm: 12, weightKg: 8 };
 
@@ -281,3 +281,22 @@ describe("landed-price regions", () => {
     expect(feedToXml(buildFeed(bumpers()).items)).toContain("<g:custom_label_3>vic</g:custom_label_3>");
   });
 });
+
+describe("range names that carry one of their own sizes", () => {
+  const sizes = ["7ft Chrome (1000Lb Capacity)", "15kg (1500Lb Capacity)", "20kg (2000Lb Capacity)"];
+
+  it("drops a trailing size that belongs to the range", () => {
+    expect(withoutSizeSuffix("Olympic Barbell - 7ft Chrome (1000Lb Capacity)", sizes)).toBe("Olympic Barbell");
+    expect(withoutSizeSuffix("Group Fitness Barbell Set - 17.5kg", ["17.5kg", "37.5kg"])).toBe("Group Fitness Barbell Set");
+  });
+
+  it("ignores spacing and case differences between the name and the size label", () => {
+    expect(withoutSizeSuffix("Olympic Barbell - 15KG  (1500lb capacity)", sizes)).toBe("Olympic Barbell");
+  });
+
+  it("leaves a suffix alone when it is not one of the range's sizes", () => {
+    expect(withoutSizeSuffix("Dead Ball - Iron Sand", ["9kg", "12kg"])).toBe("Dead Ball - Iron Sand");
+    expect(withoutSizeSuffix("Rope & Band Rack (Small)", ["Small"])).toBe("Rope & Band Rack (Small)");
+  });
+});
+
