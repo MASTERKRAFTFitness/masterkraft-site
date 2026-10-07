@@ -62,6 +62,12 @@ describe("contact enquiry", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("rejects an enquiry with no phone number", async () => {
+    const res = await post({ ...enquiry, phone: "  " });
+    expect(res.status).toBe(400);
+    expect(calls).toHaveLength(0);
+  });
+
   // The whole point of the change: HubSpot succeeding is not a reason to stay quiet.
   it("emails the team even when HubSpot takes the lead", async () => {
     const body = await (await post(enquiry)).json();

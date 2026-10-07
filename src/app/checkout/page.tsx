@@ -214,7 +214,7 @@ export default function CheckoutPage() {
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <input name="email" required type="email" aria-label="Email" placeholder="Email" className={fieldClass} />
-                <input name="phone" aria-label="Phone" placeholder="Phone" className={fieldClass} />
+                <input name="phone" type="tel" required autoComplete="tel" aria-label="Phone" placeholder="Phone" className={fieldClass} />
               </div>
               <input name="company" aria-label="Company / gym name" placeholder="Company / gym name" className={fieldClass} />
               <input name="location" aria-label="Delivery suburb / postcode" placeholder="Delivery suburb / postcode" className={fieldClass} />

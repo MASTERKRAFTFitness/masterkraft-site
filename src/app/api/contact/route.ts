@@ -116,8 +116,8 @@ export async function POST(request: Request) {
     message: (body.message ?? "").trim(),
   };
 
-  if (!enquiry.email || !enquiry.message) {
-    return NextResponse.json({ ok: false, error: "Email and message are required." }, { status: 400 });
+  if (!enquiry.email || !enquiry.phone || !enquiry.message) {
+    return NextResponse.json({ ok: false, error: "Email, phone and message are required." }, { status: 400 });
   }
 
   // Bot filter. This route now emails a human on every submission, so the guard
