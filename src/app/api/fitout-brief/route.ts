@@ -14,6 +14,7 @@ import {
   briefAttribution,
   briefFullName,
   briefHubspotFields,
+  briefPropertyFields,
   briefLines,
   emptyBrief,
   humanBytes,
@@ -276,21 +277,32 @@ export async function POST(request: Request) {
   // briefAttribution for why the brief carries it and how it is cleaned.
   const attribution = briefAttribution(String(form.get("landing") ?? ""));
 
-  const hubspot = await submitHubspotForm(
-    process.env.HUBSPOT_FORM_CONTACT,
-    briefHubspotFields(brief, kept, attribution),
-    {
+  const baseFields = briefHubspotFields(brief, kept, attribution);
+  const propertyFields = briefPropertyFields(brief);
+  const submit = (fields: { name: string; value: string }[]) =>
+    submitHubspotForm(process.env.HUBSPOT_FORM_CONTACT, fields, {
       pageName: "Fitout Brief",
       // Absolute and tagged, so HubSpot's conversion page names the campaign.
       // Rebuilt from the cleaned tags rather than taken from the client, so it
       // can only ever name this page.
       pageUri: `${SITE_URL}/fitout-solution${attributionQuery(attribution)}`,
       hutk: hubspotUtk(request),
-    }
-  ).catch((e) => {
-    console.error("[fitout-brief] hubspot failed", e);
-    return "error" as const;
-  });
+    });
+
+  // The fitout_* properties first, then WITHOUT them if HubSpot refuses: it
+  // rejects the whole submission over one property the portal does not define,
+  // and a missing property must cost us a column, never the lead. Nothing else
+  // in the submission depends on them, so the resend is the original brief.
+  const hubspot = await submit([...baseFields, ...propertyFields])
+    .catch((e) => {
+      if (propertyFields.length === 0) throw e;
+      console.warn("[fitout-brief] hubspot refused the fitout_* properties, resending without", e);
+      return submit(baseFields);
+    })
+    .catch((e) => {
+      console.error("[fitout-brief] hubspot failed", e);
+      return "error" as const;
+    });
 
   const to = internalRecipients();
   const subject =
