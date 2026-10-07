@@ -103,6 +103,11 @@ const MAX_TOTAL_PARCELS = 30;
 // person.
 const MAX_CONSIGNMENTS = 6;
 
+// UP TO HOW MANY parcel-sized cartons are ALSO priced one consignment each. See
+// singleCartonGroups. Small, because each distinct carton is a metered call; two
+// or three is a pair of plates or kettlebells, which is where it pays.
+const MAX_CARTONS_PRICED_SINGLY = 3;
+
 export type FreightAddress = {
   city: string;
   state?: string;
@@ -898,14 +903,46 @@ function boxSignature(parcels: Parcel[]): string {
  * single-carton consignments comes to $278.09 against $249.07.
  *
  * A cart with nothing over the parcel limits returns ONE group and is quoted
- * exactly as it was before this existed. That is the common case and it must
- * stay a single metered call.
+ * exactly as it was before this existed. That is the common case. (A group of
+ * two or three cartons is ALSO priced one carton at a time, as an alternative
+ * the cheaper of which wins: see singleCartonGroups.)
  */
 export function partitionConsignments<P extends Parcel>(parcels: P[]): P[][] {
   const bulky = parcels.filter((p) => isOversize(p));
   if (bulky.length === 0) return [parcels];
   const rest = parcels.filter((p) => !isOversize(p));
   return [...bulky.map((p) => [p]), ...(rest.length > 0 ? [rest] : [])];
+}
+
+/**
+ * The parcel-sized group of a cart, broken into one consignment per carton, and
+ * where it sits among the groups; or null when there is nothing worth asking.
+ *
+ * WHY. Keeping parcels together is right for a stack of them (see above), but
+ * not for two. Measured against Easyship on 2026-10-07, two 21kg plates from
+ * Thomastown:
+ *
+ *                 together (Multi Box)   each alone (Authority To Leave)
+ *   Melbourne     $39.20                 2 x $16.48 = $32.96
+ *   Sydney        $78.51                 2 x $34.05 = $68.10
+ *   Perth         $163.42                2 x $72.57 = $145.14
+ *
+ * Plates sell singly, so EVERY pair was being charged 13-19% more than the
+ * carriers would take to send it. Both shapes are now priced and the cheaper
+ * one wins. Identical cartons share one cache entry, so a pair costs one extra
+ * carrier call, not two. Bulky cartons are already alone and are left as they
+ * are.
+ */
+function singleCartonGroups<P extends Parcel>(groups: P[][]): { index: number; singles: P[][] } | null {
+  const index = groups.findIndex(
+    (g) => g.length >= 2 && g.length <= MAX_CARTONS_PRICED_SINGLY && !g.some((p) => isOversize(p))
+  );
+  if (index < 0) return null;
+  // Canonical order within the group, so the composite id is stable.
+  const singles = [...groups[index]]
+    .sort((a, b) => boxSignature([a]).localeCompare(boxSignature([b])))
+    .map((p) => [p]);
+  return { index, singles };
 }
 
 type ConsignmentResult =
@@ -982,9 +1019,10 @@ async function quoteConsignment(
 async function quoteCarriers(
   parcels: Parcel[],
   collection: FreightAddress,
-  delivery: FreightAddress
+  delivery: FreightAddress,
+  easyshipOnly = false
 ): Promise<ConsignmentResult> {
-  const key = cacheKey(parcels, collection, delivery);
+  const key = cacheKey(parcels, collection, delivery, easyshipOnly ? "easyship-only" : "");
   const cached = getCached<ConsignmentResult>(key);
   if (cached) return cached;
 
@@ -998,7 +1036,7 @@ async function quoteCarriers(
   // quiet win in the split: the parcel-sized group of a cart carrying a rack is
   // no longer denied Australia Post because of the rack.
   const oversize = parcels.some((p) => isOversize(p));
-  const askAusPost = on.has("auspost") && Boolean(auspostKey) && !oversize;
+  const askAusPost = !easyshipOnly && on.has("auspost") && Boolean(auspostKey) && !oversize;
   const askEasyship = on.has("easyship") && Boolean(easyshipToken);
 
   const [ap, es] = await Promise.all([
@@ -1219,11 +1257,49 @@ export async function quoteFreight(
     return { ok: false, reason: "oversize", oversize: oversizeSkus(items) };
   }
 
-  const results = await Promise.all(
-    groups.map((g) => quoteConsignment(g, collection, delivery, route))
-  );
+  // The same cart with its few parcels sent one consignment each, priced
+  // alongside rather than after, so it costs no extra latency. EASYSHIP ONLY:
+  // it is the one source whose services change with the number of cartons.
+  // Australia Post prices every carton singly already, and a matrix charges its
+  // minimum per consignment, so asking either again could only cost, never win.
+  // Identical cartons are asked once.
+  const singles =
+    usesApi(source) && enabledCarriers().has("easyship") && process.env.EASYSHIP_API_TOKEN
+      ? singleCartonGroups(groups)
+      : null;
+  const priceOnce = new Map<string, Promise<ConsignmentResult>>();
+  const priceSingle = (g: Parcel[]): Promise<ConsignmentResult> => {
+    const sig = boxSignature(g);
+    if (!priceOnce.has(sig)) priceOnce.set(sig, quoteCarriers(g, collection, delivery, true));
+    return priceOnce.get(sig) as Promise<ConsignmentResult>;
+  };
+  const [results, singlesPriced] = await Promise.all([
+    Promise.all(groups.map((g) => quoteConsignment(g, collection, delivery, route))),
+    singles ? Promise.all(singles.singles.map(priceSingle)) : Promise.resolve(null),
+  ]);
+  // Every other group (the bulky cartons) is the same consignment either way,
+  // so its answer is reused rather than asked for twice.
+  const singleResults =
+    singles && singlesPriced
+      ? [...results.slice(0, singles.index), ...singlesPriced, ...results.slice(singles.index + 1)]
+      : null;
 
   const failures = results.filter((r): r is Extract<ConsignmentResult, { ok: false }> => !r.ok);
+  const together =
+    failures.length === 0
+      ? combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options))
+      : [];
+  // Offered ONLY when it is actually cheaper. On a tie the consolidated options
+  // stand, ids and all, so a cart priced before this existed is priced (and
+  // matched by payment-intent) exactly as it was.
+  const separate = singleResults?.every((r) => r.ok)
+    ? combineConsignments(singleResults.map((r) => (r as { options: FreightOption[] }).options))
+    : [];
+  const cheapestOf = (opts: FreightOption[]) => Math.min(...opts.map((o) => o.price));
+  const split =
+    separate.length > 0 && (together.length === 0 || cheapestOf(separate) < cheapestOf(together))
+      ? separate
+      : [];
 
   // A split cart is ALSO offered to each consolidating matrix as one
   // consignment - see `consolidate` in the migration. It can rescue a cart whose
@@ -1232,7 +1308,7 @@ export async function quoteFreight(
     groups.length > 1 && usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
 
   let quote: FreightQuote;
-  if (failures.length > 0 && whole.length === 0) {
+  if (failures.length > 0 && whole.length === 0 && split.length === 0) {
     // One unshippable consignment is an unshippable cart. Report the most
     // explanatory reason rather than the first: "oversize" tells the customer
     // this is freight and a person will price it, which is both true and
@@ -1245,12 +1321,7 @@ export async function quoteFreight(
         ? { ok: false, reason: "error", detail: errors.join("; ") }
         : { ok: false, reason: "no_services" };
   } else {
-    const options = [
-      ...(failures.length === 0
-        ? combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options))
-        : []),
-      ...whole,
-    ];
+    const options = [...together, ...split, ...whole];
     // Applied BEFORE selectOptions, so an over-ceiling express service is never
     // offered as the "faster" second option either. The cheapest is what decides
     // whether this cart can be sold online at all.

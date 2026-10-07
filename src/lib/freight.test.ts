@@ -534,10 +534,14 @@ describe("two carriers, priced against each other", () => {
 
   // Easyship prices a whole consignment in one request, which is the latency win
   // the bulky brief asked carriers for. PAC needs one call per carton shape.
-  it("prices a multi-carton cart in a single Easyship call", async () => {
+  // Together in one call, plus ONE call for the carton alone (see "a split
+  // cart, priced"): never a call per carton.
+  it("prices a multi-carton cart in a single Easyship call, plus one for the carton alone", async () => {
     carriers({ auspost: pac("20.00"), easyship: es(90) });
     await quoteFreight([item({ quantity: 3 })], delivery);
-    expect(hits.filter((u) => u.includes("easyship"))).toHaveLength(1);
+    expect(hits.filter((u) => u.includes("easyship"))).toHaveLength(2);
+    // Australia Post prices cartons singly anyway, so it is asked once.
+    expect(hits.filter((u) => u.includes("auspost"))).toHaveLength(1);
   });
 });
 
@@ -1213,17 +1217,100 @@ describe("a split cart, priced", () => {
     expect(hits).toHaveLength(0);
   });
 
-  // The common case must not have changed at all: one call, and the carrier's
-  // own option id rather than a composite.
-  it("leaves an ordinary parcel cart exactly as it was", async () => {
-    carriers((c) => (c.easyship ? es(50, "uuid-cp", "CouriersPlease - Multi Box STD") : pac("30.00")));
+  // When sending the cartons together is no dearer, nothing changes: the
+  // carrier's own option id, not a composite, so payment-intent matches as before.
+  it("keeps the consolidated quote when sending each carton alone is no cheaper", async () => {
+    carriers((c) =>
+      c.easyship
+        ? c.parcels === 1
+          ? es(25, "uuid-cp-atl", "CouriersPlease - Authority To Leave")
+          : es(50, "uuid-cp", "CouriersPlease - Multi Box STD")
+        : pac("300.00")
+    );
     const q = await quoteFreight([item({ quantity: 2 })], delivery);
-    const esCalls = hits.filter((h) => h.url.includes("easyship"));
-    expect(esCalls).toHaveLength(1);
-    expect(esCalls[0].parcels).toBe(2);
+    expect(q.ok).toBe(true);
     if (q.ok) {
       expect(q.options[0].id).not.toMatch(/^split:/);
       expect(q.options[0].price).toBe(50);
     }
+  });
+
+  // THE PAIR OF PLATES. Measured 2026-10-07: two 21kg cartons to Sydney were
+  // $78.51 as Multi Box and 2 x $34.05 = $68.10 one at a time.
+  it("sends a pair one carton each when that is cheaper", async () => {
+    carriers((c) =>
+      c.easyship
+        ? c.parcels === 1
+          ? es(34.05, "uuid-cp-atl", "CouriersPlease - Authority To Leave - 25kg")
+          : es(78.51, "uuid-cp", "CouriersPlease - Multi Box STD")
+        : pac("300.00")
+    );
+    const q = await quoteFreight([item({ quantity: 2 })], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) {
+      expect(q.options[0].price).toBe(68.1);
+      expect(q.options[0].id).toBe("split:easyship:uuid-cp-atl+easyship:uuid-cp-atl");
+    }
+    // Identical cartons share one cache entry: one call for the pair, one for
+    // the single carton, not one per carton.
+    const esCalls = hits.filter((h) => h.url.includes("easyship"));
+    expect(esCalls.map((h) => h.parcels).sort()).toEqual([1, 2]);
+  });
+
+  // payment-intent re-quotes and matches on the id; it must not move.
+  it("gives a pair sent one carton each a stable id", async () => {
+    const reply = (c: { easyship: boolean; parcels: number }) =>
+      c.easyship
+        ? c.parcels === 1
+          ? es(20, "uuid-a", "Aramex - Domestic")
+          : es(60, "uuid-cp", "CouriersPlease - Multi Box STD")
+        : pac("300.00");
+    carriers(reply);
+    const first = await quoteFreight([item(), item({ sku: "OTHER", weightKg: 9 })], delivery);
+    clearFreightCache();
+    carriers(reply);
+    const second = await quoteFreight([item({ sku: "OTHER", weightKg: 9 }), item()], delivery);
+    expect(first.ok && second.ok).toBe(true);
+    if (first.ok && second.ok) {
+      expect(first.options[0].id).toMatch(/^split:/);
+      expect(second.options[0].id).toBe(first.options[0].id);
+    }
+  });
+
+  // The bulky carton is the same consignment either way, so it is asked for
+  // once, and the pair beside it is priced both ways.
+  it("prices a bulky carton once when the parcels beside it are priced both ways", async () => {
+    carriers((c) =>
+      c.easyship
+        ? bulky(c)
+          ? es(200, "uuid-tnt", "TNT - Road Express")
+          : c.parcels === 1
+            ? es(20, "uuid-a", "Aramex - Domestic")
+            : es(60, "uuid-cp", "CouriersPlease - Multi Box STD")
+        : pac("300.00")
+    );
+    const q = await quoteFreight([barbell(), item({ quantity: 2 })], delivery);
+    expect(hits.filter((h) => h.url.includes("easyship") && bulky(h))).toHaveLength(1);
+    if (q.ok) expect(q.options[0].price).toBe(240);
+  });
+
+  // A stack is still cheapest together, and asking about each carton would cost
+  // a metered call per distinct box.
+  it("does not price a stack of cartons one at a time", async () => {
+    carriers((c) => (c.easyship ? es(90, "uuid-cp", "CouriersPlease - Multi Box STD") : pac("300.00")));
+    await quoteFreight([item({ quantity: 4 })], delivery);
+    const esCalls = hits.filter((h) => h.url.includes("easyship"));
+    expect(esCalls).toHaveLength(1);
+    expect(esCalls[0].parcels).toBe(4);
+  });
+
+  // Sending them alone can rescue a pair no carrier will take together.
+  it("still sells a pair when only single cartons have a service", async () => {
+    carriers((c) =>
+      c.easyship ? (c.parcels === 1 ? es(30, "uuid-a", "Aramex - Domestic") : { rates: [] }) : { services: {} }
+    );
+    const q = await quoteFreight([item({ quantity: 2 })], delivery);
+    expect(q.ok).toBe(true);
+    if (q.ok) expect(q.options[0].price).toBe(60);
   });
 });
