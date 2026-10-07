@@ -1,9 +1,9 @@
 // Guards the Google Ads conversion calls. The ID and labels are read at import
 // time, so each case reloads the module — the same shape as site.test.ts.
 //
-// What is actually worth pinning here is the UNSET case: this ships before the
-// Ads account has any numbers in it, and the failure mode to avoid is a missing
-// label quietly turning into a conversion sent to "AW-123/undefined".
+// The ID and lead label have in-code defaults (lib/google-ads); the purchase
+// label does not. The failure mode to avoid is a missing label quietly turning
+// into a conversion sent to "AW-123/undefined".
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 
 type GtagCall = unknown[];
@@ -79,7 +79,7 @@ describe("trackPurchase", () => {
     ]);
   });
 
-  it("still reports to GA4 when Ads is not configured", async () => {
+  it("sends no purchase conversion when env is unset (no default purchase label)", async () => {
     const calls = gtagSpy();
     const { trackPurchase } = await withEnv({
       NEXT_PUBLIC_GOOGLE_ADS_ID: undefined,
@@ -140,9 +140,9 @@ describe("trackEnquiry", () => {
     expect(JSON.stringify(calls)).not.toContain("value");
   });
 
-  // The state the site is in today: no Ads account wired up. The GA4 event must
-  // still fire, and nothing may be addressed to "AW-123/undefined".
-  it("still reports to GA4 when Ads is unconfigured", async () => {
+  // No env vars set: the pinned account and "Submit quote" label take over, so
+  // the conversion cannot go missing because a Vercel variable was never added.
+  it("falls back to the pinned Ads account and quote label when env is unset", async () => {
     const calls = gtagSpy();
     const { trackEnquiry } = await withEnv({
       NEXT_PUBLIC_GOOGLE_ADS_ID: undefined,
@@ -150,8 +150,14 @@ describe("trackEnquiry", () => {
     });
     trackEnquiry("contact");
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toEqual(["event", "generate_lead", { method: "contact" }]);
+    expect(calls).toEqual([
+      ["event", "generate_lead", { method: "contact" }],
+      [
+        "event",
+        "conversion",
+        { send_to: "AW-18485786308/ZPQ0CJe6-ZMdEMTt2u5E", currency: "AUD" },
+      ],
+    ]);
     expect(JSON.stringify(calls)).not.toContain("undefined");
   });
 });

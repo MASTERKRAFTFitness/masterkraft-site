@@ -18,21 +18,17 @@
 // neither carries revenue — only `purchase` does that — so adding them cannot
 // inflate a revenue figure.
 import { opinlyIdentify, opinlyTrack } from "@/lib/opinly";
+import { GOOGLE_ADS_ID, GOOGLE_ADS_LEAD_LABEL, GOOGLE_ADS_PURCHASE_LABEL } from "@/lib/google-ads";
 
 type Params = Record<string, unknown>;
 
 // GOOGLE ADS CONVERSIONS. A GA4 event is not one: Ads only counts an action
-// addressed to a conversion it owns, as `AW-XXXXXXXXX/<label>`. The ID is the
-// account's, the labels are per-action, and both come from Ads > Goals >
-// Conversions > the action's tag setup. Read at module load, so a change needs
-// a redeploy — the same deal as NEXT_PUBLIC_GA_ID.
-//
-// UNSET IS A WORKING STATE, not a broken one. With no ID, or no label for the
-// action, the conversion call is skipped and the GA4 event still fires. That is
-// what lets this ship before the Ads account has the numbers in it.
-const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-const ADS_PURCHASE_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL;
-const ADS_LEAD_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL;
+// addressed to a conversion it owns, as `AW-XXXXXXXXX/<label>`. The ID and the
+// labels live in lib/google-ads (pinned in code, env overrides), read at module
+// load. An action with no label is skipped and its GA4 event still fires.
+const ADS_ID = GOOGLE_ADS_ID;
+const ADS_PURCHASE_LABEL = GOOGLE_ADS_PURCHASE_LABEL;
+const ADS_LEAD_LABEL = GOOGLE_ADS_LEAD_LABEL;
 
 interface AnalyticsWindow extends Window {
   gtag?: (...args: unknown[]) => void;
