@@ -79,15 +79,13 @@ missing var fails **silently** — that's why each must be checked deliberately.
 - ⚙️ `NEXT_PUBLIC_GA_ID` — **already set (G-86MEH5QL99) and working on staging.**
   GA4 loads after cookie consent. Re-check it is present on the production domain
   after the cutover, since a redeploy is what bakes it in.
-- ⚙️ `NEXT_PUBLIC_GOOGLE_ADS_ID` + `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` +
-  `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` — **not set, and paid advertising cannot be
-  measured until they are.** A GA4 event is not a Google Ads conversion: Ads only
-  counts what is addressed to a conversion action it owns. The tag ships wired up
-  and inert — with these unset the GA4 events still fire and nothing goes to Ads.
-  The ID is the Ads account's `AW-…`; each label comes from that action's tag
-  setup under Goals > Conversions. Two actions are wired: a paid card order
-  (purchase) and a submitted quote (lead) — keep them separate, a quote is a lead
-  and not revenue. Values are read at build time, so setting them needs a redeploy.
+- ✅ Google Ads quote conversion — **live, pinned in code** (`src/lib/google-ads.ts`):
+  account `AW-18485786308`, "Submit quote" label `ZPQ0CJe6-ZMdEMTt2u5E`. Fires only
+  after a fitout brief (/fitout-solution) or contact form (/contact) is accepted by
+  the server, and after cookie consent. `NEXT_PUBLIC_GOOGLE_ADS_ID` /
+  `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` override the defaults if set.
+  ⚙️ `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` is still **not set**: card orders do not
+  reach Ads until a purchase action exists and its label is added (needs a redeploy).
 - ✅ `OPINLY_API_KEY` — **set and live** (added 15 Sep 2026, in place before the
   16 Sep deploy, so server-side reporting has worked from its first request).
   It is a **Team-level Shared** variable, not a project one: `vercel env ls` does NOT

@@ -4,11 +4,12 @@ import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useState } from "react";
 import { isLiveHost } from "@/lib/live-host";
+import { GOOGLE_ADS_ID } from "@/lib/google-ads";
 
 const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const HS_ID = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID;
-const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+const ADS_ID = GOOGLE_ADS_ID;
 // IN CODE, NOT AN ENV VAR. A pixel ID is public by design - Meta's own snippet
 // prints it into every page's source - so there is nothing to keep out of the
 // repo, and pinning it here means the pixel cannot silently go missing because
