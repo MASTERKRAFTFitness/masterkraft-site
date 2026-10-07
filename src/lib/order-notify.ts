@@ -1,5 +1,6 @@
 // What happens after a card order exists: the customer's confirmation email,
-// the team's "new web order" email, and the buyer as a HubSpot contact.
+// the team's "new web order" email, the buyer as a HubSpot contact, and the
+// order as a closed-won HubSpot deal carrying what they paid.
 //
 // Until 2026-09-28 none of this existed. The checkout told the customer "you'll
 // get a confirmation email shortly" and nothing sent one, and a paying customer
@@ -12,7 +13,7 @@
 // than holding a paid customer's confirmation screen.
 import type { OrderAddress, OrderLine } from "@/lib/order-lines";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
-import { submitHubspotForm } from "@/lib/hubspot";
+import { createHubspotOrderDeal, submitHubspotForm } from "@/lib/hubspot";
 
 export type PlacedOrderNotice = {
   orderNumber: string;
@@ -33,13 +34,15 @@ export async function notifyOrderPlaced(order: PlacedOrderNotice): Promise<{
   customerEmail: StepResult;
   teamEmail: StepResult;
   hubspot: StepResult;
+  hubspotDeal: StepResult;
 }> {
-  const [customerEmail, teamEmail, hubspot] = await Promise.all([
+  const [customerEmail, teamEmail, hubspot, hubspotDeal] = await Promise.all([
     guard("customer email", () => sendCustomerEmail(order)),
     guard("team email", () => sendTeamEmail(order)),
     guard("hubspot", () => submitOrderToHubspot(order)),
+    guard("hubspot deal", () => submitOrderDeal(order)),
   ]);
-  return { customerEmail, teamEmail, hubspot };
+  return { customerEmail, teamEmail, hubspot, hubspotDeal };
 }
 
 async function guard(step: string, fn: () => Promise<"sent" | "skipped">): Promise<StepResult> {
@@ -116,6 +119,24 @@ async function submitOrderToHubspot(o: PlacedOrderNotice): Promise<"sent" | "ski
     ],
     { pageName: "Web Order" },
   );
+  return r === "submitted" ? "sent" : "skipped";
+}
+
+// The same order as a deal, so HubSpot's campaign reports can total revenue and
+// not just count buyers. See createHubspotOrderDeal.
+async function submitOrderDeal(o: PlacedOrderNotice): Promise<"sent" | "skipped"> {
+  const b = o.billing;
+  const r = await createHubspotOrderDeal({
+    orderNumber: o.orderNumber,
+    email: b.email ?? "",
+    firstName: b.first_name?.trim(),
+    lastName: b.last_name?.trim(),
+    amount: o.chargedTotal,
+    description:
+      o.lines.map((l) => `${l.quantity}× ${l.name}${l.sku ? ` (${l.sku})` : ""}`).join("\n") +
+      (o.freight.amount > 0 ? `\nFreight ${aud.format(o.freight.amount)}` : "") +
+      (b.company ? `\nCompany: ${b.company}` : ""),
+  });
   return r === "submitted" ? "sent" : "skipped";
 }
 

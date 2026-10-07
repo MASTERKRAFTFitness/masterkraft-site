@@ -3,8 +3,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 const submitHubspotForm = vi.fn();
+const createHubspotOrderDeal = vi.fn();
 vi.mock("@/lib/hubspot", () => ({
   submitHubspotForm: (...a: unknown[]) => submitHubspotForm(...a),
+  createHubspotOrderDeal: (...a: unknown[]) => createHubspotOrderDeal(...a),
 }));
 
 const { notifyOrderPlaced } = await import("@/lib/order-notify");
@@ -32,6 +34,7 @@ beforeEach(() => {
   fetchMock.mockReset().mockResolvedValue(new Response("{}", { status: 200 }));
   vi.stubGlobal("fetch", fetchMock);
   submitHubspotForm.mockReset().mockResolvedValue("submitted");
+  createHubspotOrderDeal.mockReset().mockResolvedValue("submitted");
   process.env.RESEND_API_KEY = "re_test";
   process.env.QUOTE_FROM_EMAIL = "MasterKraft <orders@masterkraft.com>";
   process.env.QUOTE_TO_EMAIL = "hello@masterkraft.com,ops@masterkraft.com";
@@ -48,7 +51,7 @@ const sent = () => fetchMock.mock.calls.map((c) => JSON.parse(c[1].body));
 describe("notifyOrderPlaced", () => {
   it("emails the customer and the team, and records the buyer in HubSpot", async () => {
     const r = await notifyOrderPlaced(order);
-    expect(r).toEqual({ customerEmail: "sent", teamEmail: "sent", hubspot: "sent" });
+    expect(r).toEqual({ customerEmail: "sent", teamEmail: "sent", hubspot: "sent", hubspotDeal: "sent" });
 
     const [customer, team] = sent();
     expect(customer.to).toEqual(["sam@example.com"]);
@@ -85,13 +88,27 @@ describe("notifyOrderPlaced", () => {
   it("never throws when every side effect fails", async () => {
     fetchMock.mockResolvedValue(new Response("nope", { status: 500 }));
     submitHubspotForm.mockRejectedValue(new Error("HubSpot 400"));
+    createHubspotOrderDeal.mockRejectedValue(new Error("HubSpot CRM 500"));
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(notifyOrderPlaced(order)).resolves.toEqual({
       customerEmail: "error",
       teamEmail: "error",
       hubspot: "error",
+      hubspotDeal: "error",
     });
     spy.mockRestore();
+  });
+
+  it("records the order as a deal for what was paid, with what was bought", async () => {
+    await notifyOrderPlaced({ ...order, billing: { ...order.billing, company: "Acme Gym" } });
+    expect(createHubspotOrderDeal).toHaveBeenCalledWith({
+      orderNumber: "SO-00000999",
+      email: "sam@example.com",
+      firstName: "Sam",
+      lastName: "Buyer",
+      amount: 111.73,
+      description: "2× Band <heavy> (MK-1)\nFreight $11.73\nCompany: Acme Gym",
+    });
   });
 
   it("skips email quietly when Resend is not configured", async () => {
