@@ -82,6 +82,8 @@ export async function POST(request: Request) {
         revalidatePath(BLOG_PREFIX);
         revalidatePath(`${BLOG_PREFIX}/rss.xml`);
         revalidatePath("/sitemap.xml");
+        // /resources previews the latest posts; see app/resources/page.tsx.
+        revalidatePath("/resources");
         break;
     }
   }
