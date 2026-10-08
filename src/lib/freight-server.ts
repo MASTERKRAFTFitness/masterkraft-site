@@ -190,6 +190,8 @@ export type FreightDecision = {
   selected: FreightOption | null;
   options: FreightOption[];
   reason?: string;
+  /** SKUs with no carton data, when reason is `incomplete_dimensions`. */
+  missing?: string[];
 };
 
 /**
@@ -229,7 +231,7 @@ export async function quoteFreightForRefs(
   });
 
   if (!quote.ok) {
-    return { required: true, selected: null, options: [], reason: quote.reason };
+    return { required: true, selected: null, options: [], reason: quote.reason, missing: quote.missing };
   }
   const selected =
     quote.options.find((o) => o.id === chosenServiceId) ?? quote.options[0] ?? null;
