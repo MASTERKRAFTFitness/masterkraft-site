@@ -143,14 +143,14 @@ export function classifyFailure(detail: string): CarrierFailure {
  * posture everywhere else that Supabase is optional) and a database that errors
  * both return true. See the note at the top of the file.
  */
-async function claimAlert(carrier: string, kind: CarrierFailure): Promise<boolean> {
+async function claimAlert(carrier: string, kind: string, windowMs = cooldownMs()): Promise<boolean> {
   const db = adminDb();
   if (!db) return true;
   try {
     const { data, error } = await db.rpc("claim_freight_alert", {
       p_carrier: carrier,
       p_kind: kind,
-      p_cooldown_seconds: cooldownMs() / 1000,
+      p_cooldown_seconds: windowMs / 1000,
     });
     // A missing migration should be loud in the log and harmless to the alert.
     if (error) {
@@ -234,6 +234,86 @@ export function reportCarrierFailure(carrier: string, detail: string): void {
   // in front of a customer's freight quote.
   void (async () => {
     if (!(await claimAlert(carrier, kind))) return;
+    await email(subject, body);
+  })().catch((e) =>
+    console.error("[freight-alert] could not send", e instanceof Error ? e.message : e)
+  );
+}
+
+// ---------------------------------------------------------------------------
+// A PRODUCT THE CHECKOUT CANNOT WEIGH.
+//
+// The other quiet failure. A product with no carton in Unleashed fails the whole
+// cart as `incomplete_dimensions`, the customer is told freight cannot be
+// worked out, and nothing anywhere says so. On 2026-10-07 a customer in Kaleen
+// tried to buy a Concept2 RowErg twice, gave up, and it was found the next day
+// by reading checkout_leads. About 40% of the listed catalogue had no carton at
+// the time, so this is not a rare edge.
+//
+// ONE MAIL PER PRODUCT PER DAY, not per request. A customer retrying with a new
+// address is the same gap, and so is the next customer an hour later. The day
+// is per SKU, so a different product in the next cart still gets through. The
+// claim reuses claim_freight_alert with carrier "catalogue" and the SKU as the
+// kind, so it outlives a cold lambda exactly as the carrier alerts do.
+//
+// Same rules as above: logs always, never blocks the quote, fails open.
+// ---------------------------------------------------------------------------
+
+const DEFAULT_DIMENSIONS_COOLDOWN_HOURS = 24;
+
+const dimensionsCooldownMs = (): number => {
+  const v = parseFloat(process.env.FREIGHT_DIMENSIONS_ALERT_COOLDOWN_HOURS ?? "");
+  return (Number.isFinite(v) && v >= 0 ? v : DEFAULT_DIMENSIONS_COOLDOWN_HOURS) * 3_600_000;
+};
+
+export type MissingDimensionsContext = {
+  postcode?: string | null;
+  state?: string | null;
+  /** The checkout_leads row, when the browser sent one, so the cart can be followed up. */
+  checkoutId?: string | null;
+};
+
+/**
+ * Record that a cart could not be quoted because these SKUs have no carton, and
+ * email whoever maintains Unleashed about the ones not already mailed today.
+ *
+ * Returns immediately. The email, if any, is sent in the background.
+ */
+export function reportMissingDimensions(skus: string[], context: MissingDimensionsContext = {}): void {
+  const codes = [...new Set(skus.map((s) => s.trim().toUpperCase()).filter(Boolean))].sort();
+  if (codes.length === 0) return;
+  console.error(`[freight] no carton data for ${codes.join(", ")}`);
+
+  const now = Date.now();
+  const window = dimensionsCooldownMs();
+  const fresh = codes.filter((code) => now - (lastAlerted.get(`catalogue:${code}`) ?? 0) >= window);
+  if (fresh.length === 0) return;
+  for (const code of fresh) lastAlerted.set(`catalogue:${code}`, now);
+
+  void (async () => {
+    const claimed: string[] = [];
+    for (const code of fresh) if (await claimAlert("catalogue", code, window)) claimed.push(code);
+    if (claimed.length === 0) return;
+
+    const where = [context.postcode, context.state].filter(Boolean).join(" ");
+    const subject =
+      claimed.length === 1
+        ? `MasterKraft freight: ${claimed[0]} has no carton, a checkout could not be quoted`
+        : `MasterKraft freight: ${claimed.length} products have no carton, a checkout could not be quoted`;
+    const body =
+      `A customer${where ? ` delivering to ${where}` : ""} reached checkout and could not be ` +
+      `given a freight price, because ${claimed.length === 1 ? "this product has" : "these products have"} ` +
+      `no weight or box size in Unleashed:\n\n` +
+      claimed.map((c) => `  ${c}`).join("\n") +
+      `\n\nThe whole cart fails, not just the line, so they were told freight could not be ` +
+      `worked out and most people leave at that point.\n\n` +
+      `Fix: enter the weight (kg) and box Width / Height / Depth in CENTIMETRES on the product's ` +
+      `Units of Measure row in Unleashed (the screen labels them "m"; every measured product uses cm). ` +
+      `The site picks it up on the next hourly sync.\n\n` +
+      (context.checkoutId
+        ? `The cart is in checkout_leads as ${context.checkoutId}, with the customer's contact details if they gave them.\n\n`
+        : "") +
+      `You will not hear about the same product again for ${Math.round(window / 3_600_000)} hours.`;
     await email(subject, body);
   })().catch((e) =>
     console.error("[freight-alert] could not send", e instanceof Error ? e.message : e)

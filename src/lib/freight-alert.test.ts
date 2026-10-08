@@ -11,7 +11,7 @@ vi.mock("@/lib/admin-db", () => ({
   adminDbConfigured: () => dbConfigured,
 }));
 
-const { classifyFailure, clearAlertHistory, reportCarrierFailure } = await import("@/lib/freight-alert");
+const { classifyFailure, clearAlertHistory, reportCarrierFailure, reportMissingDimensions } = await import("@/lib/freight-alert");
 
 // The router fails soft, so a carrier dropping out is invisible from the
 // outside. That is correct for a customer and dangerous for us: the Easyship
@@ -250,5 +250,106 @@ describe("alerting a human", () => {
     await settle();
     expect(sent).toHaveLength(0);
     expect(console.error).toHaveBeenCalled();
+  });
+});
+
+// A product with no carton fails the whole cart, and until this existed nobody
+// but the customer found out. On 2026-10-07 a RowErg sale was lost that way.
+describe("alerting about a product with no carton", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let mails: { subject: string; text: string }[] = [];
+
+  beforeEach(() => {
+    process.env = { ...saved };
+    process.env.RESEND_API_KEY = "test-key";
+    process.env.QUOTE_FROM_EMAIL = "site@masterkraft.com";
+    process.env.FREIGHT_ALERT_EMAIL = "michael@masterkraft.com";
+    mails = [];
+    dbConfigured = false;
+    rpc.mockClear();
+    rpc.mockImplementation(async () => ({ data: true, error: null }));
+    clearAlertHistory();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    globalThis.fetch = (async (_url: string, init: RequestInit) => {
+      const b = JSON.parse(String(init.body));
+      mails.push({ subject: String(b.subject), text: String(b.text) });
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+  });
+  afterEach(() => {
+    process.env = { ...saved };
+    globalThis.fetch = realFetch;
+    clearAlertHistory();
+    vi.restoreAllMocks();
+  });
+
+  const settle = () => new Promise((r) => setTimeout(r, 0));
+
+  it("names the product, where it was going and the checkout", async () => {
+    reportMissingDimensions(["C2ROWERG"], { postcode: "2617", state: "ACT", checkoutId: "abc-123" });
+    await settle();
+    expect(mails).toHaveLength(1);
+    expect(mails[0].subject).toContain("C2ROWERG");
+    expect(mails[0].text).toContain("2617 ACT");
+    expect(mails[0].text).toContain("abc-123");
+    expect(mails[0].text).toContain("CENTIMETRES");
+  });
+
+  it("sends one mail per product per day, not one per retry", async () => {
+    reportMissingDimensions(["C2ROWERG"], { postcode: "2617" });
+    reportMissingDimensions(["C2ROWERG"], { postcode: "3113" });
+    await settle();
+    expect(mails).toHaveLength(1);
+  });
+
+  it("still mails about a different product in the next cart", async () => {
+    reportMissingDimensions(["C2ROWERG"]);
+    reportMissingDimensions(["C2ROWERG", "MEFRBB06"]);
+    await settle();
+    expect(mails).toHaveLength(2);
+    expect(mails[1].subject).toContain("MEFRBB06");
+    expect(mails[1].text).not.toContain("C2ROWERG");
+  });
+
+  it("lists several products in one mail", async () => {
+    reportMissingDimensions(["mefrbb06", "C2ROWERG", "C2ROWERG"]);
+    await settle();
+    expect(mails).toHaveLength(1);
+    expect(mails[0].subject).toContain("2 products");
+    expect(mails[0].text).toMatch(/C2ROWERG[\s\S]*MEFRBB06/);
+  });
+
+  it("does nothing for an empty list", async () => {
+    reportMissingDimensions([]);
+    await settle();
+    expect(mails).toHaveLength(0);
+  });
+
+  it("claims each product in Postgres with a day-long window", async () => {
+    dbConfigured = true;
+    reportMissingDimensions(["C2ROWERG"]);
+    await settle();
+    expect(rpc).toHaveBeenCalledWith("claim_freight_alert", {
+      p_carrier: "catalogue",
+      p_kind: "C2ROWERG",
+      p_cooldown_seconds: 86400,
+    });
+  });
+
+  it("does not re-send after a cold start when the database says no", async () => {
+    dbConfigured = true;
+    rpc.mockImplementation(async () => ({ data: false, error: null }));
+    reportMissingDimensions(["C2ROWERG"]);
+    await settle();
+    expect(mails).toHaveLength(0);
+  });
+
+  it("survives the mailer being down, without throwing", async () => {
+    globalThis.fetch = (async () => {
+      throw new Error("resend is down");
+    }) as unknown as typeof fetch;
+    expect(() => reportMissingDimensions(["C2ROWERG"])).not.toThrow();
+    await settle();
   });
 });

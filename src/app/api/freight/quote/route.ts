@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 import { scheduleCheckoutLead, type CheckoutLeadContact, type CheckoutLeadItem } from "@/lib/checkout-leads";
+import { reportMissingDimensions } from "@/lib/freight-alert";
 
 // Freight options for the checkout summary. The Australia Post key stays on the
 // server, and the weights and dimensions are resolved from WooCommerce rather
@@ -65,6 +66,16 @@ export async function POST(request: Request) {
       options: decision.options.length,
     })
   );
+
+  // A product with no carton fails the whole cart and says nothing to anyone
+  // but the customer. Tell whoever maintains Unleashed. Fire and forget.
+  if (decision.reason === "incomplete_dimensions") {
+    reportMissingDimensions(decision.missing ?? [], {
+      postcode: body.delivery?.postcode,
+      state: body.delivery?.state,
+      checkoutId: body.checkoutId,
+    });
+  }
 
   scheduleCheckoutLead(body.checkoutId, {
     status: "quoted",
