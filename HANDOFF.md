@@ -1942,8 +1942,9 @@ the domain cutover. All 374 mirrored into `/public`, then compressed 87MB → 24
   customer sees; the rest is cleanup needed before `specification_text` can be
   retired. **Doing this work is worth it whether or not the content ever leaves
   WordPress** - it is the expensive, destination-independent half of any migration.
-- **Create the C2 Bike Erg**, which exists in Unleashed as `C2BIKEERG` at $2,145
-  inc-GST with no WooCommerce product. Then map it in `manualAliases`.
+- ~~Create the C2 Bike Erg~~ Done without WooCommerce: the site now builds pages
+  from the ERP catalogue, so `C2BIKEERG` is listed at
+  `/product/concept-2-bike-erg-with-pm5-monitor` ($2,145 inc-GST). No alias needed.
 - **33 products have no carton dimensions**, including all 3 Concept2 ergs, and
   bundles have none at all. Any cart containing one falls back to a manual freight
   quote. Fixing this widens freight coverage past 85%.

@@ -140,9 +140,11 @@ const generatedAliases: Record<string, string> = {
 // UNDERPRICED: rower $1,375 against the ERP's $1,705, ski erg $1,320 against
 // $1,650, floor stand $352 against $440. Mapping confirmed by Michael 2026-08-20.
 //
-// Unleashed also carries C2BIKEERG (Bike Erg, $2,145 inc-GST) which has NO
-// WooCommerce product, so it cannot be mapped: the Bike Erg is missing from the
-// site entirely. Add the product in WooCommerce first, then map it here.
+// Unleashed also carries C2BIKEERG (Bike Erg, $2,145 inc-GST), which never had
+// a WooCommerce product and so has no alias. It does not need one: the site now
+// builds pages from the ERP catalogue (lib/erp-catalogue.ts), so the Bike Erg
+// is listed as an ERP-only unit at /product/concept-2-bike-erg-with-pm5-monitor
+// with its copy in product-copy.json. Nothing to add here.
 //
 // ABPBMS-01-1 IS THE 45cm PLYO BOX and the matcher could not see its target:
 // GET /Products hides obsolete records, ABPBMS02 is one, so the code the box

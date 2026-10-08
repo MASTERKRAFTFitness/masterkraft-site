@@ -45,7 +45,9 @@ Paste this into a new chat to continue. Repo: `MASTERKRAFTFitness/masterkraft-si
      - Curved Treadmill Pro (MCTMSP01)
 
      None of these is in Unleashed. Decide whether to create them in Unleashed or retire them.
-3. **Supabase trigger bug:** the function `product_content_revalidate()` posts to `/api/revalidate/product-content` with the header `Bearer NEW_SECRET_HERE`, a placeholder, so cache refreshes after copy edits fail. Replace it with the real secret.
-4. **The set's value:** $1,699 saves only $46 against buying the pieces separately (dumbbells $1,200 plus rack MEFRDB06 $545). Check that this is intended.
+3. **Supabase trigger bug: code fixed 8 Oct, secret still to set.** `product_content_revalidate()` no longer carries a hard-coded token (it was posting `Bearer NEW_SECRET_HERE`). It now reads the secret from Supabase Vault and sends nothing until that is set. Migration `supabase/migrations/20261008_product_content_revalidate_vault_secret.sql` is applied. One step remains: in the Supabase SQL editor, run `select vault.create_secret('<CONTENT_REVALIDATE_SECRET from Vercel>', 'content_revalidate_secret');`, then test it using the steps in the 20260921 migration.
+4. **The set's value:** $1,699 saves only $46 against buying the pieces separately (dumbbells $1,200 plus rack MEFRDB06 $545). Both prices were re-checked against the 7 Oct sync and match. Check that this is intended.
+7. **Concept2 cartons:** C2ROWERG, C2SKIERG, C2SKIERGFS and C2BIKEERG have no Weight, Width, Depth or Height in Unleashed, so all four can only be bought through a freight quote. Enter the shipping carton for each in Unleashed.
+8. **Bike Erg note (done 8 Oct):** the comment in `src/lib/unleashed-aliases.ts` said the Bike Erg was missing from the site. It is live as an ERP-only page at `/product/concept-2-bike-erg-with-pm5-monitor`, so the comment and HANDOFF.md were corrected.
 5. **Unconfirmed assumptions in the dimensions:** the "BFT Hex Dumbbell" spec table is the MasterKraft Rubber Hex; Premium uses the same head; and the figures are product dimensions, which is right only if the dumbbells ship unboxed.
 6. **Unclear:** the cause of earlier import failures and of manual Vercel cron runs that didn't land. The Vercel logs would show it.
