@@ -75,6 +75,10 @@ const GST = 1.1;
 // between a quote and the invoice that actually lands. 15% (Michael, 2026-08-20),
 // overridable without a code change.
 const DEFAULT_MARGIN_PERCENT = 15;
+// Bulky consignments - anything holding a carton over the parcel limits - carry
+// more: they take more handling, and the quote-to-invoice gap is wider on
+// volume-priced freight. 20% (Michael, 2026-10-01), overridable the same way.
+const DEFAULT_OVERSIZE_MARGIN_PERCENT = 20;
 
 // AusPost domestic parcel limits. A consignment breaching any of these is not a
 // parcel and PAC will not price it.
@@ -178,9 +182,17 @@ type PacResponse = {
   error?: { errorMessage?: string; message?: string };
 };
 
-export function marginPercent(): number {
-  const v = parseFloat(process.env.FREIGHT_MARGIN_PERCENT ?? "");
-  return Number.isFinite(v) && v >= 0 ? v : DEFAULT_MARGIN_PERCENT;
+/**
+ * The handling margin for a consignment. `oversize` is whether it holds any
+ * carton over the parcel limits; partitionConsignments sends each such carton
+ * alone, so in practice this is "is this the bulky item's own consignment".
+ */
+export function marginPercent(oversize = false): number {
+  const v = parseFloat(
+    (oversize ? process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT : process.env.FREIGHT_MARGIN_PERCENT) ?? ""
+  );
+  if (Number.isFinite(v) && v >= 0) return v;
+  return oversize ? DEFAULT_OVERSIZE_MARGIN_PERCENT : DEFAULT_MARGIN_PERCENT;
 }
 
 // AusPost publish RETAIL prices, which are GST-inclusive, so unlike the previous
@@ -531,9 +543,9 @@ function serviceLevelFor(code: string): string {
  * `includesGst` is per CARRIER, not global: the two are configured separately
  * because they are separate accounts and either could change independently.
  */
-function priceFor(base: number, includesGst: boolean): number {
+function priceFor(base: number, includesGst: boolean, oversize: boolean): number {
   if (!Number.isFinite(base) || base <= 0) return 0;
-  const withMargin = base * (1 + marginPercent() / 100);
+  const withMargin = base * (1 + marginPercent(oversize) / 100);
   const withGst = includesGst ? withMargin : withMargin * GST;
   return Math.round(withGst * 100) / 100;
 }
@@ -646,13 +658,14 @@ async function quoteAusPost(
   }
 
   const includesGst = pricesIncludeGst();
+  const oversize = parcels.some((p) => isOversize(p));
   return [...totals.entries()]
     .map(([code, s]) => ({
       id: `auspost:${code}`,
       carrier: "Australia Post",
       service: s.name,
       serviceLevel: serviceLevelFor(code),
-      price: priceFor(s.price, includesGst),
+      price: priceFor(s.price, includesGst, oversize),
       daysFrom: TRANSIT_DAYS[code]?.from,
       daysTo: TRANSIT_DAYS[code]?.to,
     }))
@@ -785,6 +798,7 @@ async function quoteEasyship(
   }
 
   const includesGst = easyshipPricesIncludeGst();
+  const oversize = parcels.some((p) => isOversize(p));
   return (json?.rates ?? [])
     .map((r) => {
       const id = String(r.courier_service?.id ?? "").trim();
@@ -797,7 +811,7 @@ async function quoteEasyship(
         // Unlike PAC, Easyship returns real transit times, so serviceLevel is
         // read off the name only to label the option, never to invent a date.
         serviceLevel: serviceLevelFor(name),
-        price: priceFor(Number(r.total_charge), includesGst),
+        price: priceFor(Number(r.total_charge), includesGst, oversize),
         daysFrom: r.min_delivery_time,
         daysTo: r.max_delivery_time,
       };
@@ -834,7 +848,7 @@ function cacheKey(
   const to = [delivery.postcode, delivery.city, delivery.state ?? "", delivery.country]
     .map((v) => v.trim().toLowerCase())
     .join("|");
-  const config = `${marginPercent()}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}|${[...enabledCarriers()].sort().join("+")}`;
+  const config = `${marginPercent()}|${marginPercent(true)}|${pricesIncludeGst()}|${easyshipPricesIncludeGst()}|${maxAutoQuote()}|${[...enabledCarriers()].sort().join("+")}`;
   return `${collection.postcode}>${to}>${boxes}>${config}${route ? `>${route}` : ""}`;
 }
 
@@ -935,7 +949,7 @@ async function quoteConsignment(
       parcels,
       oversize,
       postcode: delivery.postcode,
-      marginPercent: marginPercent(),
+      marginPercent: marginPercent(oversize),
     });
     return options ? { ok: true, options } : null;
   };
@@ -1135,11 +1149,12 @@ function wholeCartOptions(
   delivery: FreightAddress,
   matrix: MatrixConfig
 ): FreightOption[] {
+  const oversize = parcels.some((p) => isOversize(p));
   const input = {
     parcels,
-    oversize: parcels.some((p) => isOversize(p)),
+    oversize,
     postcode: delivery.postcode,
-    marginPercent: marginPercent(),
+    marginPercent: marginPercent(oversize),
   };
   return matrix.matrices
     .filter((m) => m.consolidate)

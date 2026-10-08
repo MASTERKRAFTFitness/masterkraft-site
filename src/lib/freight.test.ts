@@ -162,6 +162,17 @@ describe("configuration", () => {
     expect(marginPercent()).toBe(15);
   });
 
+  it("defaults the bulky margin to 20%, set separately from the parcel one", () => {
+    delete process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT;
+    process.env.FREIGHT_MARGIN_PERCENT = "15";
+    expect(marginPercent(true)).toBe(20);
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "25";
+    expect(marginPercent(true)).toBe(25);
+    expect(marginPercent()).toBe(15);
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "-5";
+    expect(marginPercent(true)).toBe(20);
+  });
+
   // AusPost publish GST-inclusive retail prices, so the default must be "already
   // included". The escape hatch exists in case this account's rates differ.
   it("treats carrier prices as GST-inclusive unless told otherwise", () => {
@@ -395,6 +406,7 @@ describe("two carriers, priced against each other", () => {
     process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     process.env.FREIGHT_COLLECTION_STATE = "VIC";
     process.env.FREIGHT_MARGIN_PERCENT = "0";
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "0";
     hits = [];
   });
   afterEach(() => {
@@ -530,6 +542,15 @@ describe("two carriers, priced against each other", () => {
     carriers({ auspost: new Error("x"), easyship: es(100) });
     const q = await quoteFreight([item()], delivery);
     if (q.ok) expect(q.options[0].price).toBe(115);
+  });
+
+  it("charges the bulky margin on a bulky consignment only", async () => {
+    process.env.FREIGHT_MARGIN_PERCENT = "15";
+    delete process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT;
+    carriers({ easyship: es(100) });
+    const bulky = await quoteFreight([barbell()], delivery);
+    if (bulky.ok) expect(bulky.options[0].price).toBe(120);
+    expect(bulky.ok).toBe(true);
   });
 
   // Easyship prices a whole consignment in one request, which is the latency win
@@ -694,6 +715,7 @@ describe("the ceiling on what we will quote online", () => {
     process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
     process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     process.env.FREIGHT_MARGIN_PERCENT = "0";
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "0";
     clearFreightCache();
   });
   afterEach(() => {
@@ -800,6 +822,7 @@ describe("choosing which carriers to ask", () => {
     process.env.FREIGHT_COLLECTION_CITY = "Thomastown";
     process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     process.env.FREIGHT_MARGIN_PERCENT = "0";
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "0";
     hits = [];
     clearFreightCache();
     globalThis.fetch = (async (url: string) => {
@@ -1070,6 +1093,7 @@ describe("a split cart, priced", () => {
     process.env.FREIGHT_COLLECTION_POSTCODE = "3074";
     process.env.FREIGHT_COLLECTION_STATE = "VIC";
     process.env.FREIGHT_MARGIN_PERCENT = "0";
+    process.env.FREIGHT_MARGIN_OVERSIZE_PERCENT = "0";
     hits = [];
   });
   afterEach(() => {
