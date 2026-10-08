@@ -61,6 +61,23 @@ const snapshot = [
     weight: "41",
     dimensions: { length: "105.4", width: "16.3", height: "16.3" },
   },
+  // A pair of dumbbells the snapshot weighs as ONE: 11kg for a 10kg pair. The
+  // carton is right; only the weight froze before Unleashed was corrected.
+  {
+    id: 808,
+    name: "PU Dumbbells (Pair) 10kg",
+    sku: "MMDBUR01",
+    weight: "11",
+    dimensions: { length: "25", width: "16.3", height: "16.3" },
+  },
+  // Weighed twice, a kilo apart. Rounding, not a contradiction.
+  {
+    id: 909,
+    name: "Weighed Twice",
+    sku: "MWEIGHED2",
+    weight: "35",
+    dimensions: { length: "60", width: "40", height: "30" },
+  },
 ];
 
 const variations = {
@@ -98,6 +115,15 @@ const erp: UnleashedMap = {
   MROUNDED1: {
     price: 50, stock: 1, name: "Measured Twice",
     widthCm: 41, heightCm: 19, depthCm: 31, weightKg: 10,
+  },
+  // Corrected in Unleashed on 2026-10-06 from one dumbbell's weight to two.
+  MMDBUR01: {
+    price: 90, stock: 1, name: "PU Dumbbells (Pair) 10kg",
+    widthCm: 25, heightCm: 16.3, depthCm: 16.3, weightKg: 22,
+  },
+  MWEIGHED2: {
+    price: 50, stock: 1, name: "Weighed Twice",
+    widthCm: 60, heightCm: 30, depthCm: 40, weightKg: 36,
   },
   MBADERP01: {
     price: 100, stock: 1, name: "Urethane Fixed Barbell 41kg",
@@ -209,8 +235,8 @@ describe("a carton that could not be real is not used", () => {
     expect(item.weightKg).toBe(13);
   });
 
-  // Weight is not part of the carton test and was never wrong, so it still
-  // resolves from the snapshot first.
+  // An agreeing weight still resolves from the snapshot first; see the weight
+  // tests below for when it does not.
   it("keeps taking the snapshot when its carton is fine", async () => {
     const { refsToFreightItems } = await import("@/lib/freight-server");
     const [item] = await refsToFreightItems([{ productId: 101, sku: "MBPB3I101", quantity: 1 }]);
@@ -262,6 +288,23 @@ describe("a carton that could not be real is not used", () => {
     const { refsToFreightItems } = await import("@/lib/freight-server");
     const [item] = await refsToFreightItems([{ productId: 202, sku: "MNODIMS1", quantity: 1 }]);
     expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([0, 0, 0]);
+  });
+});
+
+// The same contradiction rule, applied to weight. A pair declared at one
+// dumbbell's weight is half the consignment the carrier will actually weigh.
+describe("a weight the ERP contradicts", () => {
+  it("takes the ERP's weight when the snapshot is half of it", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 808, sku: "MMDBUR01", quantity: 1 }]);
+    expect(item.weightKg).toBe(22);
+    expect([item.lengthCm, item.widthCm, item.heightCm]).toEqual([25, 16.3, 16.3]);
+  });
+
+  it("keeps the snapshot's weight when the two merely round differently", async () => {
+    const { refsToFreightItems } = await import("@/lib/freight-server");
+    const [item] = await refsToFreightItems([{ productId: 909, sku: "MWEIGHED2", quantity: 1 }]);
+    expect(item.weightKg).toBe(35);
   });
 });
 
