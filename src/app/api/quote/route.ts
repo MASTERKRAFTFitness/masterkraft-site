@@ -49,9 +49,9 @@ export async function POST(request: Request) {
     checkoutId?: string;
   };
 
-  if (!contact?.name || !contact?.email || !Array.isArray(items) || items.length === 0) {
+  if (!contact?.name || !contact?.email || !contact?.phone?.trim() || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json(
-      { ok: false, error: "Name, email and at least one item are required." },
+      { ok: false, error: "Name, email, phone and at least one item are required." },
       { status: 400 }
     );
   }

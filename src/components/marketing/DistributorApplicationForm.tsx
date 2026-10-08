@@ -100,7 +100,7 @@ export default function DistributorApplicationForm() {
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <input name="email" required type="email" aria-label="Email" placeholder="Email" className={fieldClass} />
-        <input name="phone" aria-label="Phone" placeholder="Phone (with country code)" className={fieldClass} />
+        <input name="phone" type="tel" required autoComplete="tel" aria-label="Phone" placeholder="Phone (with country code)" className={fieldClass} />
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <input name="company" required aria-label="Company name" placeholder="Company name" className={fieldClass} />
