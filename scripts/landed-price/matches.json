@@ -1,11 +1,83 @@
 [
  {
+  "code": "MBASADJ01",
+  "name": "Group Fitness Step (Adjustable)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MBASADJ03",
+  "name": "Group Fitness Step (6 Risers)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MBBSCU01",
+  "name": "Balance Cushion",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MBBSTR01",
+  "name": "Fitness & Balance Trainer",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MBCTACC01",
+  "name": "Utility Roller",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MBCTMA01",
+  "name": "Abdominal Mat",
+  "ourQty": 1,
+  "littleBloke": "ab-core-pad",
+  "theirQty": 1,
+  "match": "approx: ab pad"
+ },
+ {
+  "code": "MBCTWH01",
+  "name": "Abdominal Wheel",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
   "code": "MBGYRI01",
   "name": "Gymnastic Rings (Wooden)",
   "ourQty": 1,
   "littleBloke": "wooden-gymnastics-rings-timber",
   "theirQty": 1,
   "match": "exact"
+ },
+ {
+  "code": "MBPB3I101",
+  "name": "3-In-1 Foam Plyometric Box 34kg",
+  "ourQty": 1,
+  "littleBloke": "foam-plyo-box-3-1",
+  "theirQty": 1,
+  "match": "approx: their 3-in-1 foam box"
+ },
+ {
+  "code": "MBPBMS01",
+  "name": "Plyometric Box (Set of 4)",
+  "ourQty": 1,
+  "littleBloke": "360-strength-3-piece-foam-plyometric-box-set",
+  "theirQty": 1,
+  "match": "approx: their 3-piece foam set vs our set of 4"
  },
  {
   "code": "MBRMRL01",
@@ -32,6 +104,46 @@
   "match": "approx: 3 single fabric bands vs our set of 3"
  },
  {
+  "code": "MBSAHD01",
+  "name": "Lateral Endurance Hurdles (Set of 4)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MBSARO01",
+  "name": "Speed Rope (Elite)",
+  "ourQty": 1,
+  "littleBloke": "360-strength-elite-bearing-speed-rope-black",
+  "theirQty": 1,
+  "match": "exact"
+ },
+ {
+  "code": "MEFRBL01",
+  "name": "Medicine Ball Rack 10 Ball (Double Sided)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MEFRBL03",
+  "name": "Medicine Ball Rack 5 Ball (Single Sided)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MEFRPS01",
+  "name": "Group Fitness Barbell Set Rack",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
   "code": "MEWMACC01",
   "name": "Rope & Band Rack (Wall Mounted) (Small)",
   "ourQty": 1,
@@ -56,6 +168,14 @@
   "match": "no Little Bloke equivalent"
  },
  {
+  "code": "MEWMBL01",
+  "name": "Fitness Ball Storage Rack (Wall Mounted)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
   "code": "MEWMMA01",
   "name": "Exercise Mat Hanging Rack (Wall Mounted)",
   "ourQty": 1,
@@ -70,6 +190,182 @@
   "littleBloke": "battle-rope-band-storage-hook",
   "theirQty": 1,
   "match": "approx: storage hook vs our wall storage"
+ },
+ {
+  "code": "MMDBRH01",
+  "name": "Rubber Hex Dumbbell 1kg",
+  "ourQty": 2,
+  "littleBloke": "1kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH02",
+  "name": "Rubber Hex Dumbbell 2kg",
+  "ourQty": 2,
+  "littleBloke": "2kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH04",
+  "name": "Rubber Hex Dumbbell 3kg",
+  "ourQty": 2,
+  "littleBloke": "3kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH05",
+  "name": "Rubber Hex Dumbbell 4kg",
+  "ourQty": 2,
+  "littleBloke": "4kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH06",
+  "name": "Rubber Hex Dumbbell 5kg",
+  "ourQty": 2,
+  "littleBloke": "5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH07",
+  "name": "Rubber Hex Dumbbell 6kg",
+  "ourQty": 2,
+  "littleBloke": "6kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH08",
+  "name": "Rubber Hex Dumbbell 7kg",
+  "ourQty": 2,
+  "littleBloke": "7kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH10",
+  "name": "Rubber Hex Dumbbell 8kg",
+  "ourQty": 2,
+  "littleBloke": "8kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH11",
+  "name": "Rubber Hex Dumbbell 9kg",
+  "ourQty": 2,
+  "littleBloke": "9kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH12",
+  "name": "Rubber Hex Dumbbell 10kg",
+  "ourQty": 2,
+  "littleBloke": "10kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH13",
+  "name": "Rubber Hex Dumbbell 12.5kg",
+  "ourQty": 2,
+  "littleBloke": "12-5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH14",
+  "name": "Rubber Hex Dumbbell 15kg",
+  "ourQty": 2,
+  "littleBloke": "15kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH15",
+  "name": "Rubber Hex Dumbbell 17.5kg",
+  "ourQty": 2,
+  "littleBloke": "17-5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH16",
+  "name": "Rubber Hex Dumbbell 20kg",
+  "ourQty": 2,
+  "littleBloke": "20kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH17",
+  "name": "Rubber Hex Dumbbell 22.5kg",
+  "ourQty": 2,
+  "littleBloke": "22-5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH18",
+  "name": "Rubber Hex Dumbbell 25kg",
+  "ourQty": 2,
+  "littleBloke": "25kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH19",
+  "name": "Rubber Hex Dumbbell 27.5kg",
+  "ourQty": 2,
+  "littleBloke": "27-5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH20",
+  "name": "Rubber Hex Dumbbell 30kg",
+  "ourQty": 2,
+  "littleBloke": "30kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH21",
+  "name": "Rubber Hex Dumbbell 32.5kg",
+  "ourQty": 2,
+  "littleBloke": "32-5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH22",
+  "name": "Rubber Hex Dumbbell 35kg",
+  "ourQty": 2,
+  "littleBloke": "35kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH23",
+  "name": "Rubber Hex Dumbbell 37.5kg",
+  "ourQty": 2,
+  "littleBloke": "37-5kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
+ },
+ {
+  "code": "MMDBRH24",
+  "name": "Rubber Hex Dumbbell 40kg",
+  "ourQty": 2,
+  "littleBloke": "40kg-rubber-hexagonal-dumbbell-pair",
+  "theirQty": 1,
+  "match": "exact: their classic pair vs 2 of ours"
  },
  {
   "code": "MMDESH04",
@@ -104,12 +400,28 @@
   "match": "approx: slam ball vs our dead ball"
  },
  {
+  "code": "MMDESH09",
+  "name": "Dead Balls 25kg",
+  "ourQty": 1,
+  "littleBloke": "25kg-slam-ball",
+  "theirQty": 1,
+  "match": "approx: slam ball vs our dead ball"
+ },
+ {
   "code": "MMGFACC01",
   "name": "Digital Interval Timer",
   "ourQty": 1,
   "littleBloke": "digital-wall-timer",
   "theirQty": 1,
   "match": "exact (theirs out of stock)"
+ },
+ {
+  "code": "MMGFPS02",
+  "name": "Group Fitness Barbell Set 37.5kg",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
  },
  {
   "code": "MMKBPGC01",
@@ -168,6 +480,46 @@
   "match": "exact"
  },
  {
+  "code": "MMKBPGC08",
+  "name": "Competition Kettlebells 24kg",
+  "ourQty": 1,
+  "littleBloke": "24kg-hollow-competition-steel-kettlebell",
+  "theirQty": 1,
+  "match": "exact"
+ },
+ {
+  "code": "MMKBPGC09",
+  "name": "Competition Kettlebells 28kg",
+  "ourQty": 1,
+  "littleBloke": "28kg-hollow-competition-steel-kettlebell",
+  "theirQty": 1,
+  "match": "exact"
+ },
+ {
+  "code": "MMKBPGC10",
+  "name": "Competition Kettlebells 32kg",
+  "ourQty": 1,
+  "littleBloke": "32kg-hollow-competition-steel-kettlebell",
+  "theirQty": 1,
+  "match": "exact"
+ },
+ {
+  "code": "MMKBPGC11",
+  "name": "Competition Kettlebells 36kg",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MMKBPGC12",
+  "name": "Competition Kettlebells 40kg",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
   "code": "MMMBPR01",
   "name": "Medicine Ball 2kg",
   "ourQty": 1,
@@ -208,6 +560,22 @@
   "match": "exact"
  },
  {
+  "code": "MMPACE101",
+  "name": "Chrome 110 Dumbbells (1kg-10kg Pairs)",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
+  "code": "MMPWPBG05",
+  "name": "Aqua Bag 35kg",
+  "ourQty": 1,
+  "littleBloke": null,
+  "theirQty": 0,
+  "match": "no Little Bloke equivalent"
+ },
+ {
   "code": "MRCTATT01",
   "name": "Rig Core Trainer (Landmine)",
   "ourQty": 1,
@@ -216,12 +584,44 @@
   "match": "exact"
  },
  {
+  "code": "MRSPATT05",
+  "name": "Rig Premium J-Hooks",
+  "ourQty": 1,
+  "littleBloke": "1rm-premium-j-hook-pair",
+  "theirQty": 1,
+  "match": "approx: premium J-hook pair"
+ },
+ {
   "code": "MRWAATT01",
   "name": "Rig Spotter Arms (Pair)",
   "ourQty": 1,
   "littleBloke": "1rm-elite-spotter-arms-pair",
   "theirQty": 1,
   "match": "exact"
+ },
+ {
+  "code": "MWBBOL02",
+  "name": "Olympic Barbell 7ft Chrome (1000Lb)",
+  "ourQty": 1,
+  "littleBloke": "olympic-barbell-7ft-700lb-rated-liner-bearings-collars-incl",
+  "theirQty": 1,
+  "match": "approx: their 700lb bar with collars vs our 1000lb bar"
+ },
+ {
+  "code": "MWBBOL03",
+  "name": "Olympic Barbell 15kg (1500Lb)",
+  "ourQty": 1,
+  "littleBloke": "15kg-pro-olympic-barbell-hard-chrome-black-hard-chrome",
+  "theirQty": 1,
+  "match": "approx: comparable 15kg women's bar"
+ },
+ {
+  "code": "MWBBOL04",
+  "name": "Olympic Barbell 20kg (2000Lb)",
+  "ourQty": 1,
+  "littleBloke": "20kg-pro-olympic-barbell-hard-chrome",
+  "theirQty": 1,
+  "match": "approx: comparable 20kg men's bar"
  },
  {
   "code": "MWWAACC02",
@@ -276,6 +676,14 @@
   "name": "Coloured Bumper Plates 20kg",
   "ourQty": 2,
   "littleBloke": "pro-bumper-plates-pair-20kg",
+  "theirQty": 1,
+  "match": "exact: pair vs 2 of ours"
+ },
+ {
+  "code": "MWWPCB05",
+  "name": "Coloured Bumper Plates 25kg",
+  "ourQty": 2,
+  "littleBloke": "pro-bumper-plate-pair-25kg",
   "theirQty": 1,
   "match": "exact: pair vs 2 of ours"
  },
