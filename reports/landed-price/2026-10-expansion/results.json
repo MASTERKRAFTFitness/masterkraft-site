@@ -781,10 +781,10 @@
   "cities": {
    "Melbourne": {
     "ourFreight": 39.2,
-    "lbfFreight": null,
+    "lbfFreight": 23.1,
     "ours": 162.4,
-    "lbf": null,
-    "gapPct": null
+    "lbf": 154.35,
+    "gapPct": 5.2
    },
    "Sydney": {
     "ourFreight": 73.71,
@@ -805,8 +805,8 @@
   "stock": 1,
   "theirPrice": 131.25,
   "regions": [],
-  "decision": "incomplete",
-  "why": "no quote for Melbourne: re-run to fill",
+  "decision": "measured",
+  "why": "",
   "label": null
  },
  "MMDBRH16": {
@@ -1484,23 +1484,67 @@
     "ourFreight": 172.14,
     "lbfFreight": 34.19,
     "ours": 557.14,
-    "lbf": 433.19
+    "lbf": 433.19,
+    "gapPct": 28.6
    },
    "Sydney": {
     "ourFreight": 164.6,
     "lbfFreight": 52.32,
     "ours": 549.6,
-    "lbf": 451.32
+    "lbf": 451.32,
+    "gapPct": 21.8
    },
    "Perth": {
     "ourFreight": 164.6,
     "lbfFreight": 84.83,
     "ours": 549.6,
-    "lbf": 483.83
+    "lbf": 483.83,
+    "gapPct": 13.6
    }
   },
   "ourPrice": 385.0,
   "stock": 1,
-  "theirPrice": 399.0
+  "theirPrice": 399.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MWWPCB05": {
+  "code": "MWWPCB05",
+  "name": "Coloured Bumper Plates 25kg",
+  "match": "exact: pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 106.3,
+    "lbfFreight": 23.1,
+    "ours": 366.3,
+    "lbf": 313.1,
+    "gapPct": 17.0
+   },
+   "Sydney": {
+    "ourFreight": 102.76,
+    "lbfFreight": 50.35,
+    "ours": 362.76,
+    "lbf": 340.35,
+    "gapPct": 6.6
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 133.89,
+    "ours": 424.6,
+    "lbf": 423.89,
+    "gapPct": 0.2
+   }
+  },
+  "ourPrice": 260.0,
+  "stock": 1,
+  "theirPrice": 290.0,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
  }
 }
