@@ -1114,23 +1114,393 @@
     "ourFreight": 229.26,
     "lbfFreight": 27.99,
     "ours": 510.86,
-    "lbf": 327.99
+    "lbf": 327.99,
+    "gapPct": 55.8
    },
    "Sydney": {
     "ourFreight": 164.6,
     "lbfFreight": 68.49,
     "ours": 446.2,
-    "lbf": 368.49
+    "lbf": 368.49,
+    "gapPct": 21.1
    },
    "Perth": {
     "ourFreight": 180.99,
     "lbfFreight": 202.43,
     "ours": 462.59,
-    "lbf": 502.43
+    "lbf": 502.43,
+    "gapPct": -7.9
    }
   },
   "ourPrice": 281.6,
   "stock": 1,
-  "theirPrice": 300.0
+  "theirPrice": 300.0,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDESH09": {
+  "code": "MMDESH09",
+  "name": "Dead Balls 25kg",
+  "match": "approx: slam ball vs our dead ball",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 53.15,
+    "lbfFreight": 23.1,
+    "ours": 141.15,
+    "lbf": 103.1,
+    "gapPct": 36.9
+   },
+   "Sydney": {
+    "ourFreight": 51.38,
+    "lbfFreight": 36.0,
+    "ours": 139.38,
+    "lbf": 116.0,
+    "gapPct": 20.2
+   },
+   "Perth": {
+    "ourFreight": 105.33,
+    "lbfFreight": 76.76,
+    "ours": 193.33,
+    "lbf": 156.76,
+    "gapPct": 23.3
+   }
+  },
+  "ourPrice": 88.0,
+  "stock": 1,
+  "theirPrice": 80.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMGFPS02": {
+  "code": "MMGFPS02",
+  "name": "Group Fitness Barbell Set 37.5kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 295.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMKBPGC08": {
+  "code": "MMKBPGC08",
+  "name": "Competition Kettlebells 24kg",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 17.81,
+    "lbfFreight": 23.1,
+    "ours": 167.81,
+    "lbf": 168.1,
+    "gapPct": -0.2
+   },
+   "Sydney": {
+    "ourFreight": 34.05,
+    "lbfFreight": 36.0,
+    "ours": 184.05,
+    "lbf": 181.0,
+    "gapPct": 1.7
+   },
+   "Perth": {
+    "ourFreight": 72.57,
+    "lbfFreight": 74.48,
+    "ours": 222.57,
+    "lbf": 219.48,
+    "gapPct": 1.4
+   }
+  },
+  "ourPrice": 150.0,
+  "stock": 1,
+  "theirPrice": 145.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMKBPGC09": {
+  "code": "MMKBPGC09",
+  "name": "Competition Kettlebells 28kg",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 53.15,
+    "lbfFreight": 23.1,
+    "ours": 223.15,
+    "lbf": 188.1,
+    "gapPct": 18.6
+   },
+   "Sydney": {
+    "ourFreight": 54.25,
+    "lbfFreight": 37.06,
+    "ours": 224.25,
+    "lbf": 202.06,
+    "gapPct": 11.0
+   },
+   "Perth": {
+    "ourFreight": 114.41,
+    "lbfFreight": 83.61,
+    "ours": 284.41,
+    "lbf": 248.61,
+    "gapPct": 14.4
+   }
+  },
+  "ourPrice": 170.0,
+  "stock": 1,
+  "theirPrice": 165.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMKBPGC10": {
+  "code": "MMKBPGC10",
+  "name": "Competition Kettlebells 32kg",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 152.46,
+    "lbfFreight": 23.1,
+    "ours": 352.46,
+    "lbf": 208.1,
+    "gapPct": 69.4
+   },
+   "Sydney": {
+    "ourFreight": 157.37,
+    "lbfFreight": 39.47,
+    "ours": 357.37,
+    "lbf": 224.47,
+    "gapPct": 59.2
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 92.76,
+    "ours": 364.6,
+    "lbf": 277.76,
+    "gapPct": 31.3
+   }
+  },
+  "ourPrice": 200.0,
+  "stock": 1,
+  "theirPrice": 185.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMKBPGC11": {
+  "code": "MMKBPGC11",
+  "name": "Competition Kettlebells 36kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 230.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMKBPGC12": {
+  "code": "MMKBPGC12",
+  "name": "Competition Kettlebells 40kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 260.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMPACE101": {
+  "code": "MMPACE101",
+  "name": "Chrome 110 Dumbbells (1kg-10kg Pairs)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 995.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMPWPBG05": {
+  "code": "MMPWPBG05",
+  "name": "Aqua Bag 35kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 135.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MRSPATT05": {
+  "code": "MRSPATT05",
+  "name": "Rig Premium J-Hooks",
+  "match": "approx: premium J-hook pair",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 12.18,
+    "lbfFreight": 23.1,
+    "ours": 187.18,
+    "lbf": 192.1,
+    "gapPct": -2.6
+   },
+   "Sydney": {
+    "ourFreight": 27.08,
+    "lbfFreight": 36.0,
+    "ours": 202.08,
+    "lbf": 205.0,
+    "gapPct": -1.4
+   },
+   "Perth": {
+    "ourFreight": 45.37,
+    "lbfFreight": 47.07,
+    "ours": 220.37,
+    "lbf": 216.07,
+    "gapPct": 2.0
+   }
+  },
+  "ourPrice": 175.0,
+  "stock": 1,
+  "theirPrice": 169.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MWBBOL02": {
+  "code": "MWBBOL02",
+  "name": "Olympic Barbell 7ft Chrome (1000Lb)",
+  "match": "approx: their 700lb bar with collars vs our 1000lb bar",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 172.14,
+    "lbfFreight": 34.19,
+    "ours": 347.14,
+    "lbf": 213.19,
+    "gapPct": 62.8
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 52.32,
+    "ours": 339.6,
+    "lbf": 231.32,
+    "gapPct": 46.8
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 87.12,
+    "ours": 339.6,
+    "lbf": 266.12,
+    "gapPct": 27.6
+   }
+  },
+  "ourPrice": 175.0,
+  "stock": 1,
+  "theirPrice": 179.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MWBBOL03": {
+  "code": "MWBBOL03",
+  "name": "Olympic Barbell 15kg (1500Lb)",
+  "match": "approx: comparable 15kg women's bar",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 172.14,
+    "lbfFreight": 34.19,
+    "ours": 517.14,
+    "lbf": 383.19,
+    "gapPct": 35.0
+   },
+   "Sydney": {
+    "ourFreight": 147.43,
+    "lbfFreight": 52.32,
+    "ours": 492.43,
+    "lbf": 401.32,
+    "gapPct": 22.7
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 73.41,
+    "ours": 509.6,
+    "lbf": 422.41,
+    "gapPct": 20.6
+   }
+  },
+  "ourPrice": 345.0,
+  "stock": 1,
+  "theirPrice": 349.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MWBBOL04": {
+  "code": "MWBBOL04",
+  "name": "Olympic Barbell 20kg (2000Lb)",
+  "match": "approx: comparable 20kg men's bar",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 172.14,
+    "lbfFreight": 34.19,
+    "ours": 557.14,
+    "lbf": 433.19
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 52.32,
+    "ours": 549.6,
+    "lbf": 451.32
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 84.83,
+    "ours": 549.6,
+    "lbf": 483.83
+   }
+  },
+  "ourPrice": 385.0,
+  "stock": 1,
+  "theirPrice": 399.0
  }
 }
