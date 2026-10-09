@@ -1040,23 +1040,60 @@
     "ourFreight": 206.9,
     "lbfFreight": 25.9,
     "ours": 453.3,
-    "lbf": 288.4
+    "lbf": 288.4,
+    "gapPct": 57.2
    },
    "Sydney": {
     "ourFreight": 164.6,
     "lbfFreight": 62.45,
     "ours": 411.0,
-    "lbf": 324.95
+    "lbf": 324.95,
+    "gapPct": 26.5
    },
    "Perth": {
     "ourFreight": 164.6,
     "lbfFreight": 179.58,
     "ours": 411.0,
-    "lbf": 442.08
+    "lbf": 442.08,
+    "gapPct": -7.0
    }
   },
   "ourPrice": 246.4,
   "stock": 1,
-  "theirPrice": 262.5
+  "theirPrice": 262.5,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDBRH23": {
+  "code": "MMDBRH23",
+  "name": "Rubber Hex Dumbbell 37.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 220.31,
+    "lbfFreight": 27.16,
+    "ours": 484.31,
+    "lbf": 308.41
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 66.07,
+    "ours": 428.6,
+    "lbf": 347.32
+   },
+   "Perth": {
+    "ourFreight": 173.23,
+    "lbfFreight": 193.29,
+    "ours": 437.23,
+    "lbf": 474.54
+   }
+  },
+  "ourPrice": 264.0,
+  "stock": 1,
+  "theirPrice": 281.25
  }
 }
