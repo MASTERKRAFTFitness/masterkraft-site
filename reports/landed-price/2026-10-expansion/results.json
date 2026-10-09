@@ -1,0 +1,82 @@
+{
+ "MBASADJ01": {
+  "code": "MBASADJ01",
+  "name": "Group Fitness Step (Adjustable)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 275.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBASADJ03": {
+  "code": "MBASADJ03",
+  "name": "Group Fitness Step (6 Risers)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 285.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBBSCU01": {
+  "code": "MBBSCU01",
+  "name": "Balance Cushion",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 35.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBBSTR01": {
+  "code": "MBBSTR01",
+  "name": "Fitness & Balance Trainer",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 180.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBCTACC01": {
+  "code": "MBCTACC01",
+  "name": "Utility Roller",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 135.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ }
+}
