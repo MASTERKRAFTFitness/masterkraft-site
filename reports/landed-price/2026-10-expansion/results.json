@@ -78,5 +78,280 @@
   ],
   "why": "no Little Bloke equivalent",
   "label": "national"
+ },
+ "MBCTMA01": {
+  "code": "MBCTMA01",
+  "name": "Abdominal Mat",
+  "match": "approx: ab pad",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 10.42,
+    "lbfFreight": 23.1,
+    "ours": 35.42,
+    "lbf": 48.1,
+    "gapPct": -26.4
+   },
+   "Sydney": {
+    "ourFreight": 18.4,
+    "lbfFreight": 36.0,
+    "ours": 43.4,
+    "lbf": 61.0,
+    "gapPct": -28.9
+   },
+   "Perth": {
+    "ourFreight": 18.4,
+    "lbfFreight": 35.11,
+    "ours": 43.4,
+    "lbf": 60.11,
+    "gapPct": -27.8
+   }
+  },
+  "ourPrice": 25.0,
+  "stock": 1,
+  "theirPrice": 25.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MBCTWH01": {
+  "code": "MBCTWH01",
+  "name": "Abdominal Wheel",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 22.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBPB3I101": {
+  "code": "MBPB3I101",
+  "name": "3-In-1 Foam Plyometric Box 34kg",
+  "match": "approx: their 3-in-1 foam box",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 155.97,
+    "lbfFreight": 23.61,
+    "ours": 485.97,
+    "lbf": 322.61,
+    "gapPct": 50.6
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 55.8,
+    "ours": 494.6,
+    "lbf": 354.8,
+    "gapPct": 39.4
+   },
+   "Perth": {
+    "ourFreight": 182.29,
+    "lbfFreight": 154.44,
+    "ours": 512.29,
+    "lbf": 453.44,
+    "gapPct": 13.0
+   }
+  },
+  "ourPrice": 330.0,
+  "stock": 1,
+  "theirPrice": 299.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MBPBMS01": {
+  "code": "MBPBMS01",
+  "name": "Plyometric Box (Set of 4)",
+  "match": "approx: their 3-piece foam set vs our set of 4",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 152.46,
+    "lbfFreight": 54.99,
+    "ours": 547.46,
+    "lbf": 1004.99,
+    "gapPct": -45.5
+   },
+   "Sydney": {
+    "ourFreight": 162.14,
+    "lbfFreight": 147.07,
+    "ours": 557.14,
+    "lbf": 1097.07,
+    "gapPct": -49.2
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 499.43,
+    "ours": 559.6,
+    "lbf": 1449.43,
+    "gapPct": -61.4
+   }
+  },
+  "ourPrice": 395.0,
+  "stock": 1,
+  "theirPrice": 950.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MBSAHD01": {
+  "code": "MBSAHD01",
+  "name": "Lateral Endurance Hurdles (Set of 4)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 230.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBSARO01": {
+  "code": "MBSARO01",
+  "name": "Speed Rope (Elite)",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 10.42,
+    "lbfFreight": 7.5,
+    "ours": 35.42,
+    "lbf": 32.5,
+    "gapPct": 9.0
+   },
+   "Sydney": {
+    "ourFreight": 11.73,
+    "lbfFreight": 10.5,
+    "ours": 36.73,
+    "lbf": 35.5,
+    "gapPct": 3.5
+   },
+   "Perth": {
+    "ourFreight": 11.73,
+    "lbfFreight": 10.5,
+    "ours": 36.73,
+    "lbf": 35.5,
+    "gapPct": 3.5
+   }
+  },
+  "ourPrice": 25.0,
+  "stock": 1,
+  "theirPrice": 25.0,
+  "regions": [
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "nsw-wa"
+ },
+ "MEFRBL01": {
+  "code": "MEFRBL01",
+  "name": "Medicine Ball Rack 10 Ball (Double Sided)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 205.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MEFRBL03": {
+  "code": "MEFRBL03",
+  "name": "Medicine Ball Rack 5 Ball (Single Sided)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 310.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MEFRPS01": {
+  "code": "MEFRPS01",
+  "name": "Group Fitness Barbell Set Rack",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 395.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MEWMBL01": {
+  "code": "MEWMBL01",
+  "name": "Fitness Ball Storage Rack (Wall Mounted)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 245.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMDBRH01": {
+  "code": "MMDBRH01",
+  "name": "Rubber Hex Dumbbell 1kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 27.41,
+    "lbf": 30.6
+   },
+   "Sydney": {
+    "ourFreight": 23.46,
+    "lbfFreight": 36.0,
+    "ours": 30.5,
+    "lbf": 43.5
+   },
+   "Perth": {
+    "ourFreight": 23.46,
+    "lbfFreight": 35.11,
+    "ours": 30.5,
+    "lbf": 42.61
+   }
+  },
+  "ourPrice": 7.04,
+  "stock": 1,
+  "theirPrice": 7.5
  }
 }
