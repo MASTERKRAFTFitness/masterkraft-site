@@ -1,0 +1,1550 @@
+{
+ "MBASADJ01": {
+  "code": "MBASADJ01",
+  "name": "Group Fitness Step (Adjustable)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 275.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBASADJ03": {
+  "code": "MBASADJ03",
+  "name": "Group Fitness Step (6 Risers)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 285.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBBSCU01": {
+  "code": "MBBSCU01",
+  "name": "Balance Cushion",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 35.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBBSTR01": {
+  "code": "MBBSTR01",
+  "name": "Fitness & Balance Trainer",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 180.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBCTACC01": {
+  "code": "MBCTACC01",
+  "name": "Utility Roller",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 135.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBCTMA01": {
+  "code": "MBCTMA01",
+  "name": "Abdominal Mat",
+  "match": "approx: ab pad",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 10.42,
+    "lbfFreight": 23.1,
+    "ours": 35.42,
+    "lbf": 48.1,
+    "gapPct": -26.4
+   },
+   "Sydney": {
+    "ourFreight": 18.4,
+    "lbfFreight": 36.0,
+    "ours": 43.4,
+    "lbf": 61.0,
+    "gapPct": -28.9
+   },
+   "Perth": {
+    "ourFreight": 18.4,
+    "lbfFreight": 35.11,
+    "ours": 43.4,
+    "lbf": 60.11,
+    "gapPct": -27.8
+   }
+  },
+  "ourPrice": 25.0,
+  "stock": 1,
+  "theirPrice": 25.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MBCTWH01": {
+  "code": "MBCTWH01",
+  "name": "Abdominal Wheel",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 22.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBPB3I101": {
+  "code": "MBPB3I101",
+  "name": "3-In-1 Foam Plyometric Box 34kg",
+  "match": "approx: their 3-in-1 foam box",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 155.97,
+    "lbfFreight": 23.61,
+    "ours": 485.97,
+    "lbf": 322.61,
+    "gapPct": 50.6
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 55.8,
+    "ours": 494.6,
+    "lbf": 354.8,
+    "gapPct": 39.4
+   },
+   "Perth": {
+    "ourFreight": 182.29,
+    "lbfFreight": 154.44,
+    "ours": 512.29,
+    "lbf": 453.44,
+    "gapPct": 13.0
+   }
+  },
+  "ourPrice": 330.0,
+  "stock": 1,
+  "theirPrice": 299.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MBPBMS01": {
+  "code": "MBPBMS01",
+  "name": "Plyometric Box (Set of 4)",
+  "match": "approx: their 3-piece foam set vs our set of 4",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 152.46,
+    "lbfFreight": 54.99,
+    "ours": 547.46,
+    "lbf": 1004.99,
+    "gapPct": -45.5
+   },
+   "Sydney": {
+    "ourFreight": 162.14,
+    "lbfFreight": 147.07,
+    "ours": 557.14,
+    "lbf": 1097.07,
+    "gapPct": -49.2
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 499.43,
+    "ours": 559.6,
+    "lbf": 1449.43,
+    "gapPct": -61.4
+   }
+  },
+  "ourPrice": 395.0,
+  "stock": 1,
+  "theirPrice": 950.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MBSAHD01": {
+  "code": "MBSAHD01",
+  "name": "Lateral Endurance Hurdles (Set of 4)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 230.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MBSARO01": {
+  "code": "MBSARO01",
+  "name": "Speed Rope (Elite)",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 10.42,
+    "lbfFreight": 7.5,
+    "ours": 35.42,
+    "lbf": 32.5,
+    "gapPct": 9.0
+   },
+   "Sydney": {
+    "ourFreight": 11.73,
+    "lbfFreight": 10.5,
+    "ours": 36.73,
+    "lbf": 35.5,
+    "gapPct": 3.5
+   },
+   "Perth": {
+    "ourFreight": 11.73,
+    "lbfFreight": 10.5,
+    "ours": 36.73,
+    "lbf": 35.5,
+    "gapPct": 3.5
+   }
+  },
+  "ourPrice": 25.0,
+  "stock": 1,
+  "theirPrice": 25.0,
+  "regions": [
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "nsw-wa"
+ },
+ "MEFRBL01": {
+  "code": "MEFRBL01",
+  "name": "Medicine Ball Rack 10 Ball (Double Sided)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 205.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MEFRBL03": {
+  "code": "MEFRBL03",
+  "name": "Medicine Ball Rack 5 Ball (Single Sided)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 310.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MEFRPS01": {
+  "code": "MEFRPS01",
+  "name": "Group Fitness Barbell Set Rack",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 395.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MEWMBL01": {
+  "code": "MEWMBL01",
+  "name": "Fitness Ball Storage Rack (Wall Mounted)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 245.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMDBRH01": {
+  "code": "MMDBRH01",
+  "name": "Rubber Hex Dumbbell 1kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 27.41,
+    "lbf": 30.6,
+    "gapPct": -10.4
+   },
+   "Sydney": {
+    "ourFreight": 23.46,
+    "lbfFreight": 36.0,
+    "ours": 30.5,
+    "lbf": 43.5,
+    "gapPct": -29.9
+   },
+   "Perth": {
+    "ourFreight": 23.46,
+    "lbfFreight": 35.11,
+    "ours": 30.5,
+    "lbf": 42.61,
+    "gapPct": -28.4
+   }
+  },
+  "ourPrice": 7.04,
+  "stock": 1,
+  "theirPrice": 7.5,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMDBRH02": {
+  "code": "MMDBRH02",
+  "name": "Rubber Hex Dumbbell 2kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 34.45,
+    "lbf": 38.1,
+    "gapPct": -9.6
+   },
+   "Sydney": {
+    "ourFreight": 23.46,
+    "lbfFreight": 36.0,
+    "ours": 37.54,
+    "lbf": 51.0,
+    "gapPct": -26.4
+   },
+   "Perth": {
+    "ourFreight": 23.46,
+    "lbfFreight": 35.11,
+    "ours": 37.54,
+    "lbf": 50.11,
+    "gapPct": -25.1
+   }
+  },
+  "ourPrice": 14.08,
+  "stock": 1,
+  "theirPrice": 15.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMDBRH04": {
+  "code": "MMDBRH04",
+  "name": "Rubber Hex Dumbbell 3kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 41.49,
+    "lbf": 45.6,
+    "gapPct": -9.0
+   },
+   "Sydney": {
+    "ourFreight": 26.91,
+    "lbfFreight": 36.0,
+    "ours": 48.03,
+    "lbf": 58.5,
+    "gapPct": -17.9
+   },
+   "Perth": {
+    "ourFreight": 26.91,
+    "lbfFreight": 35.11,
+    "ours": 48.03,
+    "lbf": 57.61,
+    "gapPct": -16.6
+   }
+  },
+  "ourPrice": 21.12,
+  "stock": 1,
+  "theirPrice": 22.5,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMDBRH05": {
+  "code": "MMDBRH05",
+  "name": "Rubber Hex Dumbbell 4kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 48.53,
+    "lbf": 53.1,
+    "gapPct": -8.6
+   },
+   "Sydney": {
+    "ourFreight": 36.8,
+    "lbfFreight": 36.0,
+    "ours": 64.96,
+    "lbf": 66.0,
+    "gapPct": -1.6
+   },
+   "Perth": {
+    "ourFreight": 36.8,
+    "lbfFreight": 37.92,
+    "ours": 64.96,
+    "lbf": 67.92,
+    "gapPct": -4.4
+   }
+  },
+  "ourPrice": 28.16,
+  "stock": 1,
+  "theirPrice": 30.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMDBRH06": {
+  "code": "MMDBRH06",
+  "name": "Rubber Hex Dumbbell 5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 55.57,
+    "lbf": 60.6,
+    "gapPct": -8.3
+   },
+   "Sydney": {
+    "ourFreight": 42.48,
+    "lbfFreight": 36.0,
+    "ours": 77.68,
+    "lbf": 73.5,
+    "gapPct": 5.7
+   },
+   "Perth": {
+    "ourFreight": 67.74,
+    "lbfFreight": 42.49,
+    "ours": 102.94,
+    "lbf": 79.99,
+    "gapPct": 28.7
+   }
+  },
+  "ourPrice": 35.2,
+  "stock": 1,
+  "theirPrice": 37.5,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH07": {
+  "code": "MMDBRH07",
+  "name": "Rubber Hex Dumbbell 6kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 62.61,
+    "lbf": 68.1,
+    "gapPct": -8.1
+   },
+   "Sydney": {
+    "ourFreight": 44.88,
+    "lbfFreight": 36.0,
+    "ours": 87.12,
+    "lbf": 81.0,
+    "gapPct": 7.6
+   },
+   "Perth": {
+    "ourFreight": 79.24,
+    "lbfFreight": 47.07,
+    "ours": 121.48,
+    "lbf": 92.07,
+    "gapPct": 31.9
+   }
+  },
+  "ourPrice": 42.24,
+  "stock": 1,
+  "theirPrice": 45.0,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH08": {
+  "code": "MMDBRH08",
+  "name": "Rubber Hex Dumbbell 7kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 69.65,
+    "lbf": 75.6,
+    "gapPct": -7.9
+   },
+   "Sydney": {
+    "ourFreight": 47.28,
+    "lbfFreight": 36.0,
+    "ours": 96.56,
+    "lbf": 88.5,
+    "gapPct": 9.1
+   },
+   "Perth": {
+    "ourFreight": 90.74,
+    "lbfFreight": 51.62,
+    "ours": 140.02,
+    "lbf": 104.12,
+    "gapPct": 34.5
+   }
+  },
+  "ourPrice": 49.28,
+  "stock": 1,
+  "theirPrice": 52.5,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH10": {
+  "code": "MMDBRH10",
+  "name": "Rubber Hex Dumbbell 8kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 76.69,
+    "lbf": 83.1,
+    "gapPct": -7.7
+   },
+   "Sydney": {
+    "ourFreight": 49.69,
+    "lbfFreight": 36.0,
+    "ours": 106.01,
+    "lbf": 96.0,
+    "gapPct": 10.4
+   },
+   "Perth": {
+    "ourFreight": 102.24,
+    "lbfFreight": 56.21,
+    "ours": 158.56,
+    "lbf": 116.21,
+    "gapPct": 36.4
+   }
+  },
+  "ourPrice": 56.32,
+  "stock": 1,
+  "theirPrice": 60.0,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH11": {
+  "code": "MMDBRH11",
+  "name": "Rubber Hex Dumbbell 9kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 83.73,
+    "lbf": 90.6,
+    "gapPct": -7.6
+   },
+   "Sydney": {
+    "ourFreight": 52.08,
+    "lbfFreight": 36.0,
+    "ours": 115.44,
+    "lbf": 103.5,
+    "gapPct": 11.5
+   },
+   "Perth": {
+    "ourFreight": 109.4,
+    "lbfFreight": 60.77,
+    "ours": 172.76,
+    "lbf": 128.27,
+    "gapPct": 34.7
+   }
+  },
+  "ourPrice": 63.36,
+  "stock": 1,
+  "theirPrice": 67.5,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH12": {
+  "code": "MMDBRH12",
+  "name": "Rubber Hex Dumbbell 10kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 20.37,
+    "lbfFreight": 23.1,
+    "ours": 90.77,
+    "lbf": 98.1,
+    "gapPct": -7.5
+   },
+   "Sydney": {
+    "ourFreight": 54.49,
+    "lbfFreight": 36.0,
+    "ours": 124.89,
+    "lbf": 111.0,
+    "gapPct": 12.5
+   },
+   "Perth": {
+    "ourFreight": 114.31,
+    "lbfFreight": 65.34,
+    "ours": 184.71,
+    "lbf": 140.34,
+    "gapPct": 31.6
+   }
+  },
+  "ourPrice": 70.4,
+  "stock": 1,
+  "theirPrice": 75.0,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH13": {
+  "code": "MMDBRH13",
+  "name": "Rubber Hex Dumbbell 12.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 39.2,
+    "lbfFreight": 23.1,
+    "ours": 127.2,
+    "lbf": 116.85,
+    "gapPct": 8.9
+   },
+   "Sydney": {
+    "ourFreight": 61.7,
+    "lbfFreight": 36.0,
+    "ours": 149.7,
+    "lbf": 129.75,
+    "gapPct": 15.4
+   },
+   "Perth": {
+    "ourFreight": 129.04,
+    "lbfFreight": 79.04,
+    "ours": 217.04,
+    "lbf": 172.79,
+    "gapPct": 25.6
+   }
+  },
+  "ourPrice": 88.0,
+  "stock": 1,
+  "theirPrice": 93.75,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMDBRH14": {
+  "code": "MMDBRH14",
+  "name": "Rubber Hex Dumbbell 15kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 39.2,
+    "lbfFreight": 23.1,
+    "ours": 144.8,
+    "lbf": 135.6,
+    "gapPct": 6.8
+   },
+   "Sydney": {
+    "ourFreight": 66.49,
+    "lbfFreight": 38.27,
+    "ours": 172.09,
+    "lbf": 150.77,
+    "gapPct": 14.1
+   },
+   "Perth": {
+    "ourFreight": 138.87,
+    "lbfFreight": 88.19,
+    "ours": 244.47,
+    "lbf": 200.69,
+    "gapPct": 21.8
+   }
+  },
+  "ourPrice": 105.6,
+  "stock": 1,
+  "theirPrice": 112.5,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMDBRH15": {
+  "code": "MMDBRH15",
+  "name": "Rubber Hex Dumbbell 17.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 39.2,
+    "lbfFreight": 23.1,
+    "ours": 162.4,
+    "lbf": 154.35,
+    "gapPct": 5.2
+   },
+   "Sydney": {
+    "ourFreight": 73.71,
+    "lbfFreight": 41.9,
+    "ours": 196.91,
+    "lbf": 173.15,
+    "gapPct": 13.7
+   },
+   "Perth": {
+    "ourFreight": 153.59,
+    "lbfFreight": 101.89,
+    "ours": 276.79,
+    "lbf": 233.14,
+    "gapPct": 18.7
+   }
+  },
+  "ourPrice": 123.2,
+  "stock": 1,
+  "theirPrice": 131.25,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMDBRH16": {
+  "code": "MMDBRH16",
+  "name": "Rubber Hex Dumbbell 20kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 39.2,
+    "lbfFreight": 23.1,
+    "ours": 180.0,
+    "lbf": 173.1,
+    "gapPct": 4.0
+   },
+   "Sydney": {
+    "ourFreight": 78.51,
+    "lbfFreight": 44.33,
+    "ours": 219.31,
+    "lbf": 194.33,
+    "gapPct": 12.9
+   },
+   "Perth": {
+    "ourFreight": 163.42,
+    "lbfFreight": 111.04,
+    "ours": 304.22,
+    "lbf": 261.04,
+    "gapPct": 16.5
+   }
+  },
+  "ourPrice": 140.8,
+  "stock": 1,
+  "theirPrice": 150.0,
+  "regions": [
+   "vic"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "vic"
+ },
+ "MMDBRH17": {
+  "code": "MMDBRH17",
+  "name": "Rubber Hex Dumbbell 22.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 34.96,
+    "lbfFreight": 23.1,
+    "ours": 193.36,
+    "lbf": 191.85,
+    "gapPct": 0.8
+   },
+   "Sydney": {
+    "ourFreight": 68.1,
+    "lbfFreight": 47.94,
+    "ours": 226.5,
+    "lbf": 216.69,
+    "gapPct": 4.5
+   },
+   "Perth": {
+    "ourFreight": 145.14,
+    "lbfFreight": 124.73,
+    "ours": 303.54,
+    "lbf": 293.48,
+    "gapPct": 3.4
+   }
+  },
+  "ourPrice": 158.4,
+  "stock": 1,
+  "theirPrice": 168.75,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMDBRH18": {
+  "code": "MMDBRH18",
+  "name": "Rubber Hex Dumbbell 25kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 106.3,
+    "lbfFreight": 23.1,
+    "ours": 282.3,
+    "lbf": 210.6,
+    "gapPct": 34.0
+   },
+   "Sydney": {
+    "ourFreight": 102.76,
+    "lbfFreight": 50.35,
+    "ours": 278.76,
+    "lbf": 237.85,
+    "gapPct": 17.2
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 133.89,
+    "ours": 340.6,
+    "lbf": 321.39,
+    "gapPct": 6.0
+   }
+  },
+  "ourPrice": 176.0,
+  "stock": 1,
+  "theirPrice": 187.5,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMDBRH19": {
+  "code": "MMDBRH19",
+  "name": "Rubber Hex Dumbbell 27.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 106.3,
+    "lbfFreight": 23.1,
+    "ours": 299.9,
+    "lbf": 229.35,
+    "gapPct": 30.8
+   },
+   "Sydney": {
+    "ourFreight": 108.5,
+    "lbfFreight": 53.99,
+    "ours": 302.1,
+    "lbf": 260.24,
+    "gapPct": 16.1
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 147.6,
+    "ours": 358.2,
+    "lbf": 353.85,
+    "gapPct": 1.2
+   }
+  },
+  "ourPrice": 193.6,
+  "stock": 1,
+  "theirPrice": 206.25,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDBRH20": {
+  "code": "MMDBRH20",
+  "name": "Rubber Hex Dumbbell 30kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 184.54,
+    "lbfFreight": 23.82,
+    "ours": 395.74,
+    "lbf": 248.82,
+    "gapPct": 59.0
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 56.39,
+    "ours": 375.8,
+    "lbf": 281.39,
+    "gapPct": 33.6
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 156.73,
+    "ours": 375.8,
+    "lbf": 381.73,
+    "gapPct": -1.6
+   }
+  },
+  "ourPrice": 211.2,
+  "stock": 1,
+  "theirPrice": 225.0,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDBRH21": {
+  "code": "MMDBRH21",
+  "name": "Rubber Hex Dumbbell 32.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 197.95,
+    "lbfFreight": 25.08,
+    "ours": 426.75,
+    "lbf": 268.83,
+    "gapPct": 58.7
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 60.03,
+    "ours": 393.4,
+    "lbf": 303.78,
+    "gapPct": 29.5
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 170.45,
+    "ours": 393.4,
+    "lbf": 414.2,
+    "gapPct": -5.0
+   }
+  },
+  "ourPrice": 228.8,
+  "stock": 1,
+  "theirPrice": 243.75,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDBRH22": {
+  "code": "MMDBRH22",
+  "name": "Rubber Hex Dumbbell 35kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 206.9,
+    "lbfFreight": 25.9,
+    "ours": 453.3,
+    "lbf": 288.4,
+    "gapPct": 57.2
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 62.45,
+    "ours": 411.0,
+    "lbf": 324.95,
+    "gapPct": 26.5
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 179.58,
+    "ours": 411.0,
+    "lbf": 442.08,
+    "gapPct": -7.0
+   }
+  },
+  "ourPrice": 246.4,
+  "stock": 1,
+  "theirPrice": 262.5,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDBRH23": {
+  "code": "MMDBRH23",
+  "name": "Rubber Hex Dumbbell 37.5kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 220.31,
+    "lbfFreight": 27.16,
+    "ours": 484.31,
+    "lbf": 308.41,
+    "gapPct": 57.0
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 66.07,
+    "ours": 428.6,
+    "lbf": 347.32,
+    "gapPct": 23.4
+   },
+   "Perth": {
+    "ourFreight": 173.23,
+    "lbfFreight": 193.29,
+    "ours": 437.23,
+    "lbf": 474.54,
+    "gapPct": -7.9
+   }
+  },
+  "ourPrice": 264.0,
+  "stock": 1,
+  "theirPrice": 281.25,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDBRH24": {
+  "code": "MMDBRH24",
+  "name": "Rubber Hex Dumbbell 40kg",
+  "match": "exact: their classic pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 229.26,
+    "lbfFreight": 27.99,
+    "ours": 510.86,
+    "lbf": 327.99,
+    "gapPct": 55.8
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 68.49,
+    "ours": 446.2,
+    "lbf": 368.49,
+    "gapPct": 21.1
+   },
+   "Perth": {
+    "ourFreight": 180.99,
+    "lbfFreight": 202.43,
+    "ours": 462.59,
+    "lbf": 502.43,
+    "gapPct": -7.9
+   }
+  },
+  "ourPrice": 281.6,
+  "stock": 1,
+  "theirPrice": 300.0,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ },
+ "MMDESH09": {
+  "code": "MMDESH09",
+  "name": "Dead Balls 25kg",
+  "match": "approx: slam ball vs our dead ball",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 53.15,
+    "lbfFreight": 23.1,
+    "ours": 141.15,
+    "lbf": 103.1,
+    "gapPct": 36.9
+   },
+   "Sydney": {
+    "ourFreight": 51.38,
+    "lbfFreight": 36.0,
+    "ours": 139.38,
+    "lbf": 116.0,
+    "gapPct": 20.2
+   },
+   "Perth": {
+    "ourFreight": 105.33,
+    "lbfFreight": 76.76,
+    "ours": 193.33,
+    "lbf": 156.76,
+    "gapPct": 23.3
+   }
+  },
+  "ourPrice": 88.0,
+  "stock": 1,
+  "theirPrice": 80.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMGFPS02": {
+  "code": "MMGFPS02",
+  "name": "Group Fitness Barbell Set 37.5kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 295.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMKBPGC08": {
+  "code": "MMKBPGC08",
+  "name": "Competition Kettlebells 24kg",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 17.81,
+    "lbfFreight": 23.1,
+    "ours": 167.81,
+    "lbf": 168.1,
+    "gapPct": -0.2
+   },
+   "Sydney": {
+    "ourFreight": 34.05,
+    "lbfFreight": 36.0,
+    "ours": 184.05,
+    "lbf": 181.0,
+    "gapPct": 1.7
+   },
+   "Perth": {
+    "ourFreight": 72.57,
+    "lbfFreight": 74.48,
+    "ours": 222.57,
+    "lbf": 219.48,
+    "gapPct": 1.4
+   }
+  },
+  "ourPrice": 150.0,
+  "stock": 1,
+  "theirPrice": 145.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MMKBPGC09": {
+  "code": "MMKBPGC09",
+  "name": "Competition Kettlebells 28kg",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 53.15,
+    "lbfFreight": 23.1,
+    "ours": 223.15,
+    "lbf": 188.1,
+    "gapPct": 18.6
+   },
+   "Sydney": {
+    "ourFreight": 54.25,
+    "lbfFreight": 37.06,
+    "ours": 224.25,
+    "lbf": 202.06,
+    "gapPct": 11.0
+   },
+   "Perth": {
+    "ourFreight": 114.41,
+    "lbfFreight": 83.61,
+    "ours": 284.41,
+    "lbf": 248.61,
+    "gapPct": 14.4
+   }
+  },
+  "ourPrice": 170.0,
+  "stock": 1,
+  "theirPrice": 165.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMKBPGC10": {
+  "code": "MMKBPGC10",
+  "name": "Competition Kettlebells 32kg",
+  "match": "exact",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 152.46,
+    "lbfFreight": 23.1,
+    "ours": 352.46,
+    "lbf": 208.1,
+    "gapPct": 69.4
+   },
+   "Sydney": {
+    "ourFreight": 157.37,
+    "lbfFreight": 39.47,
+    "ours": 357.37,
+    "lbf": 224.47,
+    "gapPct": 59.2
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 92.76,
+    "ours": 364.6,
+    "lbf": 277.76,
+    "gapPct": 31.3
+   }
+  },
+  "ourPrice": 200.0,
+  "stock": 1,
+  "theirPrice": 185.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MMKBPGC11": {
+  "code": "MMKBPGC11",
+  "name": "Competition Kettlebells 36kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 230.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMKBPGC12": {
+  "code": "MMKBPGC12",
+  "name": "Competition Kettlebells 40kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 260.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMPACE101": {
+  "code": "MMPACE101",
+  "name": "Chrome 110 Dumbbells (1kg-10kg Pairs)",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 995.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MMPWPBG05": {
+  "code": "MMPWPBG05",
+  "name": "Aqua Bag 35kg",
+  "match": "no Little Bloke equivalent",
+  "cities": {},
+  "ourPrice": 135.0,
+  "stock": 1,
+  "decision": "no-match",
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "why": "no Little Bloke equivalent",
+  "label": "national"
+ },
+ "MRSPATT05": {
+  "code": "MRSPATT05",
+  "name": "Rig Premium J-Hooks",
+  "match": "approx: premium J-hook pair",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 12.18,
+    "lbfFreight": 23.1,
+    "ours": 187.18,
+    "lbf": 192.1,
+    "gapPct": -2.6
+   },
+   "Sydney": {
+    "ourFreight": 27.08,
+    "lbfFreight": 36.0,
+    "ours": 202.08,
+    "lbf": 205.0,
+    "gapPct": -1.4
+   },
+   "Perth": {
+    "ourFreight": 45.37,
+    "lbfFreight": 47.07,
+    "ours": 220.37,
+    "lbf": 216.07,
+    "gapPct": 2.0
+   }
+  },
+  "ourPrice": 175.0,
+  "stock": 1,
+  "theirPrice": 169.0,
+  "regions": [
+   "vic",
+   "nsw",
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "national"
+ },
+ "MWBBOL02": {
+  "code": "MWBBOL02",
+  "name": "Olympic Barbell 7ft Chrome (1000Lb)",
+  "match": "approx: their 700lb bar with collars vs our 1000lb bar",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 172.14,
+    "lbfFreight": 34.19,
+    "ours": 347.14,
+    "lbf": 213.19,
+    "gapPct": 62.8
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 52.32,
+    "ours": 339.6,
+    "lbf": 231.32,
+    "gapPct": 46.8
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 87.12,
+    "ours": 339.6,
+    "lbf": 266.12,
+    "gapPct": 27.6
+   }
+  },
+  "ourPrice": 175.0,
+  "stock": 1,
+  "theirPrice": 179.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MWBBOL03": {
+  "code": "MWBBOL03",
+  "name": "Olympic Barbell 15kg (1500Lb)",
+  "match": "approx: comparable 15kg women's bar",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 172.14,
+    "lbfFreight": 34.19,
+    "ours": 517.14,
+    "lbf": 383.19,
+    "gapPct": 35.0
+   },
+   "Sydney": {
+    "ourFreight": 147.43,
+    "lbfFreight": 52.32,
+    "ours": 492.43,
+    "lbf": 401.32,
+    "gapPct": 22.7
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 73.41,
+    "ours": 509.6,
+    "lbf": 422.41,
+    "gapPct": 20.6
+   }
+  },
+  "ourPrice": 345.0,
+  "stock": 1,
+  "theirPrice": 349.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MWBBOL04": {
+  "code": "MWBBOL04",
+  "name": "Olympic Barbell 20kg (2000Lb)",
+  "match": "approx: comparable 20kg men's bar",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 172.14,
+    "lbfFreight": 34.19,
+    "ours": 557.14,
+    "lbf": 433.19,
+    "gapPct": 28.6
+   },
+   "Sydney": {
+    "ourFreight": 164.6,
+    "lbfFreight": 52.32,
+    "ours": 549.6,
+    "lbf": 451.32,
+    "gapPct": 21.8
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 84.83,
+    "ours": 549.6,
+    "lbf": 483.83,
+    "gapPct": 13.6
+   }
+  },
+  "ourPrice": 385.0,
+  "stock": 1,
+  "theirPrice": 399.0,
+  "regions": [],
+  "decision": "measured",
+  "why": "",
+  "label": null
+ },
+ "MWWPCB05": {
+  "code": "MWWPCB05",
+  "name": "Coloured Bumper Plates 25kg",
+  "match": "exact: pair vs 2 of ours",
+  "cities": {
+   "Melbourne": {
+    "ourFreight": 106.3,
+    "lbfFreight": 23.1,
+    "ours": 366.3,
+    "lbf": 313.1,
+    "gapPct": 17.0
+   },
+   "Sydney": {
+    "ourFreight": 102.76,
+    "lbfFreight": 50.35,
+    "ours": 362.76,
+    "lbf": 340.35,
+    "gapPct": 6.6
+   },
+   "Perth": {
+    "ourFreight": 164.6,
+    "lbfFreight": 133.89,
+    "ours": 424.6,
+    "lbf": 423.89,
+    "gapPct": 0.2
+   }
+  },
+  "ourPrice": 260.0,
+  "stock": 1,
+  "theirPrice": 290.0,
+  "regions": [
+   "wa"
+  ],
+  "decision": "measured",
+  "why": "",
+  "label": "wa"
+ }
+}
