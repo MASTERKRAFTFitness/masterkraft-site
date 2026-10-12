@@ -228,6 +228,25 @@ export function maxAutoQuote(): number {
 }
 
 /**
+ * Whether an option is priced entirely off a rate card in the freight matrix.
+ *
+ * THE CAP DOES NOT APPLY TO THESE. It exists because a live carrier's bulky
+ * price is a guess until someone checks it - volumetric billing, a $446.58
+ * consignment against the $145 charged three months earlier. A matrix rate is
+ * the opposite: a contracted card someone loaded and switched on. Capping it
+ * sent a 302kg cart of dumbbells and plates (Yeppoon, 2026-10-12) to "could not
+ * be priced" when the answer was simply "it goes on a Mainfreight pallet", and
+ * the customer left. Michael's call, 2026-10-13: Mainfreight bypasses the cap.
+ *
+ * A split cart is matrix-priced only when EVERY consignment is, so a carrier
+ * guess cannot ride through on the back of one matrix leg.
+ */
+export function isMatrixPriced(option: Pick<FreightOption, "id">): boolean {
+  const legs = option.id.replace(/^split:/, "").split("+");
+  return legs.every((id) => id.replace(/^whole:/, "").startsWith("matrix:"));
+}
+
+/**
  * Which carriers the router is allowed to ask, from `FREIGHT_CARRIERS`.
  *
  * A comma-separated allowlist. Unset means BOTH, which is the measured-best
@@ -1255,7 +1274,9 @@ export async function quoteFreight(
     // offered as the "faster" second option either. The cheapest is what decides
     // whether this cart can be sold online at all.
     const cap = maxAutoQuote();
-    const affordable = cap > 0 ? options.filter((o) => o.price <= cap) : options;
+    // Matrix rates are exempt - see isMatrixPriced.
+    const affordable =
+      cap > 0 ? options.filter((o) => o.price <= cap || isMatrixPriced(o)) : options;
     const cheapest = options.length > 0 ? Math.min(...options.map((o) => o.price)) : 0;
 
     quote =
