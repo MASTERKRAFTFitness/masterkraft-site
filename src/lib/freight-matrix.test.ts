@@ -142,6 +142,7 @@ const ENV = [
   "FREIGHT_COLLECTION_POSTCODE",
   "FREIGHT_SOURCE",
   "FREIGHT_MARGIN_PERCENT",
+  "FREIGHT_MAX_AUTO_QUOTE",
 ];
 beforeEach(() => {
   for (const k of ENV) delete process.env[k];
@@ -407,6 +408,27 @@ describe("the router, by source", () => {
     const q = await quoteFreight([{ ...barbell, quantity: 3 }], to("3074"));
     const once = Math.round(102.7 * 1.1 * 1.1 * 100) / 100;
     expect(q.ok && q.options[0]).toMatchObject({ id: "whole:matrix:MF:MELBOURNE:20", price: once });
+  });
+
+  // The pallet that started this: a heavy cart the carriers price over the cap,
+  // which the Mainfreight card should still sell.
+  it("lets a matrix rate through the auto-quote cap", async () => {
+    useDb("pooled", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
+    stubCarrier();
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "50";
+    const q = await quoteFreight([step({ weightKg: 300, quantity: 1 })], to("3074"));
+    expect(q.ok).toBe(true);
+    if (q.ok) {
+      expect(q.options.every((o) => o.id.startsWith("matrix:"))).toBe(true);
+      expect(q.options[0].price).toBeGreaterThan(50);
+    }
+  });
+
+  it("still caps a carrier price when no matrix covers the delivery", async () => {
+    useDb("pooled", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
+    stubCarrier();
+    process.env.FREIGHT_MAX_AUTO_QUOTE = "50";
+    expect(await quoteFreight([step()], to("2650"))).toMatchObject({ ok: false, reason: "too_expensive" });
   });
 
   // payment-intent re-quotes and matches on the id; a rate edit must not be
