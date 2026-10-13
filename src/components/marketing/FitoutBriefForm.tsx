@@ -236,7 +236,7 @@ export default function FitoutBriefForm() {
       const res = await fetch("/api/fitout-brief", { method: "POST", body });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      trackEnquiry("fitout-brief", brief.email);
+      if (data.accepted) trackEnquiry("fitout-brief", brief.email);
       setConfirmed(data.confirmed === "sent");
       setSent(true);
     } catch (err) {

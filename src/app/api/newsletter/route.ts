@@ -112,5 +112,5 @@ export async function POST(request: Request) {
   if (hubspot !== "submitted" && fallback !== "sent") {
     console.error("[newsletter] NOT CAPTURED", { email, hubspot, fallback });
   }
-  return NextResponse.json({ ok: true, hubspot, fallback });
+  return NextResponse.json({ ok: true, accepted: true, hubspot, fallback });
 }

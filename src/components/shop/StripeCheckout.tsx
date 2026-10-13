@@ -280,8 +280,10 @@ export default function StripeCheckout({
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      identifyUser(b.email);
-      trackLead(subtotal, items.length);
+      if (data.accepted) {
+        identifyUser(b.email);
+        trackLead(subtotal, items.length);
+      }
       forgetCheckoutId();
       onQuoted?.();
       clear();

@@ -209,5 +209,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, hubspot, fallback, confirmed });
+  return NextResponse.json({ ok: true, accepted: true, hubspot, fallback, confirmed });
 }

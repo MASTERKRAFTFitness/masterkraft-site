@@ -36,7 +36,7 @@ export default function WaitlistForm() {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Something went wrong.");
-      trackSignUp("recovery-roller-waitlist", data.email);
+      if (json.accepted) trackSignUp("recovery-roller-waitlist", data.email);
       setState("done");
       form.reset();
     } catch (err) {

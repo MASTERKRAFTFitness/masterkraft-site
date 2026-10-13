@@ -71,7 +71,7 @@ export default function DistributorApplicationForm() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      trackEnquiry("distributor", String(f.get("email") ?? ""));
+      if (data.accepted) trackEnquiry("distributor", String(f.get("email") ?? ""));
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");

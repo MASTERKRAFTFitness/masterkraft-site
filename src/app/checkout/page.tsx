@@ -117,8 +117,10 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      identifyUser(contact.email);
-      trackLead(subtotal, items.length);
+      if (data.accepted) {
+        identifyUser(contact.email);
+        trackLead(subtotal, items.length);
+      }
       clear();
       setDone(true);
     } catch (err) {
