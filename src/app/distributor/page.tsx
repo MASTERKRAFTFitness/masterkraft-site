@@ -7,7 +7,7 @@ import AccordionSections from "@/components/marketing/AccordionSections";
 import DistributorApplicationForm from "@/components/marketing/DistributorApplicationForm";
 import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
-import { blogEnabled, BLOG_PREFIX } from "@/lib/opinly-content";
+import { blogEnabled, BLOG_PREFIX } from "@/lib/blog";
 
 export const metadata: Metadata = {
   title: "Become a Distributor | International Gym Equipment Distribution",
@@ -236,7 +236,7 @@ export default function DistributorPage() {
       </section>
 
       {/* MARKET INSIGHTS - same gating as the Journal link on /resources:
-          /blog 404s until OPINLY_CDN_NAMESPACE is set, so this only renders when
+          /blog 404s when Supabase is not configured, so this only renders when
           the page it links to exists. A link rather than a post list so this
           page stays static. */}
       {blogEnabled() && (
