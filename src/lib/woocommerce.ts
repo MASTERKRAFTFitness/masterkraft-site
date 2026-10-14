@@ -183,8 +183,23 @@ type Retirable = {
   id?: number;
 };
 
+// 3. RETIRED OLD-STORE PAGES, by WooCommerce product id: a page whose code now
+//    belongs to a different product in Unleashed, so the page describes
+//    something we no longer sell under that code. Retiring the page leaves the
+//    code's real product to its own ERP page. No old WooCommerce addresses are
+//    to be kept alive (Michael, 2026-10-13).
+//
+//    404186  /product/lat-pulldown-seated-row-machine-elite-selectorize, SKU
+//            MSBMSE04. MSBMSE04 is now the Assisted Chin Up & Dip; the lat
+//            pulldown is MSBMSE06/MSBMSE09, page /product/lat-pulldown-and-seated-row.
+export const RETIRED_STORE_PAGES: ReadonlySet<number> = new Set([404186]);
+
 export function isObsolete(p: Retirable): boolean {
-  return p.catalog_visibility === "hidden" || isRetiredSku(p.sku);
+  return (
+    p.catalog_visibility === "hidden" ||
+    isRetiredSku(p.sku) ||
+    (p.id !== undefined && RETIRED_STORE_PAGES.has(p.id))
+  );
 }
 
 // Never served, for any reason: retired, hidden, or another company's brand.

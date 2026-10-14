@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { decodeEntities, filterListable, plainText } from "@/lib/woocommerce";
+import { decodeEntities, filterListable, getProductBySlug, isObsolete, plainText } from "@/lib/woocommerce";
 // Hiding unshippable products, added 2026-09-06. Freight needs a weight and all
 // three dimensions; without them the WHOLE cart is unquotable, not just the line.
 describe("hiding what cannot be shipped", () => {
@@ -133,5 +133,17 @@ describe("decoding WooCommerce copy", () => {
   it("is empty for missing copy, so the caller's fallback still fires", () => {
     expect(plainText(undefined)).toBe("");
     expect(plainText("<p></p>")).toBe("");
+  });
+});
+
+// An old-store page whose code now belongs to another product (Michael, 2026-10-13).
+describe("retired old-store pages", () => {
+  it("retires the old Lat Pulldown Elite page (MSBMSE04 is now the Assisted Chin Up)", async () => {
+    expect(isObsolete({ id: 404186, sku: "MSBMSE04", catalog_visibility: "visible" })).toBe(true);
+    expect(await getProductBySlug("lat-pulldown-seated-row-machine-elite-selectorize")).toBeNull();
+  });
+
+  it("leaves another product with the same code alone when it has no store id", () => {
+    expect(isObsolete({ sku: "MSBMSE04", catalog_visibility: "visible" })).toBe(false);
   });
 });

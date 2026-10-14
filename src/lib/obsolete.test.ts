@@ -150,8 +150,12 @@ describe("the allowlist changes nothing today", () => {
   // because nothing mapped the WooCommerce SKU to it — see unleashed-aliases.
   // Adding that alias let isRetiredSku find it, which is the rule working, not
   // a product disappearing. Move this number only with the same kind of reason.
-  it("serves the same 219 products the denylist did", async () => {
+  //
+  // 219 -> 218 on 2026-10-13: the old Lat Pulldown Elite page (store id 404186,
+  // SKU MSBMSE04, now the Assisted Chin Up & Dip) retired, on purpose: no old
+  // WooCommerce addresses are kept alive (lib/woocommerce.ts RETIRED_STORE_PAGES).
+  it("serves the same 218 products the denylist did", async () => {
     const { allProducts } = await import("@/lib/catalogue");
-    expect(filterListable(allProducts()).length).toBe(219);
+    expect(filterListable(allProducts()).length).toBe(218);
   });
 });
