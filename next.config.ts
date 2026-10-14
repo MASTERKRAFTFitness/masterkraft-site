@@ -186,6 +186,14 @@ const nextConfig: NextConfig = {
       // the one that has to redirect.
       { source: "/product/urethane-fixed-barbells", destination: "/product/urethane-fixed-barbells-2", permanent: true },
 
+      // ONE 4-GRIP PLATE RANGE, ONE PAGE, 2026-10-14. Same fault as the
+      // barbells: one 1.25kg-25kg line (MWWPOU08-14, all $8.18/kg) was named
+      // "Olympic PU Weight Plates (4 Grip)" on five codes and "Olympic Urethane
+      // Weight Plates (4 Grip)" on two, so it built two pages. All seven are
+      // now Urethane in Unleashed, which merges them into the -4-grip page and
+      // leaves the PU slug - in the sitemap until today - with nothing to serve.
+      { source: "/product/olympic-pu-weight-plates-4-grip", destination: "/product/olympic-urethane-weight-plates-4-grip", permanent: true },
+
       // THE WORDPRESS SUBCATEGORY URLS WERE REDIRECTED FROM HERE, and are now
       // SERVED. Found in Semrush on 2026-09-15 rather than in the 404 log —
       // because nobody clicks them, Google is just still ranking them. The old
