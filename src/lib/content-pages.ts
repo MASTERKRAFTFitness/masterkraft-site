@@ -211,7 +211,7 @@ export const contentPages: Record<string, ContentPageData> = {
     sections: [
       { heading: "Scope", body: ["We survey each site and design a treatment- or training-floor layout for its footprint."] },
       { heading: "Spec", body: ["We standardise your equipment schedule in your colours, with custom upholstery and branding."] },
-      { heading: "Supply", body: ["We stage manufacture and freight to your rollout - as fast as 4-6 weeks."] },
+      { heading: "Supply", body: ["We stage manufacture and freight to your rollout - as fast as 6-8 weeks."] },
       { heading: "Support", body: ["We install, commission and induct your team, backed by our committed 72-hour SLA and partner portal."] },
     ],
   },
