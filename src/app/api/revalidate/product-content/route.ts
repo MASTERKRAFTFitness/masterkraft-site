@@ -10,7 +10,7 @@
 // that somebody other than an engineer could change it, and a change you cannot
 // see is not a change you can make.
 //
-// TAG AND PATH, BOTH, EVERY TIME. api/opinly/route.ts learned this the hard
+// TAG AND PATH, BOTH, EVERY TIME. The Opinly blog webhook learned this the hard
 // way and its note is worth repeating: revalidateTag clears the cached DATA but
 // leaves already-rendered HTML in the full-route cache, so the page keeps
 // serving the old body. revalidatePath does the mirror-image half. One without

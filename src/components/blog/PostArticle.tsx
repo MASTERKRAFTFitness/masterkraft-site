@@ -1,55 +1,60 @@
 import Link from "next/link";
-import { formatDate, buildBlogPostingJsonLd, buildFaqJsonLd } from "@opinly/next";
-import { buildBreadcrumbJsonLd, imageUrl, categoryPath, authorPath, tagPath, calculateReadingTime, blogUrl, postUrl } from "@opinly/shared";
-import { OpinlyContent } from "@opinly/react";
-import type { FullPost } from "@opinly/backend";
 import PageHero from "@/components/marketing/PageHero";
 import JsonLd from "@/components/seo/JsonLd";
-import { blogConfig } from "@/lib/opinly-content";
+import {
+  BLOG_PREFIX,
+  BLOG_SITE_URL,
+  authorPath,
+  blogImagePath,
+  formatPostDate,
+  postUrl,
+  readingMinutes,
+  type BlogPost,
+} from "@/lib/blog";
+import { renderMarkdown } from "@/lib/markdown";
 import { postProse } from "@/components/blog/prose";
 
-export default function PostArticle({ post }: { post: FullPost }) {
-  const hero = post.titleFile?.fileKey ? imageUrl(post.titleFile.fileKey, blogConfig) : undefined;
-  const minutes = calculateReadingTime(post.content);
+export default function PostArticle({ post }: { post: BlogPost }) {
+  const hero = post.heroImageKey ? blogImagePath(post.heroImageKey) : undefined;
+  const url = postUrl(post.slug);
 
   return (
     <>
       <PageHero
-        eyebrow={post.category?.name ?? "Journal"}
+        eyebrow="Journal"
         title={post.title}
         subtitle={post.description}
         image={hero}
         // The post's own alt text, not the shared banner registry's: these
         // photographs are not in lib/image-alt and never will be, because they
         // arrive with the content rather than with the build.
-        imageAlt={post.titleFile?.altText ?? ""}
+        imageAlt={post.heroImageAlt ?? ""}
         breadcrumbs={[
           { name: "Home", href: "/" },
-          { name: "Journal", href: blogConfig.blogPrefix ?? "/blog" },
-          ...(post.category
-            ? [{ name: post.category.name, href: categoryPath(blogConfig, post.category.slug) }]
-            : []),
+          { name: "Journal", href: BLOG_PREFIX },
         ]}
       />
 
       <article className="container-mk max-w-3xl py-14 md:py-16">
         <p className="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-ash mb-8">
-          <time dateTime={post.firstPublishedAt}>{formatDate(post.firstPublishedAt)}</time>
+          <time dateTime={post.publishedAt}>{formatPostDate(post.publishedAt)}</time>
           {post.author && (
             <>
               {" · "}
-              <Link href={authorPath(blogConfig, post.author.slug)} className="hover:text-ink">
+              <Link href={authorPath(post.author.slug)} className="hover:text-ink">
                 {post.author.name}
               </Link>
             </>
           )}
           {" · "}
-          {minutes} min read
+          {readingMinutes(post.bodyMd)} min read
         </p>
 
-        <OpinlyContent content={post.content} config={blogConfig} classNames={postProse} />
+        {/* renderMarkdown escapes the whole source before formatting it, so the
+            only tags here are ones it wrote. See lib/markdown.ts. */}
+        <div dangerouslySetInnerHTML={{ __html: renderMarkdown(post.bodyMd, postProse) }} />
 
-        {post.faqs && post.faqs.length > 0 && (
+        {post.faqs.length > 0 && (
           <section className="mt-14 border-t border-line pt-10">
             <h2 className="text-xl font-bold mb-6">Frequently asked</h2>
             <dl className="space-y-6">
@@ -62,45 +67,56 @@ export default function PostArticle({ post }: { post: FullPost }) {
             </dl>
           </section>
         )}
-
-        {post.tags.length > 0 && (
-          <nav aria-label="Topics" className="mt-12 flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <Link
-                key={tag.slug}
-                href={tagPath(blogConfig, tag.slug)}
-                className="font-mono text-[0.68rem] uppercase tracking-[0.14em] border border-line px-3 py-1.5 hover:border-ink"
-              >
-                {tag.name}
-              </Link>
-            ))}
-          </nav>
-        )}
       </article>
 
       {/* BlogPosting + breadcrumbs, and FAQPage only when the post actually
           carries FAQs — an empty FAQPage is a structured-data error, not a
           harmless no-op, and Search Console reports it as one. */}
-      <JsonLd data={buildBlogPostingJsonLd(post) as unknown as Record<string, unknown>} />
       <JsonLd
-        data={
-          buildBreadcrumbJsonLd([
-            { name: "Home", url: blogConfig.siteUrl ?? "" },
-            { name: "Journal", url: blogUrl(blogConfig) },
-            ...(post.category
-              ? [
-                  {
-                    name: post.category.name,
-                    url: `${blogConfig.siteUrl ?? ""}${categoryPath(blogConfig, post.category.slug)}`,
-                  },
-                ]
-              : []),
-            { name: post.title, url: postUrl(blogConfig, post) },
-          ]) as unknown as Record<string, unknown>
-        }
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: post.title,
+          description: post.metaDescription || post.description,
+          datePublished: post.publishedAt,
+          dateModified: post.modifiedAt ?? post.publishedAt,
+          mainEntityOfPage: url,
+          ...(hero ? { image: `${BLOG_SITE_URL}${hero}` } : {}),
+          ...(post.author
+            ? {
+                author: {
+                  "@type": "Person",
+                  name: post.author.name,
+                  url: `${BLOG_SITE_URL}${authorPath(post.author.slug)}`,
+                },
+              }
+            : {}),
+          publisher: { "@type": "Organization", name: "MASTERKRAFT", url: BLOG_SITE_URL },
+        }}
       />
-      {post.faqs && post.faqs.length > 0 && (
-        <JsonLd data={buildFaqJsonLd(post.faqs) as unknown as Record<string, unknown>} />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: BLOG_SITE_URL },
+            { "@type": "ListItem", position: 2, name: "Journal", item: `${BLOG_SITE_URL}${BLOG_PREFIX}` },
+            { "@type": "ListItem", position: 3, name: post.title, item: url },
+          ],
+        }}
+      />
+      {post.faqs.length > 0 && (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: post.faqs.map((f) => ({
+              "@type": "Question",
+              name: f.question,
+              acceptedAnswer: { "@type": "Answer", text: f.answer },
+            })),
+          }}
+        />
       )}
     </>
   );

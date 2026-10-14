@@ -4,7 +4,7 @@
 // the next render to re-read Supabase, so an open one is a cheap way to make
 // the site slow. And "does it drop BOTH caches?" — because dropping only the
 // tag leaves the rendered HTML in place and looks like it worked on any page
-// nobody has visited yet, which is the failure api/opinly's note warns about.
+// nobody has visited yet, which is the failure the route's own note warns about.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const revalidateTag = vi.fn();
