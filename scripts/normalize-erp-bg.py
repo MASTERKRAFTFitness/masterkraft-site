@@ -2,6 +2,11 @@
 """Repaint the ERP product photos whose backdrop isn't the shop tile grey.
 
 Run:  npm run normalize:erp-bg     (then commit /public/erp-bg + the JSON)
+      npm run normalize:erp-bg -- --only CODE1,CODE2
+        Re-checks just those codes against the ERP and merges the result into
+        the existing map, leaving every other override and file alone. Use it
+        after uploading images to a handful of products; a full run rebuilds
+        all ~200 overrides from scratch.
 
 WHY THIS EXISTS SEPARATELY FROM normalize-product-bg.py. That script fixes the
 WooCommerce photos, which is a DIFFERENT SET OF FILES. Since the ERP became the
@@ -117,24 +122,48 @@ def fetch_image(url):
         return Image.open(io.BytesIO(r.read())).convert("RGB")
 
 
+def parse_only(argv):
+    if "--only" not in argv:
+        return None
+    i = argv.index("--only")
+    if i + 1 >= len(argv):
+        sys.exit("--only needs a comma-separated list of product codes")
+    return {c.strip().upper() for c in argv[i + 1].split(",") if c.strip()}
+
+
 def main():
+    only = parse_only(sys.argv[1:])
     env = load_env()
     products = fetch_products(env)
     candidates = []
     for p in products:
         code = (p.get("ProductCode") or "").strip()
         url = default_image(p)
-        if code and url:
+        if code and url and (only is None or code.upper() in only):
             candidates.append((code.upper(), url))
     print(f"{len(products)} ERP products, {len(candidates)} with a photo")
+    if only is not None:
+        missing = sorted(only - {c for c, _ in candidates})
+        if missing:
+            print(f"  ! no ERP photo for: {', '.join(missing)}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for stale in OUT_DIR.glob("*.jpg"):  # a code that no longer needs fixing must not linger
-        stale.unlink()
+    if only is None:
+        for stale in OUT_DIR.glob("*.jpg"):  # a code that no longer needs fixing must not linger
+            stale.unlink()
+        overrides = {}
+    else:
+        # Merge, never rebuild: drop only the listed codes' old entries, so a
+        # code whose new photo is already on tile grey falls back to its CDN URL.
+        overrides = json.loads(MAP_FILE.read_text()) if MAP_FILE.exists() else {}
+        for code, _ in candidates:
+            old = overrides.pop(code, None)
+            if old and (ROOT / "public" / old.lstrip("/")).exists():
+                (ROOT / "public" / old.lstrip("/")).unlink()
 
-    overrides = {}
     skipped = {"tile grey": 0, "coloured or in-scene": 0}
     failed = 0
+    repainted = 0
     for code, url in candidates:
         try:
             im = fetch_image(url)
@@ -157,6 +186,7 @@ def main():
         name = f"{re.sub(r'[^A-Za-z0-9_-]', '_', code)}.jpg"
         fixed.save(OUT_DIR / name, quality=JPEG_QUALITY)
         overrides[code] = f"/erp-bg/{name}"
+        repainted += 1
         left = bd.residual(fixed, colour)
         flag = "  <-- CHECK" if left > 0.03 else ""
         print(f"  ok {code}: {colour} -> {bd.TARGET_HEX}  ({100 * left:.1f}% left){flag}")
@@ -164,7 +194,7 @@ def main():
     MAP_FILE.write_text(json.dumps(overrides, indent=2, sort_keys=True) + "\n")
     mb = sum(f.stat().st_size for f in OUT_DIR.glob("*.jpg")) / 1e6
     print(
-        f"\nrepainted {len(overrides)}  |  skipped {skipped['tile grey']} already on tile grey, "
+        f"\nrepainted {repainted} ({len(overrides)} overrides in the map)  |  skipped {skipped['tile grey']} already on tile grey, "
         f"{skipped['coloured or in-scene']} coloured/in-scene  |  {failed} failed"
     )
     print(f"wrote {mb:.1f} MB -> {OUT_DIR.relative_to(ROOT)} and {MAP_FILE.relative_to(ROOT)}")
