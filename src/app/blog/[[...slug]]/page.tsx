@@ -6,9 +6,10 @@ import { BLOG_PREFIX, blogEnabled, listAuthors, listPosts } from "@/lib/blog";
 import { loadRoute, routeMetadata } from "@/lib/blog-route";
 import BlogRouteView from "@/components/blog/BlogRouteView";
 
-// An hour is only the backstop. /api/revalidate/blog drops the `blog` cache tag
-// and re-renders the affected paths the moment a post is published or edited.
-export const revalidate = 3600;
+// Ten minutes, matching lib/blog's cache: a post written ahead of its slot goes
+// live by the clock, with no webhook at that moment, so this is how late it
+// can appear. Edits and imports are flushed at once by /api/revalidate/blog.
+export const revalidate = 600;
 
 type BlogPageProps = { params: Promise<{ slug?: string[] }> };
 

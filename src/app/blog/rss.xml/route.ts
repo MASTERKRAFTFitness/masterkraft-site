@@ -1,9 +1,9 @@
 import { BLOG_PREFIX, BLOG_SITE_URL, blogEnabled, listPosts, postUrl } from "@/lib/blog";
 import { escapeHtml } from "@/lib/markdown";
 
-// Matches the blog route's backstop; /api/revalidate/blog re-renders this path
-// by name whenever a post is published, which is what actually keeps it fresh.
-export const revalidate = 3600;
+// Matches the blog route: ten minutes, so a post that goes live by the clock
+// reaches the feed soon after. /api/revalidate/blog flushes it at once.
+export const revalidate = 600;
 
 /**
  * The blog's RSS feed. Hand-serialised: the whole feed is six tags.

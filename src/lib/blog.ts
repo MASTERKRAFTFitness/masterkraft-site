@@ -61,6 +61,25 @@ export function blogEnabled(): boolean {
   return adminDbConfigured();
 }
 
+/**
+ * The URL slug for a new post's title. Only ever used for a post that has no
+ * URL yet: once a post is live its slug is data, never re-derived.
+ *
+ *   "Choosing a 25kg Kettlebell: Cast Iron vs. Competition"
+ *     -> choosing-a-25kg-kettlebell-cast-iron-vs-competition
+ */
+export function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120)
+    .replace(/-+$/, "");
+}
+
 export function postPath(slug: string): string {
   return `${BLOG_PREFIX}/${slug}`;
 }
@@ -159,8 +178,11 @@ async function readJournal(): Promise<{ posts: BlogPost[]; authors: BlogAuthor[]
   };
 }
 
+// Ten minutes, not the hour the product tables use. Posts are sent ahead of
+// their slot and kept hidden until published_at, so nothing flushes the cache
+// at the moment one goes live; this window is how late a post can appear.
 const cachedJournal = unstable_cache(readJournal, ["blog-journal-v1"], {
-  revalidate: 3600,
+  revalidate: 600,
   tags: [BLOG_TAG],
 });
 
