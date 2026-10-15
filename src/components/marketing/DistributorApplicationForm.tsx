@@ -46,7 +46,7 @@ export default function DistributorApplicationForm() {
       "Distributor application",
       line("Country / territory", "territory"),
       line("Business type", "businessType"),
-      line("Website", "website"),
+      line("Website", "companyWebsite"),
       line("Brands currently carried", "brands"),
       "",
       String(f.get("message") ?? "").trim(),
@@ -71,7 +71,7 @@ export default function DistributorApplicationForm() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      trackEnquiry("distributor", String(f.get("email") ?? ""));
+      if (data.accepted) trackEnquiry("distributor", String(f.get("email") ?? ""));
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -104,7 +104,10 @@ export default function DistributorApplicationForm() {
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <input name="company" required aria-label="Company name" placeholder="Company name" className={fieldClass} />
-        <input name="website" aria-label="Website" placeholder="Website" className={fieldClass} />
+        {/* NOT name="website": that is the honeypot's name (lib/form-fields.ts), and
+            FormData.get returns the first match - this field - so any applicant who
+            typed their URL was silently dropped as a bot. */}
+        <input name="companyWebsite" inputMode="url" autoComplete="url" aria-label="Website" placeholder="Website" className={fieldClass} />
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <input

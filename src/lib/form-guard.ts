@@ -36,6 +36,12 @@
 // The caller's job on a block is to SAY NOTHING: return the ordinary success
 // shape and send no email. A bot that is told what tripped it tunes around it;
 // a bot that thinks it succeeded moves on.
+//
+// AND ONLY A REAL SUCCESS CARRIES `accepted: true`. The forms fire analytics,
+// Google Ads and Meta conversions on success, and they used to fire them on the
+// silent block too - so every bot that hit the honeypot was counted as a lead
+// and fed to the ad bidders. Clients track only when `accepted` is set. It tells
+// a bot no more than the block shape already did ("skipped" everywhere).
 
 import { visitorKey } from "@/lib/agent/rate-limit";
 import { HONEYPOT_FIELD, ELAPSED_FIELD } from "@/lib/form-fields";

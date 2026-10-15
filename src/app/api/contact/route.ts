@@ -192,5 +192,5 @@ export async function POST(request: Request) {
   if (hubspot !== "submitted" && notified !== "sent") {
     console.error("[contact] NOT CAPTURED", { email: enquiry.email, hubspot, notified });
   }
-  return NextResponse.json({ ok: true, hubspot, notified });
+  return NextResponse.json({ ok: true, accepted: true, hubspot, notified });
 }

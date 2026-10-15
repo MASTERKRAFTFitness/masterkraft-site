@@ -115,6 +115,15 @@ describe("contact enquiry", () => {
     expect(calls).toHaveLength(0);
   });
 
+  // The forms fire analytics and ad conversions only on `accepted`, so a bot the
+  // filter swallowed must not carry it - or every honeypot hit is a "lead".
+  it("marks a real enquiry accepted and a blocked one not", async () => {
+    expect((await (await post(enquiry)).json()).accepted).toBe(true);
+    const blocked = await (await post({ ...enquiry, [HONEYPOT_FIELD]: "http://spam.example" })).json();
+    expect(blocked.ok).toBe(true);
+    expect(blocked.accepted).toBeUndefined();
+  });
+
   it("emails nobody when the form was filled impossibly fast", async () => {
     const body = await (await post({ ...enquiry, [ELAPSED_FIELD]: 120 })).json();
     expect(body).toMatchObject({ ok: true, notified: "skipped" });

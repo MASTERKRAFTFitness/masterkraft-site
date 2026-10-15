@@ -14,12 +14,13 @@ export default function NewsletterForm() {
     setSending(true);
     const f = new FormData(e.currentTarget);
     try {
-      await fetch("/api/newsletter", {
+      const res = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: f.get("email"), ...guardValues(f, elapsed()) }),
       });
-      trackSignUp("newsletter", String(f.get("email") ?? ""));
+      const data = await res.json().catch(() => ({}));
+      if (data.accepted) trackSignUp("newsletter", String(f.get("email") ?? ""));
       setDone(true);
     } catch {
       // Not tracked on this path: the UI fails soft and thanks them anyway, but

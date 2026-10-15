@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 
   scheduleCheckoutLead(checkoutId, { status: "quote_requested" });
   console.log("[quote] processed", { customer: contact.email, items: items.length, ...results });
-  return NextResponse.json({ ok: true, ...results });
+  return NextResponse.json({ ok: true, accepted: true, ...results });
 }
 
 async function sendEmail(
