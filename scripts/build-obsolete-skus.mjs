@@ -51,10 +51,31 @@ const { items } = await fetchAllProducts({
   log: (line) => console.error(line),
 });
 
+// SELLING THROUGH. Obsolete in the ERP so nothing is reordered, but still on the
+// site as clearance until the stock is gone (Michael, 2026-10-15). All eight are
+// Obsolete:true with IsSellable:true - the ERP's way of saying "stop buying,
+// keep selling". Take a code out of this list once its stock reaches zero, then
+// re-run this script; check:obsolete will flag the drift until you do.
+const SELL_THROUGH = new Set([
+  "MCBIAR01", // Air Bike Classic
+  "MCBIAR02", // Air Bike Pro
+  "MCBIAR04", // Air Cycle Pro
+  "MCRWAR03", // Air Rower Elite
+  "MCTMSP01", // Curved Treadmill Pro
+  "MCSTAR01", // Ski Trainer Pro
+  "MCSTACC01", // Ski Trainer Floor Stand
+  "MCSTACC02", // Ski Trainer Wall Mount Bracket
+]);
+
 // Obsolete OR explicitly not sellable: both mean "do not put this in front of a
-// customer", and the two overlap almost entirely in practice.
+// customer", and the two overlap almost entirely in practice. Not-sellable
+// always wins; the sell-through list only overrides the Obsolete flag.
 const retired = items
-  .filter((p) => p.Obsolete === true || p.IsSellable === false)
+  .filter(
+    (p) =>
+      p.IsSellable === false ||
+      (p.Obsolete === true && !SELL_THROUGH.has(String(p.ProductCode).toUpperCase())),
+  )
   .map((p) => String(p.ProductCode).toUpperCase())
   .sort();
 
