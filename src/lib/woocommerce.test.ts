@@ -85,9 +85,11 @@ describe("hiding what cannot be shipped", () => {
   // none of them is measured either.
   it("hides a container none of whose sizes is measured", () => {
     process.env.HIDE_UNSHIPPABLE = "true";
-    // 403703 is AMDBRH, a `variable` product with 21 sizes and not a carton
-    // among them - so the branch opens and then rejects, which is the point.
-    expect(filterListable([{ sku: "AMDBRH", id: 403703, weight: "11", dimensions: {} }])).toHaveLength(0);
+    // 403656 is RMKBPGC, a `variable` Competition Kettlebell range with no
+    // carton on any size - so the branch opens and then rejects, which is the
+    // point. (This was AMDBRH until 2026-10-15, when the ERP carton import gave
+    // every hex dumbbell a carton and it became shippable, correctly.)
+    expect(filterListable([{ sku: "RMKBPGC", id: 403656, weight: "11", dimensions: {} }])).toHaveLength(0);
   });
 });
 
