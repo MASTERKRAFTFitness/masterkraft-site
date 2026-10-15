@@ -11,7 +11,7 @@ behind the admin login, and the code lives in `src/lib/google-reporting.ts`.
 | GA4 account | MASTERKRAFT (412066861) |
 | GA4 property | MAsterKraft Website, property ID **559036859** |
 | Measurement ID (browser tag) | **G-HNLFD90XBN**, replacing G-86MEH5QL99 from 2026-10-15 |
-| Search Console | URL-prefix property `https://masterkraft.com/`, verified via existing DNS record |
+| Search Console | Domain property `sc-domain:masterkraft.com` (DNS-verified), linked to the GA4 web stream |
 
 The old ID, G-86MEH5QL99, belongs to a property that Michael's Google login
 can't see. Its August–October history stays there. If you get access to it
@@ -23,7 +23,7 @@ later, it won't change anything here.
 NEXT_PUBLIC_GA_ID=G-HNLFD90XBN          # browser tag (already used by CookieConsent)
 GA4_PROPERTY_ID=559036859               # numeric property ID, NOT the G- ID
 GOOGLE_SERVICE_ACCOUNT_JSON={...}       # the whole key file, verbatim, one line
-GSC_SITE_URL=https://masterkraft.com/   # optional, this is the default
+GSC_SITE_URL=sc-domain:masterkraft.com  # optional, this is the default
 ```
 
 With these unset, the page shows a setup notice instead of an error.

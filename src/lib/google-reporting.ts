@@ -24,7 +24,7 @@ const SCOPES = [
 // The GA4 *property* ID (numeric, from Admin > Property details), not the
 // G-XXXX measurement ID the browser tag uses. They name different things.
 const PROPERTY_ID = process.env.GA4_PROPERTY_ID;
-const GSC_SITE = process.env.GSC_SITE_URL || "https://masterkraft.com/";
+const GSC_SITE = process.env.GSC_SITE_URL || "sc-domain:masterkraft.com";
 
 interface ServiceAccount {
   client_email: string;
