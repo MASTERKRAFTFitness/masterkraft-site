@@ -29,6 +29,9 @@ export default async function AdminPage() {
           <p className="text-sm text-ash">Products, orders, stock and delivery. Internal use only.</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-ash">
+          <Link href="/admin/analytics" className="underline underline-offset-2 hover:text-ink transition-colors">
+            Analytics
+          </Link>
           {mode === "supabase" && (
             <>
               <Link href="/admin/activity" className="underline underline-offset-2 hover:text-ink transition-colors">
