@@ -8,7 +8,7 @@
 // scheme other than http(s), mailto, a root-relative path or an anchor renders
 // as plain text.
 //
-// It covers what the Journal's posts use — checked against all 13 posts
+// It covers what the Journal's posts use — checked against every post
 // imported from Opinly: headings, paragraphs, bold, italic, inline and fenced
 // code, links, images with titles, bullet and numbered lists, blockquotes,
 // rules, GFM tables and backslash escapes. It is deliberately not CommonMark:

@@ -3,15 +3,15 @@
 //   ENV_FILE=../masterkraft-site/.env.local node scripts/blog-import-opinly.mjs <images-dir>           report only
 //   ENV_FILE=../masterkraft-site/.env.local node scripts/blog-import-opinly.mjs <images-dir> --write   write
 //
-// The posts come from scripts/data/opinly-blog-export-2026-10-14.json, which
-// was read off the LIVE pages on 14 Oct 2026 — the BlogPosting JSON-LD's
+// The posts come from scripts/data/opinly-blog-export.json, which
+// is read off the LIVE pages (last run 15 Oct 2026, 14 posts) — the BlogPosting JSON-LD's
 // articleBody converted to Markdown, plus the hero, meta tags and dates. The
 // live page rather than Opinly's draft is the source on purpose: four posts had
 // drafts queued for re-publish that differ from what was actually on the site,
 // and the move must not change a live page.
 //
-// <images-dir> holds the 17 .webp files fetched from masterkraft.com/blog-images
-// on the same day, named by their key. They are uploaded to the blog-images
+// <images-dir> holds the .webp files fetched from masterkraft.com/blog-images
+// at the same time, named by their key. They are uploaded to the blog-images
 // bucket under the same key, so /blog-images/<key> keeps resolving.
 //
 // IDEMPOTENT: upsert on slug and on storage path. It refuses to overwrite a row
@@ -41,7 +41,7 @@ const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
 });
 
 const exp = JSON.parse(
-  readFileSync(new URL("./data/opinly-blog-export-2026-10-14.json", import.meta.url), "utf8"),
+  readFileSync(new URL("./data/opinly-blog-export.json", import.meta.url), "utf8"),
 );
 
 // Body images were exported as root-relative /blog-images/<key> URLs. Kept that

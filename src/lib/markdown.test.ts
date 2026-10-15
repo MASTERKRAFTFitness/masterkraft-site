@@ -2,8 +2,8 @@
 //
 // Two things are pinned here. SAFETY: post bodies can be rewritten by a client
 // approver in Part Time CMO's portal and are rendered on a public page, so no
-// input may produce a tag this file did not write. FIDELITY: the 13 posts moved
-// from Opinly on 14 Oct 2026 were checked against the live pages before the
+// input may produce a tag this file did not write. FIDELITY: the posts moved
+// from Opinly in October 2026 were checked against the live pages before the
 // move (same text, heading ids, images and links); the cases below keep the
 // rules that check depended on.
 import { describe, it, expect } from "vitest";
@@ -64,7 +64,7 @@ describe("renderMarkdown structure", () => {
 
 describe("the imported Journal", () => {
   const exp = JSON.parse(
-    readFileSync(new URL("../../scripts/data/opinly-blog-export-2026-10-14.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../../scripts/data/opinly-blog-export.json", import.meta.url), "utf8"),
   ) as { posts: { slug: string; bodyMd: string; bodyImages: string[] }[] };
 
   it.each(exp.posts.map((p) => [p.slug, p] as const))("%s renders every image and no raw markers", (_, p) => {
