@@ -122,6 +122,9 @@ export const fitoutLinks: NavLink[] = [
   { label: "Elite Sports Clubs", href: "/fitout/elite-sports-clubs-fitout" },
   { label: "Franchise Gym", href: "/fitout/franchise-gym-fitout" },
   { label: "Home Gym", href: "/fitout/home-gym-fitout" },
+  // Not a fitout type: the buying-group page for independent gyms, filed here
+  // because the Fitouts menu is where gym owners look for "for my kind of gym".
+  { label: "Independent Gyms", href: "/independent-gyms" },
   { label: "PT Studio", href: "/fitout/pt-studio-fitout" },
   { label: "Schools & University", href: "/fitout/schools-university-fitout" },
 ];

@@ -2,13 +2,22 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
-import { ENQUIRY_TOPICS } from "@/lib/enquiry-type";
+import { ENQUIRY_TOPICS, type EnquiryKind } from "@/lib/enquiry-type";
 import { trackEnquiry } from "@/lib/analytics";
 
 const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
-export default function ContactForm() {
+export default function ContactForm({
+  defaultTopic,
+  messagePlaceholder = "How can we help?",
+  submitLabel = "Send Enquiry",
+}: {
+  /** Preselects the topic for pages whose visitors only ever ask one thing. */
+  defaultTopic?: EnquiryKind;
+  messagePlaceholder?: string;
+  submitLabel?: string;
+} = {}) {
   const elapsed = useFillTimer();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -67,7 +76,7 @@ export default function ContactForm() {
         <input name="phone" type="tel" required autoComplete="tel" aria-label="Phone" placeholder="Phone" className={fieldClass} />
       </div>
       <input name="company" aria-label="Company / gym name" placeholder="Company / gym name" className={fieldClass} />
-      <select name="topic" aria-label="Enquiry topic" className={fieldClass} defaultValue="">
+      <select name="topic" aria-label="Enquiry topic" className={fieldClass} defaultValue={defaultTopic ?? ""}>
         <option value="" disabled>
           I&apos;m enquiring about…
         </option>
@@ -80,11 +89,11 @@ export default function ContactForm() {
           </option>
         ))}
       </select>
-      <textarea name="message" required rows={5} aria-label="How can we help?" placeholder="How can we help?" className={fieldClass} />
+      <textarea name="message" required rows={5} aria-label={messagePlaceholder} placeholder={messagePlaceholder} className={fieldClass} />
       <HoneypotField />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <button type="submit" disabled={sending} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
-        {sending ? "Sending…" : "Send Enquiry"} <span aria-hidden>→</span>
+        {sending ? "Sending…" : submitLabel} <span aria-hidden>→</span>
       </button>
     </form>
   );
