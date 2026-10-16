@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   ERP_GROUPS,
   brandDisplayName,
+  copySlugFor,
   erpSubgroups,
   erpUnits,
   pageCodes,
@@ -12,7 +13,10 @@ import {
   servedCodes,
   slugify,
   unitCard,
+  unitAsProduct,
   unitDescription,
+  wooCopyFor,
+  type ErpUnit,
 } from "@/lib/erp-catalogue";
 import type { UnleashedMap } from "@/lib/unleashed";
 import { allProducts } from "@/lib/catalogue";
@@ -343,6 +347,62 @@ describe("a unit describes itself when the snapshot has no words for it", () => 
       erp([["MBCTMA03", "Multi Adjustable Bench With A Deliberately Very Long Product Name Indeed That Runs On", 900, "Strength"]])
     );
     expect(unitDescription([...units.values()][0]).length).toBeLessThanOrEqual(155);
+  });
+});
+
+// THE SNAPSHOT'S WORDS OUTLIVE ITS ROUTING. On the live site HIDE_UNSHIPPABLE
+// takes MMDBRH-GROUP out of the router, so the dumbbells render at a generated
+// slug - and rendered with no description while the snapshot had one.
+describe("a unit without its old page keeps the old page's words", () => {
+  const dumbbells: ErpUnit = {
+    slug: "rubber-hex-dumbbell",
+    name: "Rubber Hex Dumbbell",
+    group: "Mixed Implements",
+    codes: ["MMDBRH01", "MMDBRH12"],
+    isRange: true,
+    price: 5,
+    priceMax: 50,
+    sizes: ["1kg", "10kg"],
+    pricedCount: 2,
+    inStock: true,
+  };
+
+  it("finds the copy by the codes it sold, listable or not", () => {
+    expect(wooCopyFor(dumbbells.codes)?.description).toContain("High grade dumbbells");
+  });
+
+  it("prefers the live record, which is the one product_content holds", () => {
+    // MMDBRH01 is a variation of the HIDDEN twin rubber-hex-dumbbell-v; the
+    // loader skips that one, so its row would never be found.
+    expect(wooCopyFor(dumbbells.codes)?.slug).toBe("rubber-hex-dumbbell-group");
+    expect(copySlugFor(dumbbells)).toBe("rubber-hex-dumbbell-group");
+  });
+
+  it("gives a unit that owns its page no alias", () => {
+    expect(copySlugFor({ ...dumbbells, slug: "rubber-hex-dumbbell-group", wooSlug: "rubber-hex-dumbbell-group" })).toBeUndefined();
+  });
+
+  it("puts that copy on the generated page", () => {
+    const p = unitAsProduct(dumbbells, { withCopy: true });
+    expect(p.description).toContain("High grade dumbbells");
+    expect(p.short_description).not.toBe("");
+  });
+
+  it("leaves listing cards light", () => {
+    const p = unitAsProduct(dumbbells);
+    expect(p.description).toBeUndefined();
+  });
+
+  it("does not lend a shared stem's words to a product that page never sold", () => {
+    // MWBBFUR-GROUP sold the straight barbell (01-10). The curl barbell shares
+    // the stem and is a different product.
+    expect(wooCopyFor(["MWBBFUR01"])).toBeDefined();
+    expect(wooCopyFor(["MWBBFUR20", "MWBBFUR21"])).toBeUndefined();
+  });
+
+  it("finds nothing for codes the store never carried", () => {
+    expect(wooCopyFor(["ZZNOPE01"])).toBeUndefined();
+    expect(wooCopyFor([])).toBeUndefined();
   });
 });
 
