@@ -100,3 +100,42 @@ describe("getSalesOrder: the Stripe reference", () => {
     expect(found).toBeNull();
   });
 });
+
+describe("getSalesOrder: the buyer", () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    process.env = { ...saved, UNLEASHED_API_ID: "test-id", UNLEASHED_API_KEY: "test-key" };
+  });
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+    process.env = { ...saved };
+    vi.resetModules();
+  });
+
+  const read = async (orders: unknown[]) => {
+    vi.resetModules();
+    const { getSalesOrder } = await import("./unleashed");
+    globalThis.fetch = vi.fn(
+      async () => new Response(JSON.stringify({ Items: orders }), { status: 200 })
+    ) as typeof fetch;
+    return getSalesOrder("490118");
+  };
+
+  it("reads the buyer off the labelled lines", async () => {
+    const found = await read([order(comments("Email: Jane@Example.com", "Phone: 0400"))]);
+    expect(found?.buyer).toEqual({ name: "Jane Smith", email: "jane@example.com" });
+  });
+
+  it("never takes the shared web account's own email as the buyer's", async () => {
+    // The shipped email WRITES to this address. On WEB-MASTERKRAFT the
+    // structured email is the account's, so it would reach the wrong person.
+    const found = await read([
+      order("Keyed in by hand", { Customer: { CustomerName: "MasterKraft Website", Email: "accounts@masterkraft.com" } }),
+    ]);
+    expect(found?.buyer.email).toBeNull();
+    expect(found?.emails).toContain("accounts@masterkraft.com");
+  });
+});
