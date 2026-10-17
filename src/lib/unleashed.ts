@@ -779,6 +779,16 @@ export type SalesOrder = {
    * was never paid by card through the site.
    */
   stripeRef: string | null;
+  /**
+   * The website buyer, from the labelled "Buyer:" and "Email:" lines
+   * `buildComments` writes. Null on an order the website did not write.
+   *
+   * Kept apart from `emails` because that list also takes the structured
+   * Customer email, and on the shared WEB-MASTERKRAFT account that address
+   * belongs to the account, not to whoever bought. Anything that WRITES to the
+   * buyer (the shipped email) must use this, never `emails`.
+   */
+  buyer: { name: string | null; email: string | null };
 };
 
 type RawSalesOrder = {
@@ -863,8 +873,90 @@ export async function getSalesOrder(orderNumber: string): Promise<SalesOrder | n
     })),
     emails: emailsOn(exact),
     stripeRef: stripeRefOn(exact),
+    buyer: buyerOn(exact),
   };
 }
+
+/** The labelled Buyer/Email lines only, for the same reason as stripeRefOn. */
+function buyerOn(raw: RawSalesOrder): { name: string | null; email: string | null } {
+  const comments = String(raw.Comments ?? "");
+  const email = /^Email:[ \t]*(\S+@\S+?)[ \t]*$/im.exec(comments)?.[1]?.toLowerCase() ?? null;
+  const name = /^Buyer:[ \t]*(.+?)[ \t]*$/im.exec(comments)?.[1] ?? null;
+  return { name, email };
+}
+
+/** A web order's dispatch record, as the shipped-email cron needs it. */
+export type DispatchedShipment = Shipment & {
+  orderNumber: string;
+  customerCode: string | null;
+  deliveryName: string | null;
+  lines: { name: string | null; code: string | null; qty: number }[];
+};
+
+/**
+ * Every shipment changed since `sinceIso`, across all customers.
+ *
+ * Filtering to the website's customer account is the caller's job: Unleashed
+ * does not document a customer filter on SalesShipments, and an ignored filter
+ * would quietly hand back every trade customer's dispatches.
+ */
+export async function getShipmentsModifiedSince(sinceIso: string): Promise<DispatchedShipment[]> {
+  const out: DispatchedShipment[] = [];
+  // A runaway guard, not a limit: about 30 shipments a month change at all.
+  for (let page = 1; page <= 10; page++) {
+    // Not URL-encoded: Unleashed checks the signature against the DECODED query,
+    // so an encoded ":" signs one string and is verified as another (403).
+    const query = `pageSize=200&modifiedSince=${sinceIso.slice(0, 19)}`;
+    const res = await fetch(`${BASE}/SalesShipments/${page}?${query}`, {
+      headers: {
+        "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
+        "api-auth-signature": sign(query),
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0",
+      },
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Unleashed ${res.status} on SalesShipments since ${sinceIso}`);
+    const data = (await res.json()) as {
+      Items?: (RawShipment & {
+        OrderNumber?: string;
+        DeliveryName?: string | null;
+        Customer?: { CustomerCode?: string | null } | null;
+      })[];
+      Pagination?: { NumberOfPages?: number };
+    };
+    for (const s of data.Items ?? []) {
+      if (s.ShipmentStatus === "Deleted" || !s.OrderNumber) continue;
+      out.push({
+        orderNumber: s.OrderNumber,
+        customerCode: s.Customer?.CustomerCode ?? null,
+        deliveryName: s.DeliveryName ?? null,
+        shipmentNumber: s.ShipmentNumber ?? null,
+        status: s.ShipmentStatus ?? null,
+        dispatchedAt: parseUnleashedDate(s.DispatchDate),
+        trackingNumber: s.TrackingNumber?.trim() || null,
+        carrier: s.ShippingCompany?.Name || null,
+        packages: s.NumberOfPackages ?? null,
+        weightKg: s.ShipmentWeight ?? null,
+        deliverTo:
+          [s.DeliverySuburb, s.DeliveryRegion, s.DeliveryPostCode].filter(Boolean).join(" ") || null,
+        lineCount: s.SalesShipmentLines?.length ?? 0,
+        lines: ((s.SalesShipmentLines ?? []) as RawShipmentLine[]).map((l) => ({
+          name: l.Product?.ProductDescription ?? null,
+          code: l.Product?.ProductCode ?? null,
+          qty: l.ShipmentQty ?? 0,
+        })),
+      });
+    }
+    if (page >= (data.Pagination?.NumberOfPages ?? 1)) break;
+  }
+  return out;
+}
+
+type RawShipmentLine = {
+  Product?: { ProductCode?: string | null; ProductDescription?: string | null } | null;
+  ShipmentQty?: number | null;
+};
 
 /**
  * Every shipment recorded against one order number, newest first.
