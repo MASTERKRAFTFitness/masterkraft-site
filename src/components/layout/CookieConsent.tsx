@@ -49,9 +49,12 @@ export default function CookieConsent() {
       {tracking && (GA_ID || ADS_ID) && (
         <>
           {/* ONE gtag.js serves both properties — loading it twice would double
-              every event. The src id only has to be one of them; what actually
-              turns a property on is its own config line below. */}
-          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID || ADS_ID}`} strategy="afterInteractive" />
+              every event. What turns a property on is its own config line below,
+              but the src id must be one Google will SERVE: G-HNLFD90XBN was set
+              up as a destination of the Ads Google tag, not a tag of its own, so
+              gtag/js?id=G-HNLFD90XBN is a 404 and nothing at all ran from
+              2026-10-15 to 10-19. The Ads id serves a script carrying both. */}
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${ADS_ID || GA_ID}`} strategy="afterInteractive" />
           <Script id="ga4-init" strategy="afterInteractive">
             {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());` +
               (GA_ID ? `gtag('config','${GA_ID}');` : "") +
