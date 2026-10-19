@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import TrendChart from "@/components/admin/TrendChart";
+import AdminTabs from "@/components/admin/AdminTabs";
+import { identityMode } from "@/lib/admin-db";
 import {
   rangeFor,
   reportingStatus,
@@ -143,12 +145,10 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
   return (
     <section className="container-mk pt-28 pb-16">
+      <AdminTabs full={identityMode() === "supabase"} />
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <Link href="/admin" className="text-xs text-ash underline underline-offset-2 hover:text-ink">
-            Back to the desk
-          </Link>
-          <h1 className="mt-3 font-display text-2xl uppercase tracking-wide text-ink">Analytics</h1>
+          <h1 className="font-display text-2xl uppercase tracking-wide text-ink">Web analytics</h1>
           <p className="text-sm text-ash">
             masterkraft.com · {range.start} to {range.end}, against the {days} days before. Google Analytics and Search Console.
           </p>

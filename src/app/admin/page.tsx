@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, adminSecret, readSession } from "@/lib/admin-auth";
 import { identityMode } from "@/lib/admin-db";
+import AdminTabs from "@/components/admin/AdminTabs";
 import AgentConsole from "@/components/admin/AgentConsole";
 import SignOutButton from "@/components/admin/SignOutButton";
 
@@ -23,31 +23,13 @@ export default async function AdminPage() {
   return (
     // The site header is position:fixed at 76px, so the console has to clear it.
     <section className="container-mk pt-28 pb-8">
+      <AdminTabs full={mode === "supabase"} />
       <header className="flex items-baseline justify-between mb-4">
         <div>
           <h1 className="font-display text-2xl uppercase tracking-wide text-ink">Support desk</h1>
           <p className="text-sm text-ash">Products, orders, stock and delivery. Internal use only.</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-ash">
-          <Link href="/admin/analytics" className="underline underline-offset-2 hover:text-ink transition-colors">
-            Analytics
-          </Link>
-          {mode === "supabase" && (
-            <>
-              <Link href="/admin/activity" className="underline underline-offset-2 hover:text-ink transition-colors">
-                Activity
-              </Link>
-              <Link href="/admin/dead-links" className="underline underline-offset-2 hover:text-ink transition-colors">
-                Dead links
-              </Link>
-              <Link href="/admin/checkouts" className="underline underline-offset-2 hover:text-ink transition-colors">
-                Checkouts
-              </Link>
-              <Link href="/admin/freight" className="underline underline-offset-2 hover:text-ink transition-colors">
-                Freight
-              </Link>
-            </>
-          )}
           {session?.email && <span className="font-mono">{session.email}</span>}
           <SignOutButton />
         </div>
