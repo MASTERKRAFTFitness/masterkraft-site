@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { formatClose, formatLanding, upcomingWindows, windowLabel } from "./indie-iron";
+import {
+  GROUP_DISCOUNT,
+  MEMBER_DISCOUNT,
+  PRICE_EXAMPLES,
+  PRICING_CONFIRMED,
+  discounted,
+  formatClose,
+  formatLanding,
+  upcomingWindows,
+  windowLabel,
+} from "./indie-iron";
 
 // The calendar the brief signed off (doc 64, section 4). The page computes it
 // from dates rather than hard-coding it, so these pin the computation to it.
@@ -40,5 +50,21 @@ describe("Indie Iron buy windows", () => {
     const w = upcomingWindows(new Date("2027-09-01T00:00:00Z"));
     expect(w[0].name).toBe("Summer");
     expect(windowLabel(w[0])).toBe("Summer (closes 15 Nov 2027)");
+  });
+});
+
+// The draft table must agree with the branded-kit sales sheet (14 Oct 2026):
+// "20kg competition bumper: website $225.00 · trade $202.50 · club $191.25".
+describe("Indie Iron member pricing (draft)", () => {
+  it("matches the sales sheet's worked bumper example", () => {
+    const bumper = PRICE_EXAMPLES.find((p) => p.line === "Plates")!;
+    expect(bumper.website).toBe(225);
+    expect(discounted(bumper.website, MEMBER_DISCOUNT)).toBe(202.5);
+    expect(discounted(bumper.website, GROUP_DISCOUNT)).toBe(191.25);
+  });
+
+  it("stays off the live page until the numbers are confirmed", () => {
+    // Flip this with the numbers, once Steve confirms them (open item 1).
+    expect(PRICING_CONFIRMED).toBe(false);
   });
 });

@@ -6,6 +6,7 @@ import WindowClock from "@/components/indie-iron/WindowClock";
 import WindowCalendar from "@/components/indie-iron/WindowCalendar";
 import JoinForm from "@/components/indie-iron/JoinForm";
 import JoinHeading from "@/components/indie-iron/JoinHeading";
+import PricingTable from "@/components/indie-iron/PricingTable";
 import { ALONE, FAQ, IN_GROUP, RANGE, STEPS } from "@/lib/indie-iron";
 
 // Indie Iron: a programme inside MasterKraft, so it keeps the global header and
@@ -227,6 +228,9 @@ export default function IndieIronPage() {
           <p className="mt-3 text-[0.8rem] text-ash">Weight ranges are indicative and confirmed on your quote.</p>
         </div>
       </section>
+
+      {/* ---------- member pricing (hidden until confirmed) ---------- */}
+      <PricingTable />
 
       {/* ---------- buy calendar ---------- */}
       <section id="windows" className="border-t border-[#C9CED5] py-14 md:py-20">

@@ -211,3 +211,39 @@ export const FAQ = [
     a: "The group buy covers the five free-weight lines. For racks, rigs, flooring or a full fit-out, ask and we'll quote it separately.",
   },
 ];
+
+// ---- member pricing (DRAFT) ---------------------------------------------------
+//
+// TO BE CONFIRMED. These are the 14 Oct 2026 branded-kit numbers (price matrix
+// in the migration folder, Unleashed prices read that day): a member's trade
+// login is 10% off the website price, and an order in a buy window is 15% off,
+// a further 5%. They do not yet agree with the brief's "up to 30% off RRP"
+// (open item 1), so the table stays off the live page until PRICING_CONFIRMED
+// is true. Until then it shows only with ?pricing=draft on the URL.
+//
+// Labels are Website / Member / Buying group, never tier names: the brand rule
+// is to talk about the member's price advantage, not pricing tiers.
+
+export const PRICING_CONFIRMED = false;
+
+export const MEMBER_DISCOUNT = 0.1;
+export const GROUP_DISCOUNT = 0.15;
+
+/** One example size per line. Website prices inc GST, from Unleashed on 14 Oct 2026. */
+export const PRICE_EXAMPLES = [
+  { line: "Plates", item: "Competition bumper plate, 20 kg", website: 225, method: "Laser engraved", fee: 125 },
+  { line: "Kettlebells", item: "Urethane competition kettlebell, 16 kg", website: 160, method: "PVC label", fee: 50 },
+  { line: "Medicine balls", item: "Medicine ball, 6 kg", website: 64, method: "Printed", fee: 50 },
+  { line: "Dumbbells", item: "Urethane dumbbells, 10 kg pair", website: 176, method: "PVC label", fee: 50 },
+  { line: "Fixed barbells", item: "Urethane fixed barbell, 20 kg", website: 170, method: "PVC label", fee: 50 },
+] as const;
+
+/** Who pays the branding fees, by order value ex GST: Steve's email of 13 Oct 2026. */
+export const BRANDING_ABSORPTION = [
+  { over: 0, share: "You pay the fee" },
+  { over: 20000, share: "We pay half" },
+  { over: 50000, share: "We pay all of it" },
+];
+
+/** Website price less a discount, to the cent. */
+export const discounted = (website: number, discount: number) => Math.round(website * (1 - discount) * 100) / 100;
