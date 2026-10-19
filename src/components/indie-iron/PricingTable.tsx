@@ -3,16 +3,14 @@
 import { useSyncExternalStore } from "react";
 import {
   BRANDING_ABSORPTION,
-  GROUP_DISCOUNT,
-  MEMBER_DISCOUNT,
+  MEMBER_DISCOUNT_LABEL,
   PRICE_EXAMPLES,
   PRICING_CONFIRMED,
-  discounted,
+  savingPct,
 } from "@/lib/indie-iron";
 
 const aud = (n: number) =>
   n.toLocaleString("en-AU", { style: "currency", currency: "AUD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 // ?pricing=draft, read in the browser so the page stays static.
 const noop = () => () => {};
@@ -45,8 +43,8 @@ export default function PricingTable() {
             </h2>
           </div>
           <p className="max-w-[52ch] text-ash">
-            Members get {pct(MEMBER_DISCOUNT)} off the website price on every order. Order in a buy window and your
-            order goes into the pooled production run, taking you to {pct(GROUP_DISCOUNT)} off.
+            Members get {MEMBER_DISCOUNT_LABEL} the website price on every order. Order in a buy window and your order
+            goes into the pooled production run at the buying-group price, the one the big networks buy at.
           </p>
         </div>
 
@@ -59,12 +57,10 @@ export default function PricingTable() {
               <dl className="mt-3 grid grid-cols-[1fr_auto] gap-y-1 text-sm">
                 <dt className="text-ash">Website</dt>
                 <dd className="text-right tabular-nums text-ash line-through decoration-1">{aud(p.website)}</dd>
-                <dt>Member · {pct(MEMBER_DISCOUNT)} off</dt>
-                <dd className="text-right tabular-nums">{aud(discounted(p.website, MEMBER_DISCOUNT))}</dd>
-                <dt className="font-bold text-[var(--ii-cobalt)]">Buying group · {pct(GROUP_DISCOUNT)} off</dt>
-                <dd className="text-right font-bold tabular-nums text-[var(--ii-cobalt)]">
-                  {aud(discounted(p.website, GROUP_DISCOUNT))}
-                </dd>
+                <dt>Member · {MEMBER_DISCOUNT_LABEL}</dt>
+                <dd className="text-right tabular-nums">{aud(p.member)}</dd>
+                <dt className="font-bold text-[var(--ii-cobalt)]">Buying group · save {savingPct(p.website, p.group)}%</dt>
+                <dd className="text-right font-bold tabular-nums text-[var(--ii-cobalt)]">{aud(p.group)}</dd>
                 <dt className="text-ash">Branding, once per size</dt>
                 <dd className="text-right">{aud(p.fee).replace(".00", "")} <span className="text-ash">· {p.method}</span></dd>
               </dl>
@@ -79,9 +75,9 @@ export default function PricingTable() {
               <tr>
                 <th scope="col" className="px-4 py-3 font-bold">Example</th>
                 <th scope="col" className="px-4 py-3 text-right font-bold">Website</th>
-                <th scope="col" className="px-4 py-3 text-right font-bold">Member · {pct(MEMBER_DISCOUNT)} off</th>
+                <th scope="col" className="px-4 py-3 text-right font-bold">Member · {MEMBER_DISCOUNT_LABEL}</th>
                 <th scope="col" className="bg-[var(--ii-cobalt)] px-4 py-3 text-right font-bold">
-                  Buying group · {pct(GROUP_DISCOUNT)} off
+                  Buying group
                 </th>
                 <th scope="col" className="px-4 py-3 font-bold">Branding, once per size</th>
               </tr>
@@ -94,9 +90,10 @@ export default function PricingTable() {
                     <span className="text-ash">{p.item}</span>
                   </th>
                   <td className="px-4 py-3 text-right tabular-nums text-ash line-through decoration-1">{aud(p.website)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{aud(discounted(p.website, MEMBER_DISCOUNT))}</td>
-                  <td className="bg-[#EEF2FD] px-4 py-3 text-right font-bold tabular-nums text-[var(--ii-cobalt)]">
-                    {aud(discounted(p.website, GROUP_DISCOUNT))}
+                  <td className="px-4 py-3 text-right tabular-nums">{aud(p.member)}</td>
+                  <td className="bg-[#EEF2FD] px-4 py-3 text-right tabular-nums text-[var(--ii-cobalt)]">
+                    <span className="font-bold">{aud(p.group)}</span>
+                    <span className="block text-[0.75rem]">save {savingPct(p.website, p.group)}%</span>
                   </td>
                   <td className="px-4 py-3">
                     {aud(p.fee).replace(".00", "")} <span className="text-ash">· {p.method}</span>

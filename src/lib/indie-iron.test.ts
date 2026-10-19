@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  GROUP_DISCOUNT,
-  MEMBER_DISCOUNT,
   PRICE_EXAMPLES,
   PRICING_CONFIRMED,
-  discounted,
+  savingPct,
   formatClose,
   formatLanding,
   upcomingWindows,
@@ -53,14 +51,20 @@ describe("Indie Iron buy windows", () => {
   });
 });
 
-// The draft table must agree with the branded-kit sales sheet (14 Oct 2026):
-// "20kg competition bumper: website $225.00 · trade $202.50 · club $191.25".
+// Member = the T6 tier (10% off the website), buying group = the T4 tier (the
+// 20% tier). Michael, 19 Oct 2026. Prices from Unleashed, 14 Oct 2026.
 describe("Indie Iron member pricing (draft)", () => {
-  it("matches the sales sheet's worked bumper example", () => {
+  it("prices the 20 kg bumper at T6 for members and T4 in the buying group", () => {
     const bumper = PRICE_EXAMPLES.find((p) => p.line === "Plates")!;
-    expect(bumper.website).toBe(225);
-    expect(discounted(bumper.website, MEMBER_DISCOUNT)).toBe(202.5);
-    expect(discounted(bumper.website, GROUP_DISCOUNT)).toBe(191.25);
+    expect([bumper.website, bumper.member, bumper.group]).toEqual([225, 202.5, 180]);
+  });
+
+  it("keeps every example in order: website > member > buying group", () => {
+    for (const p of PRICE_EXAMPLES) {
+      expect(p.member, p.item).toBeLessThan(p.website);
+      expect(p.group, p.item).toBeLessThan(p.member);
+      expect(savingPct(p.website, p.member), p.item).toBe(10);
+    }
   });
 
   it("stays off the live page until the numbers are confirmed", () => {

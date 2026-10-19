@@ -214,28 +214,35 @@ export const FAQ = [
 
 // ---- member pricing (DRAFT) ---------------------------------------------------
 //
-// TO BE CONFIRMED. These are the 14 Oct 2026 branded-kit numbers (price matrix
-// in the migration folder, Unleashed prices read that day): a member's trade
-// login is 10% off the website price, and an order in a buy window is 15% off,
-// a further 5%. They do not yet agree with the brief's "up to 30% off RRP"
-// (open item 1), so the table stays off the live page until PRICING_CONFIRMED
-// is true. Until then it shows only with ?pricing=draft on the URL.
+// TO BE CONFIRMED before it goes live. Michael, 19 Oct 2026: an independent
+// gym's member price is the Unleashed T6 tier (10% off the website price), and
+// ordering in a buy window unlocks the T4 tier, the 20% tier. That is a TIER,
+// not a calculated 20%: the prices below are each product's real T6 and T4
+// prices, read from Unleashed on 14 Oct 2026 (branded-kit price matrix). For
+// these five examples T4 happens to be exactly 20% under the website.
+//
+// It supersedes the 14 Oct plan (club = T5, 15% off). The hero's "up to 30% off
+// RRP" still does not match (open item 1), so the table stays off the live page
+// until PRICING_CONFIRMED is true; ?pricing=draft shows it for review.
 //
 // Labels are Website / Member / Buying group, never tier names: the brand rule
 // is to talk about the member's price advantage, not pricing tiers.
 
 export const PRICING_CONFIRMED = false;
 
-export const MEMBER_DISCOUNT = 0.1;
-export const GROUP_DISCOUNT = 0.15;
+/** Member price: the T6 tier, 10% off the website price. */
+export const MEMBER_DISCOUNT_LABEL = "10% off";
 
-/** One example size per line. Website prices inc GST, from Unleashed on 14 Oct 2026. */
+/**
+ * One example size per line. All prices inc GST, from Unleashed on 14 Oct 2026:
+ * website = default sell price, member = T6, group = T4.
+ */
 export const PRICE_EXAMPLES = [
-  { line: "Plates", item: "Competition bumper plate, 20 kg", website: 225, method: "Laser engraved", fee: 125 },
-  { line: "Kettlebells", item: "Urethane competition kettlebell, 16 kg", website: 160, method: "PVC label", fee: 50 },
-  { line: "Medicine balls", item: "Medicine ball, 6 kg", website: 64, method: "Printed", fee: 50 },
-  { line: "Dumbbells", item: "Urethane dumbbells, 10 kg pair", website: 176, method: "PVC label", fee: 50 },
-  { line: "Fixed barbells", item: "Urethane fixed barbell, 20 kg", website: 170, method: "PVC label", fee: 50 },
+  { line: "Plates", item: "Competition bumper plate, 20 kg", sku: "MWWPCNB04", website: 225, member: 202.5, group: 180, method: "Laser engraved", fee: 125 },
+  { line: "Kettlebells", item: "Urethane competition kettlebell, 16 kg", sku: "MMKBUR04", website: 160, member: 144, group: 128, method: "PVC label", fee: 50 },
+  { line: "Medicine balls", item: "Medicine ball, 6 kg", sku: "MMMBPR03", website: 64, member: 57.6, group: 51.2, method: "Printed", fee: 50 },
+  { line: "Dumbbells", item: "Urethane dumbbells, 10 kg pair", sku: "MMDBUR01", website: 176, member: 158.4, group: 140.8, method: "PVC label", fee: 50 },
+  { line: "Fixed barbells", item: "Urethane fixed barbell, 20 kg", sku: "MWBBFUR05", website: 170, member: 153, group: 136, method: "PVC label", fee: 50 },
 ] as const;
 
 /** Who pays the branding fees, by order value ex GST: Steve's email of 13 Oct 2026. */
@@ -245,5 +252,5 @@ export const BRANDING_ABSORPTION = [
   { over: 50000, share: "We pay all of it" },
 ];
 
-/** Website price less a discount, to the cent. */
-export const discounted = (website: number, discount: number) => Math.round(website * (1 - discount) * 100) / 100;
+/** Whole-percent saving of a price against the website price. */
+export const savingPct = (website: number, price: number) => Math.round((1 - price / website) * 100);
