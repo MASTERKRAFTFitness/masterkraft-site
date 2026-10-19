@@ -20,7 +20,7 @@ export default function AdminTabs({ full }: { full: boolean }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Admin" className="mb-6 -mx-4 overflow-x-auto px-4 border-b border-line">
+    <nav aria-label="Admin" className="mb-6 -mx-4 overflow-x-auto overflow-y-hidden px-4 border-b border-line">
       <ul className="flex gap-1 whitespace-nowrap text-xs uppercase tracking-wide">
         {TABS.filter((t) => full || !t.full).map((t) => {
           const active = t.href === "/admin" ? pathname === "/admin" : pathname.startsWith(t.href);
