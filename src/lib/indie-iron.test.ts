@@ -67,8 +67,9 @@ describe("Indie Iron member pricing (draft)", () => {
     }
   });
 
-  it("stays off the live page until the numbers are confirmed", () => {
-    // Flip this with the numbers, once Steve confirms them (open item 1).
-    expect(PRICING_CONFIRMED).toBe(false);
+  it("is live, so the page's 'up to' claim must match the deepest saving", () => {
+    expect(PRICING_CONFIRMED).toBe(true);
+    const deepest = Math.max(...PRICE_EXAMPLES.map((p) => savingPct(p.website, p.group)));
+    expect(deepest).toBe(20); // the hero, facts and callout say "up to 20%"
   });
 });

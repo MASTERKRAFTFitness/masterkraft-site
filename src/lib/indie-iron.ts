@@ -143,6 +143,7 @@ export const RANGE = [
     body: "Bumper and iron plates with your logo on the face. The hero piece of any branded floor.",
     href: "/equipment/weightlifting/weight-plates",
     icon: "plate",
+    image: { src: "/indie-iron/branded-bumper-plate.jpg", width: 1500, height: 1030, alt: "A green competition bumper plate with the MasterKraft logo engraved on its face" },
   },
   {
     name: "Kettlebells",
@@ -150,6 +151,7 @@ export const RANGE = [
     body: "Single-cast bells with your logo on the body and the weight marked in kg.",
     href: "/equipment/mixed-implements/kettlebells",
     icon: "kettlebell",
+    image: { src: "/indie-iron/branded-kettlebells.jpg", width: 1000, height: 1080, alt: "Two black urethane competition kettlebells with a round MasterKraft label on the body" },
   },
   {
     name: "Medicine balls",
@@ -164,6 +166,7 @@ export const RANGE = [
     body: "Commercial dumbbell sets with branded heads, sold in pairs and full runs.",
     href: "/equipment/mixed-implements/dumbbells",
     icon: "dumbbell",
+    image: { src: "/indie-iron/branded-dumbbells.jpg", width: 1000, height: 1080, alt: "A pair of black urethane dumbbells with the MasterKraft label on each head" },
   },
   {
     name: "Fixed barbells",
@@ -182,7 +185,7 @@ export const ALONE = [
 ];
 
 export const IN_GROUP = [
-  "Up to 30% off RRP on the five core lines",
+  "Up to 20% off the website price on the five core lines",
   "Your logo on every piece, with a proof first",
   "One production run, shipped together",
   "A set date, every quarter, so you can plan",
@@ -214,21 +217,24 @@ export const FAQ = [
 
 // ---- member pricing (DRAFT) ---------------------------------------------------
 //
-// TO BE CONFIRMED before it goes live. Michael, 19 Oct 2026: an independent
+// LIVE from 19 Oct 2026 (Michael: "show website, then the 10% off and then the
+// buying group tier"). Michael, 19 Oct 2026: an independent
 // gym's member price is the Unleashed T6 tier (10% off the website price), and
 // ordering in a buy window unlocks the T4 tier, the 20% tier. That is a TIER,
 // not a calculated 20%: the prices below are each product's real T6 and T4
 // prices, read from Unleashed on 14 Oct 2026 (branded-kit price matrix). For
 // these five examples T4 happens to be exactly 20% under the website.
 //
-// It supersedes the 14 Oct plan (club = T5, 15% off). The hero's "up to 30% off
-// RRP" still does not match (open item 1), so the table stays off the live page
-// until PRICING_CONFIRMED is true; ?pricing=draft shows it for review.
+// It supersedes the 14 Oct plan (club = T5, 15% off). The brief's "up to 30% off
+// RRP" was changed to "up to 20%" across the page when this went live, so the
+// claims match the table; change both together if Steve confirms more.
+// Prices re-read live from Unleashed on 19 Oct and unchanged. Setting
+// PRICING_CONFIRMED to false hides the table again (?pricing=draft still shows it).
 //
 // Labels are Website / Member / Buying group, never tier names: the brand rule
 // is to talk about the member's price advantage, not pricing tiers.
 
-export const PRICING_CONFIRMED = false;
+export const PRICING_CONFIRMED = true;
 
 /** Member price: the T6 tier, 10% off the website price. */
 export const MEMBER_DISCOUNT_LABEL = "10% off";

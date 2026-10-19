@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   // The root layout appends " | MASTERKRAFT".
   title: "Indie Iron: independent gym buying group",
   description:
-    "Franchise buying power for independent gyms. Up to 30% off branded plates, kettlebells, dumbbells, medicine balls and fixed barbells, in four quarterly buy windows.",
+    "Franchise buying power for independent gyms. Up to 20% off branded plates, kettlebells, dumbbells, medicine balls and fixed barbells, in four quarterly buy windows.",
   alternates: { canonical: "/indie-iron" },
 };
 
@@ -125,7 +125,7 @@ export default function IndieIronPage() {
             </h1>
             <p className="mt-5 max-w-[58ch] text-[1.1rem] leading-relaxed text-white/80 lg:text-[1.2rem]">
               Indie Iron pools orders from independent gyms into one quarterly buy, so you get the pricing the
-              big chains get. Up to 30% off branded plates, kettlebells, medicine balls, dumbbells and fixed
+              big chains get. Up to 20% off branded plates, kettlebells, medicine balls, dumbbells and fixed
               barbells, with your logo on every piece.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -134,7 +134,7 @@ export default function IndieIronPage() {
             </div>
             <dl className="mt-8 flex flex-wrap gap-x-7 gap-y-3 border-t border-white/15 pt-5">
               {[
-                ["30%", "up to, off RRP"],
+                ["20%", "up to, off the website price"],
                 ["4×", "buy windows a year"],
                 ["6–8 wks", "from window close to your floor"],
               ].map(([n, l]) => (
@@ -205,9 +205,26 @@ export default function IndieIronPage() {
                 href={r.href}
                 className="group grid grid-rows-[auto_auto_auto_1fr_auto] gap-2.5 rounded-md border border-[#C9CED5] bg-white p-5 transition-colors hover:border-[var(--ii-cobalt)]"
               >
-                <svg viewBox="0 0 56 56" className="h-14 w-14" aria-hidden>
-                  {ICONS[r.icon]}
-                </svg>
+                {"image" in r ? (
+                  // The product shots carry a lot of studio backdrop; scaled up
+                  // inside a clipped frame so the branding is legible on a card.
+                  <div className="aspect-[4/3] w-full overflow-hidden rounded-sm bg-[#E9E9E9]">
+                    <Image
+                      src={r.image.src}
+                      alt={r.image.alt}
+                      width={r.image.width}
+                      height={r.image.height}
+                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 70vw, 100vw"
+                      className="h-full w-full scale-[1.6] object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid aspect-[4/3] w-full place-items-center rounded-sm bg-[var(--ii-zinc)]">
+                    <svg viewBox="0 0 56 56" className="h-16 w-16" aria-hidden>
+                      {ICONS[r.icon]}
+                    </svg>
+                  </div>
+                )}
                 <h3 className="ii-display text-[1.4rem] leading-none">{r.name}</h3>
                 <p className="font-mono text-[0.75rem] uppercase tracking-[0.02em] text-ash">{r.spec}</p>
                 <p className="text-sm text-ash">{r.body}</p>
@@ -225,7 +242,10 @@ export default function IndieIronPage() {
             ))}
             <span>Pick one per order. We send a proof before anything is made.</span>
           </div>
-          <p className="mt-3 text-[0.8rem] text-ash">Weight ranges are indicative and confirmed on your quote.</p>
+          <p className="mt-3 text-[0.8rem] text-ash">
+            Photos show MasterKraft branding; your logo goes in the same place. Weight ranges are indicative and
+            confirmed on your quote.
+          </p>
         </div>
       </section>
 
