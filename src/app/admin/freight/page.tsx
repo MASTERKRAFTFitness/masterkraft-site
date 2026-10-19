@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { identityMode } from "@/lib/admin-db";
 import { marginPercent } from "@/lib/freight";
 import { customerPrice, listLevyMatrices, recentLevyChanges } from "@/lib/fuel-levy";
 import FuelLevyForm from "@/components/admin/FuelLevyForm";
+import AdminTabs from "@/components/admin/AdminTabs";
 
 export const metadata: Metadata = {
   title: "Freight",
@@ -38,11 +38,9 @@ export default async function FreightPage() {
 
   return (
     <section className="container-mk pt-28 pb-16">
+      <AdminTabs full={identityMode() === "supabase"} />
       <header className="mb-6">
-        <Link href="/admin" className="text-xs text-ash underline underline-offset-2 hover:text-ink">
-          Back to the desk
-        </Link>
-        <h1 className="mt-3 font-display text-2xl uppercase tracking-wide text-ink">Freight</h1>
+        <h1 className="font-display text-2xl uppercase tracking-wide text-ink">Freight</h1>
         <p className="max-w-2xl text-sm text-ash">
           The fuel levy on each carrier rate card. It is added to the carrier&rsquo;s charge before our{" "}
           {margin}% margin and GST, on every price checkout quotes from that card. Mainfreight&rsquo;s changes

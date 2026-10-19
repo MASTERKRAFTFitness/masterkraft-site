@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { identityMode } from "@/lib/admin-db";
 import { recentActivity } from "@/lib/agent/audit";
+import AdminTabs from "@/components/admin/AdminTabs";
 
 export const metadata: Metadata = {
   title: "Activity",
@@ -34,11 +34,9 @@ export default async function ActivityPage() {
 
   return (
     <section className="container-mk pt-28 pb-16">
+      <AdminTabs full={identityMode() === "supabase"} />
       <header className="mb-6">
-        <Link href="/admin" className="text-xs text-ash underline underline-offset-2 hover:text-ink">
-          Back to the desk
-        </Link>
-        <h1 className="mt-3 font-display text-2xl uppercase tracking-wide text-ink">Activity</h1>
+        <h1 className="font-display text-2xl uppercase tracking-wide text-ink">Activity</h1>
         <p className="text-sm text-ash">
           Every action the agent proposed that would reach outside the building, and what a person
           decided. Read only.
