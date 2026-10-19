@@ -118,7 +118,7 @@ export const equipmentCategories: EquipmentCategory[] = [
 
 export const fitoutLinks: NavLink[] = [
   { label: "Boutique Fitness", href: "/fitout/boutique-fitness-fitout" },
-  { label: "Commercial Gym", href: "/fitout/commercial-gym-fitout" },
+  { label: "Independent Gym", href: "/fitout/independent-gym-fitout" },
   { label: "Elite Sports Clubs", href: "/fitout/elite-sports-clubs-fitout" },
   { label: "Franchise Gym", href: "/fitout/franchise-gym-fitout" },
   { label: "Home Gym", href: "/fitout/home-gym-fitout" },
