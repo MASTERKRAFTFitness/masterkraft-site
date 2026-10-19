@@ -147,6 +147,7 @@ export const footerLinks: NavLink[] = [
   { label: "Delivery Information", href: "/delivery-information" },
   { label: "FitPass", href: "/fitpass" },
   { label: "Distributor", href: "/distributor" },
+  { label: "Indie Iron Buying Group", href: "/indie-iron" },
   { label: "Terms and Conditions", href: "/terms-and-conditions" },
   { label: "Privacy Policy", href: "/privacy-policy" },
 ];

@@ -7,6 +7,7 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
+import IndieIronCallout from "@/components/indie-iron/IndieIronCallout";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { withQualifier } from "@/lib/page-title";
 
@@ -101,6 +102,9 @@ export default async function FitoutTypePage({
 
       {/* Boutique fitness: showcase the real REVL studio fitout as proof. */}
       {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
+
+      {/* Independent and boutique owners are who the buying group is for. */}
+      {f.slug === "boutique-fitness-fitout" && <IndieIronCallout />}
 
       {/* Commercial and franchise gyms: a real club, Fernwood Pakenham, as proof. */}
       {(f.slug === "commercial-gym-fitout" || f.slug === "franchise-gym-fitout") && (
