@@ -63,7 +63,7 @@ describe("Indie Iron sign-up", () => {
   const hubspotCalls = () => calls.filter((c) => c.url.includes("hsforms.com"));
   const emails = () => calls.filter((c) => c.url.includes("resend.com"));
 
-  it("sends every Indie Iron property, the owner and the lifecycle stage", async () => {
+  it("sends every Indie Iron property the form defines", async () => {
     process.env.HUBSPOT_FORM_INDIE_IRON = "guid-ii";
     const res = await post(valid);
     expect(await res.json()).toMatchObject({ ok: true, hubspot: "submitted", notified: "sent" });
@@ -76,8 +76,9 @@ describe("Indie Iron sign-up", () => {
     expect(field("indie_iron_products")).toBe("Plates;Kettlebells");
     expect(field("indie_iron_branding")).toBe("My gym logo");
     expect(field("indie_iron_member")).toBe("true");
-    expect(field("lifecyclestage")).toBe("lead");
-    expect(field("hubspot_owner_id")).toBe("368320454");
+    // The form cannot hold these, so they are left to a HubSpot workflow.
+    expect(field("hubspot_owner_id")).toBeUndefined();
+    expect(field("lifecyclestage")).toBeUndefined();
   });
 
   it("tells the team about every sign-up, with the reply going to the gym", async () => {

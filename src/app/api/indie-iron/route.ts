@@ -23,13 +23,12 @@ import {
 // set, submitHubspotForm returns "skipped" and the team email is the only record,
 // so it says so in the email.
 //
-// OWNER AND LIFECYCLE: sent as `hubspot_owner_id` (Tina Phan) and
-// `lifecyclestage` (lead). The Forms API silently DROPS any field the form does
-// not define, so both have to be hidden fields on the HubSpot form, along with
-// `indie_iron_member`. If a test contact lands without an owner, that is why.
-
-/** Tina Phan, who owns inbound leads. See the HubSpot forms note in the README. */
-const LEAD_OWNER_ID = "368320454";
+// OWNER AND LIFECYCLE ARE NOT SET HERE. The Forms API silently drops any field
+// the form does not define, and HubSpot's form editor will not put Contact owner
+// or Lifecycle Stage on a form at all. Both belong to a HubSpot workflow
+// triggered by a submission of this form, the way the website enquiry
+// lifecycle workflows already work. Consent is not sent either: this portal has
+// no `opt_in_status` property (the waitlist route's copy of it is dropped too).
 
 /** What the window select can send: a round label, "Not sure", or nothing. */
 const WINDOW_SHAPE = /^(Founding round|Autumn|Winter|Spring|Summer) \(closes \d{1,2} [A-Z][a-z]{2} \d{4}\)$/;
@@ -94,7 +93,7 @@ function teamNotification(s: SignUp, hubspot: string): string {
     <strong>within one business day</strong>.</p>
     ${
       hubspot === "submitted"
-        ? `<p style="color:#666">Recorded in HubSpot (Website Indie Iron form), owner Tina.</p>`
+        ? `<p style="color:#666">Recorded in HubSpot (Website Indie Iron form).</p>`
         : `<p style="color:#c73e37"><strong>HubSpot did NOT record this (${escape(hubspot)}).</strong>
            Add the contact manually, and check <code>HUBSPOT_FORM_INDIE_IRON</code> is set.</p>`
     }`;
@@ -181,9 +180,6 @@ export async function POST(request: Request) {
       { name: "indie_iron_branding", value: s.branding },
       { name: "message", value: s.message },
       { name: "indie_iron_member", value: "true" },
-      { name: "lifecyclestage", value: "lead" },
-      { name: "hubspot_owner_id", value: LEAD_OWNER_ID },
-      { name: "opt_in_status", value: "true" },
     ],
     { pageName: "Indie Iron", pageUri: "/indie-iron" }
   ).catch((e) => {
