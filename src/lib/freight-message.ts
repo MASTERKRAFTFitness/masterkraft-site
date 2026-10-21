@@ -37,3 +37,29 @@ export function freightMessage(reason?: string): string {
       return "We couldn't calculate freight for this order right now. Please request a quote and our team will confirm it.";
   }
 }
+
+/**
+ * Whether an unpriced freight answer goes straight to the team as a quote,
+ * without waiting for the customer to press Request a Quote.
+ *
+ * THE BUTTON WAS NOT ENOUGH (Michael, 2026-10-21). It shipped on 1 October, and
+ * every checkout that hit one of these reasons after that left without pressing
+ * it - two Concept2 rowers and a regional dumbbell set, $4,415 between them. The
+ * customer had already typed their name, email, phone and address, so asking
+ * them to press one more button only gave them a place to stop.
+ *
+ * ONLY THE REASONS A PERSON WILL PRICE, which are exactly the ones that share
+ * freightMessage's "ships as freight" sentence. They are decided by the cart
+ * itself (a machine, a rack, a pallet's worth of plates), so the same address
+ * would get the same answer again. Everything else may be the customer's typo or
+ * a carrier timing out - `no_services`, `error`, a missing postcode - and those
+ * keep the manual button and Recalculate Freight, because a retry can fix them.
+ */
+export function quotesAutomatically(reason?: string | null): boolean {
+  return (
+    reason === "oversize" ||
+    reason === "too_many_parcels" ||
+    reason === "too_expensive" ||
+    reason === "incomplete_dimensions"
+  );
+}

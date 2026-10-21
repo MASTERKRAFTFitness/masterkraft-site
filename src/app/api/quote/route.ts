@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { hubspotUtk, submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
-import { internalRecipients } from "@/lib/notify-recipients";
+import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
 import { visitorKey } from "@/lib/agent/rate-limit";
 import { scheduleCheckoutLead } from "@/lib/checkout-leads";
@@ -40,13 +40,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 
-  const { contact, items, subtotal, checkoutId } = (payload ?? {}) as {
+  const { contact, items, subtotal, checkoutId, freightQuote } = (payload ?? {}) as {
     contact?: QuoteContact;
     items?: QuoteItem[];
     subtotal?: number;
     // Set when the request comes from a card checkout whose freight could not
     // be priced, so that checkout is not also reported as abandoned.
     checkoutId?: string;
+    // The same checkout, sent because freight needs a person to price it - most
+    // often automatically, see quotesAutomatically. The customer has been told a
+    // freight price is coming by email, so the team is told that is what to send
+    // and the customer gets a note confirming it.
+    freightQuote?: boolean;
   };
 
   if (!contact?.name || !contact?.email || !contact?.phone?.trim() || !Array.isArray(items) || items.length === 0) {
@@ -92,10 +97,16 @@ export async function POST(request: Request) {
 
   const [firstName, ...lastParts] = (contact.name ?? "").split(" ");
   const results = {
-    email: await sendEmail(contact, items, subtotal ?? 0).catch((e) => {
+    email: await sendEmail(contact, items, subtotal ?? 0, freightQuote === true).catch((e) => {
       console.error("[quote] email failed", e);
       return "error" as const;
     }),
+    customerEmail: freightQuote === true
+      ? await sendFreightAcknowledgement(contact, items, subtotal ?? 0).catch((e) => {
+          console.error("[quote] customer email failed", e);
+          return "error" as const;
+        })
+      : ("skipped" as const),
     order: await placeQuote(contact, items).catch((e) => {
       console.error("[quote] order failed", e);
       return "error" as const;
@@ -125,22 +136,19 @@ export async function POST(request: Request) {
 async function sendEmail(
   contact: QuoteContact,
   items: QuoteItem[],
-  subtotal: number
+  subtotal: number,
+  freightQuote: boolean
 ): Promise<"sent" | "skipped"> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.QUOTE_FROM_EMAIL; // e.g. "MasterKraft <quotes@masterkraft.com>"
   const to = internalRecipients();
   if (!apiKey || !from) return "skipped";
 
-  const rows = items
-    .map(
-      (i) =>
-        `<tr><td style="padding:6px 12px 6px 0">${escape(i.name)}${i.sku ? `<br><span style="color:#777;font:12px monospace">${escape(i.sku)}</span>` : ""}</td><td style="padding:6px 0;text-align:center">${i.qty}</td><td style="padding:6px 0;text-align:right">${money(i.price * i.qty)}</td></tr>`
-    )
-    .join("");
+  const rows = itemRows(items);
 
   const html = `
-    <h2>New quote request</h2>
+    <h2>${freightQuote ? "Freight quote needed" : "New quote request"}</h2>
+    ${freightQuote ? `<p><strong>This customer tried to pay by card.</strong> Freight could not be priced automatically, so they have been told we will email them a freight price, normally within one business day.</p>` : ""}
     <p><strong>${escape(contact.name ?? "")}</strong>${contact.company ? ` (${escape(contact.company)})` : ""}<br/>
     ${escape(contact.email ?? "")}${contact.phone ? ` · ${escape(contact.phone)}` : ""}<br/>
     ${contact.location ? `Delivery: ${escape(contact.location)}` : ""}</p>
@@ -157,12 +165,69 @@ async function sendEmail(
       from,
       to: Array.isArray(to) ? to : [to],
       reply_to: contact.email,
-      subject: `Quote request: ${contact.name}${contact.company ? ` (${contact.company})` : ""}`,
+      subject: freightQuote
+        ? `Freight quote needed: ${contact.name}${contact.company ? ` (${contact.company})` : ""} - ${money(subtotal)}`
+        : `Quote request: ${contact.name}${contact.company ? ` (${contact.company})` : ""}`,
       html,
     }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}`);
   return "sent";
+}
+
+/**
+ * The customer's copy, for a card checkout that became a freight quote. The
+ * screen told them a freight price is coming by email; this puts that promise
+ * in their inbox, with a reply-to that reaches the team, so the thread the deal
+ * closes on already exists before anyone at MasterKraft has picked it up.
+ *
+ * Fixed wording around the customer's own cart. Sent only past the bot filter
+ * above, which is what stops this route mailing an address nobody typed.
+ */
+async function sendFreightAcknowledgement(
+  contact: QuoteContact,
+  items: QuoteItem[],
+  subtotal: number
+): Promise<"sent" | "skipped"> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.QUOTE_FROM_EMAIL;
+  if (!apiKey || !from || !contact.email) return "skipped";
+
+  const first = (contact.name ?? "").trim().split(" ")[0];
+  const html = `
+    <p>${first ? `Hi ${escape(first)},` : "Hi,"}</p>
+    <p>Thanks for your order request with MasterKraft. Your order ships as freight rather
+    than parcel post, so our team prices delivery by hand. We'll email you the freight
+    price, normally within one business day, and you can confirm the order from there.</p>
+    <table style="border-collapse:collapse;margin-top:12px"><tbody>${itemRows(items)}</tbody></table>
+    <p style="margin-top:12px"><strong>Subtotal (inc. GST): ${money(subtotal)}</strong> plus freight.<br/>
+    <span style="color:#666">Nothing has been charged.</span></p>
+    <p>Questions in the meantime? Just reply to this email.</p>
+    <p>MasterKraft</p>
+  `;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from,
+      to: [contact.email],
+      reply_to: primaryRecipient(),
+      subject: "Your MasterKraft order: freight price on its way",
+      html,
+    }),
+  });
+  if (!res.ok) throw new Error(`Resend ${res.status}`);
+  return "sent";
+}
+
+function itemRows(items: QuoteItem[]): string {
+  return items
+    .map(
+      (i) =>
+        `<tr><td style="padding:6px 12px 6px 0">${escape(i.name)}${i.sku ? `<br><span style="color:#777;font:12px monospace">${escape(i.sku)}</span>` : ""}</td><td style="padding:6px 0;text-align:center">${i.qty}</td><td style="padding:6px 0;text-align:right">${money(i.price * i.qty)}</td></tr>`
+    )
+    .join("");
 }
 
 function escape(s: string) {

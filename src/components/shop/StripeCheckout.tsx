@@ -7,7 +7,7 @@ import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
 import { identifyUser, trackLead, trackPurchase } from "@/lib/analytics";
 import { opinlyAnonId } from "@/lib/opinly";
-import { freightMessage } from "@/lib/freight-message";
+import { freightMessage, quotesAutomatically } from "@/lib/freight-message";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -82,10 +82,12 @@ export default function StripeCheckout({
   onQuoted,
 }: {
   onPaid?: (orderNumber: string, buyer: PaidBuyer) => void;
-  // Called when freight could not be priced and the customer asked for a quote
-  // instead. Called BEFORE the cart is cleared, for the same reason as onPaid:
-  // clearing unmounts this component, so the page owns the thank-you screen.
-  onQuoted?: () => void;
+  // Called when freight could not be priced and the cart went to the team as a
+  // quote - automatically, or from the button. Called BEFORE the cart is
+  // cleared, for the same reason as onPaid: clearing unmounts this component, so
+  // the page owns the thank-you screen, and needs the email to say where the
+  // freight price is going.
+  onQuoted?: (quote: { email: string }) => void;
 }) {
   const { items, subtotal, lock, unlock, clear } = useCart();
   const [checkoutId] = useState(checkoutIdFor);
@@ -93,6 +95,9 @@ export default function StripeCheckout({
   const elapsed = useFillTimer();
   // The quote fallback, for when freight cannot be priced (see below).
   const [quoteSending, setQuoteSending] = useState(false);
+  // True while a quote is going out on its own, without the button - see
+  // quotesAutomatically. Changes the notice from "request a quote" to "sending".
+  const [autoQuoting, setAutoQuoting] = useState(false);
   const [phase, setPhase] = useState<"details" | "payment">("details");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   // Snapshot of the cart taken when the PaymentIntent was created. The order is
@@ -135,7 +140,11 @@ export default function StripeCheckout({
   // required but could not be priced there is no card path, so the button stays
   // on Calculate Freight and the message below explains why.
   const canContinue = quoted && !(freightRequired && !freight);
-  const freightNotice = quoted && freightRequired && !freight ? freightMessage(freightReason ?? undefined) : null;
+  const freightNotice = !quoted || !freightRequired || freight
+    ? null
+    : autoQuoting
+      ? "This order ships as freight rather than parcel post, so we price delivery per order. Sending your details to our team now…"
+      : freightMessage(freightReason ?? undefined);
 
   /** Everything the customer typed, in the shape both calls below want. */
   function billingFrom(form: HTMLFormElement): Billing {
@@ -202,6 +211,16 @@ export default function StripeCheckout({
         : null
     );
     setQuoted(true);
+    // A cart only a person can price goes to them now, rather than waiting on a
+    // button the customer has shown they will not press. See quotesAutomatically.
+    if (fq.required && !fq.selected && quotesAutomatically(fq.reason)) {
+      setAutoQuoting(true);
+      try {
+        await sendQuote(b, fq.reason, true);
+      } finally {
+        setAutoQuoting(false);
+      }
+    }
   }
 
   /** Step two: create the PaymentIntent for the freight already on screen. */
@@ -256,9 +275,25 @@ export default function StripeCheckout({
   async function requestQuote() {
     const form = formRef.current;
     if (!form || !form.reportValidity()) return;
-    const b = billingFrom(form);
-    setQuoteSending(true);
     setError(null);
+    try {
+      await sendQuote(billingFrom(form), freightReason, false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    }
+  }
+
+  /**
+   * Send the cart and what the customer typed through the ordinary quote route,
+   * so the team receives it like any other. Throws on failure, leaving the
+   * manual button on screen as the way to try again.
+   *
+   * `freightQuote` tells the route this customer is waiting on a delivery price,
+   * which is what their acknowledgement email and the team's subject line say.
+   */
+  async function sendQuote(b: Billing, reason: string | null | undefined, automatic: boolean) {
+    const form = formRef.current;
+    setQuoteSending(true);
     try {
       const res = await fetch("/api/quote", {
         method: "POST",
@@ -270,25 +305,26 @@ export default function StripeCheckout({
             phone: b.phone,
             company: b.company,
             location: [b.address_1, b.city, b.state, b.postcode].filter(Boolean).join(", "),
-            notes: `From the card checkout: freight could not be priced automatically${freightReason ? ` (${freightReason})` : ""}.`,
+            notes:
+              `From the card checkout: freight could not be priced automatically${reason ? ` (${reason})` : ""}.` +
+              (automatic ? " Sent without the customer pressing Request a Quote." : ""),
           },
           items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
           subtotal,
           checkoutId,
-          ...guardValues(new FormData(form), elapsed()),
+          freightQuote: true,
+          ...guardValues(form ? new FormData(form) : new FormData(), elapsed()),
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
         identifyUser(b.email);
         trackLead(subtotal, items.length);
       }
       forgetCheckoutId();
-      onQuoted?.();
+      onQuoted?.({ email: b.email });
       clear();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setQuoteSending(false);
     }
@@ -346,13 +382,13 @@ export default function StripeCheckout({
                 <button
                   type="button"
                   onClick={requestQuote}
-                  disabled={quoteSending}
+                  disabled={quoteSending || loading}
                   className="btn btn-accent w-full sm:w-auto disabled:opacity-60"
                 >
                   {quoteSending ? "Sending…" : "Request a Quote"} <span aria-hidden>→</span>
                 </button>
                 <button type="submit" disabled={loading || quoteSending} className="btn btn-out !text-ink w-full sm:w-auto disabled:opacity-60">
-                  {loading ? "Calculating…" : "Recalculate Freight"}
+                  {loading ? (autoQuoting ? "Sending…" : "Calculating…") : "Recalculate Freight"}
                 </button>
               </div>
             ) : (
