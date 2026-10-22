@@ -164,8 +164,11 @@ select
   own.colour,
   case when own.code is not null then own.material else src.material end as material,
   case when own.code is not null then own.warranty else src.warranty end as warranty,
-  case when own.code is not null then own.net_weight else src.net_weight end as net_weight,
-  case when own.code is not null then own.gross_weight else src.gross_weight end as gross_weight,
+  -- Weights: never another SIZE's (a 2-tier rack is not the 3-tier's 51 kg).
+  -- Null here, so the portal falls back to the product's own ERP weight. An M
+  -- twin is the same item in another livery, so its weights stand.
+  case when own.code is not null then own.net_weight when c.source = 'family' then null else src.net_weight end as net_weight,
+  case when own.code is not null then own.gross_weight when c.source = 'family' then null else src.gross_weight end as gross_weight,
   case
     when ov.image_url is not null then ov.image_url
     when bp.url is not null then bp.url
