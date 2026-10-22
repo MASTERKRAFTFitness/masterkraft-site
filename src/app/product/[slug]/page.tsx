@@ -35,6 +35,7 @@ import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, absoluteUrl, priceValidUntil } from "@/lib/site";
 import { merchantReturnPolicy } from "@/lib/return-policy";
+import { stockLabel } from "@/lib/stock-label";
 
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
@@ -228,6 +229,7 @@ export default async function ProductPage({
     : enrich(product, unleashed);
   const inStock = enriched.inStock;
   const stockQty = lookupBySku(unleashed, product.sku)?.stock;
+  const availability = stockLabel(stockQty, lookupBySku(unleashed, product.sku)?.stockChina, inStock);
 
   // THE SIZES COME FROM UNLEASHED, and from the SAME unit the category card was
   // built from, so a card and the page it opens can never disagree about what is
@@ -254,6 +256,7 @@ export default async function ProductPage({
     priceValue: s.price,
     inStock: s.stock > 0,
     stockQty: s.stock,
+    stockChina: s.stockChina,
     image: s.image ?? product.images?.[0]?.src,
     wooProductId: s.wooProductId,
     wooVariationId: s.wooVariationId,
@@ -474,11 +477,7 @@ export default async function ProductPage({
                   <span className="text-ink">{enriched.priceLabel}</span>
                 </div>
                 <p className="mt-2 text-xs font-mono uppercase tracking-widest text-ash">
-                  {inStock
-                    ? stockQty && stockQty > 0
-                      ? `${stockQty} in stock`
-                      : "In stock"
-                    : "Made to order"}{" "}
+                  {availability.text}{" "}
                   · Prices inc. GST
                 </p>
                 <div className="mt-8">

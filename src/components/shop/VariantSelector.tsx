@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useVariantSelection } from "@/components/shop/VariantSelection";
 import { trackAddToCart } from "@/lib/analytics";
+import { stockLabel } from "@/lib/stock-label";
 import { variantLine } from "@/lib/variant-line";
 
 export type Variant = {
@@ -14,7 +15,8 @@ export type Variant = {
   priceLabel: string;
   priceValue: number;
   inStock: boolean;
-  stockQty?: number;
+  stockQty?: number; // Melbourne
+  stockChina?: number;
   image?: string;
   wooProductId?: number;
   wooVariationId?: number;
@@ -76,11 +78,7 @@ export default function VariantSelector({
         <span className="text-ink">{selected.priceLabel}</span>
       </div>
       <p className="mt-2 text-xs font-mono uppercase tracking-widest text-ash">
-        {selected.inStock
-          ? selected.stockQty && selected.stockQty > 0
-            ? `${selected.stockQty} in stock`
-            : "In stock"
-          : "Made to order"}{" "}
+        {stockLabel(selected.stockQty, selected.stockChina, selected.inStock).text}{" "}
         · Prices inc. GST
       </p>
 
@@ -105,7 +103,7 @@ export default function VariantSelector({
               <option key={v.id} value={v.id}>
                 {v.label}
                 {v.priceValue > 0 ? ` — ${v.priceLabel}` : ""}
-                {v.inStock ? "" : " (made to order)"}
+                {stockLabel(v.stockQty, v.stockChina, v.inStock).optionSuffix}
               </option>
             ))}
           </select>
