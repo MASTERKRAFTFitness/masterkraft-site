@@ -25,7 +25,8 @@ import { adminDb } from "@/lib/admin-db";
 const MAX_SHRINK = 0.1;
 
 const sign = (q: string) =>
-  createHmac("sha256", process.env.UNLEASHED_API_KEY ?? "").update(q).digest("base64");
+  // Decoded, as lib/unleashed signs it: "MELB WHS" is sent as %20, signed as a space.
+  createHmac("sha256", process.env.UNLEASHED_API_KEY ?? "").update(decodeURIComponent(q)).digest("base64");
 
 type ErpProduct = {
   ProductCode?: string;
@@ -59,10 +60,10 @@ const RETRYABLE = new Set([429, 500, 502, 503, 504]);
  * first blip leaves the mirror stale, and stale past the read path's ceiling
  * means the site quietly goes back to paying the 16-second cold start.
  */
-async function pages<T>(path: string): Promise<T[]> {
+async function pages<T>(path: string, extraQuery = ""): Promise<T[]> {
   const items: T[] = [];
   for (let page = 1; page <= 40; page++) {
-    const query = "pageSize=200";
+    const query = `pageSize=200${extraQuery}`;
     let body: { Items?: T[]; Pagination?: { NumberOfPages?: number } } | null = null;
     let lastError = "";
 
@@ -153,7 +154,12 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
   // is optional: a price with no stock figure is still a usable catalogue.
   const [products, stockRows] = await Promise.all([
     pages<ErpProduct>("Products"),
-    pages<StockRow>("StockOnHand").catch(() => [] as StockRow[]),
+    // MELBOURNE ONLY, to match lib/unleashed: `stock` means what ships now. The
+    // table has no China column yet, so a mirror-served map shows China-only
+    // stock as made to order rather than with its lead time — the mirror is
+    // off in production (ERP_MIRROR_ENABLED unset, 22 Oct 2026). Add
+    // `stock_china` before turning it on.
+    pages<StockRow>("StockOnHand", "&warehouseCode=MELB%20WHS").catch(() => [] as StockRow[]),
   ]);
 
   const stock = new Map<string, number>();

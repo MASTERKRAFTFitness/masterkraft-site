@@ -39,7 +39,14 @@ const IMAGE_OVERRIDES = erpImageOverrides as Record<string, string>;
 // Hyper Health and NO BRAND ranges that sit beside it under the same names.
 export type UnleashedEntry = {
   price: number;
+  /**
+   * Available in the MELBOURNE warehouse only — what ships now, and the only
+   * figure behind "in stock" anywhere on the site. Until 2026-10-22 this was the
+   * sum across every warehouse, so China-only stock showed as in stock.
+   */
   stock: number;
+  /** Available in the CHINA warehouse: orderable, on a lead time. See lib/stock-label. */
+  stockChina?: number;
   /** ProductDescription, e.g. "Rubber Hex Dumbbell - 9kg". */
   name?: string;
   /** Default image on Unleashed's own CDN — not the WordPress box. */
@@ -74,12 +81,21 @@ export type UnleashedEntry = {
 };
 export type UnleashedMap = Record<string, UnleashedEntry>; // keyed by UPPERCASE ProductCode
 
+// UNLEASHED SIGNS THE DECODED QUERY. A value with a space in it — the warehouse
+// codes are "MELB WHS" and "CHINA WHS" — is sent as %20 but must be signed as a
+// space, or every request 403s. Decoding is a no-op for every other query here.
 function sign(query: string): string {
   return crypto
     .createHmac("sha256", process.env.UNLEASHED_API_KEY ?? "")
-    .update(query)
+    .update(decodeURIComponent(query))
     .digest("base64");
 }
+
+// The warehouses stock is read from, by WarehouseCode. VIRTUAL WHS also exists
+// and holds nothing; an unfiltered StockOnHand sums all of them into one row.
+export const MELB_WAREHOUSE = "MELB WHS";
+export const CHINA_WAREHOUSE = "CHINA WHS";
+const inWarehouse = (code: string) => `&warehouseCode=${encodeURIComponent(code)}`;
 
 async function unleashedGet<T>(path: string, page: number, extraQuery = ""): Promise<T> {
   // NOTE: the query string is what gets HMAC-signed, so it must match the URL exactly.
@@ -124,6 +140,7 @@ async function buildMap(): Promise<UnleashedMap> {
   // because the two fetches now run concurrently and StockOnHand could otherwise
   // land first and be overwritten by the Products pass. Merged below instead.
   const stock: Record<string, number> = {};
+  const stockChina: Record<string, number> = {};
 
   // Prices. Deliberately WITHOUT includeObsolete=true: obsolescence is resolved
   // from the committed list in `obsolete.ts`, so this fetch stays at 6 pages
@@ -173,22 +190,34 @@ async function buildMap(): Promise<UnleashedMap> {
     }
     ),
 
-    // Stock on hand. Independent of the price/obsolete pass, so both run at once:
-    // this map is what every listing waits on, and Unleashed answers slowly.
-    fetchAllPages<{ ProductCode?: string; AvailableQty?: number; QtyOnHand?: number }>(
-      "StockOnHand",
-      (s) => {
-        if (!s.ProductCode) return;
-        stock[s.ProductCode.toUpperCase()] = Number(s.AvailableQty ?? s.QtyOnHand ?? 0);
-      }
-    ).catch(() => {
-      /* stock optional - prices still work if this fails */
-    }),
+    // Stock on hand, once per warehouse. Independent of the price/obsolete pass,
+    // so all three run at once: this map is what every listing waits on, and
+    // Unleashed answers slowly.
+    ...([
+      [MELB_WAREHOUSE, stock],
+      [CHINA_WAREHOUSE, stockChina],
+    ] as const).map(([warehouse, into]) =>
+      fetchAllPages<{ ProductCode?: string; AvailableQty?: number; QtyOnHand?: number }>(
+        "StockOnHand",
+        (s) => {
+          if (!s.ProductCode) return;
+          into[s.ProductCode.toUpperCase()] = Number(s.AvailableQty ?? s.QtyOnHand ?? 0);
+        },
+        { extraQuery: inWarehouse(warehouse) }
+      ).catch(() => {
+        /* stock optional - prices still work if this fails */
+      })
+    ),
   ]);
 
   for (const [code, qty] of Object.entries(stock)) {
     if (map[code]) map[code].stock = qty;
     else map[code] = { price: 0, stock: qty };
+  }
+  for (const [code, qty] of Object.entries(stockChina)) {
+    if (!qty) continue;
+    if (map[code]) map[code].stockChina = qty;
+    else map[code] = { price: 0, stock: 0, stockChina: qty };
   }
 
   return map;
@@ -224,13 +253,16 @@ async function buildMap(): Promise<UnleashedMap> {
 // as a correctness fix and assume a rename always needs one. It does not. A
 // bump costs every instance a ~16s catalogue rebuild on its first request, so
 // it is worth it when a stale map would be WRONG, not merely old.
+// v11 (2026-10-22): `stock` now means Melbourne only and `stockChina` is new. A
+// warm v10 map keeps calling China-only stock "in stock" for the hour — the
+// exact claim this change removes — so this is a correctness bump.
 // v10 (2026-09-15): the 5kg-50kg urethane barbell range was held under two
 // names and is now under one, merging two units into a single 19-size unit.
 // That RETIRES the /product/urethane-fixed-barbells slug, and next.config.ts
 // redirects it - so this is the v8 case again, not the v9 one: a warm map keeps
 // that page alive while the redirect in front of it sends visitors elsewhere,
 // and the two disagree until the cache expires.
-const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v10"], {
+const cachedBuildMap = unstable_cache(buildMap, ["unleashed-product-map-v11"], {
   revalidate: 3600,
   tags: ["unleashed"],
 });
@@ -684,10 +716,10 @@ export function withErpImages<T extends WcProduct>(
 /** Live reads are per-SKU, so a large list would mean a burst of requests. */
 const LIVE_SKU_LIMIT = 10;
 
-async function unleashedLive<T>(path: string, code: string): Promise<T[]> {
+async function unleashedLive<T>(path: string, code: string, extraQuery = ""): Promise<T[]> {
   // The signature covers the query string exactly, so the same string must be
   // both signed and sent. Do not rebuild it between the two.
-  const query = `pageSize=200&productCode=${encodeURIComponent(code)}`;
+  const query = `pageSize=200&productCode=${encodeURIComponent(code)}${extraQuery}`;
   const res = await fetch(`${BASE}/${path}/1?${query}`, {
     headers: {
       "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
@@ -928,11 +960,11 @@ export async function getLiveEntries(skus: string[]): Promise<Record<string, Liv
     codes.map(async (code): Promise<[string, LiveEntry]> => {
       const target = skuAliases[code] ?? code;
       try {
-        const [products, stock] = await Promise.all([
+        type Stock = { AvailableQty?: number; QtyOnHand?: number };
+        const [products, stock, china] = await Promise.all([
           unleashedLive<{ DefaultSellPrice?: number | string }>("Products", target),
-          unleashedLive<{ AvailableQty?: number; QtyOnHand?: number }>("StockOnHand", target).catch(
-            () => []
-          ),
+          unleashedLive<Stock>("StockOnHand", target, inWarehouse(MELB_WAREHOUSE)).catch(() => []),
+          unleashedLive<Stock>("StockOnHand", target, inWarehouse(CHINA_WAREHOUSE)).catch(() => []),
         ]);
         const raw = parseFloat(String(products[0]?.DefaultSellPrice ?? "0"));
         if (!products.length) throw new Error("not in Unleashed");
@@ -941,6 +973,7 @@ export async function getLiveEntries(skus: string[]): Promise<Record<string, Liv
           {
             price: raw > 0 ? Math.round(raw * GST * 100) / 100 : 0,
             stock: Number(stock[0]?.AvailableQty ?? stock[0]?.QtyOnHand ?? 0),
+            stockChina: Number(china[0]?.AvailableQty ?? china[0]?.QtyOnHand ?? 0),
             live: true,
           },
         ];
@@ -948,7 +981,10 @@ export async function getLiveEntries(skus: string[]): Promise<Record<string, Liv
         console.error(`[unleashed] live read failed for ${code}, falling back`, e);
         fallback ??= await getUnleashedMap();
         const cached = lookupBySku(fallback, code);
-        return [code, { price: cached?.price ?? 0, stock: cached?.stock ?? 0, live: false }];
+        return [
+          code,
+          { price: cached?.price ?? 0, stock: cached?.stock ?? 0, stockChina: cached?.stockChina, live: false },
+        ];
       }
     })
   );

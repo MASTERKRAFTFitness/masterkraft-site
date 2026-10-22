@@ -35,7 +35,8 @@ export type RangeSize = {
   /** The bit after " - ": "9kg", "2 Tier (10 Pair) 1.0", "32mm (Black)". */
   label: string;
   price: number; // GST-inclusive, from the ERP
-  stock: number;
+  stock: number; // Melbourne
+  stockChina?: number;
   image?: string;
   /**
    * The store's own RRP for this size, GST-inclusive, when the snapshot records
@@ -198,6 +199,7 @@ export function sizesFromCodes(codes: string[], map: UnleashedMap): RangeSize[] 
             : code,
         price: entry.price,
         stock: entry.stock,
+        stockChina: entry.stockChina,
         image: entry.image,
         compareAt: woo && woo.compareAt > entry.price ? woo.compareAt : undefined,
         wooProductId: woo?.productId,

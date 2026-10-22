@@ -6,6 +6,7 @@
 // src/app/api/admin/agent/route.ts.
 
 import type Anthropic from "@anthropic-ai/sdk";
+import { CHINA_LEAD_TIME } from "@/lib/stock-label";
 import {
   allProducts,
   productBySku,
@@ -213,6 +214,8 @@ const getProductTool: AgentTool = {
       price: live && live.price > 0 ? formatPrice(live.price) : e?.priceLabel ?? "Contact for pricing",
       price_source: live?.live ? "unleashed (live)" : live ? "unleashed (cached fallback)" : e?.source ?? "website",
       in_stock: live ? live.stock > 0 : e?.inStock ?? false,
+      // Melbourne is in stock; China is orderable on a lead time (lib/stock-label).
+      china_stock_qty: live?.stockChina ?? null,
       stock_qty: live ? live.stock : e?.stockQty ?? null,
       stock_basis: live?.live ? "read live from the ERP just now" : "up to 60 minutes old, the live read failed",
       retired: isRetiredSku(product.sku),
@@ -270,7 +273,9 @@ const checkStockTool: AgentTool = {
           price: entry && entry.price > 0 ? formatPrice(entry.price) : "Contact for pricing",
           price_source: entry?.live ? "unleashed (live)" : "unleashed (cached fallback, up to 60 min old)",
           in_stock: (entry?.stock ?? 0) > 0,
-          stock_qty: entry?.stock ?? null,
+          stock_qty: entry?.stock ?? null, // Melbourne: ships now
+          china_stock_qty: entry?.stockChina ?? null, // orderable, ships in CHINA_LEAD_TIME
+          china_lead_time: CHINA_LEAD_TIME,
           retired: isRetiredSku(sku),
         };
       }),
