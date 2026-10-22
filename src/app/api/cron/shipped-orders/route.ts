@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     const result = await sendShippedNotices();
     console.log(
       `[cron/shipped-orders] ${result.checked} shipments, ${result.sent.length} emailed, ` +
-        `${result.waiting} waiting, ${result.failed.length} failed${result.error ? ` (${result.error})` : ""}`
+        `${result.reviews.length} review requests, ${result.waiting} waiting, ${result.failed.length} failed${result.error ? ` (${result.error})` : ""}`
     );
     return NextResponse.json(result, { status: result.ok ? 200 : 503 });
   } catch (e) {

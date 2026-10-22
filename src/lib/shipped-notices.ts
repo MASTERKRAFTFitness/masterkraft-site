@@ -19,6 +19,13 @@
 // row is claimed BEFORE sending and released if the send fails, so two
 // overlapping runs cannot both email, and a failed send is retried next hour.
 //
+// THEN A REVIEW REQUEST, once per order, REVIEW_AFTER_DAYS (default 7) after
+// dispatch, so it lands after the parcel has. It goes to EVERY website buyer
+// with nothing offered for it: asking only the ones you expect to be happy, or
+// rewarding a review, is against Google's review policy and the ACCC's
+// guidance. It asks once and promotes nothing, so it stays a service follow-up.
+// Off until GOOGLE_REVIEW_URL is set to the Business Profile's review link.
+//
 // OFF UNTIL SHIPPED_EMAILS_FROM IS SET. It is a date, and only shipments
 // dispatched on or after it are emailed, so switching this on does not reach
 // back and email customers whose parcels arrived weeks ago.
@@ -34,6 +41,7 @@ const TIMEOUT_MS = 8000;
 /** How far back each run looks. Long enough to ride out a week of failed runs. */
 const LOOKBACK_DAYS = 14;
 const DEFAULT_WAIT_HOURS = 24;
+const DEFAULT_REVIEW_DAYS = 7;
 
 export type Decision =
   | { action: "send"; kind: "tracked" | "untracked" }
@@ -51,6 +59,54 @@ export function emailsFrom(raw = process.env.SHIPPED_EMAILS_FROM): Date | null {
 export function waitHours(raw = process.env.SHIPPED_NO_TRACKING_WAIT_HOURS): number {
   const n = Number(raw);
   return Number.isFinite(n) && n >= 0 && raw?.trim() ? n : DEFAULT_WAIT_HOURS;
+}
+
+export function reviewAfterDays(raw = process.env.REVIEW_AFTER_DAYS): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 1 && raw?.trim() ? n : DEFAULT_REVIEW_DAYS;
+}
+
+/** The Business Profile review link, or null (review requests off). https only. */
+export function reviewUrl(raw = process.env.GOOGLE_REVIEW_URL): string | null {
+  const v = raw?.trim();
+  if (!v) return null;
+  try {
+    return new URL(v).protocol === "https:" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether this shipment's order is due its review request. The once-per-ORDER
+ * rule is the table's job (review_requests), not this function's.
+ */
+export function reviewDue(
+  s: DispatchedShipment,
+  opts: { webCustomerCode: string; from: Date; now: Date; reviewDays: number }
+): boolean {
+  if (s.customerCode !== opts.webCustomerCode || s.status !== "Dispatched" || !s.dispatchedAt) return false;
+  const dispatched = new Date(s.dispatchedAt);
+  if (dispatched.toISOString().slice(0, 10) < opts.from.toISOString().slice(0, 10)) return false;
+  return opts.now.getTime() - dispatched.getTime() >= opts.reviewDays * 86_400_000;
+}
+
+export function reviewEmail(
+  orderNumber: string,
+  buyerName: string | null,
+  url: string
+): { subject: string; html: string } {
+  const name = firstName(buyerName);
+  const html = `
+    <p>${name ? `Hi ${escape(name)},` : "Hi,"}</p>
+    <p>Your MasterKraft order <strong>#${escape(orderNumber)}</strong> should have arrived by now. We hope it's all as it should be.</p>
+    <p>If you have a minute, we'd really value a review of how we went. It helps other people find us and tells us what to keep doing and what to fix.</p>
+    <p><a href="${escape(url)}" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:4px">Leave a Google review</a></p>
+    <p>And if anything isn't right with your order, please reply to this email first so we can sort it out.</p>
+    <p>Thanks,<br/>MasterKraft</p>
+    <p style="color:#888;font-size:12px">We only ask once per order.</p>
+  `;
+  return { subject: `How did we go with order #${orderNumber}?`, html };
 }
 
 /**
@@ -151,13 +207,14 @@ export type RunResult = {
   error?: string;
   checked: number;
   sent: { order: string; shipment: string; kind: "tracked" | "untracked" }[];
+  reviews: string[];
   waiting: number;
   failed: { order: string; error: string }[];
 };
 
 /** One pass: find dispatched web orders, email each shipment once. */
 export async function sendShippedNotices(now = new Date()): Promise<RunResult> {
-  const empty = { checked: 0, sent: [], waiting: 0, failed: [] };
+  const empty = { checked: 0, sent: [], reviews: [], waiting: 0, failed: [] };
   const from = emailsFrom();
   if (!from) return { ok: true, error: "SHIPPED_EMAILS_FROM is not set; nothing sent", ...empty };
   const webCustomerCode = process.env.UNLEASHED_WEB_CUSTOMER_CODE?.trim();
@@ -165,12 +222,16 @@ export async function sendShippedNotices(now = new Date()): Promise<RunResult> {
   const db = adminDb();
   if (!db) return { ok: false, error: "Supabase is not configured", ...empty };
 
-  const lookback = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000);
+  const reviewDays = reviewAfterDays();
+  // The review is sent days after dispatch, so the window must reach back past
+  // it with room to retry, or a shipment ages out before it is due.
+  const lookbackDays = Math.max(LOOKBACK_DAYS, reviewDays + 7);
+  const lookback = new Date(now.getTime() - lookbackDays * 86_400_000);
   const since = lookback > from ? lookback : from;
   const shipments = await getShipmentsModifiedSince(since.toISOString());
   const opts = { webCustomerCode, from, now, waitHours: waitHours() };
 
-  const result: RunResult = { ok: true, checked: shipments.length, sent: [], waiting: 0, failed: [] };
+  const result: RunResult = { ok: true, checked: shipments.length, sent: [], reviews: [], waiting: 0, failed: [] };
   for (const s of shipments) {
     const d = decide(s, opts);
     if (d.action === "wait") result.waiting++;
@@ -202,6 +263,35 @@ export async function sendShippedNotices(now = new Date()): Promise<RunResult> {
       // Release the claim so the next run tries again.
       await db.from("shipped_notices").delete().eq("shipment_number", s.shipmentNumber);
       result.failed.push({ order: s.orderNumber, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  const review = reviewUrl();
+  if (review) {
+    const due = shipments.filter((s) => reviewDue(s, { webCustomerCode, from, now, reviewDays }));
+    for (const orderNumber of new Set(due.map((s) => s.orderNumber))) {
+      // Same claim-then-send as above, keyed by ORDER: a split order gets one ask.
+      const { data: claimed, error: claimError } = await db
+        .from("review_requests")
+        .upsert({ order_number: orderNumber }, { onConflict: "order_number", ignoreDuplicates: true })
+        .select("order_number");
+      if (claimError) {
+        result.failed.push({ order: orderNumber, error: `review claim: ${claimError.message}` });
+        continue;
+      }
+      if (!claimed?.length) continue;
+      try {
+        const order = await getSalesOrder(orderNumber);
+        const to = order?.buyer.email;
+        if (!to) throw new Error("no buyer email on the sales order");
+        const { subject, html } = reviewEmail(orderNumber, order?.buyer.name ?? null, review);
+        await resend({ to: [to], reply_to: primaryRecipient(), subject, html });
+        await db.from("review_requests").update({ email: to, sent_at: new Date().toISOString() }).eq("order_number", orderNumber);
+        result.reviews.push(orderNumber);
+      } catch (e) {
+        await db.from("review_requests").delete().eq("order_number", orderNumber);
+        result.failed.push({ order: orderNumber, error: `review: ${e instanceof Error ? e.message : String(e)}` });
+      }
     }
   }
 
