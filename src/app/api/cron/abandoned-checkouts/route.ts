@@ -12,6 +12,10 @@
 //
 // One email per checkout, once (notified_at). A checkout that comes back and
 // re-quotes clears notified_at and is eligible again - see the migration.
+//
+// THE EXCEPTION IS CONSENT. A shopper who ticks "Email me my cart if I don't
+// finish" has asked for the email, so they get one reminder the next morning
+// (lib/cart-reminders), on this same schedule. The team alert still goes too.
 import { NextResponse } from "next/server";
 import {
   abandonedCheckoutLeads,
@@ -19,6 +23,7 @@ import {
   type CheckoutLeadRow,
 } from "@/lib/checkout-leads";
 import { internalRecipients } from "@/lib/notify-recipients";
+import { sendCartReminders } from "@/lib/cart-reminders";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +63,7 @@ function abandonedEmailHtml(row: CheckoutLeadRow): string {
   return `
     <h2>Abandoned checkout</h2>
     <p>This customer ${STAGE[row.status] ?? "left the checkout"}. Worth a call or a personal reply.</p>
+    ${row.reminder_opt_in ? `<p>They asked to be emailed their cart, so an automatic reminder goes to them from 9am the next morning.</p>` : ""}
     <p><strong>${escape(row.name ?? "")}</strong>${row.company ? ` (${escape(row.company)})` : ""}<br/>
     ${escape(row.email ?? "")}${row.phone ? ` · ${escape(row.phone)}` : ""}<br/>
     ${where ? `Delivery: ${escape(where)}` : ""}</p>
@@ -110,5 +116,13 @@ export async function GET(req: Request) {
     }
   }
   console.log(`[cron/abandoned-checkouts] ${rows.length} abandoned, ${sent} emailed`);
-  return NextResponse.json({ ok: true, abandoned: rows.length, emailed: sent });
+
+  // Kept apart from the team alert above: a failure here must not stop it, and
+  // its own result says why nothing went (outside the morning window, mostly).
+  const reminders = await sendCartReminders().catch((e) => ({
+    ok: false,
+    error: e instanceof Error ? e.message : String(e),
+  }));
+  console.log("[cron/abandoned-checkouts] reminders", JSON.stringify(reminders));
+  return NextResponse.json({ ok: true, abandoned: rows.length, emailed: sent, reminders });
 }
