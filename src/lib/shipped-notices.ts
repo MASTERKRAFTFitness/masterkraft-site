@@ -15,6 +15,11 @@
 // was "we'll be in touch", not "we'll send a number". The team is told which went
 // without, so the habit of filling it in can catch up.
 //
+// EASYSHIP FILLS THE GAP, 2026-10-22. A label bought in Easyship reports its
+// number to /api/easyship/webhook, and withLabelTracking() uses it when the
+// Unleashed shipment has none. Unleashed still decides WHEN: the email waits
+// for the shipment to be marked Dispatched there.
+//
 // ONE EMAIL PER SHIPMENT, enforced by shipped_notices (see the migration): the
 // row is claimed BEFORE sending and released if the send fails, so two
 // overlapping runs cannot both email, and a failed send is retried next hour.
@@ -30,6 +35,7 @@
 // dispatched on or after it are emailed, so switching this on does not reach
 // back and email customers whose parcels arrived weeks ago.
 import { adminDb } from "@/lib/admin-db";
+import { labelTrackingFor, type LabelTracking } from "@/lib/easyship-webhook";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import {
   getSalesOrder,
@@ -42,6 +48,28 @@ const TIMEOUT_MS = 8000;
 const LOOKBACK_DAYS = 14;
 const DEFAULT_WAIT_HOURS = 24;
 const DEFAULT_REVIEW_DAYS = 7;
+
+/**
+ * A shipment, plus Easyship's tracking page where its label was bought there.
+ * The page works for every courier, so it beats a guessed carrier URL.
+ */
+export type NoticeShipment = DispatchedShipment & { trackingPageUrl?: string | null };
+
+/**
+ * Fill in the tracking Unleashed is missing from labels bought in Easyship
+ * (easyship-webhook.ts). A number typed into Unleashed wins: someone chose it.
+ *
+ * A split order has a label per consignment but may be one Unleashed shipment,
+ * so every number is given; a single tracking page only when there is one label.
+ */
+export function withLabelTracking(s: DispatchedShipment, labels: LabelTracking[] | undefined): NoticeShipment {
+  if (s.trackingNumber || !labels?.length) return s;
+  return {
+    ...s,
+    trackingNumber: labels.map((l) => l.trackingNumber).join(", "),
+    trackingPageUrl: labels.length === 1 ? labels[0].trackingPageUrl : null,
+  };
+}
 
 export type Decision =
   | { action: "send"; kind: "tracked" | "untracked" }
@@ -161,7 +189,7 @@ function firstName(full: string | null): string | null {
 }
 
 export function shippedEmail(
-  s: DispatchedShipment,
+  s: NoticeShipment,
   buyerName: string | null
 ): { subject: string; html: string } {
   const name = firstName(buyerName ?? s.deliveryName);
@@ -172,7 +200,7 @@ export function shippedEmail(
         `<tr><td style="${cell}">${escape(l.name ?? l.code ?? "Item")}${l.code ? `<br><span style="color:#777;font:12px monospace">${escape(l.code)}</span>` : ""}</td><td style="${cell};text-align:center">${l.qty}</td></tr>`
     )
     .join("");
-  const url = trackingUrl(s.carrier, s.trackingNumber);
+  const url = s.trackingPageUrl || trackingUrl(s.carrier, s.trackingNumber);
   const number = s.trackingNumber ? escape(s.trackingNumber) : "";
   const tracking = s.trackingNumber
     ? `<p><strong>Tracking:</strong> ${s.carrier ? `${escape(s.carrier)} ` : ""}${url ? `<a href="${url}">${number}</a>` : number}</p>`
@@ -228,7 +256,17 @@ export async function sendShippedNotices(now = new Date()): Promise<RunResult> {
   const lookbackDays = Math.max(LOOKBACK_DAYS, reviewDays + 7);
   const lookback = new Date(now.getTime() - lookbackDays * 86_400_000);
   const since = lookback > from ? lookback : from;
-  const shipments = await getShipmentsModifiedSince(since.toISOString());
+  const fromUnleashed = await getShipmentsModifiedSince(since.toISOString());
+  // Easyship's tracking for web orders Unleashed has no number for. A failed
+  // lookup costs the number, not the email, so it never stops the run.
+  const labels = await labelTrackingFor(
+    fromUnleashed.filter((s) => !s.trackingNumber && s.customerCode === webCustomerCode).map((s) => s.orderNumber),
+    db
+  ).catch((e) => {
+    console.error("[shipped-notices] easyship labels lookup failed", e);
+    return new Map<string, LabelTracking[]>();
+  });
+  const shipments = fromUnleashed.map((s) => withLabelTracking(s, labels.get(s.orderNumber)));
   const opts = { webCustomerCode, from, now, waitHours: waitHours() };
 
   const result: RunResult = { ok: true, checked: shipments.length, sent: [], reviews: [], waiting: 0, failed: [] };
@@ -301,7 +339,7 @@ export async function sendShippedNotices(now = new Date()): Promise<RunResult> {
       to: internalRecipients(),
       subject: `Shipped emails: ${untracked.length} without tracking, ${result.failed.length} failed`,
       html: `
-        ${untracked.length ? `<p>These web orders were dispatched with no tracking number in Unleashed, so the customer was told it's on its way and to reply for tracking:</p><ul>${untracked.map((x) => `<li>${escape(x.order)} (${escape(x.shipment)})</li>`).join("")}</ul><p>Next time, paste the carrier's tracking number into the shipment in Unleashed and it goes out with the email.</p>` : ""}
+        ${untracked.length ? `<p>These web orders were dispatched with no tracking number in Unleashed, so the customer was told it's on its way and to reply for tracking:</p><ul>${untracked.map((x) => `<li>${escape(x.order)} (${escape(x.shipment)})</li>`).join("")}</ul><p>Next time, buy the label in Easyship (its tracking number is picked up automatically) or paste the carrier's tracking number into the shipment in Unleashed, and it goes out with the email.</p>` : ""}
         ${result.failed.length ? `<p>These could not be emailed and will be retried next hour:</p><ul>${result.failed.map((x) => `<li>${escape(x.order)}: ${escape(x.error)}</li>`).join("")}</ul>` : ""}
       `,
     }).catch((e) => console.error("[shipped-notices] team email failed", e));

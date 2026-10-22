@@ -204,7 +204,15 @@ export function shipmentBody(
   // domestic parcel declares nothing to customs. Easyship refuses zero.
   const priceBySku = new Map(o.lines.filter((l) => l.sku).map((l) => [l.sku, l.unitPrice]));
   const reference = of > 1 ? `${o.orderNumber} (${index + 1}/${of})` : o.orderNumber;
+  // THE SUBURB, SPELLED OUT, because Easyship's address box can swap it for
+  // another locality on the same postcode while someone edits the shipment, and
+  // the courier prices the suburb. SO-00000862 went Brunswick West -> South;
+  // SO-00000877 went Loftus -> Audley (Royal National Park) and its label jumped
+  // from $45.29 to $96.86. The note is what the person clicking Ship can check
+  // the address against.
+  const place = [destination.city, destination.postal_code].filter(Boolean).join(" ").toUpperCase();
   const notes = [
+    place ? `DELIVER TO ${place}: check the suburb matches before buying the label, as Easyship can swap it for another suburb on the same postcode and change the price` : "",
     o.freightLabel ? `Customer paid for: ${o.freightLabel}` : "",
     of > 1 ? `Consignment ${index + 1} of ${of}` : "",
     "Created automatically by masterkraft.com. Check before buying the label.",

@@ -135,6 +135,14 @@ describe("the shipment request", () => {
     expect(body.courier_settings).toEqual({});
   });
 
+  it("spells out the suburb and postcode, so a swapped suburb is caught before the label", () => {
+    const plan = planShipments(itemsToCartons([deadBall]))[0];
+    const to = { ...dest, city: "Brunswick West", postal_code: "3055" };
+    const notes = shipmentBody(order(), plan, 0, 1, origin, to).order_data.seller_notes;
+    expect(notes.startsWith("DELIVER TO BRUNSWICK WEST 3055: check the suburb matches")).toBe(true);
+    expect(notes).toContain("Created automatically by masterkraft.com");
+  });
+
   it("treats an order to a company as a business address", () => {
     const plan = planShipments(itemsToCartons([deadBall]))[0];
     const body = shipmentBody(

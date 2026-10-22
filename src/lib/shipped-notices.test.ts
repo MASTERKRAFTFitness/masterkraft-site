@@ -9,6 +9,7 @@ import {
   shippedEmail,
   trackingUrl,
   waitHours,
+  withLabelTracking,
 } from "./shipped-notices";
 import type { DispatchedShipment } from "./unleashed";
 
@@ -171,5 +172,36 @@ describe("review request", () => {
     expect(html).toContain("Hi Jessica,");
     expect(html).toContain('href="https://g.page/r/abc/review"');
     expect(html).not.toMatch(/discount|voucher|coupon|% off/i);
+  });
+});
+
+describe("withLabelTracking", () => {
+  const label = (n: string, url: string | null = `https://www.trackmyshipment.co/shipment-tracking/${n}`) => ({
+    orderNumber: "SO-00000862",
+    trackingNumber: n,
+    trackingPageUrl: url,
+  });
+
+  it("fills a missing number from the Easyship label, with its tracking page", () => {
+    const s = withLabelTracking(shipment(), [label("CPAZ1")]);
+    expect(s.trackingNumber).toBe("CPAZ1");
+    expect(s.trackingPageUrl).toBe("https://www.trackmyshipment.co/shipment-tracking/CPAZ1");
+    expect(decide(s, opts)).toEqual({ action: "send", kind: "tracked" });
+    expect(shippedEmail(s, null).html).toContain('href="https://www.trackmyshipment.co/shipment-tracking/CPAZ1"');
+  });
+
+  it("keeps a number typed into Unleashed", () => {
+    const s = withLabelTracking(shipment({ trackingNumber: "IP123" }), [label("CPAZ1")]);
+    expect(s.trackingNumber).toBe("IP123");
+  });
+
+  it("gives every number for a split order, and no single page", () => {
+    const s = withLabelTracking(shipment(), [label("CPAZ1"), label("TNT2")]);
+    expect(s.trackingNumber).toBe("CPAZ1, TNT2");
+    expect(s.trackingPageUrl).toBeNull();
+  });
+
+  it("changes nothing without a label", () => {
+    expect(withLabelTracking(shipment(), undefined)).toEqual(shipment());
   });
 });
