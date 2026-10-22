@@ -74,7 +74,7 @@ export async function GET(req: Request) {
     // to ten minutes from now. Tagged "unleashed", same as the live map — both
     // are the catalogue and both are stale the moment this finishes.
     // `{ expire: 0 }` because Next 16 requires the profile argument; same shape
-    // api/opinly/route.ts already uses.
+    // api/revalidate/product-content already uses.
     revalidateTag("unleashed", { expire: 0 });
 
     console.log(

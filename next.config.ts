@@ -1,30 +1,14 @@
 import type { NextConfig } from "next";
-import { withOpinlyConfig } from "@opinly/next";
 import legacyRedirects from "./src/data/legacy-redirects.json";
 
-// The Opinly workspace's CDN namespace - a 21-character id, read from Settings
-// > Developers in the Opinly dashboard on 21 September 2026. It is a public path
-// segment, not a secret: it is the folder the blog's images are served from, and
-// it ends up in the HTML of every post. Hence a literal here rather than an env
-// var, the same as @opinly/next's own documented setup - and necessarily so,
-// since `.env*` is gitignored, so a value living only in .env.local would never
-// reach a Vercel build and /blog would keep 404ing in production.
-//
-// IT IS NOT THE COMPANY ID, though both are 21-character nanoids and the
-// resemblance is inviting. The company is comp_4uxP45Rq6aqaL_5ceX8K3; strip the
-// prefix and you get a string of exactly the right length that is still wrong.
-// Do not check that guess against the CDN either: cdn.opinly.ai answers 403 for
-// an unknown namespace exactly as it does for a missing file, so probing cannot
-// tell a right namespace from a wrong one. The dashboard is the only source.
-//
-// EMPTY IS STILL A WORKING STATE, now reached by setting the env var to "" - the
-// wrapper below is skipped entirely, `opinlyConfig.blogPrefix` stays undefined,
-// and lib/blog-route reads that as "the blog is not configured" and 404s /blog,
-// leaving the rest of the site untouched. What must never go here is a
-// placeholder that merely satisfies the 21-character check: it would build clean
-// and serve a blog whose every image 404s from a CDN folder that does not exist,
-// which is the failure you only find in Search Console six weeks later.
-const OPINLY_CDN_NAMESPACE = process.env.OPINLY_CDN_NAMESPACE ?? "wa6KQsl0oN3tXMVaX7JYL";
+// THE JOURNAL'S IMAGES live in the public `blog-images` bucket of this site's
+// Supabase project and are served same-origin at /blog-images/<key> through the
+// rewrite below. That is the path Opinly's CDN was mounted at until October
+// 2026, so every image URL already in a post body, an og:image or a shared link
+// keeps resolving after the move. The project URL is public (it is in every
+// image request the browser makes); the literal is only the fallback for a
+// checkout without .env.local.
+const BLOG_IMAGES_ORIGIN = `${process.env.SUPABASE_URL ?? "https://vnemkpduafnjxhkasqif.supabase.co"}/storage/v1/object/public/blog-images`;
 
 const nextConfig: NextConfig = {
   images: {
@@ -239,48 +223,20 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      // `/blog-images`, not `/images`: a rewrite is invisible from the
+      // filesystem, and the day someone adds `public/images` (this repo mirrors
+      // catalogue photography into /public on a script) Next would serve those
+      // static files in preference and every blog image would 404. A prefix that
+      // names what it carries cannot collide.
+      //
+      // Served UNOPTIMISED (images.unoptimized above, and `unoptimized` on the
+      // card <Image>): same-origin paths are exactly what next/image would feed
+      // to the Vercel optimiser that blanked the site at 402 in September.
+      { source: "/blog-images/:key", destination: `${BLOG_IMAGES_ORIGIN}/:key` },
+    ];
+  },
 };
 
-// OPINLY POWERS /blog. The wrapper does exactly two things, both of which the
-// blog route depends on: it rewrites `imagesPath` to the Opinly CDN, and it
-// injects OPINLY_SITE_URL / OPINLY_BLOG_PREFIX / OPINLY_IMAGES_PREFIX into the
-// build. @opinly/backend 1.6+ reads the first two and reports them as headers on
-// the content calls this app already makes, which is what tells Opinly the live
-// URL of each post it publishes - and therefore what joins a post to its search
-// and traffic data. There is no separate wiring for that; without the wrapper
-// Opinly holds no live URL for these posts at all.
-//
-// `unoptimizedImages: true` IS THE LINE THAT KEEPS THE IMAGES ON THE PAGE.
-// Read the `images.unoptimized` note above first: this site blanked sitewide
-// once already when Vercel's optimiser hit its quota and started answering 402
-// on every transformation. Blog images arrive from Opinly's CDN through the
-// /blog-images rewrite, which makes them same-origin paths that next/image
-// would happily feed to that same optimiser - a fresh set of billable
-// transformations, on content that is published continuously rather than
-// mirrored once. This flag is what lib/blog reads to keep them out of it, and
-// it must survive any future attempt to turn optimisation back on: the sitewide
-// switch above and this one are two locks on the same door, not a duplicate.
-//
-// `imagesPath` is `/blog-images` rather than `/images`. `public/images` does not
-// exist today, so `/images` would work - but a rewrite is invisible from the
-// filesystem, and the day someone adds `public/images` (this repo mirrors
-// catalogue photography into /public on a script) Next would serve those static
-// files in preference and every blog image would 404 with nothing in the diff to
-// explain it. A prefix that names what it carries cannot collide.
-export default OPINLY_CDN_NAMESPACE
-  ? withOpinlyConfig({
-      blogPath: "/blog",
-      imagesPath: "/blog-images",
-      companyName: "MASTERKRAFT",
-      cdnNamespace: OPINLY_CDN_NAMESPACE,
-      // THE APEX, LITERALLY, and not lib/site's SITE_URL. That constant falls
-      // back to the vercel.app hostname whenever NEXT_PUBLIC_SITE_URL is unset,
-      // which is every preview deployment - and this value is not cosmetic:
-      // it is reported to Opinly as the live address of every post, so a
-      // preview build would overwrite the real URLs with its own throwaway
-      // ones and detach each post from its search data. A post has one
-      // canonical home; www redirects to the apex, so this is it.
-      siteUrl: "https://masterkraft.com",
-      unoptimizedImages: true,
-    })(nextConfig)
-  : nextConfig;
+export default nextConfig;

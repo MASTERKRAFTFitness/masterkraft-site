@@ -8,8 +8,7 @@ import { locations } from "@/lib/locations";
 import { getAllProductSlugs } from "@/lib/woocommerce";
 import { erpUnits } from "@/lib/erp-catalogue";
 import { getUnleashedMap } from "@/lib/unleashed";
-import { buildSitemapEntries } from "@opinly/shared";
-import { blogConfig, blogEnabled, getOpinly } from "@/lib/opinly-content";
+import { BLOG_PREFIX, BLOG_SITE_URL, authorPath, blogEnabled, listAuthors, listPosts, postPath } from "@/lib/blog";
 
 export const revalidate = 86400; // rebuild sitemap daily
 
@@ -86,30 +85,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // products are best-effort — skip if the store is unreachable at build
   }
 
-  // THE BLOG, from Opinly's own route list rather than from a list kept here.
-  //
-  // `routes()` returns every addressable content route — home, posts,
-  // categories, authors, tags — and buildSitemapEntries applies the same
-  // prefixes lib/blog-route matches on, so what this file ADVERTISES and what
-  // /blog ANSWERS cannot drift apart. Writing them out by hand is how a sitemap
-  // ends up submitting tag URLs that 404.
+  // THE BLOG: the index, each author with a live post, and every live post —
+  // the same set /blog answers (lib/blog-route), read from the same cached
+  // Journal, so what this advertises and what the route serves cannot drift.
   //
   // Best-effort like the products above, and for a sharper reason: this file is
-  // the sitemap for the whole site. An Opinly outage at build time must cost the
+  // the sitemap for the whole site. A database outage at build time must cost the
   // blog's URLs, not every product URL on masterkraft.com.
   if (blogEnabled()) {
     try {
-      const routes = await getOpinly().routes();
-      for (const entry of buildSitemapEntries(routes, blogConfig)) {
+      const [posts, authors] = await Promise.all([listPosts(), listAuthors()]);
+      const newest = posts[0]?.modifiedAt ?? posts[0]?.publishedAt;
+      const blogUrls: { path: string; lastModified?: string }[] = [
+        { path: BLOG_PREFIX, lastModified: newest },
+        ...authors.map((a) => ({
+          path: authorPath(a.slug),
+          lastModified: a.posts[0]?.modifiedAt ?? a.posts[0]?.publishedAt,
+        })),
+        ...posts.map((p) => ({ path: postPath(p.slug), lastModified: p.modifiedAt ?? p.publishedAt })),
+      ];
+      for (const u of blogUrls) {
         entries.push({
-          url: entry.url,
-          lastModified: new Date(entry.lastModified),
+          url: `${BLOG_SITE_URL}${u.path}`,
+          ...(u.lastModified ? { lastModified: new Date(u.lastModified) } : {}),
           changeFrequency: "weekly",
           priority: 0.6,
         });
       }
     } catch (e) {
-      console.warn("[opinly] blog routes missing from sitemap", e);
+      console.warn("[blog] routes missing from sitemap", e);
     }
   }
 
