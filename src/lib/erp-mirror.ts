@@ -44,6 +44,9 @@ type ErpProduct = {
   Width?: number;
   Depth?: number;
   Height?: number;
+  // SellPriceTier1..10, each { Name, Value }. Value is ex GST, like
+  // DefaultSellPrice. Read by the partner portals (sell_price_tiers below).
+  [tier: `SellPriceTier${number}`]: { Name?: string; Value?: number | string } | undefined;
 };
 
 type StockRow = { ProductCode?: string; AvailableQty?: number; QtyOnHand?: number };
@@ -103,12 +106,30 @@ const num = (v: unknown) => {
   return Number.isFinite(n) && n !== 0 ? n : null;
 };
 
+/**
+ * A product's ten sell-price tiers as `{"1": 123.45, ...}`, positive values only,
+ * or null when it has none. The partner portals price each customer at its
+ * Unleashed tier from this column instead of crawling /Products themselves (the
+ * crawl cost them 8-19s cold). A tier with no value is left out, never stored as
+ * 0: the portals show a missing tier as "Price on application", so a stored
+ * zero and a missing key must not be told apart by anyone.
+ */
+export function sellPriceTiers(p: ErpProduct): Record<string, number> | null {
+  const out: Record<string, number> = {};
+  for (let tier = 1; tier <= 10; tier++) {
+    const v = num(p[`SellPriceTier${tier}`]?.Value);
+    if (v !== null && v > 0) out[String(tier)] = v;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 export type MirrorRefresh = {
   ok: boolean;
   /** Why, when ok is false. */
   reason?: string;
   read: number;
   withPrice: number;
+  withTiers: number;
   withCarton: number;
   withStock: number;
   before: number;
@@ -132,6 +153,7 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
   const empty = {
     read: 0,
     withPrice: 0,
+    withTiers: 0,
     withCarton: 0,
     withStock: 0,
     before: 0,
@@ -180,6 +202,8 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
         // EX GST, as the ERP holds it. lib/unleashed applies GST when it builds
         // the map, so the rule lives in one place.
         price: num(p.DefaultSellPrice),
+        // EX GST, like price. See sellPriceTiers.
+        sell_price_tiers: sellPriceTiers(p),
         stock: stock.get(code) ?? null,
         brand: p.ProductBrand?.BrandName?.trim() || null,
         group_name: p.ProductGroup?.GroupName?.trim() || null,
@@ -208,6 +232,7 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
   const stats = {
     read: rows.length,
     withPrice: rows.filter((r) => r.price).length,
+    withTiers: rows.filter((r) => r.sell_price_tiers).length,
     withCarton: rows.filter((r) => r.width_cm && r.depth_cm && r.height_cm).length,
     withStock: rows.filter((r) => r.stock !== null).length,
     before,

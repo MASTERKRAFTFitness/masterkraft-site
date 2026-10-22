@@ -46,6 +46,7 @@ it(
     const summary = [
       `Unleashed products read:  ${r.read}`,
       `  with a price:           ${r.withPrice}`,
+      `  with tier prices:       ${r.withTiers}`,
       `  with a full carton:     ${r.withCarton}`,
       `  with stock on hand:     ${r.withStock}`,
       ``,
