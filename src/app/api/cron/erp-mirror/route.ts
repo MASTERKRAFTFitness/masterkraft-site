@@ -19,7 +19,8 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { refreshErpMirror } from "@/lib/erp-mirror";
 
-// The refresh reads ~9 pages of Products and ~3 of StockOnHand sequentially and
+// The refresh reads ~9 pages of Products and StockOnHand for each warehouse
+// (~3 pages for MELB WHS, fewer for the rest) and
 // takes about 80 seconds against a healthy ERP. api/admin/agent already runs at
 // 300, so this ceiling is known to work on this account.
 export const maxDuration = 300;

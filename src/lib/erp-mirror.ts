@@ -49,7 +49,17 @@ type ErpProduct = {
   [tier: `SellPriceTier${number}`]: { Name?: string; Value?: number | string } | undefined;
 };
 
-type StockRow = { ProductCode?: string; AvailableQty?: number; QtyOnHand?: number };
+type StockRow = {
+  ProductCode?: string;
+  AvailableQty?: number | string;
+  QtyOnHand?: number | string;
+  AllocatedQty?: number | string;
+};
+
+type Warehouse = { WarehouseCode?: string; Obsolete?: boolean };
+
+/** One warehouse's stock of one product, as stored in erp_products.stock_by_warehouse. */
+export type WarehouseStock = { onHand: number; allocated: number; available: number };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const RETRYABLE = new Set([429, 500, 502, 503, 504]);
@@ -123,6 +133,55 @@ export function sellPriceTiers(p: ErpProduct): Record<string, number> | null {
   return Object.keys(out).length ? out : null;
 }
 
+/** A quantity as a number, where 0 is a real value (unlike `num`). */
+const qty = (v: unknown) => {
+  const n = parseFloat(String(v ?? ""));
+  return Number.isFinite(n) ? n : 0;
+};
+
+/**
+ * Per-warehouse stock keyed by product code: `{"MELB WHS": {onHand, allocated,
+ * available}, ...}` for every warehouse that holds a record for the product.
+ * The partner portals show stock by location (Melbourne and China, each with
+ * its own lead time) and net one warehouse's shortfall against the others, so
+ * they need every warehouse's row, VIRTUAL WHS included, not one total. A
+ * product with no record anywhere is absent, so it is stored as null and shown
+ * as "—", never as a confident zero.
+ */
+export function stockByWarehouse(
+  perWarehouse: { warehouse: string; rows: StockRow[] }[],
+): Map<string, Record<string, WarehouseStock>> {
+  const out = new Map<string, Record<string, WarehouseStock>>();
+  for (const { warehouse, rows } of perWarehouse) {
+    for (const r of rows) {
+      const code = r.ProductCode?.trim().toUpperCase();
+      if (!code) continue;
+      const entry = out.get(code) ?? {};
+      entry[warehouse] = { onHand: qty(r.QtyOnHand), allocated: qty(r.AllocatedQty), available: qty(r.AvailableQty) };
+      out.set(code, entry);
+    }
+  }
+  return out;
+}
+
+/**
+ * Every current warehouse's StockOnHand, one warehouse after another. Without a
+ * warehouseCode filter Unleashed returns one summed row per product with the
+ * warehouse blank, which is why each is read on its own. The list is read
+ * rather than hard-coded, so a new warehouse is mirrored without a deploy.
+ */
+async function readStock(): Promise<{ warehouse: string; rows: StockRow[] }[]> {
+  const codes = (await pages<Warehouse>("Warehouses"))
+    .filter((w) => !w.Obsolete && w.WarehouseCode)
+    .map((w) => w.WarehouseCode!);
+  if (!codes.length) throw new Error("Unleashed listed no warehouses");
+  const out: { warehouse: string; rows: StockRow[] }[] = [];
+  for (const warehouse of codes) {
+    out.push({ warehouse, rows: await pages<StockRow>("StockOnHand", `&warehouseCode=${encodeURIComponent(warehouse)}`) });
+  }
+  return out;
+}
+
 export type MirrorRefresh = {
   ok: boolean;
   /** Why, when ok is false. */
@@ -132,6 +191,9 @@ export type MirrorRefresh = {
   withTiers: number;
   withCarton: number;
   withStock: number;
+  /** Products with a per-warehouse stock record; null when the stock read failed
+   *  and the stored per-warehouse stock was left as it was. */
+  withStockByWarehouse: number | null;
   before: number;
   written: number;
   pruned: number;
@@ -156,6 +218,7 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
     withTiers: 0,
     withCarton: 0,
     withStock: 0,
+    withStockByWarehouse: null,
     before: 0,
     written: 0,
     pruned: 0,
@@ -174,19 +237,24 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
 
   // Products and stock concurrently — StockOnHand is a separate endpoint, and it
   // is optional: a price with no stock figure is still a usable catalogue.
-  const [products, stockRows] = await Promise.all([
+  const [products, perWarehouse] = await Promise.all([
     pages<ErpProduct>("Products"),
-    // MELBOURNE ONLY, to match lib/unleashed: `stock` means what ships now. The
-    // table has no China column yet, so a mirror-served map shows China-only
-    // stock as made to order rather than with its lead time — the mirror is
-    // off in production (ERP_MIRROR_ENABLED unset, 22 Oct 2026). Add
-    // `stock_china` before turning it on.
-    pages<StockRow>("StockOnHand", "&warehouseCode=MELB%20WHS").catch(() => [] as StockRow[]),
+    readStock().catch((e) => {
+      console.error(`[erp-mirror] stock read failed; per-warehouse stock left as it was: ${e instanceof Error ? e.message : e}`);
+      return null;
+    }),
   ]);
+  const byWarehouse = perWarehouse ? stockByWarehouse(perWarehouse) : null;
 
+  // `stock` is MELBOURNE ONLY, to match lib/unleashed: it means what ships now.
+  // The site reads nothing else; a mirror-served map would show China-only stock
+  // as made to order rather than with its lead time — the mirror is off in
+  // production (ERP_MIRROR_ENABLED unset, 22 Oct 2026). stock_by_warehouse
+  // already carries CHINA WHS for when it is turned on.
   const stock = new Map<string, number>();
-  for (const s of stockRows) {
-    if (s.ProductCode) stock.set(s.ProductCode.toUpperCase(), Number(s.AvailableQty ?? s.QtyOnHand ?? 0));
+  for (const [code, w] of byWarehouse ?? []) {
+    const melb = w["MELB WHS"];
+    if (melb) stock.set(code, melb.available);
   }
 
   const now = new Date().toISOString();
@@ -205,6 +273,13 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
         // EX GST, like price. See sellPriceTiers.
         sell_price_tiers: sellPriceTiers(p),
         stock: stock.get(code) ?? null,
+        // Every warehouse, for the partner portals (stockByWarehouse). Sent on
+        // EVERY row or on none: when the stock read failed both keys are left
+        // out of the whole upsert, so the last good figures and their date
+        // survive rather than being nulled (see 20261001_erp_products_tags.sql
+        // for what sending a key on some rows only does). The portals date
+        // them by stock_synced_at and stop showing them when it is old.
+        ...(byWarehouse ? { stock_by_warehouse: byWarehouse.get(code) ?? null, stock_synced_at: now } : {}),
         brand: p.ProductBrand?.BrandName?.trim() || null,
         group_name: p.ProductGroup?.GroupName?.trim() || null,
         subgroup: p.ProductSubGroup?.GroupName?.trim() || null,
@@ -235,6 +310,7 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
     withTiers: rows.filter((r) => r.sell_price_tiers).length,
     withCarton: rows.filter((r) => r.width_cm && r.depth_cm && r.height_cm).length,
     withStock: rows.filter((r) => r.stock !== null).length,
+    withStockByWarehouse: byWarehouse ? rows.filter((r) => r.stock_by_warehouse).length : null,
     before,
     shrinkPct: Math.round(shrink * 1000) / 10,
     dryRun: !write,
