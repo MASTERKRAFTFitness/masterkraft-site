@@ -38,6 +38,10 @@ export default function CheckoutPage() {
   const [paidOrder, setPaidOrder] = useState<string | null>(null);
   // Who paid, for the Google Customer Reviews offer on the confirmation.
   const [paidBuyer, setPaidBuyer] = useState<PaidBuyer | null>(null);
+  // Set when a card checkout went to the team because freight needs a person to
+  // price it. The customer is waiting on a delivery price, not a general quote,
+  // and the thank-you says so and says where it is going.
+  const [freightQuoteEmail, setFreightQuoteEmail] = useState<string | null>(null);
 
   // GOOGLE MERCHANT CENTER'S CHECKOUT LINK: /checkout?id={id}, where {id} is
   // the feed item's ERP code. The shopper clicked "Checkout" on a Google listing
@@ -185,15 +189,32 @@ export default function CheckoutPage() {
               setPaidOrder(num);
               setPaidBuyer(buyer);
             }}
-            onQuoted={() => setDone(true)}
+            onQuoted={({ email }) => {
+              setFreightQuoteEmail(email);
+              setDone(true);
+            }}
           />
         ) : done ? (
           <div className="max-w-lg mx-auto text-center border border-accent bg-accent/5 p-10">
-            <p className="font-display uppercase tracking-wide text-2xl">Quote requested</p>
-            <p className="mt-3 text-ash">
-              Thanks - our team will confirm pricing, freight and lead times and be in touch
-              shortly.
-            </p>
+            {freightQuoteEmail ? (
+              <>
+                <p className="font-display uppercase tracking-wide text-2xl">Order received</p>
+                <p className="mt-3 text-ash">
+                  Thanks - this order ships as freight, so our team prices delivery by hand.
+                  We&apos;ll email your freight price to <strong>{freightQuoteEmail}</strong>,
+                  normally within one business day, and you can confirm the order from
+                  there. Nothing has been charged.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-display uppercase tracking-wide text-2xl">Quote requested</p>
+                <p className="mt-3 text-ash">
+                  Thanks - our team will confirm pricing, freight and lead times and be in touch
+                  shortly.
+                </p>
+              </>
+            )}
             <Link href="/all-equipment" className="btn btn-accent mt-8">
               Keep Browsing
             </Link>
