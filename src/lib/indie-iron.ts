@@ -106,6 +106,20 @@ export const windowLabel = (w: BuyWindow) =>
 
 export const NOT_SURE_WINDOW = "Not sure";
 
+/**
+ * The window a submitted label names, or null for "Not sure", a blank, or a
+ * label that is not a real close date. The inverse of windowLabel, for the
+ * welcome email, which needs the exact closing instant, not just the label.
+ */
+export function windowFromLabel(label: string): BuyWindow | null {
+  const m = /^(Founding round|Autumn|Winter|Spring|Summer) \(closes 15 ([A-Z][a-z]{2}) (\d{4})\)$/.exec(label);
+  if (!m) return null;
+  const month = MONTHS.indexOf(m[2]);
+  if (!(CLOSE_MONTHS as readonly number[]).includes(month)) return null;
+  const w = makeWindow(Number(m[3]), month);
+  return w.name === m[1] ? w : null;
+}
+
 // ---- form options: these match the HubSpot property options exactly --------
 
 export const STATE_OPTIONS = ["VIC", "NSW", "QLD", "WA", "SA", "TAS", "ACT", "NT", "New Zealand"];

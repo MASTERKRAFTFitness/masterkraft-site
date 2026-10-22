@@ -6,6 +6,7 @@ import {
   formatClose,
   formatLanding,
   upcomingWindows,
+  windowFromLabel,
   windowLabel,
 } from "./indie-iron";
 
@@ -71,5 +72,24 @@ describe("Indie Iron member pricing (draft)", () => {
     expect(PRICING_CONFIRMED).toBe(true);
     const deepest = Math.max(...PRICE_EXAMPLES.map((p) => savingPct(p.website, p.group)));
     expect(deepest).toBe(20); // the hero, facts and callout say "up to 20%"
+  });
+});
+
+describe("windowFromLabel", () => {
+  it("round-trips every label the form can submit", () => {
+    for (const w of upcomingWindows(new Date("2026-10-19T00:00:00Z"), 8)) {
+      expect(windowFromLabel(windowLabel(w))).toEqual(w);
+    }
+  });
+
+  it("closes at 23:59 Melbourne time", () => {
+    expect(windowFromLabel("Founding round (closes 15 Nov 2026)")?.closesAt.toISOString()).toBe("2026-11-15T12:59:00.000Z");
+    expect(windowFromLabel("Winter (closes 15 May 2027)")?.closesAt.toISOString()).toBe("2027-05-15T13:59:00.000Z");
+  });
+
+  it("returns null for anything that is not a real window", () => {
+    for (const bad of ["", "Not sure", "Autumn (closes 15 Mar 2027)", "Summer (closes 15 Feb 2027)", "Autumn (closes 14 Feb 2027)"]) {
+      expect(windowFromLabel(bad), bad).toBeNull();
+    }
   });
 });
