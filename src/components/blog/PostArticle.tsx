@@ -6,6 +6,7 @@ import type { FullPost } from "@opinly/backend";
 import PageHero from "@/components/marketing/PageHero";
 import JsonLd from "@/components/seo/JsonLd";
 import { blogConfig } from "@/lib/opinly-content";
+import { followInternalLinks } from "@/lib/blog-links";
 import { postProse } from "@/components/blog/prose";
 
 export default function PostArticle({ post }: { post: FullPost }) {
@@ -47,7 +48,11 @@ export default function PostArticle({ post }: { post: FullPost }) {
           {minutes} min read
         </p>
 
-        <OpinlyContent content={post.content} config={blogConfig} classNames={postProse} />
+        <OpinlyContent
+          content={followInternalLinks(post.content, blogConfig.siteUrl)}
+          config={blogConfig}
+          classNames={postProse}
+        />
 
         {post.faqs && post.faqs.length > 0 && (
           <section className="mt-14 border-t border-line pt-10">
