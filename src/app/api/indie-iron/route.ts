@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { submitHubspotForm } from "@/lib/hubspot";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
-import { internalRecipients } from "@/lib/notify-recipients";
+import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
 import { visitorKey } from "@/lib/agent/rate-limit";
 import {
@@ -11,17 +11,23 @@ import {
   SITE_OPTIONS,
   STATE_OPTIONS,
 } from "@/lib/indie-iron";
+import { welcomeEmail } from "@/lib/indie-iron-welcome";
 
 // Indie Iron sign-up, from the form on /indie-iron.
 //
 // Same shape as the Recovery Roller waitlist: the guard, then HubSpot, then the
-// team. It differs in one way. Every sign-up is emailed to the team, not only
+// team, then a welcome email to the gym. It differs in one way. Every sign-up is emailed to the team, not only
 // when HubSpot fails, because a new member gym is a lead someone should call,
 // and the brief asks for Steve and Michael to be told each time.
 //
 // HUBSPOT_FORM_INDIE_IRON is the GUID of "Website Indie Iron (API)". Until it is
 // set, submitHubspotForm returns "skipped" and the team email is the only record,
 // so it says so in the email.
+//
+// THE WELCOME EMAIL IS BEST EFFORT. It goes only once the sign-up is recorded
+// somewhere, and whatever happens to it (no Resend key, a Resend error, a throw
+// building it) is logged and nothing more: the response, HubSpot and the team
+// email are already settled before it starts.
 //
 // OWNER AND LIFECYCLE ARE NOT SET HERE. The Forms API silently drops any field
 // the form does not define, and HubSpot's form editor will not put Contact owner
@@ -202,5 +208,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "We could not record your sign-up." }, { status: 502 });
   }
 
+  await sendWelcome(s);
+
   return NextResponse.json({ ok: true, hubspot, notified });
+}
+
+/** Never throws, and its result never reaches the response. */
+async function sendWelcome(s: SignUp): Promise<void> {
+  try {
+    const { subject, html } = welcomeEmail(s);
+    const welcomed = await sendEmail(subject, html, [s.email], primaryRecipient());
+    console.log("[indie-iron] welcome", { email: s.email, welcomed });
+  } catch (e) {
+    console.error("[indie-iron] welcome failed", e);
+  }
 }
