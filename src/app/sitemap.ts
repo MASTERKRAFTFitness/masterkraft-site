@@ -19,6 +19,7 @@ const staticPaths = [
   "/fitout-solution",
   "/resources",
   "/distributor",
+  "/independent-gyms",
   "/fitout",
   "/revl-fitouts",
   "/all-equipment",
