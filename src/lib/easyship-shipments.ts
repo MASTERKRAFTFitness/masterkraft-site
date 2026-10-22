@@ -36,6 +36,13 @@ const TIMEOUT_MS = 10_000;
 /** Easyship rejects the whole request if an address line runs past this. */
 const MAX_LINE = 35;
 
+/**
+ * Easyship rejects the whole shipment if seller_notes runs past this: "is too
+ * long (maximum is 200 characters)", found 2026-10-22 when a longer suburb
+ * warning was refused. Every order would have failed to sync.
+ */
+const MAX_NOTES = 200;
+
 export type ShipmentOrder = {
   orderNumber: string;
   billing: OrderAddress;
@@ -209,16 +216,17 @@ export function shipmentBody(
   // the courier prices the suburb. SO-00000862 went Brunswick West -> South;
   // SO-00000877 went Loftus -> Audley (Royal National Park) and its label jumped
   // from $45.29 to $96.86. The note is what the person clicking Ship can check
-  // the address against.
+  // the address against. It goes FIRST, so it survives the 200-character cut.
   const place = [destination.city, destination.postal_code].filter(Boolean).join(" ").toUpperCase();
   const notes = [
-    place ? `DELIVER TO ${place}: check the suburb matches before buying the label, as Easyship can swap it for another suburb on the same postcode and change the price` : "",
+    place ? `DELIVER TO ${place} - check the suburb before buying the label` : "",
     o.freightLabel ? `Customer paid for: ${o.freightLabel}` : "",
     of > 1 ? `Consignment ${index + 1} of ${of}` : "",
-    "Created automatically by masterkraft.com. Check before buying the label.",
+    "Created by masterkraft.com",
   ]
     .filter(Boolean)
-    .join(". ");
+    .join(". ")
+    .slice(0, MAX_NOTES);
   return {
     origin_address: origin,
     destination_address: destination,
