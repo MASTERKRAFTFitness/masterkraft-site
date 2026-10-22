@@ -37,6 +37,7 @@ const staticPaths = [
   "/privacy-policy",
   "/wholesale-store",
   "/recovery-roller",
+  "/indie-iron",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

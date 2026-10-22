@@ -7,8 +7,13 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
+import IndieIronCallout from "@/components/indie-iron/IndieIronCallout";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { withQualifier } from "@/lib/page-title";
+
+// Fit-out pages that carry the Indie Iron callout. Not the franchise page: the
+// buying group is for independents.
+const INDIE_IRON_FITOUTS = new Set(["boutique-fitness-fitout", "independent-gym-fitout"]);
 
 export function generateStaticParams() {
   return fitouts.map((f) => ({ slug: f.slug }));
@@ -76,7 +81,7 @@ export default async function FitoutTypePage({
             ))}
           </ul>
           <Link href="/fitout-solution" className="btn btn-accent mt-10">
-            Enquire About a {f.name} Fitout
+            Enquire About {/^[AEIOU]/.test(f.name) ? "an" : "a"} {f.name} Fitout
           </Link>
         </div>
 
@@ -102,10 +107,12 @@ export default async function FitoutTypePage({
       {/* Boutique fitness: showcase the real REVL studio fitout as proof. */}
       {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
 
-      {/* Commercial and franchise gyms: a real club, Fernwood Pakenham, as proof. */}
-      {(f.slug === "commercial-gym-fitout" || f.slug === "franchise-gym-fitout") && (
-        <FernwoodPakenhamCaseStudy />
-      )}
+      {/* Franchise gyms: a real club, Fernwood Pakenham, as proof. Not on the
+          independent page, which this used to share: Fernwood is a franchise. */}
+      {f.slug === "franchise-gym-fitout" && <FernwoodPakenhamCaseStudy />}
+
+      {/* The buying group, on the pages independent gym owners land on. */}
+      {INDIE_IRON_FITOUTS.has(f.slug) && <IndieIronCallout />}
     </>
   );
 }

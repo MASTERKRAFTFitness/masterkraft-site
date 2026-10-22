@@ -22,16 +22,18 @@ export const fitouts: Fitout[] = [
     ],
   },
   {
-    slug: "commercial-gym-fitout",
-    name: "Commercial Gym",
-    blurb: "Complete commercial gym solutions - from a single zone to a full multi-level facility.",
+    // Was "Commercial Gym" at /fitout/commercial-gym-fitout until 19 Oct 2026;
+    // next.config.ts redirects the old URL here.
+    slug: "independent-gym-fitout",
+    name: "Independent Gym",
+    blurb: "Fitouts for independently owned gyms - the commercial-grade gear the big networks run, built around your brand.",
     image: "/home/fitouts.jpg",
     intro:
-      "A commercial floor has to satisfy every member, from first-timers to serious lifters. We deliver a complete, cohesive fitout across strength, weightlifting, cardio and functional training.",
+      "An independent gym wins members on its own name. We design, supply and install a complete floor across strength, weightlifting, cardio and functional training, with the same commercial-grade equipment we supply to large franchise networks, branded as yours.",
     points: [
-      "End-to-end design, supply and installation",
-      "Balanced equipment mix across every training modality",
-      "Volume pricing and staged delivery to your build schedule",
+      "End-to-end design, supply and installation, from a single zone to a full floor",
+      "Your logo on the equipment, with a proof before anything is made",
+      "Network buying power on free weights through Indie Iron, our buying group for independent gyms",
     ],
   },
   {

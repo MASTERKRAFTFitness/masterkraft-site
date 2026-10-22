@@ -215,3 +215,37 @@ html.nav-busy * {
     animation: none;
   }
 }
+
+/* Indie Iron (/indie-iron). Its own display face and cobalt button, scoped to
+   that page: --font-big-shoulders is only defined there, and the --ii-* colour
+   tokens are set on the page wrapper. Body copy stays on the site's type. */
+@layer components {
+  .ii-display {
+    font-family: var(--font-big-shoulders), var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+  .ii-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    background-color: var(--ii-cobalt);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 4px;
+    padding: 0.875rem 1.375rem;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+  /* Darker cobalt, not graphite: the button also sits on the graphite hero. */
+  .ii-btn:hover {
+    background-color: #1B3FB0;
+  }
+  .ii-btn:focus-visible {
+    outline: 3px solid var(--ii-yellow);
+    outline-offset: 2px;
+  }
+}
