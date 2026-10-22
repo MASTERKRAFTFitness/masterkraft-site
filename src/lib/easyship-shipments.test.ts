@@ -139,8 +139,17 @@ describe("the shipment request", () => {
     const plan = planShipments(itemsToCartons([deadBall]))[0];
     const to = { ...dest, city: "Brunswick West", postal_code: "3055" };
     const notes = shipmentBody(order(), plan, 0, 1, origin, to).order_data.seller_notes;
-    expect(notes.startsWith("DELIVER TO BRUNSWICK WEST 3055: check the suburb matches")).toBe(true);
-    expect(notes).toContain("Created automatically by masterkraft.com");
+    expect(notes.startsWith("DELIVER TO BRUNSWICK WEST 3055 - check the suburb before buying the label")).toBe(true);
+    expect(notes).toContain("Created by masterkraft.com");
+  });
+
+  it("keeps the notes within Easyship's 200 characters, suburb first", () => {
+    const plan = planShipments(itemsToCartons([deadBall]))[0];
+    const to = { ...dest, city: "Mount Druitt Village Shopping Centre", postal_code: "2770" };
+    const long = order({ freightLabel: "CouriersPlease - Authority To Leave - 25kg ".repeat(5) });
+    const notes = shipmentBody(long, plan, 2, 3, origin, to).order_data.seller_notes;
+    expect(notes.length).toBeLessThanOrEqual(200);
+    expect(notes.startsWith("DELIVER TO MOUNT DRUITT VILLAGE SHOPPING CENTRE 2770")).toBe(true);
   });
 
   it("treats an order to a company as a business address", () => {
