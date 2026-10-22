@@ -15,6 +15,7 @@ const ok = {
   ok: true,
   read: 1648,
   withPrice: 1491,
+  withTiers: 1200,
   withCarton: 742,
   withStock: 578,
   before: 1648,
