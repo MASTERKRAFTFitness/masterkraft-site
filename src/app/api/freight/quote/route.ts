@@ -20,6 +20,8 @@ type Body = {
   contact?: CheckoutLeadContact;
   cart?: CheckoutLeadItem[];
   subtotal?: number;
+  // The checkout's "Email me my cart if I don't finish" box - see cart-reminders.
+  reminderOptIn?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
     delivery: body.delivery,
     items: body.cart,
     subtotal: body.subtotal,
+    reminderOptIn: body.reminderOptIn === true,
     freight: {
       price: decision.selected?.price ?? null,
       label: decision.selected ? `${decision.selected.carrier} ${decision.selected.service}`.trim() : undefined,

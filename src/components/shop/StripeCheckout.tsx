@@ -194,6 +194,7 @@ export default function StripeCheckout({
         },
         cart: items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, price: i.price })),
         subtotal,
+        reminderOptIn: formRef.current ? new FormData(formRef.current).get("cart_reminder") === "on" : false,
       }),
     })
       .then((r) => r.json())
@@ -356,6 +357,15 @@ export default function StripeCheckout({
               <input name="email" required type="email" aria-label="Email" placeholder="Email" className={fieldClass} />
               <input name="phone" required aria-label="Phone" placeholder="Phone" className={fieldClass} />
             </div>
+            {/* UNTICKED, AND IT STAYS THAT WAY. A tick is the shopper's consent to
+                the one next-morning reminder (lib/cart-reminders); a pre-ticked
+                box would not be. Changing it clears the freight quote like any
+                other field, so the choice is re-sent before payment and an
+                untick always reaches the server before the email could. */}
+            <label className="flex items-start gap-2 text-sm text-ash cursor-pointer">
+              <input type="checkbox" name="cart_reminder" className="mt-[3px] h-4 w-4 flex-none accent-accent" />
+              <span>Email me my cart if I don&apos;t finish</span>
+            </label>
             <input name="company" aria-label="Company / gym name (optional)" placeholder="Company / gym name (optional)" className={fieldClass} />
             <input name="address_1" required aria-label="Delivery address" placeholder="Delivery address" className={fieldClass} />
             <div className="grid sm:grid-cols-3 gap-4">
