@@ -3,8 +3,8 @@
     python3 build.py
 
 MasterKraft version of the supplier's A72 "Body Shaping Roller Device" manual
-(src/). Same machine as /recovery-roller on the site, so brochure.html follows
-the same rule: no benefit claims, pending the TGA question.
+(src/). Same machine as /recovery-roller on the site. The only benefit claims
+are page two's list (Michael, 2026-10-23); see the note in brochure.html.
 
 Exports brochure.html with headless Chrome, then writes:
   MasterKraft-Recovery-Roller-Brochure.pdf   8 pages, A4

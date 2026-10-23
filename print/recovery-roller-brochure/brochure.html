@@ -7,10 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
 <style>
   /* MasterKraft version of the supplier's A72 "Body Shaping Roller Device"
-     manual (src/). Same machine as /recovery-roller on the site, so the same
-     rule applies: NO BENEFIT CLAIMS. The supplier's lymphatic, fat, collagen,
-     sleep and before/after material is left out on purpose, pending the TGA
-     question. The light is "integrated" and nothing more. */
+     manual (src/). Same machine as /recovery-roller on the site.
+     BENEFITS: page two's "What members get" list is Michael's call
+     (2026-10-23), and the only benefit claims in here. The rest stays
+     claim-free: the supplier's lymphatic, fat, collagen, sleep and
+     before/after material is left out on purpose, pending the TGA question.
+     /recovery-roller itself still makes no claims. */
   @page { size: 210mm 297mm; margin: 0; }
   :root {
     --ink: #111113; --carbon: #0a0a0b; --charcoal: #1b1b1e;
@@ -69,12 +71,16 @@
   .cover .chips span { font-family: "JetBrains Mono", monospace; font-size: 6.5pt; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.5); }
 
   /* ---------- argument ---------- */
-  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; margin-top: 12mm; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; margin-top: 9mm; }
   .three p { color: var(--ash); margin-top: 2mm; }
-  .band { margin: 14mm -18mm 0; padding: 12mm 18mm; background: var(--smoke); display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; align-items: center; }
+  .band { margin: 10mm -18mm 0; padding: 9mm 18mm; background: var(--smoke); display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; align-items: center; }
   .band img { width: 100%; border-radius: 1.2mm; display: block; }
   .band h3 { margin-top: 0; font-size: 15pt; }
   .band p { color: var(--ash); margin-top: 3mm; }
+  .benefits { margin-top: 7mm; }
+  .benefits ul { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm 8mm; margin-top: 5mm; }
+  .benefits li { border-top: .5mm solid var(--accent); padding-top: 2.5mm; font-family: "Oswald", sans-serif; font-weight: 500;
+                 text-transform: uppercase; font-size: 11.5pt; line-height: 1.2; }
   .uses { margin-top: 10mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: .25mm solid var(--line); }
   .uses div { padding: 4mm 4mm 0 0; }
   .uses b { font-family: "Oswald", sans-serif; font-weight: 500; text-transform: uppercase; font-size: 10.5pt; display: block; }
@@ -189,10 +195,17 @@
     </div>
   </div>
 
-  <div class="uses">
-    <div><b>Gyms &amp; clubs</b><span>A recovery zone or premium-tier room.</span></div>
-    <div><b>Studios &amp; PT</b><span>A finish to every session, without the floor space.</span></div>
-    <div><b>Wellness &amp; spa</b><span>A self-serve station alongside treatment rooms.</span></div>
+  <div class="benefits">
+    <span class="eyebrow">The benefits</span>
+    <h3 style="font-size:17pt;margin-top:2.5mm">What members get</h3>
+    <ul>
+      <li>Eases muscle tension and tightness</li>
+      <li>Reduces soreness after heavy training</li>
+      <li>Helps with relaxation and stress relief</li>
+      <li>Infrared heat warms the muscles as they are worked</li>
+      <li>Covers all major muscle groups in one session</li>
+      <li>Fixes foam rolling problems: no awkward positioning, and the roller stays in place</li>
+    </ul>
   </div>
   <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>02</span></div>
 </section>
