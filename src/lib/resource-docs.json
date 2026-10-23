@@ -344,6 +344,18 @@
     ]
   },
   {
+    "name": "Recovery Roller (Massage Rolling Machine)",
+    "sub": "MBRMRL09",
+    "thumb": "/resources/mbrmrl09.jpg",
+    "manuals": [
+      {
+        "label": "Brochure",
+        "download": "/manuals/mbrmrl09-recovery-roller-brochure.pdf",
+        "external": false
+      }
+    ]
+  },
+  {
     "name": "Retail Rack",
     "sub": "MERK153001",
     "thumb": "/category/equipment-storage.jpg",

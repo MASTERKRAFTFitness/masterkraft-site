@@ -24,7 +24,7 @@ import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
-import { getProductContent, resolveCopy, resolveSpecs } from "@/lib/product-content";
+import { getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
 // The cart key for a size with no WooCommerce variation id. Shared with the
@@ -220,6 +220,7 @@ export default async function ProductPage({
   // so this is a no-op until somebody edits one — at which point their value
   // replaces that row and the rest of the table stands.
   const specs = resolveSpecs(slug, detail.specs, content);
+  const documents = resolveDocuments(slug, content);
   // A bundle has no price of its own, so label it the same way its card is
   // labelled. priceValue stays 0 so it keeps routing to the quote flow rather
   // than becoming card-payable at the cost of its cheapest item - see enrichCard.
@@ -558,6 +559,31 @@ export default async function ProductPage({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {documents.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-xl font-bold border-b border-line pb-3 mb-2">Downloads</h2>
+              <ul className="divide-y divide-line">
+                {documents.map((d) => (
+                  <li key={d.href}>
+                    <a
+                      href={d.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center justify-between gap-4 py-4"
+                    >
+                      <span className="font-semibold text-ink group-hover:text-accent-600 transition-colors">
+                        {d.label}
+                      </span>
+                      <span className="shrink-0 font-mono text-xs uppercase tracking-widest text-ink group-hover:text-accent-600 transition-colors">
+                        Download <span aria-hidden>→</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
