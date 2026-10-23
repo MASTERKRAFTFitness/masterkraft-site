@@ -89,7 +89,22 @@ export type ContentEntry = {
    */
   shortDescription?: string;
   description?: string;
+  /** Downloads under the spec table, in render order. See 20261023_product_content_documents.sql. */
+  documents?: ProductDocument[];
 };
+
+/** One download link on a product page. `href` is a site path or a full URL. */
+export type ProductDocument = { label: string; href: string };
+
+/** The usable entries of a `documents` value. Anything malformed is dropped, not rendered. */
+function documentsFrom(value: unknown): ProductDocument[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((d) => {
+    const label = String((d as { label?: unknown })?.label ?? "").trim();
+    const href = String((d as { href?: unknown })?.href ?? "").trim();
+    return label && href ? [{ label, href }] : [];
+  });
+}
 
 /** Human-edited copy, keyed by SLUG — which is what the page and the URL have. */
 export type ContentMap = Record<string, ContentEntry>;
@@ -145,7 +160,7 @@ async function buildContent(): Promise<ContentMap> {
     db
       .from("product_content")
       .select(
-        "slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty, description, short_description",
+        "slug, overview_short, overview, features, updated_by, assembled_size, colour, material, net_weight, gross_weight, packing_size, warranty, description, short_description, documents",
       )
       .range(from, from + PAGE - 1);
 
@@ -189,11 +204,12 @@ async function buildContent(): Promise<ContentMap> {
     // snapshot is a no-op today; what it buys is that the snapshot can go.
     const shortDescription = String(row.short_description ?? "").trim() || undefined;
     const description = String(row.description ?? "").trim() || undefined;
+    const documents = documentsFrom(row.documents);
 
     // A row that sets nothing is not an override of anything. Skipping it keeps
     // "has an entry" meaning "has something to say", so a caller can test the
     // entry rather than each of its fields.
-    if (!short && !html && !hasSpecs && !shortDescription && !description) continue;
+    if (!short && !html && !hasSpecs && !shortDescription && !description && !documents.length) continue;
 
     out[slug] = {
       ...(short ? { short } : {}),
@@ -201,6 +217,7 @@ async function buildContent(): Promise<ContentMap> {
       ...(hasSpecs ? { specs } : {}),
       ...(shortDescription ? { shortDescription } : {}),
       ...(description ? { description } : {}),
+      ...(documents.length ? { documents } : {}),
     };
   }
   return out;
@@ -216,7 +233,8 @@ async function buildContent(): Promise<ContentMap> {
 // v2: the map now carries specs from loader-owned rows, which v1 discarded. A
 // warm v1 cache would serve spec-less entries for an hour after deploy and the
 // flip would look like it had not shipped.
-const cachedContent = unstable_cache(buildContent, ["product-content-v2"], {
+// v3: entries carry `documents`.
+const cachedContent = unstable_cache(buildContent, ["product-content-v3"], {
   revalidate: 3600,
   tags: ["product-content"],
 });
@@ -298,4 +316,9 @@ export function resolveSpecs(
     if (value) out.push({ label, value });
   }
   return out;
+}
+
+/** The downloads a slug should show. Only the database holds these, so no fallback. */
+export function resolveDocuments(slug: string, content: ContentMap = {}): ProductDocument[] {
+  return content[slug]?.documents ?? [];
 }
