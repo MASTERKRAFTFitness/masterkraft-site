@@ -60,7 +60,10 @@
   /* The showroom photo, full bleed from below the title, fading into the ink at
      the top and under the spec chips at the bottom. */
   .cover .photo { position: absolute; left: 0; right: 0; top: 104mm; bottom: 26mm;
-                  background: url("img/cover-showroom.jpg") 50% 50% / cover; }
+                  overflow: hidden; }
+  /* Photos are real <img> elements, not CSS backgrounds: Chrome prints a
+     background as a PDF pattern fill, which some viewers leave blank. */
+  .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .cover .photo::after { content: ""; position: absolute; inset: 0;
                          background: linear-gradient(to bottom, var(--ink) 0%, rgba(17,17,19,0) 20%, rgba(17,17,19,0) 80%, var(--ink) 100%); }
   .cover .title, .cover .chips, .cover .top { z-index: 1; }
@@ -87,7 +90,7 @@
   .uses span { color: var(--ash); font-size: 8.8pt; }
 
   /* ---------- machine ---------- */
-  .detail { margin: 8mm -18mm 0; height: 92mm; background: url("img/roller-detail.jpg") center 40% / cover; }
+  .detail { position: relative; margin: 8mm -18mm 0; height: 92mm; overflow: hidden; }
   .features { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm 10mm; margin-top: 10mm; }
   .features div { border-top: .25mm solid var(--line); padding-top: 3mm; }
   .features .n { font-family: "JetBrains Mono", monospace; font-size: 7pt; letter-spacing: .14em; color: var(--accent); }
@@ -149,7 +152,7 @@
   .cta h2 em { font-style: normal; color: var(--accent); }
   .cta .contact { font-size: 11pt; line-height: 1.8; }
   .cta .contact b { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 7pt; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.5); display: inline-block; width: 22mm; }
-  .strip { position: absolute; left: 0; right: 0; top: 150mm; height: 62mm; background: url("img/roller-detail.jpg") center 45% / cover; }
+  .strip { position: absolute; left: 0; right: 0; top: 150mm; height: 62mm; overflow: hidden; }
   .back .mk { position: absolute; left: 18mm; bottom: 12mm; height: 4mm; }
   .back .tag { position: absolute; right: 18mm; bottom: 12mm; font-family: "JetBrains Mono", monospace; font-size: 6.5pt; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.5); }
 </style>
@@ -164,7 +167,7 @@
     <h1>Recovery<em>Roller</em></h1>
     <p>A motorised roller bed for gyms that want recovery to be a room rather than a corner. Hands-free, touchscreen controlled, built for commercial floors.</p>
   </div>
-  <div class="photo" role="img" aria-label="The Recovery Roller in the MasterKraft showroom"></div>
+  <div class="photo"><img class="ph" src="img/cover-showroom.jpg" alt="The Recovery Roller in the MasterKraft showroom" style="object-position:50% 50%"></div>
   <div class="chips">
     <div><b>Hands-free</b><span>Motorised rollers</span></div>
     <div><b>15.6"</b><span>Touchscreen</span></div>
@@ -214,7 +217,7 @@
 <section class="page">
   <span class="eyebrow">02 &nbsp;/&nbsp; The machine</span>
   <h2>Built for the floor,<br>not the lounge room</h2>
-  <div class="detail"></div>
+  <div class="detail"><img class="ph" src="img/roller-detail.jpg" alt="The roller drum and arm rests" style="object-position:50% 40%"></div>
   <div class="features">
     <div><span class="n">01</span><h3>Profiled roller drum</h3><p>Multiple rollers with a raised, nodular profile turn together inside the drum, working a wide contact area at once.</p></div>
     <div><span class="n">02</span><h3>Two-way rotation</h3><p>Rollers run in either direction at multiple speeds, so one machine covers arms, legs, back, sides and glutes.</p></div>
@@ -362,7 +365,7 @@
       </ul>
     </div>
   </div>
-  <div class="strip"></div>
+  <div class="strip"><img class="ph" src="img/roller-detail.jpg" alt="" style="object-position:50% 45%"></div>
   <div class="cta">
     <h2>See it in the<br><em>showroom.</em></h2>
     <div class="contact">
