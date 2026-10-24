@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { equipmentCategories, fitoutLinks, footerLinks } from "@/lib/nav";
-import { blogEnabled, BLOG_PREFIX } from "@/lib/opinly-content";
+import { blogEnabled, BLOG_PREFIX } from "@/lib/blog";
 import { FRANCHISOR_PORTAL_URL, franchisorLoginEnabled } from "@/lib/site";
 
 export default function Footer() {
@@ -85,8 +85,8 @@ export default function Footer() {
           <ul className="mt-4 space-y-2.5">
             {/* THE JOURNAL IS CONDITIONAL, and not in `footerLinks`, because
                 unlike every other link in that list it can be unbuilt. /blog is
-                served by Opinly and 404s until OPINLY_CDN_NAMESPACE is set in
-                next.config.ts — so a static entry would put a dead link in the
+                read from Supabase and 404s on a deployment without database
+                credentials — so a static entry would put a dead link in the
                 footer of every page on the site, which is both a bad visit and
                 something Search Console reports as a crawl error. Gated on the
                 same check the route itself uses, so the link exists exactly when

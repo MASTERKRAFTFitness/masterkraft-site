@@ -48,7 +48,8 @@ it(
       `  with a price:           ${r.withPrice}`,
       `  with tier prices:       ${r.withTiers}`,
       `  with a full carton:     ${r.withCarton}`,
-      `  with stock on hand:     ${r.withStock}`,
+      `  with stock on hand:     ${r.withStock} (Melbourne)`,
+      `  with stock by warehouse: ${r.withStockByWarehouse ?? "stock read failed"}`,
       ``,
       `rows already in the mirror: ${r.before}`,
       r.refused

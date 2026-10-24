@@ -19,7 +19,8 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { refreshErpMirror } from "@/lib/erp-mirror";
 
-// The refresh reads ~9 pages of Products and ~3 of StockOnHand sequentially and
+// The refresh reads ~9 pages of Products and StockOnHand for each warehouse
+// (~3 pages for MELB WHS, fewer for the rest) and
 // takes about 80 seconds against a healthy ERP. api/admin/agent already runs at
 // 300, so this ceiling is known to work on this account.
 export const maxDuration = 300;
@@ -73,7 +74,7 @@ export async function GET(req: Request) {
     // to ten minutes from now. Tagged "unleashed", same as the live map — both
     // are the catalogue and both are stale the moment this finishes.
     // `{ expire: 0 }` because Next 16 requires the profile argument; same shape
-    // api/opinly/route.ts already uses.
+    // api/revalidate/product-content already uses.
     revalidateTag("unleashed", { expire: 0 });
 
     console.log(

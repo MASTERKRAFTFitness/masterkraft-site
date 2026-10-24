@@ -1,93 +1,104 @@
-import { opinlyConfig } from "@opinly/next";
-import type { SeoResolved } from "@opinly/shared";
-import { getOpinly } from "@/lib/opinly-content";
+import type { Metadata } from "next";
+import {
+  BLOG_PREFIX,
+  BLOG_SITE_URL,
+  authorPath,
+  blogImagePath,
+  getAuthor,
+  getPost,
+  listAuthors,
+  listPosts,
+  postPath,
+} from "@/lib/blog";
 
-// The three archive segments. @opinly/shared's URL builders apply these same
-// defaults when the config leaves them unset, so reading them here is what keeps
-// the URLs this route ANSWERS identical to the URLs the sitemap ADVERTISES. Set
-// one in next.config.ts and both move together; hardcode one here and they part
-// company silently, which shows up as a sitemap full of 404s.
-const categoryPrefix = opinlyConfig.categoryPrefix ?? "category";
-const authorPrefix = opinlyConfig.authorPrefix ?? "authors";
-const tagPrefix = opinlyConfig.tagPrefix ?? "tag";
+/** The index shows this many posts. */
+export const INDEX_COUNT = 12;
 
 /**
  * Resolve a blog URL once, for both generateMetadata and the render.
  *
  * One resolver in one place is what stops a page's `<title>` and canonical from
- * describing something other than its body; Next dedupes the underlying fetches
- * across the two calls, so the second resolution is free.
+ * describing something other than its body; the underlying read is one cached
+ * call (lib/blog getJournal), so resolving twice is free.
  *
- * ONE OPTIONAL CATCH-ALL HANDLES EVERY BLOG URL, index included. The CareLocate
- * build of this integration splits the index into its own `app/blog/page.tsx`
- * alongside a required `[...slug]`, and that split must NOT be copied here: it
- * exists only to dodge a Next 15 bug where `[[...slug]]` combined with
- * `runtime = 'edge'` delivers an empty params object, so every post silently
- * rendered the index. Nothing in this app runs on the edge runtime, and this is
- * Next 16, so the documented single optional catch-all is both correct and one
- * fewer file to keep in step.
+ * The URL shapes are the ones the Journal had on Opinly, because those are the
+ * URLs in Google and in shared links:
+ *
+ *   /blog                     the index
+ *   /blog/<slug>              a post — FLAT, never nested under a category
+ *   /blog/authors             every author
+ *   /blog/authors/<slug>      one author's posts
+ *
+ * Opinly also answered /blog/category/<x> and /blog/tag/<x>. No post ever had a
+ * category or a tag, so no such URL was ever in the sitemap; they 404 now.
  */
 export async function loadRoute(slug: string[]) {
   if (slug.length === 0) {
-    const [posts, categories] = await Promise.all([
-      getOpinly().posts({ limit: 12 }),
-      getOpinly().categories(),
-    ]);
-    return { type: "home" as const, data: { posts: posts.data, categories } };
+    return { type: "home" as const, data: { posts: await listPosts(INDEX_COUNT) } };
   }
 
-  if (slug[0] === categoryPrefix && slug[1]) {
-    const [categories, list] = await Promise.all([
-      getOpinly().categories(),
-      getOpinly().posts({ category: slug[1] }),
-    ]);
-    const meta = categories.find((c) => c.slug === slug[1]);
-    if (!meta) return { type: "not-found" as const };
-    // CategorySummary calls it `title`; SeoResolved wants `name`.
-    return { type: "category" as const, data: { ...meta, name: meta.title, posts: list.data } };
+  if (slug[0] === "authors") {
+    if (slug.length === 1) return { type: "authors" as const, data: await listAuthors() };
+    if (slug.length !== 2) return { type: "not-found" as const };
+    const author = await getAuthor(slug[1]);
+    return author ? { type: "author" as const, data: author } : { type: "not-found" as const };
   }
 
-  // Tag archives exist because routes() emits tag routes and buildSitemapEntries
-  // turns them into URLs. Drop this branch and the sitemap submits
-  // /blog/tag/<slug> pages that 404 — the site's own sitemap teaching Google
-  // that a fifth of the blog is broken.
-  if (slug[0] === tagPrefix && slug[1]) {
-    const [tags, list] = await Promise.all([
-      getOpinly().tags(),
-      getOpinly().posts({ tag: slug[1] }),
-    ]);
-    const meta = tags.find((t) => t.slug === slug[1]);
-    if (!meta) return { type: "not-found" as const };
-    return { type: "tag" as const, data: { ...meta, posts: list.data } };
-  }
-
-  if (slug[0] === authorPrefix) {
-    const authorSlug = slug[1];
-    if (!authorSlug) {
-      return { type: "authors" as const, data: (await getOpinly().authors()).data };
-    }
-    const author = await getOpinly().author(authorSlug);
-    return author.type === "author"
-      ? { type: "author" as const, data: author.data }
-      : { type: "not-found" as const };
-  }
-
-  // Posts are addressed FLAT — one segment, never nested under their category.
-  // A two-segment URL that got this far is not a post with a category in front
-  // of it, it is a 404.
   if (slug.length !== 1) return { type: "not-found" as const };
-  const post = await getOpinly().post(slug[0]);
+  const post = await getPost(slug[0]);
   return post ? { type: "post" as const, data: post } : { type: "not-found" as const };
 }
 
 export type BlogRoute = Awaited<ReturnType<typeof loadRoute>>;
 
-/** Narrow a resolved route to the shape @opinly/next's metadata builder wants. */
-export function toSeo(route: BlogRoute): SeoResolved {
-  return route.type === "post" ||
-    route.type === "category" ||
-    route.type === "author" ||
-    route.type === "tag"
-    ? ({ type: route.type, data: route.data } as SeoResolved)
-    : { type: route.type };
+// The title the index has carried since launch; kept so its search listing does not change.
+const INDEX_TITLE = "MASTERKRAFT Blog";
+const INDEX_DESCRIPTION = "Equipment, fitouts and how commercial gyms actually get built.";
+
+/**
+ * The page's metadata. The root layout's title template appends the site name,
+ * so titles here are bare.
+ */
+export function routeMetadata(route: BlogRoute): Metadata {
+  switch (route.type) {
+    case "post": {
+      const p = route.data;
+      const title = p.metaTitle || p.title;
+      const description = p.metaDescription || p.description;
+      const url = `${BLOG_SITE_URL}${postPath(p.slug)}`;
+      const image = p.heroImageKey ? `${BLOG_SITE_URL}${blogImagePath(p.heroImageKey)}` : undefined;
+      return {
+        title,
+        description,
+        alternates: { canonical: url },
+        openGraph: {
+          type: "article",
+          title,
+          description,
+          url,
+          publishedTime: p.publishedAt,
+          ...(p.modifiedAt ? { modifiedTime: p.modifiedAt } : {}),
+          ...(p.author ? { authors: [p.author.name] } : {}),
+          ...(image ? { images: [{ url: image, alt: p.heroImageAlt ?? p.title }] } : {}),
+        },
+        twitter: { card: image ? "summary_large_image" : "summary", title, description },
+      };
+    }
+    case "author":
+      return {
+        title: route.data.name,
+        description: route.data.bio ?? undefined,
+        alternates: { canonical: `${BLOG_SITE_URL}${authorPath(route.data.slug)}` },
+      };
+    case "authors":
+      return { title: "Authors", alternates: { canonical: `${BLOG_SITE_URL}${BLOG_PREFIX}/authors` } };
+    case "home":
+      return {
+        title: INDEX_TITLE,
+        description: INDEX_DESCRIPTION,
+        alternates: { canonical: `${BLOG_SITE_URL}${BLOG_PREFIX}` },
+      };
+    default:
+      return {};
+  }
 }

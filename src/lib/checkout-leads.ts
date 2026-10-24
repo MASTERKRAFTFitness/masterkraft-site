@@ -30,6 +30,9 @@ export type CheckoutLeadPatch = {
   subtotal?: number;
   freight?: { price: number | null; label?: string; reason?: string | null };
   orderNumber?: string;
+  // The "Email me my cart if I don't finish" box. Sent by the freight step as
+  // true or false; absent leaves the stored choice alone. See cart-reminders.
+  reminderOptIn?: boolean;
 };
 
 const MAX = 256;
@@ -79,6 +82,7 @@ export async function recordCheckoutLead(checkoutId: string, patch: CheckoutLead
       p_freight_label: trim(patch.freight?.label),
       p_freight_reason: trim(patch.freight?.reason ?? undefined, 64),
       p_order_number: trim(patch.orderNumber, 64),
+      p_reminder_opt_in: typeof patch.reminderOptIn === "boolean" ? patch.reminderOptIn : null,
     });
     if (error) console.error("[checkout-leads] could not record", patch.status, error.message);
   } catch (e) {
@@ -118,13 +122,15 @@ export type CheckoutLeadRow = {
   freight_reason: string | null;
   order_number: string | null;
   notified_at: string | null;
+  reminder_opt_in?: boolean;
+  reminded_at?: string | null;
   created_at: string;
   updated_at: string;
 };
 
 const COLUMNS =
   "checkout_id, status, name, email, phone, company, suburb, state, postcode, items, subtotal, " +
-  "freight_price, freight_label, freight_reason, order_number, notified_at, created_at, updated_at";
+  "freight_price, freight_label, freight_reason, order_number, notified_at, reminder_opt_in, created_at, updated_at";
 
 /** Most recent checkouts first - the admin list. */
 export async function recentCheckoutLeads(limit = 100): Promise<CheckoutLeadRow[]> {
