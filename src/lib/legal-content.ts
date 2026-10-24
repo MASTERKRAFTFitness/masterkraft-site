@@ -440,6 +440,7 @@ export const legalContent: Record<string, ContentSection[]> = {
       "heading": "Direct Marketing",
       "body": [
         "We will take steps not to disclose personal information for direct marketing purposes unless you have provided your consent to do so. In any event you will be provided with an opt out option with respect to direct marketing, should you wish to be excluded from direct marketing. If you do not elect to ‘opt out’ to receiving direct marketing material from us, you consent to us using personal information (other than sensitive information) provided to us for direct marketing purposes. We may however use sensitive information for direct marketing purposes if you provide your consent to do so. You may at any point in time, request to no longer receive direct marketing material from us by opting out. We will record this information on our opt out register.",
+        "If you tick the box at checkout asking us to email you your cart, and you don’t finish your order, we will send you one reminder email the next morning with the items you left and a link to complete your order. We only send it if you ask for it, we send it once, and it includes a link to unsubscribe from any further cart reminders.",
         "Direct Marketing and Third Parties",
         "We may also from time to time, if we have received your consent, provide your personal information to a third party for the purposes of direct marketing. You may at any time request the source of the personal information that has been disclosed."
       ]
