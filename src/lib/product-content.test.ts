@@ -283,6 +283,21 @@ describe("the WooCommerce description fields, and where they rank", () => {
     expect(out.html).toBe("<p>Woo body.</p>");
   });
 
+  // A generated ERP unit page reads the row of the snapshot record its words
+  // came from, so editing rubber-hex-dumbbell-group reaches rubber-hex-dumbbell.
+  it("reads the alias row when the page's own slug has none", () => {
+    const content = { "old-page": { html: "<p>Edited.</p>", specs: { Warranty: "2 years" } } };
+    expect(resolveCopy("new-page", content, "old-page").html).toBe("<p>Edited.</p>");
+    expect(resolveSpecs("new-page", [], content, "old-page")).toEqual([
+      { label: "Warranty", value: "2 years" },
+    ]);
+  });
+
+  it("prefers the page's own row over the alias", () => {
+    const content = { "new-page": { html: "<p>Mine.</p>" }, "old-page": { html: "<p>Theirs.</p>" } };
+    expect(resolveCopy("new-page", content, "old-page").html).toBe("<p>Mine.</p>");
+  });
+
   it("does NOT outrank an edited row's overview body", () => {
     const out = resolveCopy("a-product", {
       "a-product": { html: "<p>Edited body.</p>", description: "<p>Woo body.</p>" },
