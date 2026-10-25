@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
-import { handleEvent, orderNumberFrom, verifySignature } from "./easyship-webhook";
+import { describeSignature, handleEvent, orderNumberFrom, verifySignature } from "./easyship-webhook";
 
 const SECRET = "webh_test_secret";
 const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
@@ -33,6 +33,38 @@ describe("verifySignature", () => {
     const now = Date.parse("2026-10-22T00:00:00Z");
     expect(verifySignature(jwt({ exp: now / 1000 - 60 }), SECRET, now)).toBeNull();
     expect(verifySignature(jwt({ exp: now / 1000 + 60 }), SECRET, now)).not.toBeNull();
+  });
+});
+
+describe("Bearer prefix", () => {
+  it("accepts a signed token sent as `Bearer <jwt>`", () => {
+    expect(verifySignature(`Bearer ${jwt({ easyship_company_id: "c1" })}`, SECRET)).toEqual({ easyship_company_id: "c1" });
+  });
+});
+
+describe("describeSignature", () => {
+  it("says the secret is wrong when a well-formed HS256 token does not verify", () => {
+    const d = describeSignature(jwt({ easyship_company_id: "c1" }, "webh_other"), SECRET);
+    expect(d).toMatchObject({ present: true, parts: 3, alg: "HS256", macMatches: false, macMatchesWithoutPrefix: false });
+    expect(d.claimKeys).toEqual(["easyship_company_id"]);
+  });
+
+  it("spots a token signed with the secret minus its webh_ prefix", () => {
+    const d = describeSignature(jwt({}, SECRET.slice(5)), SECRET);
+    expect(d).toMatchObject({ macMatches: false, macMatchesWithoutPrefix: true });
+  });
+
+  it("never includes the secret, the signature or claim values", () => {
+    const token = jwt({ easyship_company_id: "c-secret-id" });
+    const text = JSON.stringify(describeSignature(token, SECRET));
+    expect(text).not.toContain(SECRET);
+    expect(text).not.toContain(token.split(".")[2]);
+    expect(text).not.toContain("c-secret-id");
+  });
+
+  it("reports a missing or malformed header", () => {
+    expect(describeSignature(null, SECRET)).toMatchObject({ present: false });
+    expect(describeSignature("abc", SECRET)).toMatchObject({ parts: 1 });
   });
 });
 

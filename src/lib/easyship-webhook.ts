@@ -48,7 +48,7 @@ export function verifySignature(
   now = Date.now()
 ): Record<string, unknown> | null {
   if (!token || !secret) return null;
-  const parts = token.trim().split(".");
+  const parts = bare(token).split(".");
   if (parts.length !== 3) return null;
   const [head, body, sig] = parts;
   try {
@@ -63,6 +63,58 @@ export function verifySignature(
   } catch {
     return null;
   }
+}
+
+/** The token without a `Bearer ` prefix, which an HTTP header may carry. */
+function bare(token: string): string {
+  return token.trim().replace(/^Bearer\s+/i, "");
+}
+
+/**
+ * Why a signature failed, safe to log: shapes and yes/no answers only, never the
+ * secret, the signature or the claims' values.
+ *
+ * WHY, 2026-10-26. Easyship's own webhook test was refused as "bad signature"
+ * and a bare 401 cannot say whether the secret saved in Vercel is stale or the
+ * token is shaped differently from the docs. `macMatches` false with a
+ * well-formed HS256 token means the secret is wrong; anything else is format.
+ */
+export function describeSignature(token: string | null | undefined, secret: string, now = Date.now()) {
+  const out: Record<string, unknown> = {
+    present: Boolean(token),
+    length: token?.length ?? 0,
+    bearer: /^\s*Bearer\s/i.test(token ?? ""),
+    secretPrefix: secret.startsWith("webh_"),
+    secretLength: secret.length,
+  };
+  if (!token) return out;
+  const parts = bare(token).split(".");
+  out.parts = parts.length;
+  if (parts.length !== 3) return out;
+  const [head, body, sig] = parts;
+  const mac = (key: string) => {
+    const expected = createHmac("sha256", key).update(`${head}.${body}`).digest();
+    const given = Buffer.from(sig, "base64url");
+    return given.length === expected.length && timingSafeEqual(given, expected);
+  };
+  try {
+    const header = JSON.parse(Buffer.from(head, "base64url").toString("utf8")) as Record<string, unknown>;
+    out.alg = header.alg;
+    out.typ = header.typ;
+  } catch {
+    out.header = "unreadable";
+  }
+  try {
+    const claims = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as Record<string, unknown>;
+    out.claimKeys = Object.keys(claims);
+    if (typeof claims.exp === "number") out.expiresInSeconds = Math.round(claims.exp - now / 1000);
+  } catch {
+    out.claims = "unreadable";
+  }
+  out.macMatches = mac(secret);
+  // In case Easyship signs with the secret minus its display prefix.
+  if (secret.startsWith("webh_")) out.macMatchesWithoutPrefix = mac(secret.slice("webh_".length));
+  return out;
 }
 
 /**
