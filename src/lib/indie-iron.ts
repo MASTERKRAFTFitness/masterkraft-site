@@ -156,7 +156,6 @@ export const RANGE = [
     spec: "1.25 – 25 kg",
     body: "Bumper and iron plates with your logo on the face. The hero piece of any branded floor.",
     href: "/equipment/weightlifting/weight-plates",
-    icon: "plate",
     image: { src: "/indie-iron/branded-bumper-plate.jpg", width: 1500, height: 1030, alt: "A green competition bumper plate with the MasterKraft logo engraved on its face" },
   },
   {
@@ -164,7 +163,6 @@ export const RANGE = [
     spec: "4 – 48 kg",
     body: "Single-cast bells with your logo on the body and the weight marked in kg.",
     href: "/equipment/mixed-implements/kettlebells",
-    icon: "kettlebell",
     image: { src: "/indie-iron/branded-kettlebells.jpg", width: 1000, height: 1080, alt: "Two black urethane competition kettlebells with a round MasterKraft label on the body" },
   },
   {
@@ -172,14 +170,13 @@ export const RANGE = [
     spec: "2 – 10 kg",
     body: "Grippy, wall-ball friendly balls with your gym's mark printed on.",
     href: "/equipment/mixed-implements/wall-balls",
-    icon: "ball",
+    image: { src: "/indie-iron/branded-wall-ball.jpg", width: 1500, height: 1030, alt: "A grey MasterKraft wall ball, 8 lb, with the MasterKraft logo printed above the seam" },
   },
   {
     name: "Dumbbells",
     spec: "2.5 – 50 kg pairs",
     body: "Commercial dumbbell sets with branded heads, sold in pairs and full runs.",
     href: "/equipment/mixed-implements/dumbbells",
-    icon: "dumbbell",
     image: { src: "/indie-iron/branded-dumbbells.jpg", width: 1000, height: 1080, alt: "A pair of black urethane dumbbells with the MasterKraft label on each head" },
   },
   {
@@ -187,7 +184,7 @@ export const RANGE = [
     spec: "10 – 50 kg",
     body: "Pre-loaded straight and curl bars for the rack, with branded end caps.",
     href: "/equipment/weightlifting/barbells",
-    icon: "barbell",
+    image: { src: "/indie-iron/branded-fixed-barbell.jpg", width: 1000, height: 1080, alt: "A black urethane fixed barbell with a red 40 kg MasterKraft end cap", zoom: 1.15 },
   },
 ] as const;
 
