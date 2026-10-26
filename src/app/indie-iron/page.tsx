@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   // The root layout appends " | MASTERKRAFT".
   title: "Indie Iron: independent gym buying group",
   description:
-    "Franchise buying power for independent gyms. Up to 20% off branded plates, kettlebells, dumbbells, medicine balls and fixed barbells, in four quarterly buy windows.",
+    "Franchise buying power for independent gyms. 10% off MasterKraft equipment any time, and up to 20% off in four quarterly buy windows, with your logo on plates, kettlebells, dumbbells, medicine balls and fixed barbells.",
   alternates: { canonical: "/indie-iron" },
 };
 
@@ -125,8 +125,9 @@ export default function IndieIronPage() {
             </h1>
             <p className="mt-5 max-w-[58ch] text-[1.1rem] leading-relaxed text-white/80 lg:text-[1.2rem]">
               Indie Iron pools orders from independent gyms into one quarterly buy, so you get the pricing the
-              big chains get. Up to 20% off branded plates, kettlebells, medicine balls, dumbbells and fixed
-              barbells, with your logo on every piece.
+              big chains get. 10% off the website price on all MasterKraft equipment, and up to 20% off when you
+              order in a buy window, with your logo on plates, kettlebells, medicine balls, dumbbells and fixed
+              barbells.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <a href="#join" className="ii-btn">Join free →</a>
@@ -335,8 +336,8 @@ export default function IndieIronPage() {
               <JoinHeading />
             </h2>
             <p className="mt-4 max-w-[44ch] text-ash">
-              Joining is free. We&apos;ll send member pricing for the five lines and the order form for the next
-              window. You only pay when you order.
+              Joining is free. We&apos;ll send your member pricing and the order form for the next window. You
+              only pay when you order.
             </p>
             <ul className="mt-5 grid gap-2.5 text-[0.95rem]">
               {["No membership fee", "No lock-in, order in the windows you want", "Branding proof before production"].map((l) => (

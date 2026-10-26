@@ -158,6 +158,7 @@ describe("Indie Iron sign-up", () => {
       expect(mail.html).toContain("<strong>Founding round</strong> window");
       expect(mail.html).toContain("23:59 Melbourne time on Sun 15 Nov 2026");
       expect(mail.html).toContain("up to 20% off the website price");
+      expect(mail.html).toContain("10% off the website price</strong> on all MasterKraft");
       expect(mail.html).toContain("What happens next");
       expect(mail.html).toContain("27 Dec 2026 – 10 Jan 2027");
       // The brief's rules: never "cheap", never tiers.

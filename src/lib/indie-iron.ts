@@ -199,7 +199,7 @@ export const ALONE = [
 ];
 
 export const IN_GROUP = [
-  "Up to 20% off the website price on the five core lines",
+  "Up to 20% off the website price on everything in your window order",
   "Your logo on every piece, with a proof first",
   "One production run, shipped together",
   "A set date, every quarter, so you can plan",
@@ -222,10 +222,10 @@ export const FAQ = [
     q: "Who is behind Indie Iron?",
     a: "MasterKraft, a commercial gym equipment supplier working with large franchise networks and independent gym owners alike. Indie Iron is how independents get network buying power.",
   },
-  { q: "What if I miss a window?", a: "Your order rolls into the next one. You can also buy outside the group at normal pricing any time." },
+  { q: "What if I miss a window?", a: "Your order rolls into the next one. You can also buy outside a window any time at 10% off the website price." },
   {
     q: "Can I add other equipment?",
-    a: "The group buy covers the five free-weight lines. For racks, rigs, flooring or a full fit-out, ask and we'll quote it separately.",
+    a: "Yes. Anything in the MasterKraft range can go into your window order, at up to 20% off the website price depending on the product. Branding covers the five free-weight lines. For a full fit-out, ask and we'll quote it.",
   },
 ];
 
@@ -242,6 +242,11 @@ export const FAQ = [
 // It supersedes the 14 Oct plan (club = T5, 15% off). The brief's "up to 30% off
 // RRP" was changed to "up to 20%" across the page when this went live, so the
 // claims match the table; change both together if Steve confirms more.
+//
+// Michael, 26 Oct 2026: the 10% is for ANY independent gym on ALL equipment, any
+// time. Ordering in a window takes ANYTHING in that order (not only the five
+// branded lines) to the buying-group price, up to 20% depending on the product.
+// Branding stays limited to the five lines.
 // Prices re-read live from Unleashed on 19 Oct and unchanged. Setting
 // PRICING_CONFIRMED to false hides the table again (?pricing=draft still shows it).
 //
