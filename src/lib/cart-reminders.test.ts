@@ -47,12 +47,16 @@ function query(table: string) {
 vi.mock("@/lib/admin-db", () => ({ adminDb: () => ({ from: query }) }));
 
 const {
+  ABANDON_REASONS,
   inSendWindow,
-  melbourneDayStart,
+  reasonTeamEmail,
+  reasonUrl,
+  recordAbandonReason,
   reminderEmail,
   reminderRange,
   sendCartReminders,
   unsubscribeUrl,
+  validReasonToken,
   validUnsubscribeToken,
 } = await import("./cart-reminders");
 
@@ -81,16 +85,13 @@ const lead = (over: Partial<CheckoutLeadRow> = {}): CheckoutLeadRow => ({
   created_at: "2026-10-22T09:00:00.000Z",
   // 22 Oct, 8pm Melbourne: the evening before MORNING.
   updated_at: "2026-10-22T09:00:00.000Z",
+  abandon_reason: null,
+  abandon_reason_note: null,
+  abandon_reason_at: null,
   ...over,
 });
 
-describe("the morning after", () => {
-  it("finds Melbourne midnight, daylight saving included", () => {
-    expect(melbourneDayStart(MORNING).toISOString()).toBe("2026-10-22T13:00:00.000Z");
-    // Winter, AEST (UTC+10).
-    expect(melbourneDayStart(new Date("2026-06-15T02:00:00Z")).toISOString()).toBe("2026-06-14T14:00:00.000Z");
-  });
-
+describe("when it sends", () => {
   it("sends between 9am and 6pm Melbourne time only", () => {
     expect(inSendWindow(new Date("2026-10-22T21:59:00Z"))).toBe(false); // 8:59am
     expect(inSendWindow(new Date("2026-10-22T22:00:00Z"))).toBe(true); // 9:00am
@@ -98,10 +99,10 @@ describe("the morning after", () => {
     expect(inSendWindow(new Date("2026-10-23T07:00:00Z"))).toBe(false); // 6:00pm
   });
 
-  it("reminds carts from earlier days, not today's and not last week's", () => {
+  it("reminds carts left an hour ago or more, not last week's", () => {
     const { after, before } = reminderRange(MORNING);
-    expect(before.toISOString()).toBe("2026-10-22T13:00:00.000Z");
-    expect(after.toISOString()).toBe("2026-10-20T13:00:00.000Z");
+    expect(before.toISOString()).toBe("2026-10-22T22:00:00.000Z");
+    expect(after.toISOString()).toBe("2026-10-20T23:00:00.000Z");
   });
 });
 
@@ -134,6 +135,20 @@ describe("the email", () => {
     expect(html).toContain("Email me my cart if I don't finish");
     expect(html).toContain('href="https://masterkraft.com/u?c=x&amp;t=y"');
     expect(html).toContain("MasterKraft Pty Ltd · ABN 84 659 220 274");
+  });
+
+  it("asks what stopped them, one signed link per reason", () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    const { html } = reminderEmail(lead(), "https://x");
+    expect(html).toContain("what stopped you?");
+    for (const label of Object.values(ABANDON_REASONS)) expect(html).toContain(label);
+    expect(html).toContain("/api/cart-reminder/reason?c=1efdb65f-0044-40ce-83e3-56855a3f0ea2&amp;r=quote&amp;t=");
+    vi.unstubAllEnvs();
+  });
+
+  it("leaves the question out rather than send dead links", () => {
+    const { html } = reminderEmail(lead(), "https://x", () => null);
+    expect(html).not.toContain("what stopped you?");
   });
 
   it("does not invent a freight price it never had", () => {
@@ -194,15 +209,30 @@ describe("sendCartReminders", () => {
     expect(sent).toHaveLength(0);
   });
 
-  it("waits for the next morning, and leaves paid and quoted orders alone", async () => {
+  it("waits an hour, and leaves paid and quoted orders alone", async () => {
     tables.checkout_leads.push(
-      lead({ checkout_id: "today-0000000000000", email: "a@example.com", updated_at: "2026-10-22T20:00:00.000Z" }),
+      // 9:30am, half an hour before MORNING: not left long enough yet.
+      lead({ checkout_id: "recent-000000000000", email: "a@example.com", updated_at: "2026-10-22T22:30:00.000Z" }),
       lead({ checkout_id: "paid-00000000000000", email: "b@example.com", status: "paid" }),
       lead({ checkout_id: "quote-0000000000000", email: "c@example.com", status: "quote_requested" }),
       lead({ checkout_id: "old-000000000000000", email: "d@example.com", updated_at: "2026-10-15T09:00:00.000Z" })
     );
     expect(await sendCartReminders(MORNING)).toMatchObject({ candidates: 0, sent: 0 });
     expect(await sendCartReminders(new Date("2026-10-22T20:00:00Z"))).toMatchObject({ skipped: expect.any(String) });
+  });
+
+  it("sends an hour after a lunchtime checkout, the same day", async () => {
+    // Left at 11:55am: the 12:30 run is too soon, the 1:00pm run reminds it.
+    tables.checkout_leads.push(lead({ updated_at: "2026-10-23T00:55:00.000Z" }));
+    expect(await sendCartReminders(new Date("2026-10-23T01:30:00Z"))).toMatchObject({ sent: 0 });
+    expect(await sendCartReminders(new Date("2026-10-23T02:00:00Z"))).toMatchObject({ sent: 1 });
+  });
+
+  it("holds an evening checkout until 9am", async () => {
+    // Left at 5:30pm; 6:30pm is after hours, so 9am the next day.
+    tables.checkout_leads.push(lead({ updated_at: "2026-10-22T06:30:00.000Z" }));
+    expect(await sendCartReminders(new Date("2026-10-22T07:30:00Z"))).toMatchObject({ skipped: expect.any(String) });
+    expect(await sendCartReminders(MORNING)).toMatchObject({ sent: 1 });
   });
 
   it("sends one email per address, for the newest cart, and marks the other", async () => {
@@ -220,5 +250,43 @@ describe("sendCartReminders", () => {
     globalThis.fetch = (async () => new Response("down", { status: 500 })) as unknown as typeof fetch;
     expect(await sendCartReminders(MORNING)).toMatchObject({ sent: 0, failed: 1 });
     expect(rows()[0].reminded_at).toBeNull();
+  });
+});
+
+describe("what stopped them", () => {
+  beforeEach(() => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    tables.checkout_leads = [lead()];
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  const ID = "1efdb65f-0044-40ce-83e3-56855a3f0ea2";
+
+  it("signs reason links apart from unsubscribe links", () => {
+    const reasonToken = new URL(reasonUrl(ID, "quote")!).searchParams.get("t")!;
+    const unsubToken = new URL(unsubscribeUrl(ID)!).searchParams.get("t")!;
+    expect(validReasonToken(ID, reasonToken)).toBe(true);
+    expect(validReasonToken(ID, unsubToken)).toBe(false);
+    expect(validUnsubscribeToken(ID, reasonToken)).toBe(false);
+  });
+
+  it("stores the answer, and says when a resubmit changed nothing", async () => {
+    expect(await recordAbandonReason(ID, "quote", "  For our club in Geelong  ")).toMatchObject({ changed: true });
+    expect(tables.checkout_leads[0]).toMatchObject({ abandon_reason: "quote", abandon_reason_note: "For our club in Geelong" });
+    expect(await recordAbandonReason(ID, "quote", "For our club in Geelong")).toMatchObject({ changed: false });
+    expect(await recordAbandonReason(ID, "freight", null)).toMatchObject({ changed: true });
+    expect(tables.checkout_leads[0]).toMatchObject({ abandon_reason: "freight", abandon_reason_note: null });
+  });
+
+  it("returns null for a checkout it does not know", async () => {
+    expect(await recordAbandonReason("eeb3b8b2-fd8a-4fbe-8783-483cfe2263b8", "other", null)).toBeNull();
+  });
+
+  it("tells the team what they said, escaped, with the cart", () => {
+    const { subject, html } = reasonTeamEmail(lead({ abandon_reason: "quote", abandon_reason_note: "<i>asap</i>" }));
+    expect(subject).toBe("Why they didn't finish: I need a formal quote or invoice first - Violet Atkinson");
+    expect(html).toContain("Please send one.");
+    expect(html).toContain("&lt;i&gt;asap&lt;/i&gt;");
+    expect(html).toContain("Barbell Squat Pad");
   });
 });

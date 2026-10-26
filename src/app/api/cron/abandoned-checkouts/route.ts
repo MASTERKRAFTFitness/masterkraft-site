@@ -14,8 +14,9 @@
 // re-quotes clears notified_at and is eligible again - see the migration.
 //
 // THE EXCEPTION IS CONSENT. A shopper who ticks "Email me my cart if I don't
-// finish" has asked for the email, so they get one reminder the next morning
-// (lib/cart-reminders), on this same schedule. The team alert still goes too.
+// finish" has asked for the email, so they get one reminder about an hour after
+// they leave (lib/cart-reminders), on this same schedule. The team alert still
+// goes too.
 import { NextResponse } from "next/server";
 import {
   abandonedCheckoutLeads,
@@ -63,7 +64,7 @@ function abandonedEmailHtml(row: CheckoutLeadRow): string {
   return `
     <h2>Abandoned checkout</h2>
     <p>This customer ${STAGE[row.status] ?? "left the checkout"}. Worth a call or a personal reply.</p>
-    ${row.reminder_opt_in ? `<p>They asked to be emailed their cart, so an automatic reminder goes to them from 9am the next morning.</p>` : ""}
+    ${row.reminder_opt_in ? `<p>They asked to be emailed their cart, so an automatic reminder goes to them now (or from 9am, if it's after hours) asking what stopped them. Their answer will be emailed here.</p>` : ""}
     <p><strong>${escape(row.name ?? "")}</strong>${row.company ? ` (${escape(row.company)})` : ""}<br/>
     ${escape(row.email ?? "")}${row.phone ? ` · ${escape(row.phone)}` : ""}<br/>
     ${where ? `Delivery: ${escape(where)}` : ""}</p>

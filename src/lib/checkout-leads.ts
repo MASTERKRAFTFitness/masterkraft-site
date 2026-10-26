@@ -124,6 +124,10 @@ export type CheckoutLeadRow = {
   notified_at: string | null;
   reminder_opt_in?: boolean;
   reminded_at?: string | null;
+  // The shopper's answer to "what stopped you?" in the cart reminder. See cart-reminders.
+  abandon_reason?: string | null;
+  abandon_reason_note?: string | null;
+  abandon_reason_at?: string | null;
   created_at: string;
   updated_at: string;
 };
