@@ -92,11 +92,11 @@ const lead = (over: Partial<CheckoutLeadRow> = {}): CheckoutLeadRow => ({
 });
 
 describe("when it sends", () => {
-  it("sends between 9am and 6pm Melbourne time only", () => {
+  it("sends between 9am and 8pm Melbourne time only", () => {
     expect(inSendWindow(new Date("2026-10-22T21:59:00Z"))).toBe(false); // 8:59am
     expect(inSendWindow(new Date("2026-10-22T22:00:00Z"))).toBe(true); // 9:00am
-    expect(inSendWindow(new Date("2026-10-23T06:59:00Z"))).toBe(true); // 5:59pm
-    expect(inSendWindow(new Date("2026-10-23T07:00:00Z"))).toBe(false); // 6:00pm
+    expect(inSendWindow(new Date("2026-10-23T08:59:00Z"))).toBe(true); // 7:59pm
+    expect(inSendWindow(new Date("2026-10-23T09:00:00Z"))).toBe(false); // 8:00pm
   });
 
   it("reminds carts left an hour ago or more, not last week's", () => {
@@ -235,10 +235,16 @@ describe("sendCartReminders", () => {
     expect(await sendCartReminders(new Date("2026-10-23T02:00:00Z"))).toMatchObject({ sent: 1 });
   });
 
-  it("holds an evening checkout until 9am", async () => {
-    // Left at 5:30pm; 6:30pm is after hours, so 9am the next day.
-    tables.checkout_leads.push(lead({ updated_at: "2026-10-22T06:30:00.000Z" }));
-    expect(await sendCartReminders(new Date("2026-10-22T07:30:00Z"))).toMatchObject({ skipped: expect.any(String) });
+  it("reminds an after-work checkout the same evening", async () => {
+    // Left at 6:00pm; the 7:30pm run reminds it.
+    tables.checkout_leads.push(lead({ updated_at: "2026-10-22T07:00:00.000Z" }));
+    expect(await sendCartReminders(new Date("2026-10-22T08:30:00Z"))).toMatchObject({ sent: 1 });
+  });
+
+  it("holds a late checkout until 9am", async () => {
+    // Left at 7:30pm; 8:30pm is after hours, so 9am the next day.
+    tables.checkout_leads.push(lead({ updated_at: "2026-10-22T08:30:00.000Z" }));
+    expect(await sendCartReminders(new Date("2026-10-22T09:30:00Z"))).toMatchObject({ skipped: expect.any(String) });
     expect(await sendCartReminders(MORNING)).toMatchObject({ sent: 1 });
   });
 
