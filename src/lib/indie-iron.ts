@@ -156,7 +156,7 @@ export const RANGE = [
     spec: "1.25 – 25 kg",
     body: "Bumper and iron plates with your logo on the face. The hero piece of any branded floor.",
     href: "/equipment/weightlifting/weight-plates",
-    image: { src: "/indie-iron/branded-bumper-plate.jpg", width: 1500, height: 1030, alt: "A green competition bumper plate with the MasterKraft logo engraved on its face" },
+    image: { src: "/indie-iron/branded-bumper-plate-snap.png", width: 1280, height: 1305, alt: "A black 20 kg competition bumper plate with the Snap Fitness logo in red and white", zoom: 0.8 },
   },
   {
     name: "Kettlebells",
