@@ -421,6 +421,25 @@ describe("the router, by source", () => {
     expect(q.ok && q.options[0]).toMatchObject({ id: "whole:matrix:MF:MELBOURNE:20", price: once });
   });
 
+  // Ten barbells are ten consignments to the carriers, over the cap, but one
+  // pallet to a line-haul card - so the card prices it instead of refusing it.
+  it("puts a cart past the consignment cap on a pallet", async () => {
+    useDb("pooled", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
+    const fetch = stubCarrier();
+    const q = await quoteFreight([{ ...barbell, quantity: 10 }], to("3074"));
+    expect(q.ok && q.options[0].id).toMatch(/^whole:matrix:MF:MELBOURNE:/);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("still sends a cart past the cap to the quote flow where no card delivers", async () => {
+    useDb("pooled", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
+    stubCarrier();
+    expect(await quoteFreight([{ ...barbell, quantity: 10 }], to("2650"))).toMatchObject({
+      ok: false,
+      reason: "too_many_parcels",
+    });
+  });
+
   // The pallet that started this: a heavy cart the carriers price over the cap,
   // which the Mainfreight card should still sell.
   it("lets a matrix rate through the auto-quote cap", async () => {
