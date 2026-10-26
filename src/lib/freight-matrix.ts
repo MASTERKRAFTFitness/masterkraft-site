@@ -35,6 +35,16 @@ export type MatrixRate = {
   minimum: number;
   days_from: number | null;
   days_to: number | null;
+  /**
+   * A TRUCK, not a weight band: the pallets it carries. Set, the row prices any
+   * consignment that fits it - payload (weight_to_kg), pallets and bed length -
+   * whatever its weight_from_kg, and only the cheapest truck that fits is
+   * offered. How a taxi-truck card works: a light rig still needs the truck
+   * with room for it.
+   */
+  max_pallets: number | null;
+  /** The bed length, cm. The longest carton must lie on it. Null = no limit. */
+  max_length_cm: number | null;
 };
 
 export type Matrix = {
@@ -133,6 +143,8 @@ export function buildMatrixConfig(raw: {
             minimum: n(r.minimum) ?? 0,
             days_from: n(r.days_from),
             days_to: n(r.days_to),
+            max_pallets: n(r.max_pallets),
+            max_length_cm: n(r.max_length_cm),
           }))
           .sort((a, b) => a.id - b.id),
       };
@@ -274,6 +286,22 @@ export function chargeableKg(parcels: Parcel[], cubicFactorKgM3: number): number
   return Math.ceil(kg * 100 - 1e-9) / 100;
 }
 
+// A standard Australian pallet: 1165 x 1165mm, loaded to 1.8m, 1,000kg.
+const PALLET_M3 = 1.165 * 1.165 * 1.8;
+const PALLET_KG = 1000;
+
+/**
+ * How many pallets a consignment fills: by volume, or by weight at 1,000kg a
+ * pallet, whichever needs more. An estimate - nobody packs to the last
+ * centimetre - but it decides the truck, and a truck too small is the failure
+ * worth avoiding.
+ */
+export function palletsFor(parcels: Parcel[]): number {
+  const m3 = parcels.reduce((sum, p) => sum + (p.length * p.width * p.height) / 1e6, 0);
+  const kg = parcels.reduce((sum, p) => sum + p.weight, 0);
+  return Math.max(1, Math.ceil(m3 / PALLET_M3 - 1e-9), Math.ceil(kg / PALLET_KG - 1e-9));
+}
+
 export type MatrixQuoteInput = {
   parcels: Parcel[];
   /** True when any carton is over the parcel limits. From the caller, which
@@ -289,15 +317,24 @@ export function quoteOneMatrix(m: Matrix, input: MatrixQuoteInput): FreightOptio
   const zone = zoneFor(m, input.postcode);
   if (!zone || input.parcels.length === 0) return [];
   const kg = chargeableKg(input.parcels, m.cubicFactorKgM3);
+  const pallets = palletsFor(input.parcels);
+  const longest = Math.max(...input.parcels.map((p) => Math.max(p.length, p.width, p.height)));
   const options: FreightOption[] = [];
+  let truck: FreightOption | null = null;
   for (const r of m.rates) {
     if (r.zone_code !== zone || r.price === null) continue;
     if (r.applies_to === "parcel" && input.oversize) continue;
     if (r.applies_to === "oversize" && !input.oversize) continue;
-    // The first band starts at 0 and must take a 0.2kg satchel, so a band's
-    // lower edge is exclusive only above zero.
-    const above = r.weight_from_kg === 0 ? kg >= 0 : kg > r.weight_from_kg;
-    if (!above || (r.weight_to_kg !== null && kg > r.weight_to_kg)) continue;
+    if (r.max_pallets !== null) {
+      if (pallets > r.max_pallets) continue;
+      if (r.weight_to_kg !== null && kg > r.weight_to_kg) continue;
+      if (r.max_length_cm !== null && longest > r.max_length_cm) continue;
+    } else {
+      // The first band starts at 0 and must take a 0.2kg satchel, so a band's
+      // lower edge is exclusive only above zero.
+      const above = r.weight_from_kg === 0 ? kg >= 0 : kg > r.weight_from_kg;
+      if (!above || (r.weight_to_kg !== null && kg > r.weight_to_kg)) continue;
+    }
 
     const perKgOver = m.perKgOn === "total" ? kg : Math.max(0, kg - r.weight_from_kg);
     const charge = Math.max(r.minimum, r.price + r.per_kg * perKgOver);
@@ -307,7 +344,7 @@ export function quoteOneMatrix(m: Matrix, input: MatrixQuoteInput): FreightOptio
       m.basis === "cost"
         ? charge * (1 + m.fuelLevyPercent / 100) * (1 + (m.marginPercent ?? input.marginPercent) / 100) * GST
         : charge;
-    options.push({
+    const option: FreightOption = {
       id: `matrix:${m.code}:${zone}:${r.id}`,
       carrier: m.carrier,
       service: r.service,
@@ -315,9 +352,12 @@ export function quoteOneMatrix(m: Matrix, input: MatrixQuoteInput): FreightOptio
       price: Math.round(price * 100) / 100,
       ...(r.days_from !== null ? { daysFrom: r.days_from } : {}),
       ...(r.days_to !== null ? { daysTo: r.days_to } : {}),
-    });
+    };
+    // Every bigger truck fits too; only the cheapest is a real option.
+    if (r.max_pallets === null) options.push(option);
+    else if (!truck || option.price < truck.price) truck = option;
   }
-  return options;
+  return truck ? [...options, truck] : options;
 }
 
 /**
