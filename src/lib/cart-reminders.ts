@@ -1,4 +1,4 @@
-// The cart reminder: one email, the morning after an abandoned checkout, to a
+// The cart reminder: one email, about an hour after an abandoned checkout, to a
 // shopper who asked for it.
 //
 // WHY ONLY THOSE WHO ASKED (Michael, 2026-10-22). A recovery email is a
@@ -8,9 +8,15 @@
 // tick is express consent, recorded on the checkout (reminder_opt_in), and only
 // those checkouts get this email. The team alert carries on for everyone.
 //
-// THE NEXT MORNING, from 9am Melbourne time, for a checkout last touched on an
-// earlier day. Late-night shoppers are not emailed at 1am, and someone who
-// leaves at lunch hears from us once they have slept on it.
+// AN HOUR AFTER THEY LEAVE (Michael, 2026-10-26; it was the next morning), while
+// they are still deciding. The cron runs every 30 minutes, so it lands 60-90
+// minutes after their last step. Only between 9am and 6pm Melbourne time: a cart
+// left in the evening or overnight is reminded from 9am, so nobody is emailed at
+// 1am.
+//
+// IT ASKS WHAT STOPPED THEM. One link per reason; the page it opens records the
+// answer on the checkout (abandon_reason) and emails the team, who can act on
+// "I need a quote" the same day. See api/cart-reminder/reason.
 //
 // ONE PER CHECKOUT, claimed BEFORE sending (reminded_at) and released if the
 // send fails, the same pattern as shipped-notices: two overlapping runs cannot
@@ -32,9 +38,11 @@ const ZONE = "Australia/Melbourne";
 /** The morning starts at 9, and nothing goes out after 6pm - it waits for tomorrow. */
 const SEND_FROM_HOUR = 9;
 const SEND_UNTIL_HOUR = 18;
+/** How long a checkout sits untouched before it counts as left. Same as the team alert. */
+export const REMIND_AFTER_MINUTES = 60;
 /**
  * How many days back a checkout can be and still be reminded. Two, so one
- * missed morning (a failed deploy, a Resend outage) still catches up, while a
+ * missed day (a failed deploy, a Resend outage) still catches up, while a
  * week-old cart is left alone rather than chased.
  */
 const LOOKBACK_DAYS = 2;
@@ -48,59 +56,53 @@ export function melbourneHour(now: Date): number {
   );
 }
 
-/** The instant today began in Melbourne (local midnight), daylight saving included. */
-export function melbourneDayStart(now: Date): Date {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-AU", {
-      timeZone: ZONE,
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hourCycle: "h23",
-    })
-      .formatToParts(now)
-      .map((p) => [p.type, Number(p.value)])
-  );
-  const localAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
-  const offset = localAsUtc - Math.floor(now.getTime() / 1000) * 1000;
-  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day) - offset);
-}
-
 /** Whether a reminder run should send anything at all right now. */
 export function inSendWindow(now: Date): boolean {
   const h = melbourneHour(now);
   return h >= SEND_FROM_HOUR && h < SEND_UNTIL_HOUR;
 }
 
-/** The range of last-activity times a run reminds: earlier days, not too long ago. */
+/** The range of last-activity times a run reminds: left an hour ago or more, not too long ago. */
 export function reminderRange(now: Date): { after: Date; before: Date } {
-  const before = melbourneDayStart(now);
-  return { after: new Date(before.getTime() - LOOKBACK_DAYS * 86_400_000), before };
+  return {
+    after: new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000),
+    before: new Date(now.getTime() - REMIND_AFTER_MINUTES * 60_000),
+  };
 }
 
-// ---- Unsubscribe ----------------------------------------------------------
+// ---- Signed links ---------------------------------------------------------
 
-// Keyed on the checkout id, not the email, so no address travels in the link.
-// Signed with CRON_SECRET (already set wherever the cron runs) under its own
-// label, so the signature is useless for anything but this.
+// Keyed on the checkout id, not the email, so no address travels in a link.
+// Signed with CRON_SECRET (already set wherever the cron runs) under a label
+// per purpose, so an unsubscribe signature cannot record a reason, or the
+// reverse, and neither is useful for anything else.
 function signingKey(): string | null {
   return process.env.CRON_SECRET || null;
 }
 
-export function unsubscribeToken(checkoutId: string, key = signingKey()): string | null {
+type LinkPurpose = "unsubscribe" | "reason";
+
+function sign(purpose: LinkPurpose, checkoutId: string, key: string | null): string | null {
   if (!key) return null;
-  return createHmac("sha256", key).update(`cart-reminder-unsubscribe:${checkoutId}`).digest("base64url");
+  return createHmac("sha256", key).update(`cart-reminder-${purpose}:${checkoutId}`).digest("base64url");
 }
 
-export function validUnsubscribeToken(checkoutId: string, token: string, key = signingKey()): boolean {
-  const expected = unsubscribeToken(checkoutId, key);
+function validSignature(purpose: LinkPurpose, checkoutId: string, token: string, key: string | null): boolean {
+  const expected = sign(purpose, checkoutId, key);
   if (!expected) return false;
   const a = Buffer.from(token);
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// ---- Unsubscribe ----------------------------------------------------------
+
+export function unsubscribeToken(checkoutId: string, key = signingKey()): string | null {
+  return sign("unsubscribe", checkoutId, key);
+}
+
+export function validUnsubscribeToken(checkoutId: string, token: string, key = signingKey()): boolean {
+  return validSignature("unsubscribe", checkoutId, token, key);
 }
 
 export function unsubscribeUrl(checkoutId: string, key = signingKey()): string | null {
@@ -138,6 +140,89 @@ export async function unsubscribeCheckout(checkoutId: string): Promise<boolean> 
   return true;
 }
 
+// ---- What stopped them ----------------------------------------------------
+
+/** The answers the email offers, in the order it lists them. Codes are what's stored. */
+export const ABANDON_REASONS = {
+  freight: "Delivery cost or timing",
+  quote: "I need a formal quote or invoice first",
+  question: "I had a question about the product",
+  payment: "Payment didn't go through",
+  comparing: "Still comparing options",
+  later: "Not ready to buy yet",
+  other: "Something else",
+} as const;
+
+export type AbandonReason = keyof typeof ABANDON_REASONS;
+
+export function validAbandonReason(value: unknown): AbandonReason | null {
+  return typeof value === "string" && Object.hasOwn(ABANDON_REASONS, value) ? (value as AbandonReason) : null;
+}
+
+/** Longest free-text note kept with a reason. */
+export const MAX_REASON_NOTE = 1000;
+
+export function reasonUrl(checkoutId: string, reason: AbandonReason, key = signingKey()): string | null {
+  const token = sign("reason", checkoutId, key);
+  if (!token) return null;
+  return `${SITE_URL}/api/cart-reminder/reason?c=${encodeURIComponent(checkoutId)}&r=${reason}&t=${token}`;
+}
+
+export function validReasonToken(checkoutId: string, token: string, key = signingKey()): boolean {
+  return validSignature("reason", checkoutId, token, key);
+}
+
+/**
+ * Store the shopper's answer on their checkout. A second answer replaces the
+ * first. Returns the row, so the caller can tell the team, plus whether the
+ * answer changed (an unchanged resubmit is not worth another email); null when
+ * the checkout is unknown.
+ */
+export async function recordAbandonReason(
+  checkoutId: string,
+  reason: AbandonReason,
+  note: string | null
+): Promise<{ row: CheckoutLeadRow; changed: boolean } | null> {
+  const db = adminDb();
+  if (!db) throw new Error("Supabase is not configured");
+  const { data, error } = await db.from("checkout_leads").select(COLUMNS).eq("checkout_id", checkoutId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  const row = data as unknown as CheckoutLeadRow;
+  const cleanNote = note?.trim().slice(0, MAX_REASON_NOTE) || null;
+  if (row.abandon_reason === reason && (row.abandon_reason_note ?? null) === cleanNote) {
+    return { row, changed: false };
+  }
+  const patch = { abandon_reason: reason, abandon_reason_note: cleanNote, abandon_reason_at: new Date().toISOString() };
+  const { error: upError } = await db.from("checkout_leads").update(patch).eq("checkout_id", checkoutId);
+  if (upError) throw new Error(upError.message);
+  return { row: { ...row, ...patch }, changed: true };
+}
+
+/** The team's copy of an answer: what they said, and the cart it was about. */
+export function reasonTeamEmail(row: CheckoutLeadRow): { subject: string; html: string } {
+  const reason = validAbandonReason(row.abandon_reason);
+  const label = reason ? ABANDON_REASONS[reason] : String(row.abandon_reason ?? "");
+  const items = (row.items ?? [])
+    .map((i) => `<li>${i.qty} × ${escape(i.name)}${i.sku ? ` <span style="color:#777;font:12px monospace">${escape(i.sku)}</span>` : ""}</li>`)
+    .join("");
+  const where = [row.suburb, row.state, row.postcode].filter(Boolean).join(" ");
+  const html = `
+    <h2>Why they didn't finish: ${escape(label)}</h2>
+    ${row.abandon_reason_note ? `<blockquote style="margin:0 0 12px;padding-left:12px;border-left:3px solid #ccc">${escape(row.abandon_reason_note).replace(/\n/g, "<br/>")}</blockquote>` : ""}
+    ${reason === "quote" ? `<p><strong>They want a formal quote. Please send one.</strong></p>` : ""}
+    <p>From their cart reminder email.</p>
+    <p><strong>${escape(row.name ?? "")}</strong>${row.company ? ` (${escape(row.company)})` : ""}<br/>
+    ${escape(row.email ?? "")}${row.phone ? ` · ${escape(row.phone)}` : ""}<br/>
+    ${where ? `Delivery: ${escape(where)}` : ""}</p>
+    ${items ? `<ul>${items}</ul>` : ""}
+    <p>Subtotal (inc. GST): <strong>${row.subtotal != null ? aud.format(row.subtotal) : "?"}</strong><br/>
+    Freight shown: <strong>${row.freight_price != null ? `${aud.format(row.freight_price)}${row.freight_label ? ` (${escape(row.freight_label)})` : ""}` : "not priced"}</strong></p>
+    <p style="color:#666;font-size:12px">Replying goes to the customer.</p>
+  `;
+  return { subject: `Why they didn't finish: ${label} - ${row.name || row.email}`, html };
+}
+
 // ---- The email ------------------------------------------------------------
 
 function escape(s: string) {
@@ -148,7 +233,11 @@ function firstName(full: string | null): string | null {
   return full?.trim().split(/\s+/)[0] || null;
 }
 
-export function reminderEmail(row: CheckoutLeadRow, unsubscribe: string): { subject: string; html: string } {
+export function reminderEmail(
+  row: CheckoutLeadRow,
+  unsubscribe: string,
+  reasonLink: (reason: AbandonReason) => string | null = (r) => reasonUrl(row.checkout_id, r)
+): { subject: string; html: string } {
   const name = firstName(row.name);
   const cell = "padding:6px 12px 6px 0";
   const rows = (row.items ?? [])
@@ -163,6 +252,11 @@ export function reminderEmail(row: CheckoutLeadRow, unsubscribe: string): { subj
       ? `Delivery${where ? ` to ${escape(where)}` : ""}: <strong>${aud.format(row.freight_price)}</strong>`
       : `Delivery${where ? ` to ${escape(where)}` : ""}: we'll confirm the price with you`;
   const contact = primaryRecipient();
+  const reasons = (Object.keys(ABANDON_REASONS) as AbandonReason[])
+    .map((r) => [reasonLink(r), ABANDON_REASONS[r]] as const)
+    .filter(([href]) => href)
+    .map(([href, label]) => `<li style="margin:4px 0"><a href="${escape(href!)}" style="color:#111">${escape(label)}</a></li>`)
+    .join("");
   const html = `
     <p>${name ? `Hi ${escape(name)},` : "Hi,"}</p>
     <p>You started a checkout with MasterKraft and didn't get to finish. Here's your cart, as you asked.</p>
@@ -170,6 +264,8 @@ export function reminderEmail(row: CheckoutLeadRow, unsubscribe: string): { subj
     <p style="margin-top:12px">${row.subtotal != null ? `Subtotal (inc. GST): <strong>${aud.format(row.subtotal)}</strong><br/>` : ""}${freight}</p>
     <p><a href="${SITE_URL}/cart" style="display:inline-block;padding:10px 18px;background:#111;color:#fff;text-decoration:none;border-radius:4px">Finish your order</a></p>
     <p>Your cart is saved on the device you used. If you're on a different one, or you have a question about freight, sizing or anything else, just reply to this email and we'll help.</p>
+    ${reasons ? `<p style="margin-top:20px"><strong>If you don't mind telling us, what stopped you?</strong> One click is all it takes:</p>
+    <ul style="padding-left:20px;margin-top:4px">${reasons}</ul>` : ""}
     <p>MasterKraft</p>
     <p style="color:#888;font-size:12px;margin-top:24px">
       You're getting this because you ticked "Email me my cart if I don't finish" at checkout.
@@ -196,14 +292,14 @@ export type ReminderResult = {
 const COLUMNS =
   "checkout_id, status, name, email, phone, company, suburb, state, postcode, items, subtotal, " +
   "freight_price, freight_label, freight_reason, order_number, notified_at, reminder_opt_in, reminded_at, " +
-  "created_at, updated_at";
+  "abandon_reason, abandon_reason_note, abandon_reason_at, created_at, updated_at";
 
-async function resend(msg: {
+export async function resend(msg: {
   to: string[];
-  reply_to: string;
+  reply_to?: string;
   subject: string;
   html: string;
-  headers: Record<string, string>;
+  headers?: Record<string, string>;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.QUOTE_FROM_EMAIL;
@@ -217,7 +313,7 @@ async function resend(msg: {
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text().catch(() => "")}`);
 }
 
-/** One pass: remind every opted-in checkout abandoned on an earlier day. */
+/** One pass: remind every opted-in checkout left at least an hour ago. */
 export async function sendCartReminders(now = new Date()): Promise<ReminderResult> {
   const result: ReminderResult = { ok: true, candidates: 0, sent: 0, optedOut: 0, failed: 0 };
   if (!inSendWindow(now)) return { ...result, skipped: "outside 9am-6pm Melbourne" };
