@@ -202,8 +202,8 @@ export default function IndieIronPage() {
             <span>Pick one per order. We send a proof before anything is made.</span>
           </div>
           <p className="mt-3 text-[0.8rem] text-ash">
-            Photos show MasterKraft branding; your logo goes in the same place. Weight ranges are indicative and
-            confirmed on your quote.
+            Photos show MasterKraft branding, and gear we&apos;ve branded for REVL and Fernwood. Your logo goes in
+            the same place. Weight ranges are indicative and confirmed on your quote.
           </p>
         </div>
       </section>
