@@ -45,6 +45,8 @@ export type Matrix = {
   perKgOn: "excess" | "total";
   cubicFactorKgM3: number;
   fuelLevyPercent: number;
+  /** This card's margin on 'cost' rates, replacing FREIGHT_MARGIN_PERCENT. Null = the site's. */
+  marginPercent: number | null;
   consolidate: boolean;
   zones: { code: string; name: string }[];
   postcodes: { zone_code: string; postcode_from: number; postcode_to: number }[];
@@ -108,6 +110,7 @@ export function buildMatrixConfig(raw: {
         perKgOn: m.per_kg_on === "total" ? "total" : "excess",
         cubicFactorKgM3: n(m.cubic_factor_kg_m3) ?? 250,
         fuelLevyPercent: n(m.fuel_levy_percent) ?? 0,
+        marginPercent: n(m.margin_percent),
         consolidate: m.consolidate === true,
         zones: of(raw.zones, code).map((z) => ({ code: String(z.code), name: String(z.name ?? z.code) })),
         postcodes: of(raw.postcodes, code).map((p) => ({
@@ -277,7 +280,7 @@ export type MatrixQuoteInput = {
    *  already knows - and it keeps this file free of a runtime import cycle. */
   oversize: boolean;
   postcode: string;
-  /** FREIGHT_MARGIN_PERCENT, applied to 'cost' matrices only. */
+  /** FREIGHT_MARGIN_PERCENT, applied to 'cost' matrices that set no margin of their own. */
   marginPercent: number;
 };
 
@@ -302,7 +305,7 @@ export function quoteOneMatrix(m: Matrix, input: MatrixQuoteInput): FreightOptio
     // the carrier's charge, then our margin, then GST.
     const price =
       m.basis === "cost"
-        ? charge * (1 + m.fuelLevyPercent / 100) * (1 + input.marginPercent / 100) * GST
+        ? charge * (1 + m.fuelLevyPercent / 100) * (1 + (m.marginPercent ?? input.marginPercent) / 100) * GST
         : charge;
     options.push({
       id: `matrix:${m.code}:${zone}:${r.id}`,

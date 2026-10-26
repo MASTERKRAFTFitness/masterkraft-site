@@ -264,6 +264,15 @@ describe("pricing a carrier's cost card", () => {
     const big = [{ weight: 10, length: 200, width: 50, height: 50 }];
     expect(quoteMatrices(mf(), { ...input(0), parcels: big })?.[0].price).toBe(priced(27.39 + 166.5 * 0.7835));
   });
+
+  // Capital Group carries 15% even on a bulky consignment, where the site's default is 20%.
+  it("uses the card's own margin in place of the site's", () => {
+    const own = config({
+      matrices: withMf().map((m) => (m.code === "MF" ? { ...m, margin_percent: "15" } : m)),
+      rates: rates.filter((r) => r.matrix_code === "MF"),
+    });
+    expect(quoteMatrices(own, { ...input(21), marginPercent: 20 })?.[0].price).toBe(priced(102.7));
+  });
 });
 
 describe("loading", () => {
