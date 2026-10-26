@@ -170,7 +170,7 @@ export const RANGE = [
     spec: "2 – 10 kg",
     body: "Grippy, wall-ball friendly balls with your gym's mark printed on.",
     href: "/equipment/mixed-implements/wall-balls",
-    image: { src: "/indie-iron/branded-wall-ball.jpg", width: 1500, height: 1030, alt: "A grey MasterKraft wall ball, 8 lb, with the MasterKraft logo printed above the seam" },
+    image: { src: "/indie-iron/branded-wall-ball-revl.jpg", width: 1500, height: 1030, alt: "A grey 14 lb wall ball with the REVL logo printed above the seam" },
   },
   {
     name: "Dumbbells",
@@ -184,7 +184,7 @@ export const RANGE = [
     spec: "10 – 50 kg",
     body: "Pre-loaded straight and curl bars for the rack, with branded end caps.",
     href: "/equipment/weightlifting/barbells",
-    image: { src: "/indie-iron/branded-fixed-barbell.jpg", width: 1000, height: 1080, alt: "A black urethane fixed barbell with a red 40 kg MasterKraft end cap", zoom: 1.15 },
+    image: { src: "/indie-iron/branded-fixed-barbell-fernwood.png", width: 1624, height: 1131, alt: "A 5 kg fixed curl bar with the Fernwood Fitness logo in pink on the end cap", zoom: 1.2 },
   },
 ] as const;
 
