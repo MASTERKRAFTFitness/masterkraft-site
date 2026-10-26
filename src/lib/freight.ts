@@ -89,7 +89,8 @@ export const MAX_PARCEL_VOLUME_M3 = 0.25;
 // PAC prices ONE parcel per call, so a cart costs one AusPost call per distinct
 // carton shape. Identical cartons are priced once and multiplied. These caps stop
 // a large order turning into a burst of API calls mid-checkout; past them the
-// order goes to the quote flow, where a human was going to price it anyway.
+// cart is priced as one pallet by the consolidating matrices, and goes to the
+// quote flow only where none of them delivers.
 //
 // Easyship needs no such cap: it prices a whole consignment in ONE call, which is
 // the latency win docs/freight-brief-bulky.md asked carriers for. MAX_DISTINCT
@@ -102,9 +103,8 @@ const MAX_TOTAL_PARCELS = 30;
 // partitionConsignments: an over-limit carton is quoted on its own, because the
 // carriers that take bulky goods will not quote a consignment holding anything
 // else. Each group costs one metered Easyship call, so this is the ceiling on
-// what a single checkout can spend of the allowance. Past it the order goes to
-// the quote flow, where a trolley of racks was always going to be priced by a
-// person.
+// what a single checkout can spend of the allowance. Past it the cart goes on a
+// pallet, as above.
 const MAX_CONSIGNMENTS = 6;
 
 export type FreightAddress = {
@@ -1219,10 +1219,6 @@ export async function quoteFreight(
     return { ok: false, reason: "incomplete_dimensions", missing };
   }
 
-  if (parcels.length > MAX_TOTAL_PARCELS) {
-    return { ok: false, reason: "too_many_parcels", detail: `${parcels.length} cartons` };
-  }
-
   // Checked AFTER the local validations, so a key is only ever built for a cart
   // that would actually reach a carrier. This is the WHOLE-CART entry; each
   // consignment caches itself separately inside quoteCarriers.
@@ -1235,8 +1231,23 @@ export async function quoteFreight(
   const groups = partitionConsignments(parcels).sort((a, b) =>
     boxSignature(a).localeCompare(boxSignature(b))
   );
-  if (groups.length > MAX_CONSIGNMENTS) {
-    return { ok: false, reason: "too_many_parcels", detail: `${groups.length} consignments` };
+  // PAST THE CAPS, IT GOES ON A PALLET. The caps exist to stop a big cart
+  // becoming a burst of carrier calls, not to refuse it: ten barbells are ten
+  // consignments to TNT but one pallet to a line-haul card (Michael, 27 Oct
+  // 2026). So the consolidating matrices price the whole cart, and only a cart
+  // none of them covers still goes to the quote flow.
+  const overCap =
+    parcels.length > MAX_TOTAL_PARCELS
+      ? `${parcels.length} cartons`
+      : groups.length > MAX_CONSIGNMENTS
+        ? `${groups.length} consignments`
+        : null;
+  if (overCap) {
+    const pallet = usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
+    const quote: FreightQuote =
+      pallet.length > 0 ? pickOptions(pallet) : { ok: false, reason: "too_many_parcels", detail: overCap };
+    setCached(key, quote, cacheableFor(quote));
+    return quote;
   }
 
   // PRE-FLIGHT, AND IT MUST STAY BEFORE THE FIRST CALL. If nothing on the
@@ -1279,33 +1290,36 @@ export async function quoteFreight(
         ? { ok: false, reason: "error", detail: errors.join("; ") }
         : { ok: false, reason: "no_services" };
   } else {
-    const options = [
+    quote = pickOptions([
       ...(failures.length === 0
         ? combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options))
         : []),
       ...whole,
-    ];
-    // Applied BEFORE selectOptions, so an over-ceiling express service is never
-    // offered as the "faster" second option either. The cheapest is what decides
-    // whether this cart can be sold online at all.
-    const cap = maxAutoQuote();
-    // Matrix rates are exempt - see isMatrixPriced.
-    const affordable =
-      cap > 0 ? options.filter((o) => o.price <= cap || isMatrixPriced(o)) : options;
-    const cheapest = options.length > 0 ? Math.min(...options.map((o) => o.price)) : 0;
-
-    quote =
-      affordable.length > 0
-        ? { ok: true, options: selectOptions(affordable) }
-        : options.length > 0
-          ? {
-              ok: false,
-              reason: "too_expensive",
-              detail: `cheapest $${cheapest.toFixed(2)} over the $${cap.toFixed(2)} cap`,
-            }
-          : { ok: false, reason: "no_services" };
+    ]);
   }
 
   setCached(key, quote, cacheableFor(quote));
   return quote;
+}
+
+/** The options a priced cart offers, after the auto-quote cap. */
+function pickOptions(options: FreightOption[]): FreightQuote {
+  // Applied BEFORE selectOptions, so an over-ceiling express service is never
+  // offered as the "faster" second option either. The cheapest is what decides
+  // whether this cart can be sold online at all.
+  const cap = maxAutoQuote();
+  // Matrix rates are exempt - see isMatrixPriced.
+  const affordable =
+    cap > 0 ? options.filter((o) => o.price <= cap || isMatrixPriced(o)) : options;
+  const cheapest = options.length > 0 ? Math.min(...options.map((o) => o.price)) : 0;
+
+  return affordable.length > 0
+    ? { ok: true, options: selectOptions(affordable) }
+    : options.length > 0
+      ? {
+          ok: false,
+          reason: "too_expensive",
+          detail: `cheapest $${cheapest.toFixed(2)} over the $${cap.toFixed(2)} cap`,
+        }
+      : { ok: false, reason: "no_services" };
 }
