@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   // The root layout appends " | MASTERKRAFT".
   title: "Indie Iron: independent gym buying group",
   description:
-    "Franchise buying power for independent gyms. 10% off MasterKraft equipment any time, and up to 20% off in four quarterly buy windows, with your logo on plates, kettlebells, dumbbells, medicine balls and fixed barbells.",
+    "Franchise buying power for independent gyms. Up to 10% off MasterKraft equipment any time, and up to 20% off in four quarterly buy windows, with your logo on plates, kettlebells, dumbbells, medicine balls and fixed barbells.",
   alternates: { canonical: "/indie-iron" },
 };
 
@@ -125,7 +125,7 @@ export default function IndieIronPage() {
             </h1>
             <p className="mt-5 max-w-[58ch] text-[1.1rem] leading-relaxed text-white/80 lg:text-[1.2rem]">
               Indie Iron pools orders from independent gyms into one quarterly buy, so you get the pricing the
-              big chains get. 10% off the website price on all MasterKraft equipment, and up to 20% off when you
+              big chains get. Up to 10% off the website price on all MasterKraft equipment, and up to 20% off when you
               order in a buy window, with your logo on plates, kettlebells, medicine balls, dumbbells and fixed
               barbells.
             </p>

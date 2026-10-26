@@ -21,7 +21,7 @@ export const WELCOME_SUBJECT = "Welcome to Indie Iron";
 
 /** The pricing claims. Match the page; change both together. */
 export const WELCOME_PRICING = "up to 20% off the website price";
-export const WELCOME_MEMBER_PRICING = "10% off the website price";
+export const WELCOME_MEMBER_PRICING = "up to 10% off the website price";
 
 const GRAPHITE = "#16191D";
 const COBALT = "#2350D8";

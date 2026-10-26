@@ -21,7 +21,7 @@ export default function IndieIronCallout() {
           </p>
           <h2 className="mt-3 font-display text-3xl uppercase">Franchise buying power, without the franchise.</h2>
           <p className="mt-3 max-w-[60ch] text-white/70">
-            Indie Iron pools orders from independent gyms into one quarterly buy. 10% off the website price on all
+            Indie Iron pools orders from independent gyms into one quarterly buy. Up to 10% off the website price on all
             MasterKraft equipment, and up to 20% off when you order in a buy window. Free to join.
           </p>
         </div>

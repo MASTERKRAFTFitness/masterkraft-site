@@ -222,7 +222,7 @@ export const FAQ = [
     q: "Who is behind Indie Iron?",
     a: "MasterKraft, a commercial gym equipment supplier working with large franchise networks and independent gym owners alike. Indie Iron is how independents get network buying power.",
   },
-  { q: "What if I miss a window?", a: "Your order rolls into the next one. You can also buy outside a window any time at 10% off the website price." },
+  { q: "What if I miss a window?", a: "Your order rolls into the next one. You can also buy outside a window any time at up to 10% off the website price." },
   {
     q: "Can I add other equipment?",
     a: "Yes. Anything in the MasterKraft range can go into your window order, at up to 20% off the website price depending on the product. Branding covers the five free-weight lines. For a full fit-out, ask and we'll quote it.",
@@ -244,7 +244,7 @@ export const FAQ = [
 // claims match the table; change both together if Steve confirms more.
 //
 // Michael, 26 Oct 2026: the 10% is for ANY independent gym on ALL equipment, any
-// time. Ordering in a window takes ANYTHING in that order (not only the five
+// time, and it is UP TO 10%, not guaranteed on every product, so always say "up to". Ordering in a window takes ANYTHING in that order (not only the five
 // branded lines) to the buying-group price, up to 20% depending on the product.
 // Branding stays limited to the five lines.
 // Prices re-read live from Unleashed on 19 Oct and unchanged. Setting
@@ -255,8 +255,8 @@ export const FAQ = [
 
 export const PRICING_CONFIRMED = true;
 
-/** Member price: the T6 tier, 10% off the website price. */
-export const MEMBER_DISCOUNT_LABEL = "10% off";
+/** Member price: the T6 tier, up to 10% off the website price. */
+export const MEMBER_DISCOUNT_LABEL = "up to 10% off";
 
 /**
  * One example size per line. All prices inc GST, from Unleashed on 14 Oct 2026:
