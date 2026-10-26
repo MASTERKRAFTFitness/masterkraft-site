@@ -69,43 +69,6 @@ function SectionHead({ eyebrow, title, children }: { eyebrow: string; title: str
   );
 }
 
-const ICONS: Record<(typeof RANGE)[number]["icon"], React.ReactNode> = {
-  plate: (
-    <>
-      <circle cx="28" cy="28" r="26" fill="var(--ii-graphite)" />
-      <circle cx="28" cy="28" r="12" fill="var(--ii-cobalt)" />
-      <circle cx="28" cy="28" r="5" fill="#fff" />
-    </>
-  ),
-  kettlebell: (
-    <>
-      <path d="M18 22a10 10 0 0 1 20 0v4h-5v-4a5 5 0 0 0-10 0v4h-5z" fill="var(--ii-graphite)" />
-      <circle cx="28" cy="38" r="16" fill="var(--ii-graphite)" />
-      <rect x="20" y="34" width="16" height="8" rx="1" fill="var(--ii-cobalt)" />
-    </>
-  ),
-  ball: (
-    <>
-      <circle cx="28" cy="28" r="24" fill="var(--ii-graphite)" />
-      <path d="M6 26h44v4H6z" fill="var(--ii-cobalt)" />
-    </>
-  ),
-  dumbbell: (
-    <>
-      <rect x="4" y="16" width="12" height="24" rx="3" fill="var(--ii-graphite)" />
-      <rect x="40" y="16" width="12" height="24" rx="3" fill="var(--ii-graphite)" />
-      <rect x="16" y="25" width="24" height="6" fill="var(--ii-cobalt)" />
-    </>
-  ),
-  barbell: (
-    <>
-      <rect x="4" y="25" width="48" height="6" rx="2" fill="var(--ii-cobalt)" />
-      <rect x="8" y="18" width="7" height="20" rx="2" fill="var(--ii-graphite)" />
-      <rect x="41" y="18" width="7" height="20" rx="2" fill="var(--ii-graphite)" />
-    </>
-  ),
-};
-
 export default function IndieIronPage() {
   return (
     <div className={`${bigShoulders.variable} bg-[var(--ii-zinc)] text-[var(--ii-graphite)]`} style={tokens}>
@@ -206,26 +169,21 @@ export default function IndieIronPage() {
                 href={r.href}
                 className="group grid grid-rows-[auto_auto_auto_1fr_auto] gap-2.5 rounded-md border border-[#C9CED5] bg-white p-5 transition-colors hover:border-[var(--ii-cobalt)]"
               >
-                {"image" in r ? (
-                  // The product shots carry a lot of studio backdrop; scaled up
-                  // inside a clipped frame so the branding is legible on a card.
-                  <div className="aspect-[4/3] w-full overflow-hidden rounded-sm bg-[#E9E9E9]">
-                    <Image
-                      src={r.image.src}
-                      alt={r.image.alt}
-                      width={r.image.width}
-                      height={r.image.height}
-                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 70vw, 100vw"
-                      className="h-full w-full scale-[1.6] object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="grid aspect-[4/3] w-full place-items-center rounded-sm bg-[var(--ii-zinc)]">
-                    <svg viewBox="0 0 56 56" className="h-16 w-16" aria-hidden>
-                      {ICONS[r.icon]}
-                    </svg>
-                  </div>
-                )}
+                {/* The product shots carry a lot of studio backdrop; scaled up
+                    inside a clipped frame so the branding is legible on a card.
+                    A long, thin shot (the barbell) sets a smaller zoom so its
+                    ends stay in frame. */}
+                <div className="aspect-[4/3] w-full overflow-hidden rounded-sm bg-[#E9E9E9]">
+                  <Image
+                    src={r.image.src}
+                    alt={r.image.alt}
+                    width={r.image.width}
+                    height={r.image.height}
+                    sizes="(min-width: 1024px) 360px, (min-width: 640px) 70vw, 100vw"
+                    className="h-full w-full object-cover"
+                    style={{ transform: `scale(${"zoom" in r.image ? r.image.zoom : 1.6})` }}
+                  />
+                </div>
                 <h3 className="ii-display text-[1.4rem] leading-none">{r.name}</h3>
                 <p className="font-mono text-[0.75rem] uppercase tracking-[0.02em] text-ash">{r.spec}</p>
                 <p className="text-sm text-ash">{r.body}</p>
