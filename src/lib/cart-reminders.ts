@@ -10,9 +10,9 @@
 //
 // AN HOUR AFTER THEY LEAVE (Michael, 2026-10-26; it was the next morning), while
 // they are still deciding. The cron runs every 30 minutes, so it lands 60-90
-// minutes after their last step. Only between 9am and 6pm Melbourne time: a cart
-// left in the evening or overnight is reminded from 9am, so nobody is emailed at
-// 1am.
+// minutes after their last step. Only between 9am and 8pm Melbourne time (8pm
+// since 2026-10-26, so after-work shoppers hear the same evening): a cart left
+// late or overnight is reminded from 9am, so nobody is emailed at 1am.
 //
 // IT ASKS WHAT STOPPED THEM. One link per reason; the page it opens records the
 // answer on the checkout (abandon_reason) and emails the team, who can act on
@@ -36,9 +36,9 @@ import { ABANDON_REASONS, MAX_REASON_NOTE, validAbandonReason, type AbandonReaso
 
 const TIMEOUT_MS = 8000;
 const ZONE = "Australia/Melbourne";
-/** The morning starts at 9, and nothing goes out after 6pm - it waits for tomorrow. */
+/** The morning starts at 9, and nothing goes out from 8pm - it waits for tomorrow. */
 const SEND_FROM_HOUR = 9;
-const SEND_UNTIL_HOUR = 18;
+const SEND_UNTIL_HOUR = 20;
 /** How long a checkout sits untouched before it counts as left. Same as the team alert. */
 export const REMIND_AFTER_MINUTES = 60;
 /**
@@ -303,7 +303,7 @@ export async function resend(msg: {
 /** One pass: remind every opted-in checkout left at least an hour ago. */
 export async function sendCartReminders(now = new Date()): Promise<ReminderResult> {
   const result: ReminderResult = { ok: true, candidates: 0, sent: 0, optedOut: 0, failed: 0 };
-  if (!inSendWindow(now)) return { ...result, skipped: "outside 9am-6pm Melbourne" };
+  if (!inSendWindow(now)) return { ...result, skipped: "outside 9am-8pm Melbourne" };
   const db = adminDb();
   if (!db) return { ...result, ok: false, error: "Supabase is not configured" };
   if (!process.env.RESEND_API_KEY || !process.env.QUOTE_FROM_EMAIL) {
