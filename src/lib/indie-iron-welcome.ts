@@ -19,8 +19,9 @@ import {
 
 export const WELCOME_SUBJECT = "Welcome to Indie Iron";
 
-/** The headline pricing claim. Matches the page; change both together. */
+/** The pricing claims. Match the page; change both together. */
 export const WELCOME_PRICING = "up to 20% off the website price";
+export const WELCOME_MEMBER_PRICING = "up to 10% off the website price";
 
 const GRAPHITE = "#16191D";
 const COBALT = "#2350D8";
@@ -86,8 +87,10 @@ export function welcomeEmail(
         <p style="margin:0 0 16px">Welcome to Indie Iron. ${escape(s.company)} is now a member of
         MasterKraft's buying group for independent gyms. Membership is free, and there's no lock-in.</p>
         <p style="margin:0 0 16px">${intro}</p>
-        <p style="margin:0 0 24px">Ordering in a buy window gets you <strong>${WELCOME_PRICING}</strong>
-        on the five core lines, with your logo on every piece.</p>
+        <p style="margin:0 0 24px">You get <strong>${WELCOME_MEMBER_PRICING}</strong> on all MasterKraft
+        equipment, any time. Order in a buy window and it's <strong>${WELCOME_PRICING}</strong>,
+        depending on the product, with your logo on plates, kettlebells, medicine balls, dumbbells
+        and fixed barbells.</p>
         <p style="margin:0 0 12px;font:700 12px/18px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:${COBALT}">What happens next</p>
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
           ${step(1, "Your pricing and order form", `Within one business day we'll email your member pricing and the order form for the ${w.name} window.`)}
