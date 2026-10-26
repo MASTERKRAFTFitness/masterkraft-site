@@ -8,6 +8,7 @@ import { useCart, type CartItem } from "@/components/cart/CartProvider";
 import { identifyUser, trackLead, trackPurchase } from "@/lib/analytics";
 import { opinlyAnonId } from "@/lib/opinly";
 import { freightMessage, quotesAutomatically } from "@/lib/freight-message";
+import StoppingQuestion from "@/components/shop/StoppingQuestion";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -358,7 +359,7 @@ export default function StripeCheckout({
               <input name="phone" required aria-label="Phone" placeholder="Phone" className={fieldClass} />
             </div>
             {/* UNTICKED, AND IT STAYS THAT WAY. A tick is the shopper's consent to
-                the one next-morning reminder (lib/cart-reminders); a pre-ticked
+                the one reminder email (lib/cart-reminders); a pre-ticked
                 box would not be. Changing it clears the freight quote like any
                 other field, so the choice is re-sent before payment and an
                 untick always reaches the server before the email could. */}
@@ -420,6 +421,16 @@ export default function StripeCheckout({
               </p>
             )}
           </form>
+        )}
+
+        {/* After the freight quote, whatever it said. Keyed on the checkout so
+            a fresh checkout starts unanswered. */}
+        {phase === "details" && quoted && (
+          <StoppingQuestion
+            key={checkoutId}
+            checkoutId={checkoutId}
+            onRequestQuote={freightNotice ? undefined : requestQuote}
+          />
         )}
 
         {phase === "payment" && clientSecret && billing && (

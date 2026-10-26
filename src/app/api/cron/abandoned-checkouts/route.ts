@@ -25,6 +25,7 @@ import {
 } from "@/lib/checkout-leads";
 import { internalRecipients } from "@/lib/notify-recipients";
 import { sendCartReminders } from "@/lib/cart-reminders";
+import { ABANDON_REASONS, validAbandonReason } from "@/lib/abandon-reasons";
 
 export const dynamic = "force-dynamic";
 
@@ -61,9 +62,17 @@ function abandonedEmailHtml(row: CheckoutLeadRow): string {
       ? `${aud.format(row.freight_price)}${row.freight_label ? ` (${escape(row.freight_label)})` : ""}`
       : `could not be priced automatically${row.freight_reason ? ` (${escape(row.freight_reason)})` : ""}`;
   const where = [row.suburb, row.state, row.postcode].filter(Boolean).join(" ");
+  // Their answer to "Anything stopping you?" on the checkout page, if they gave one.
+  const reason = validAbandonReason(row.abandon_reason);
+  const said = reason
+    ? `<p style="padding:8px 12px;background:#f4f4f4"><strong>They said what stopped them:</strong> ${escape(ABANDON_REASONS[reason])}${
+        row.abandon_reason_note ? `<br/>&ldquo;${escape(row.abandon_reason_note).replace(/\n/g, "<br/>")}&rdquo;` : ""
+      }</p>`
+    : "";
   return `
     <h2>Abandoned checkout</h2>
     <p>This customer ${STAGE[row.status] ?? "left the checkout"}. Worth a call or a personal reply.</p>
+    ${said}
     ${row.reminder_opt_in ? `<p>They asked to be emailed their cart, so an automatic reminder goes to them now (or from 9am, if it's after hours) asking what stopped them. Their answer will be emailed here.</p>` : ""}
     <p><strong>${escape(row.name ?? "")}</strong>${row.company ? ` (${escape(row.company)})` : ""}<br/>
     ${escape(row.email ?? "")}${row.phone ? ` · ${escape(row.phone)}` : ""}<br/>
@@ -78,6 +87,8 @@ function abandonedEmailHtml(row: CheckoutLeadRow): string {
 
 async function send(row: CheckoutLeadRow, apiKey: string, from: string): Promise<boolean> {
   const value = row.subtotal != null ? ` ${aud.format(row.subtotal)}` : "";
+  const reason = validAbandonReason(row.abandon_reason);
+  const said = reason ? ` (${ABANDON_REASONS[reason]})` : "";
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -85,7 +96,7 @@ async function send(row: CheckoutLeadRow, apiKey: string, from: string): Promise
       from,
       to: internalRecipients(),
       reply_to: row.email ?? undefined,
-      subject: `Abandoned checkout:${value} - ${row.name || row.email}`,
+      subject: `Abandoned checkout:${value} - ${row.name || row.email}${said}`,
       html: abandonedEmailHtml(row),
     }),
   });

@@ -146,6 +146,13 @@ describe("the email", () => {
     vi.unstubAllEnvs();
   });
 
+  it("doesn't ask again when they already answered on the checkout page", () => {
+    vi.stubEnv("CRON_SECRET", "s3cret");
+    const { html } = reminderEmail(lead({ abandon_reason: "freight" }), "https://x");
+    expect(html).not.toContain("what stopped you?");
+    vi.unstubAllEnvs();
+  });
+
   it("leaves the question out rather than send dead links", () => {
     const { html } = reminderEmail(lead(), "https://x", () => null);
     expect(html).not.toContain("what stopped you?");
