@@ -21,8 +21,8 @@ matrix notes, not offered at checkout.
 The zone is Melbourne metro, borrowed from the Mainfreight card's MELBOURNE and
 MEL CENTRAL postcode ranges, so the two cards cover the same addresses.
 
-The matrix is written INACTIVE with a 0% fuel levy (the card is "exclusive of
-GST and Fuel"). Set the levy, then switch it on (freight_matrices.active).
+The card is "exclusive of GST and Fuel"; Capital's fuel levy is 35% (27/10/26).
+The matrix is written INACTIVE: switch it on with freight_matrices.active.
 Checkout runs 'pooled', so once active it competes on price with Mainfreight.
 
 MARGIN IS 15%, ours, set on the card (margin_percent) so a bulky load is not
@@ -50,7 +50,7 @@ TRUCKS = [
 NOTES = (
     "Capital Group Standard Hourly Hire - VIC, supplied 27/10/26. Ex Thomastown. "
     "Priced at MINIMUM HIRE (min hours x hourly rate) - real jobs bill pickup to delivery plus return, so this is a floor. "
-    "Rates ex GST and ex fuel: SET fuel_levy_percent BEFORE ACTIVATING. "
+    "Rates ex GST and ex fuel: Fuel levy 35% (set 27/10/26). "
     "Not priced: Hydraulic tailgate 6T $46.80/h, 8T $53.95, 12T $62.40, 14T $68.90; Crane/Hiab 8T $97.50, 12T $104.00, 14T $110.50 (4h minimum). "
     "Booked 6am-4pm Mon-Fri; VIP/after-4pm surcharges, 60-120 min specialised pickups, mobile and toll charges not modelled. "
     "Capital also quoted 1T courier rates (SC/SSW/SLV/SH/S1, 4-5h standard) - that card is not loaded yet."
@@ -75,7 +75,7 @@ def main():
         "begin;",
         f"delete from freight_matrices where code = '{CODE}';",
         "insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3, fuel_levy_percent, margin_percent, consolidate, notes) values "
-        f"('{CODE}', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 333, 0, 15, true, {sql_str(NOTES)});",
+        f"('{CODE}', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 333, 35, 15, true, {sql_str(NOTES)});",
         "insert into freight_zones (matrix_code, code, name, notes) values "
         f"('{CODE}', 'MELBOURNE', 'Melbourne metro', 'Same postcodes as Mainfreight MELBOURNE + MEL CENTRAL');",
         "insert into freight_zone_postcodes (matrix_code, zone_code, postcode_from, postcode_to) values",
