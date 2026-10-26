@@ -172,6 +172,9 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
   }
 
   if (dryRun) {
+    // The checkout's follow-up row is still marked paid: left at payment_started,
+    // the abandoned-checkout run would alert the team about a test.
+    scheduleCheckoutLead(checkoutId, { status: "paid", orderNumber: String(order.orderNumber) });
     console.log("[order] DRY RUN, nothing written, emailed or shipped", { orderNumber: order.orderNumber });
     return { status: 200, body: { ok: true, orderId: order.id, orderNumber: order.orderNumber, value: chargedTotal } };
   }

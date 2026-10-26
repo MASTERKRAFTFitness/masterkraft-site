@@ -596,6 +596,9 @@ function PayForm({
             phone: billing.phone,
             address: {
               line1: billing.address_1,
+              // Required as a key once the Payment Element stops asking for the
+              // address (fields below); the form has no second line.
+              line2: "",
               city: billing.city,
               state: billing.state,
               postal_code: billing.postcode,
@@ -668,7 +671,14 @@ function PayForm({
           charged the current total.
         </p>
       )}
-      <PaymentElement />
+      {/* The details form above already took all of these, and pay() passes
+          them on. Without this, Afterpay, Zip and Klarna ask for the email and
+          name a second time. */}
+      <PaymentElement
+        options={{
+          fields: { billingDetails: { name: "never", email: "never", phone: "never", address: "never" } },
+        }}
+      />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <div className="flex flex-wrap gap-4">
         <button type="submit" disabled={!stripe || paying} className="btn btn-accent disabled:opacity-60">
