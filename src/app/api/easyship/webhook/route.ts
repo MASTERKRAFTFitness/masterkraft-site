@@ -7,7 +7,7 @@
 //           its `webh_...` secret into EASYSHIP_WEBHOOK_SECRET first.
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/admin-db";
-import { handleEvent, verifySignature, type EasyshipEvent } from "@/lib/easyship-webhook";
+import { describeSignature, handleEvent, verifySignature, type EasyshipEvent } from "@/lib/easyship-webhook";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +18,12 @@ export async function POST(req: Request) {
     console.warn("[easyship/webhook] refused: EASYSHIP_WEBHOOK_SECRET is not set");
     return NextResponse.json({ ok: false, error: "not configured" }, { status: 503 });
   }
-  if (!verifySignature(req.headers.get("x-easyship-signature"), secret)) {
-    console.warn("[easyship/webhook] refused: bad signature");
+  const signature = req.headers.get("x-easyship-signature");
+  if (!verifySignature(signature, secret)) {
+    // Shapes only (see describeSignature), plus which signature-like headers
+    // arrived, in case Easyship names it differently from its docs.
+    const headers = [...req.headers.keys()].filter((k) => /sign|auth|easyship/i.test(k));
+    console.warn("[easyship/webhook] refused: bad signature", { ...describeSignature(signature, secret), headers });
     return NextResponse.json({ ok: false, error: "bad signature" }, { status: 401 });
   }
 
