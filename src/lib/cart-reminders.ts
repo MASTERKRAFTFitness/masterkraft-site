@@ -32,6 +32,7 @@ import { adminDb } from "@/lib/admin-db";
 import { primaryRecipient } from "@/lib/notify-recipients";
 import { SITE_URL } from "@/lib/site";
 import type { CheckoutLeadRow } from "@/lib/checkout-leads";
+import { ABANDON_REASONS, MAX_REASON_NOTE, validAbandonReason, type AbandonReason } from "@/lib/abandon-reasons";
 
 const TIMEOUT_MS = 8000;
 const ZONE = "Australia/Melbourne";
@@ -142,25 +143,8 @@ export async function unsubscribeCheckout(checkoutId: string): Promise<boolean> 
 
 // ---- What stopped them ----------------------------------------------------
 
-/** The answers the email offers, in the order it lists them. Codes are what's stored. */
-export const ABANDON_REASONS = {
-  freight: "Delivery cost or timing",
-  quote: "I need a formal quote or invoice first",
-  question: "I had a question about the product",
-  payment: "Payment didn't go through",
-  comparing: "Still comparing options",
-  later: "Not ready to buy yet",
-  other: "Something else",
-} as const;
-
-export type AbandonReason = keyof typeof ABANDON_REASONS;
-
-export function validAbandonReason(value: unknown): AbandonReason | null {
-  return typeof value === "string" && Object.hasOwn(ABANDON_REASONS, value) ? (value as AbandonReason) : null;
-}
-
-/** Longest free-text note kept with a reason. */
-export const MAX_REASON_NOTE = 1000;
+// The answers themselves are in lib/abandon-reasons, shared with the checkout page.
+export { ABANDON_REASONS, MAX_REASON_NOTE, validAbandonReason, type AbandonReason } from "@/lib/abandon-reasons";
 
 export function reasonUrl(checkoutId: string, reason: AbandonReason, key = signingKey()): string | null {
   const token = sign("reason", checkoutId, key);
@@ -252,7 +236,10 @@ export function reminderEmail(
       ? `Delivery${where ? ` to ${escape(where)}` : ""}: <strong>${aud.format(row.freight_price)}</strong>`
       : `Delivery${where ? ` to ${escape(where)}` : ""}: we'll confirm the price with you`;
   const contact = primaryRecipient();
-  const reasons = (Object.keys(ABANDON_REASONS) as AbandonReason[])
+  // Already answered on the checkout page: don't ask twice.
+  const reasons = row.abandon_reason
+    ? ""
+    : (Object.keys(ABANDON_REASONS) as AbandonReason[])
     .map((r) => [reasonLink(r), ABANDON_REASONS[r]] as const)
     .filter(([href]) => href)
     .map(([href, label]) => `<li style="margin:4px 0"><a href="${escape(href!)}" style="color:#111">${escape(label)}</a></li>`)

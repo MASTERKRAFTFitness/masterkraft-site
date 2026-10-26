@@ -134,7 +134,8 @@ export type CheckoutLeadRow = {
 
 const COLUMNS =
   "checkout_id, status, name, email, phone, company, suburb, state, postcode, items, subtotal, " +
-  "freight_price, freight_label, freight_reason, order_number, notified_at, reminder_opt_in, created_at, updated_at";
+  "freight_price, freight_label, freight_reason, order_number, notified_at, reminder_opt_in, " +
+  "abandon_reason, abandon_reason_note, created_at, updated_at";
 
 /** Most recent checkouts first - the admin list. */
 export async function recentCheckoutLeads(limit = 100): Promise<CheckoutLeadRow[]> {
