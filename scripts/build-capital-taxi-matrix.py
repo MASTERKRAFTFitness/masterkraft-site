@@ -10,9 +10,11 @@ THE CARD IS HOURLY HIRE, the matrix is zone x weight. Capital Group's
 pickup to delivery plus return, with a minimum hire per truck size. A cart's
 real cost depends on the drive, which nothing here knows, so each truck is
 priced at its MINIMUM HIRE (minimum hours x hourly rate): the least the job can
-cost, and an underestimate for a run to the far side of Melbourne. One weight
-band per truck, sized by its rated tonnage, so the smallest truck that carries
-the cart is the one priced.
+cost, and an underestimate for a run to the far side of Melbourne. One row per
+truck, carrying its payload, pallet count and bed length off the card
+(max_pallets, max_length_cm), so the cheapest truck the cart FITS is priced - a
+light rig that fills four pallets needs the 4 tonne. Cubic weight is off (0):
+pallets, not kilograms of air, decide the truck.
 
 Only the Tray / Tautliner rates are priced; they are identical. Hydraulic
 (tailgate) and Crane/Hiab hire carry a 4-hour minimum and are recorded in the
@@ -35,16 +37,16 @@ from pathlib import Path
 CARDS = Path(__file__).resolve().parent.parent / "supabase" / "rate-cards"
 CODE = "capital-taxi-mel"
 
-# (label, kg up to, min hours, hourly rate ex GST) - Tray / Tautliner.
+# (label, kg up to, min hours, hourly rate ex GST, pallets, bed cm) - Tray / Tautliner.
 TRUCKS = [
-    ("2 tonne", 2000, 1.5, 36.86),
-    ("4 tonne", 4000, 1.5, 38.91),
-    ("6 tonne", 6000, 2, 42.32),
-    ("8 tonne", 8000, 2, 49.83),
-    ("12 tonne", 12000, 3, 58.70),
-    ("14 tonne", 14000, 3, 65.52),
-    ("20 tonne semi", 20000, 4, 84.50),
-    ("32 tonne B-double", 32000, 5, 130.00),
+    ("2 tonne", 2000, 1.5, 36.86, 3, 360),
+    ("4 tonne", 4000, 1.5, 38.91, 6, 420),
+    ("6 tonne", 6000, 2, 42.32, 8, 540),
+    ("8 tonne", 8000, 2, 49.83, 10, 600),
+    ("12 tonne", 12000, 3, 58.70, 12, 720),
+    ("14 tonne", 14000, 3, 65.52, 14, 840),
+    ("20 tonne semi", 20000, 4, 84.50, 22, 1320),
+    ("32 tonne B-double", 32000, 5, 130.00, 32, 2040),
 ]
 
 NOTES = (
@@ -75,17 +77,17 @@ def main():
         "begin;",
         f"delete from freight_matrices where code = '{CODE}';",
         "insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3, fuel_levy_percent, margin_percent, consolidate, notes) values "
-        f"('{CODE}', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 333, 35, 15, true, {sql_str(NOTES)});",
+        f"('{CODE}', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 0, 35, 15, true, {sql_str(NOTES)});",
         "insert into freight_zones (matrix_code, code, name, notes) values "
         f"('{CODE}', 'MELBOURNE', 'Melbourne metro', 'Same postcodes as Mainfreight MELBOURNE + MEL CENTRAL');",
         "insert into freight_zone_postcodes (matrix_code, zone_code, postcode_from, postcode_to) values",
         ",\n".join(f"  ('{CODE}', 'MELBOURNE', {a}, {b})" for a, b in ranges) + ";",
-        "insert into freight_matrix_rates (matrix_code, zone_code, service, service_level, applies_to, weight_from_kg, weight_to_kg, price, per_kg, minimum, days_from, days_to) values",
+        "insert into freight_matrix_rates (matrix_code, zone_code, service, service_level, applies_to, weight_from_kg, weight_to_kg, price, per_kg, minimum, days_from, days_to, max_pallets, max_length_cm) values",
     ]
     rows, lo = [], 0
-    for label, hi, hours, rate in TRUCKS:
+    for label, hi, hours, rate, pallets, bed in TRUCKS:
         price = (Decimal(str(hours)) * Decimal(str(rate))).quantize(Decimal("0.01"), ROUND_HALF_UP)
-        rows.append(f"  ('{CODE}', 'MELBOURNE', {sql_str('Taxi truck (' + label + ')')}, 'standard', 'any', {lo}, {hi}, {price}, 0, 0, 0, 1)")
+        rows.append(f"  ('{CODE}', 'MELBOURNE', {sql_str('Taxi truck (' + label + ')')}, 'standard', 'any', {lo}, {hi}, {price}, 0, 0, 0, 1, {pallets}, {bed})")
         lo = hi
     lines += [",\n".join(rows) + ";", "commit;", ""]
     out = CARDS / "capital-taxi-truck-vic.sql"

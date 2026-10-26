@@ -42,7 +42,7 @@ vi.mock("@/lib/admin-db", () => ({
 }));
 
 const { clearFreightCache } = await import("@/lib/freight-cache");
-const { buildMatrixConfig, chargeableKg, clearMatrixCache, loadMatrixConfig, quoteMatrices, zoneFor } =
+const { buildMatrixConfig, chargeableKg, clearMatrixCache, loadMatrixConfig, palletsFor, quoteMatrices, zoneFor } =
   await import("@/lib/freight-matrix");
 const { freightAvailable, quoteFreight } = await import("@/lib/freight");
 type FreightItem = import("@/lib/freight").FreightItem;
@@ -272,6 +272,45 @@ describe("pricing a carrier's cost card", () => {
       rates: rates.filter((r) => r.matrix_code === "MF"),
     });
     expect(quoteMatrices(own, { ...input(21), marginPercent: 20 })?.[0].price).toBe(priced(102.7));
+  });
+});
+
+// Capital-shaped: trucks, each with a payload, a pallet count and a bed.
+describe("pricing a truck card", () => {
+  const truck = (id: number, kg: number, pallets: number, bed: number, price: string) =>
+    rate({ id, zone_code: "VIC", applies_to: "any", service: `Truck ${kg}`, weight_from_kg: "0", weight_to_kg: String(kg), price, max_pallets: pallets, max_length_cm: bed });
+  const trucks = () =>
+    config({
+      matrices: [{ ...matrices[0], cubic_factor_kg_m3: "0" }],
+      rates: [truck(30, 2000, 3, 360, "55"), truck(31, 4000, 6, 420, "58"), truck(32, 8000, 10, 600, "100")],
+    });
+  const box = (n: number, side: number, weight: number) =>
+    Array.from({ length: n }, () => ({ weight, length: side, width: side, height: side }));
+  const quote = (parcels: ReturnType<typeof box>) =>
+    quoteMatrices(trucks(), { parcels, oversize: true, postcode: "3074", marginPercent: 0 });
+
+  it("counts pallets by volume or by 1,000kg, whichever needs more", () => {
+    expect(palletsFor(box(1, 50, 20))).toBe(1);
+    // 5 x 1m3 = 5m3, over two 2.44m3 pallets.
+    expect(palletsFor(box(5, 100, 20))).toBe(3);
+    expect(palletsFor(box(1, 50, 2500))).toBe(3);
+  });
+
+  it("offers only the cheapest truck that fits", () => {
+    expect(quote(box(1, 50, 20))?.map((o) => o.id)).toEqual(["matrix:OWN:VIC:30"]);
+  });
+
+  // 400kg of rig is nowhere near 2 tonnes, but it fills 4 pallets.
+  it("moves a light, bulky load up to the truck with room for it", () => {
+    expect(quote(box(8, 110, 50))?.map((o) => o.id)).toEqual(["matrix:OWN:VIC:31"]);
+  });
+
+  it("needs a bed long enough for the longest carton", () => {
+    expect(quote([{ weight: 60, length: 400, width: 30, height: 30 }])?.map((o) => o.id)).toEqual(["matrix:OWN:VIC:31"]);
+  });
+
+  it("offers nothing when no truck fits", () => {
+    expect(quote([{ weight: 60, length: 700, width: 30, height: 30 }])).toBeNull();
   });
 });
 
