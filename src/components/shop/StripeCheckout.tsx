@@ -65,11 +65,31 @@ function checkoutIdFor(): string {
     return fresh();
   }
 }
-function forgetCheckoutId() {
+export function forgetCheckoutId() {
   try {
     localStorage.removeItem(CHECKOUT_ID_KEY);
   } catch {
     /* nothing to forget */
+  }
+}
+
+// Who is paying, kept for the length of the tab so /checkout/complete can offer
+// the Google Customer Reviews survey after an Afterpay or Zip round trip. The
+// server never hands an address back to whoever holds an intent id.
+const BUYER_KEY = "mk-paying-buyer";
+function rememberBuyer(buyer: PaidBuyer) {
+  try {
+    sessionStorage.setItem(BUYER_KEY, JSON.stringify(buyer));
+  } catch {
+    /* the review offer is optional */
+  }
+}
+export function recallBuyer(): PaidBuyer | null {
+  try {
+    const b = JSON.parse(sessionStorage.getItem(BUYER_KEY) ?? "null");
+    return typeof b?.email === "string" && typeof b?.state === "string" ? b : null;
+  } catch {
+    return null;
   }
 }
 
@@ -232,7 +252,9 @@ export default function StripeCheckout({
     const res = await fetch("/api/payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: refs, delivery, freightServiceId, checkoutId }),
+      // billing and anonId are stored on the intent, so an Afterpay or Zip
+      // payment can become an order without this page - see lib/order-intent.
+      body: JSON.stringify({ items: refs, delivery, freightServiceId, checkoutId, billing: b, anonId: opinlyAnonId() }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
@@ -555,10 +577,18 @@ function PayForm({
       setPaying(false);
       return;
     }
+    // For the return page's review offer, if Afterpay or Zip takes the customer
+    // away. Cards never leave, so for them this is simply never read.
+    rememberBuyer({ email: billing.email, state: billing.state });
     const { error: payError, paymentIntent } = await stripe.confirmPayment({
       elements,
+      // Cards and wallets finish here. Afterpay and Zip send the customer to
+      // their own site and back to return_url, where /checkout/complete places
+      // the order from the intent (and the Stripe webhook does, if they never
+      // come back).
       redirect: "if_required",
       confirmParams: {
+        return_url: `${window.location.origin}/checkout/complete`,
         payment_method_data: {
           billing_details: {
             name: `${billing.first_name} ${billing.last_name}`.trim(),
@@ -566,6 +596,9 @@ function PayForm({
             phone: billing.phone,
             address: {
               line1: billing.address_1,
+              // Required as a key once the Payment Element stops asking for the
+              // address (fields below); the form has no second line.
+              line2: "",
               city: billing.city,
               state: billing.state,
               postal_code: billing.postcode,
@@ -638,7 +671,14 @@ function PayForm({
           charged the current total.
         </p>
       )}
-      <PaymentElement />
+      {/* The details form above already took all of these, and pay() passes
+          them on. Without this, Afterpay, Zip and Klarna ask for the email and
+          name a second time. */}
+      <PaymentElement
+        options={{
+          fields: { billingDetails: { name: "never", email: "never", phone: "never", address: "never" } },
+        }}
+      />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <div className="flex flex-wrap gap-4">
         <button type="submit" disabled={!stripe || paying} className="btn btn-accent disabled:opacity-60">

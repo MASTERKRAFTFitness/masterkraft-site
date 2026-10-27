@@ -4,7 +4,9 @@ import { quoteOnly } from "@/lib/checkout-mode";
 import { resolveOrderLines, type CartRef } from "@/lib/order-lines";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 import { freightMessage } from "@/lib/freight-message";
-import { scheduleCheckoutLead } from "@/lib/checkout-leads";
+import { scheduleCheckoutLead, validCheckoutId } from "@/lib/checkout-leads";
+import { orderIntentMetadata } from "@/lib/order-intent";
+import type { OrderAddress } from "@/lib/order-lines";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
@@ -30,8 +32,10 @@ export async function POST(request: Request) {
   let delivery: DeliveryInput | undefined;
   let freightServiceId: string | undefined;
   let checkoutId: unknown;
+  let billing: OrderAddress | undefined;
+  let anonId: unknown;
   try {
-    ({ items, delivery, freightServiceId, checkoutId } = await request.json());
+    ({ items, delivery, freightServiceId, checkoutId, billing, anonId } = await request.json());
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
@@ -75,6 +79,28 @@ export async function POST(request: Request) {
   const freightCost = freight.selected?.price ?? 0;
   const chargeTotal = Math.round((total + freightCost) * 100) / 100;
 
+  // The cart and the buyer, stored ON the intent, so the order can be placed
+  // from the intent alone when the customer pays with Afterpay or Zip and the
+  // browser that holds them is not the one that comes back - see
+  // lib/order-intent. These are the refs priced above, not a second copy.
+  let orderData: Record<string, string> = {};
+  if (billing?.email) {
+    try {
+      orderData = orderIntentMetadata({
+        items,
+        billing,
+        checkoutId: validCheckoutId(checkoutId) ?? undefined,
+        anonId: typeof anonId === "string" ? anonId : undefined,
+      });
+    } catch (e) {
+      console.error("[payment-intent] cart too large to store on the intent", e);
+      return NextResponse.json(
+        { ok: false, error: "This order is too large to pay for online. Please request a quote." },
+        { status: 422 }
+      );
+    }
+  }
+
   // A misconfigured/rejected Stripe key throws here. Catch it so the client gets
   // a legible error instead of a bare 500 (which is what masked a bad key earlier).
   let intent;
@@ -83,6 +109,24 @@ export async function POST(request: Request) {
       amount: Math.round(chargeTotal * 100), // cents
       currency: "aud",
       automatic_payment_methods: { enabled: true },
+      // Afterpay requires a shipping address on the intent, and every method's
+      // fraud checks use it. Delivery goes to the billing address (the form
+      // asks for one address), so it is the same address.
+      ...(billing?.email && billing.address_1
+        ? {
+            shipping: {
+              name: `${billing.first_name ?? ""} ${billing.last_name ?? ""}`.trim() || billing.email,
+              phone: billing.phone || undefined,
+              address: {
+                line1: billing.address_1,
+                city: billing.city || undefined,
+                state: billing.state || undefined,
+                postal_code: billing.postcode || undefined,
+                country: "AU",
+              },
+            },
+          }
+        : {}),
       metadata: {
         source: "masterkraft-site",
         line_count: String(lines.length),
@@ -97,6 +141,7 @@ export async function POST(request: Request) {
         // metadata value at 500 characters; a split id is a few UUIDs long.
         freight_option_id: (freight.selected?.id ?? "").slice(0, 500),
         freight: freight.selected ? `${freight.selected.service} ${freightCost}` : "quoted separately",
+        ...orderData,
       },
     });
   } catch (e) {
