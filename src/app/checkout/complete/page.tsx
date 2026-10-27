@@ -64,7 +64,7 @@ export default function CheckoutCompletePage() {
         const data = res ? await res.json().catch(() => ({})) : {};
         if (res?.ok && data.ok) {
           if (data.orderNumber && typeof data.value === "number") {
-            trackPurchase({ id: String(data.orderNumber), value: data.value });
+            trackPurchase({ id: String(data.orderNumber), value: data.value, email: recallBuyer()?.email });
           }
           paid(data.orderNumber ? String(data.orderNumber) : undefined);
           return;
