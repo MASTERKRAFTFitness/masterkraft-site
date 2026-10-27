@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MasterKraft Recovery Roller – Brochure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* MasterKraft version of the supplier's A72 "Body Shaping Roller Device"
+     manual (src/). Same machine as /recovery-roller on the site.
+     BENEFITS: page two's "What members get" list is Michael's call
+     (2026-10-23), and the only benefit claims in here. The rest stays
+     claim-free: the supplier's lymphatic, fat, collagen, sleep and
+     before/after material is left out on purpose, pending the TGA question.
+     /recovery-roller itself still makes no claims. */
+  @page { size: 210mm 297mm; margin: 0; }
+  :root {
+    --ink: #111113; --carbon: #0a0a0b; --charcoal: #1b1b1e;
+    --accent: #ef5350;   /* MasterKraft coral red, used for every accent */
+    --smoke: #f4f4f5; --ash: #6b6b70; --line: #e5e5e7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body { font-family: "Inter", sans-serif; font-size: 9.6pt; line-height: 1.5; color: var(--ink);
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page { position: relative; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always;
+          padding: 20mm 18mm 22mm; }
+  .page:last-child { page-break-after: auto; }
+  .dark { background: var(--ink); color: #fff; }
+
+  h1, h2, h3 { font-family: "Oswald", sans-serif; font-weight: 600; text-transform: uppercase; line-height: 1.05; letter-spacing: .005em; }
+  h2 { font-size: 26pt; margin-top: 4mm; }
+  h3 { font-size: 11.5pt; margin-top: 3.5mm; }
+  .eyebrow { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 7pt; text-transform: uppercase;
+             letter-spacing: .2em; color: var(--accent); }
+  .dark .eyebrow { color: var(--accent); }
+  .rule { display: block; width: 16mm; height: 1mm; border-radius: .3mm; background: var(--accent); }
+  .lede { font-size: 11.5pt; line-height: 1.5; color: var(--ash); max-width: 140mm; margin-top: 5mm; }
+  .dark .lede { color: rgba(255,255,255,.7); }
+  p + p { margin-top: 2.5mm; }
+  .muted { color: var(--ash); }
+
+  /* running footer */
+  .foot { position: absolute; left: 18mm; right: 18mm; bottom: 10mm; display: flex; justify-content: space-between;
+          align-items: center; border-top: .25mm solid var(--line); padding-top: 3mm;
+          font-family: "JetBrains Mono", monospace; font-size: 6.5pt; letter-spacing: .14em; text-transform: uppercase; color: var(--ash); }
+  .foot img { height: 2.6mm; }
+  .dark .foot { border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.5); }
+
+  /* ---------- cover ---------- */
+  .cover { padding: 0; }
+  .cover .top { position: absolute; left: 18mm; right: 18mm; top: 16mm; display: flex; justify-content: space-between; align-items: center; }
+  .cover .top img { height: 4.2mm; }
+  .cover .top span { font-family: "JetBrains Mono", monospace; font-size: 7pt; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+  .cover .title { position: absolute; left: 18mm; right: 18mm; top: 44mm; }
+  .cover h1 { font-size: 62pt; line-height: .95; margin-top: 5mm; }
+  .cover h1 em { font-style: normal; color: var(--accent); display: block; }
+  .cover .title p { margin-top: 7mm; font-size: 12.5pt; color: rgba(255,255,255,.72); max-width: 120mm; }
+  /* The showroom photo, full bleed from below the title, fading into the ink at
+     the top and under the spec chips at the bottom. */
+  .cover .photo { position: absolute; left: 0; right: 0; top: 104mm; bottom: 26mm;
+                  overflow: hidden; }
+  /* Photos are real <img> elements, not CSS backgrounds: Chrome prints a
+     background as a PDF pattern fill, which some viewers leave blank. */
+  .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover .photo::after { content: ""; position: absolute; inset: 0;
+                         background: linear-gradient(to bottom, var(--ink) 0%, rgba(17,17,19,0) 20%, rgba(17,17,19,0) 80%, var(--ink) 100%); }
+  .cover .title, .cover .chips, .cover .top { z-index: 1; }
+  .cover .chips { position: absolute; left: 18mm; right: 18mm; bottom: 18mm; display: grid; grid-template-columns: repeat(5, 1fr);
+                  border-top: .25mm solid rgba(255,255,255,.18); }
+  .cover .chips div { padding: 4mm 3mm 0 0; }
+  .cover .chips b { display: block; font-family: "Oswald", sans-serif; font-weight: 500; font-size: 14pt; text-transform: uppercase; }
+  .cover .chips span { font-family: "JetBrains Mono", monospace; font-size: 6.5pt; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+
+  /* ---------- argument ---------- */
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; margin-top: 9mm; }
+  .three p { color: var(--ash); margin-top: 2mm; }
+  .band { margin: 10mm -18mm 0; padding: 9mm 18mm; background: var(--smoke); display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; align-items: center; }
+  .band img { width: 100%; border-radius: 1.2mm; display: block; }
+  .band h3 { margin-top: 0; font-size: 15pt; }
+  .band p { color: var(--ash); margin-top: 3mm; }
+  .benefits { margin-top: 7mm; }
+  .benefits ul { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm 8mm; margin-top: 5mm; }
+  .benefits li { border-top: .5mm solid var(--accent); padding-top: 2.5mm; font-family: "Oswald", sans-serif; font-weight: 500;
+                 text-transform: uppercase; font-size: 11.5pt; line-height: 1.2; }
+  .uses { margin-top: 10mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: .25mm solid var(--line); }
+  .uses div { padding: 4mm 4mm 0 0; }
+  .uses b { font-family: "Oswald", sans-serif; font-weight: 500; text-transform: uppercase; font-size: 10.5pt; display: block; }
+  .uses span { color: var(--ash); font-size: 8.8pt; }
+
+  /* ---------- machine ---------- */
+  .detail { position: relative; margin: 8mm -18mm 0; height: 92mm; overflow: hidden; }
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm 10mm; margin-top: 10mm; }
+  .features div { border-top: .25mm solid var(--line); padding-top: 3mm; }
+  .features .n { font-family: "JetBrains Mono", monospace; font-size: 7pt; letter-spacing: .14em; color: var(--accent); }
+  .features h3 { margin-top: 1.5mm; }
+  .features p { color: var(--ash); margin-top: 1.5mm; }
+
+  /* ---------- spec ---------- */
+  dl.spec { margin-top: 9mm; border-top: .25mm solid var(--line); }
+  dl.spec div { display: grid; grid-template-columns: 52mm 1fr; padding: 2.6mm 0; border-bottom: .25mm solid var(--line); align-items: baseline; }
+  dt { font-family: "JetBrains Mono", monospace; font-size: 7pt; letter-spacing: .13em; text-transform: uppercase; color: var(--ash); }
+  dd { font-size: 10pt; }
+  .dims { position: relative; margin-top: 8mm; height: 80mm; background: var(--smoke); border-radius: 1.2mm; }
+  .dims img { position: absolute; left: 24mm; top: 6mm; height: 60mm; }
+  .dims svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .dims text { font-family: "JetBrains Mono", monospace; font-size: 3px; letter-spacing: .1px; fill: var(--ink); }
+  .fine { font-size: 7.5pt; color: var(--ash); margin-top: 3mm; }
+
+  /* ---------- sessions ---------- */
+  table { width: 100%; border-collapse: collapse; margin-top: 8mm; }
+  th { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 6.8pt; letter-spacing: .13em; text-transform: uppercase;
+       color: var(--ash); text-align: left; padding: 0 3mm 2.5mm 0; border-bottom: .5mm solid var(--ink); }
+  td { padding: 4.6mm 3mm 4.6mm 0; border-bottom: .25mm solid var(--line); vertical-align: top; font-size: 9.6pt; }
+  td:first-child { font-family: "Oswald", sans-serif; font-weight: 500; text-transform: uppercase; font-size: 10.5pt; white-space: nowrap; }
+  td.t { white-space: nowrap; }
+  .note { margin-top: 7mm; padding: 4mm 5mm; border-left: 1mm solid var(--accent); background: var(--smoke); }
+  .note b { font-family: "Oswald", sans-serif; font-weight: 500; text-transform: uppercase; }
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 10mm; margin-top: 6mm; }
+  .rules p { margin: 0; padding-left: 5mm; position: relative; color: var(--ash); font-size: 9.2pt; }
+  .rules p::before { content: ""; position: absolute; left: 0; top: .72em; width: 3mm; height: .5mm; background: var(--accent); }
+
+  /* ---------- operation ---------- */
+  .inuse { margin: 8mm 0 0; width: 100%; border-radius: 1.2mm; display: block; }
+  ol.steps { list-style: none; counter-reset: s; margin-top: 8mm; display: grid; grid-template-columns: 1fr 1fr; gap: 5mm 10mm; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: 11mm; }
+  ol.steps li::before { content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: -.4mm;
+                        font-family: "Oswald", sans-serif; font-weight: 600; font-size: 14pt; color: var(--accent); }
+  ol.steps b { font-family: "Oswald", sans-serif; font-weight: 500; text-transform: uppercase; font-size: 10.5pt; display: block; }
+  ol.steps span { color: var(--ash); font-size: 8.8pt; }
+
+  /* ---------- safety ---------- */
+  .donts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; margin-top: 8mm; }
+  .donts figure img { width: 100%; height: 34mm; object-fit: cover; border-radius: 1.2mm; display: block; }
+  .donts figure.txt { background: var(--charcoal); color: #fff; border-radius: 1.2mm; height: 34mm; display: flex; align-items: center; justify-content: center;
+                      font-family: "Oswald", sans-serif; font-size: 13pt; text-transform: uppercase; text-align: center; line-height: 1.1; padding: 3mm; }
+  .donts figcaption { margin-top: 2mm; font-size: 8.5pt; color: var(--ash); }
+  .donts figcaption b { color: var(--ink); display: block; font-family: "Oswald", sans-serif; font-weight: 500; text-transform: uppercase; font-size: 10pt; }
+  .contra { columns: 2; column-gap: 10mm; margin-top: 5mm; }
+  .contra p { break-inside: avoid; margin: 0 0 2.2mm; padding-left: 5mm; position: relative; font-size: 8.4pt; color: var(--ash); }
+  .contra p::before { content: ""; position: absolute; left: 0; top: .72em; width: 3mm; height: .5mm; background: var(--accent); }
+
+  /* ---------- back ---------- */
+  .back .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; margin-top: 10mm; }
+  .back ul { list-style: none; margin-top: 3mm; }
+  .back li { padding: 2mm 0 2mm 5mm; position: relative; color: rgba(255,255,255,.72); border-bottom: .25mm solid rgba(255,255,255,.1); }
+  .back li::before { content: ""; position: absolute; left: 0; top: 1.15em; width: 3mm; height: .5mm; background: var(--accent); }
+  .cta { position: absolute; left: 18mm; right: 18mm; bottom: 26mm; padding-top: 9mm;
+         display: grid; grid-template-columns: 1fr 1.15fr; gap: 10mm; align-items: end; }
+  .cta h2 { font-size: 30pt; margin: 0; }
+  .cta h2 em { font-style: normal; color: var(--accent); }
+  .cta .contact { font-size: 11pt; line-height: 1.8; }
+  .cta .contact b { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 7pt; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.5); display: inline-block; width: 22mm; }
+  .strip { position: absolute; left: 0; right: 0; top: 150mm; height: 62mm; overflow: hidden; }
+  .back .mk { position: absolute; left: 18mm; bottom: 12mm; height: 4mm; }
+  .back .tag { position: absolute; right: 18mm; bottom: 12mm; font-family: "JetBrains Mono", monospace; font-size: 6.5pt; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+</style>
+</head>
+<body>
+
+<!-- 1 · COVER -->
+<section class="page dark cover">
+  <div class="top"><img src="img/mk-wordmark-white.svg" alt="MasterKraft"><span>Commercial recovery</span></div>
+  <div class="title">
+    <span class="rule"></span>
+    <h1>Recovery<em>Roller</em></h1>
+    <p>A motorised infrared roller bed for gyms that want recovery to be a room rather than a corner. Hands-free, touchscreen controlled, built for commercial floors.</p>
+  </div>
+  <div class="photo"><img class="ph" src="img/cover-showroom.jpg" alt="The Recovery Roller in the MasterKraft showroom" style="object-position:50% 50%"></div>
+  <div class="chips">
+    <div><b>Hands-free</b><span>Motorised rollers</span></div>
+    <div><b>Infrared</b><span>Built-in heat</span></div>
+    <div><b>15.6"</b><span>Touchscreen</span></div>
+    <div><b>200 rpm</b><span>Max roller speed</span></div>
+    <div><b>100–240 V</b><span>Universal supply</span></div>
+  </div>
+</section>
+
+<!-- 2 · WHY -->
+<section class="page">
+  <span class="eyebrow">01 &nbsp;/&nbsp; Why it exists</span>
+  <h2>Are you taking recovery seriously?<br><span style="color:var(--accent)">Your members are.</span></h2>
+  <p class="lede">Recovery has moved from the stretching mat to the membership tier. The Recovery Roller is commercial gym equipment for that room: one machine, one footprint, no therapist required.</p>
+
+  <div class="three">
+    <div><span class="rule"></span><h3>Recovery became a tier</h3><p>Across the big networks, recovery now sits behind the top membership rather than alongside it. Members are choosing it and paying for it.</p></div>
+    <div><span class="rule"></span><h3>Most gyms answer with a corner</h3><p>A mat, two foam rollers and whatever was left in the fitout budget. It is the most asked-about part of a floor and the least specified.</p></div>
+    <div><span class="rule"></span><h3>The gap was the equipment</h3><p>Consumer products built for a lounge room on one side, fleet contracts built for national chains on the other. Very little engineered as commercial gym equipment.</p></div>
+  </div>
+
+  <div class="band">
+    <img src="img/in-use.png" alt="A member standing and seated against the Recovery Roller">
+    <div>
+      <span class="eyebrow">Hands-free</span>
+      <h3 style="margin-top:3mm">The rollers do the work</h3>
+      <p>The member stands, leans or sits against the roller drum and the motor does the rest. Nobody gets down onto the floor and back up again, and nobody needs to hold a device.</p>
+      <p>Speed, direction and session time are set on the touchscreen. Staff set a program once; members run it themselves.</p>
+    </div>
+  </div>
+
+  <div class="benefits">
+    <span class="eyebrow">The benefits</span>
+    <h3 style="font-size:17pt;margin-top:2.5mm">What members get</h3>
+    <ul>
+      <li>Eases muscle tension and tightness</li>
+      <li>Reduces soreness after heavy training</li>
+      <li>Helps with relaxation and stress relief</li>
+      <li>Infrared heat warms the muscles as they are worked</li>
+      <li>Covers all major muscle groups in one session</li>
+      <li>Fixes foam rolling problems: no awkward positioning, and the roller stays in place</li>
+    </ul>
+  </div>
+  <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>02</span></div>
+</section>
+
+<!-- 3 · THE MACHINE -->
+<section class="page">
+  <span class="eyebrow">02 &nbsp;/&nbsp; The machine</span>
+  <h2>Built for the floor,<br>not the lounge room</h2>
+  <div class="detail"><img class="ph" src="img/roller-detail.jpg" alt="The roller drum and arm rests" style="object-position:50% 40%"></div>
+  <div class="features">
+    <div><span class="n">01</span><h3>Profiled roller drum</h3><p>Multiple rollers with a raised, nodular profile turn together inside the drum, working a wide contact area at once.</p></div>
+    <div><span class="n">02</span><h3>Two-way rotation</h3><p>Rollers run in either direction at multiple speeds, so one machine covers arms, legs, back, sides and glutes.</p></div>
+    <div><span class="n">03</span><h3>15.6" touchscreen</h3><p>Speed, direction and timer on one screen, with the session ending automatically when the time is up.</p></div>
+    <div><span class="n">04</span><h3>Infrared heat</h3><p>Infrared heat is built in beneath the rollers, warming the muscles as they are worked. It can be switched off from the screen.</p></div>
+    <div><span class="n">05</span><h3>Commercial housing</h3><p>Upholstered, scratch-resistant shell with padded arm rests to brace against. Wipe-clean finish in colours to suit the room.</p></div>
+    <div><span class="n">06</span><h3>Your brand on it</h3><p>Housing colour and branding can be specified for networks and franchise groups, as on our showroom unit.</p></div>
+  </div>
+  <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>03</span></div>
+</section>
+
+<!-- 4 · SPECIFICATION -->
+<section class="page">
+  <span class="eyebrow">03 &nbsp;/&nbsp; Specification</span>
+  <h2>The data sheet</h2>
+  <dl class="spec">
+    <div><dt>Product</dt><dd>MasterKraft Recovery Roller</dd></div>
+    <div><dt>Type</dt><dd>Motorised roller bed, hands-free</dd></div>
+    <div><dt>Control</dt><dd>15.6" touchscreen: speed, direction, timer</dd></div>
+    <div><dt>Roller speed</dt><dd>Multi-speed, up to 200 rpm, two-way rotation</dd></div>
+    <div><dt>Heat</dt><dd>Infrared, beneath the rollers</dd></div>
+    <div><dt>Power</dt><dd>500 W</dd></div>
+    <div><dt>Supply</dt><dd>100–240 V</dd></div>
+    <div><dt>Unit dimensions</dt><dd>100 L × 66 W × 74 H cm</dd></div>
+    <div><dt>Packed dimensions</dt><dd>114 L × 77 W × 88 H cm</dd></div>
+    <div><dt>Packed weight</dt><dd>93 kg</dd></div>
+    <div><dt>User capacity</dt><dd>One user at a time</dd></div>
+    <div><dt>Warranty</dt><dd>12 months, main unit</dd></div>
+  </dl>
+
+  <div class="dims">
+    <img src="img/roller-render.png" alt="">
+    <svg viewBox="0 0 174 80" preserveAspectRatio="none">
+      <g stroke="#111113" stroke-width=".25" fill="none">
+        <path d="M122 8 V66 M120 8 H124 M120 66 H124"/>
+        <path d="M24 73 H106 M24 71 V75 M106 71 V75"/>
+      </g>
+      <text x="125.5" y="38">74 cm</text>
+      <text x="58" y="78">100 cm</text>
+      <text x="134" y="62">Depth 66 cm</text>
+    </svg>
+  </div>
+  <p class="fine">Specifications are the manufacturer's and may change without notice. Confirm with MasterKraft before planning a room.</p>
+  <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>04</span></div>
+</section>
+
+<!-- 5 · SESSION GUIDE -->
+<section class="page">
+  <span class="eyebrow">04 &nbsp;/&nbsp; Session guide</span>
+  <h2>Area by area</h2>
+  <p class="lede">Start every new user on the lowest speed and step up from there. Rollers always work toward the centre of the body: limbs toward the torso.</p>
+  <table>
+    <thead><tr><th>Area</th><th>Time</th><th>Rotation &amp; direction</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Arms</td><td class="t">5–6 min / side</td><td>Clockwise, wrist toward shoulder</td><td>Forearm, then upper arm. Keep clear of the armpit.</td></tr>
+      <tr><td>Calves</td><td class="t">8–10 min / side</td><td>Clockwise, ankle toward knee</td><td>Roll in sections, 3–5 passes each.</td></tr>
+      <tr><td>Thighs</td><td class="t">8–10 min / side</td><td>Clockwise, knee toward hip</td><td>Roll in sections, 3–5 passes each.</td></tr>
+      <tr><td>Glutes</td><td class="t">8–10 min</td><td>Anticlockwise, upper thigh toward waist</td><td>Very light pressure.</td></tr>
+      <tr><td>Waist sides</td><td class="t">8–10 min</td><td>Clockwise, hip toward lower ribs</td><td>Muscles either side of the spine only. Very light pressure.</td></tr>
+      <tr><td>Abdomen</td><td class="t">5–8 min</td><td>Clockwise around the navel</td><td>Gentle pressure. Not within an hour of a meal.</td></tr>
+      <tr><td>Back</td><td class="t">8–10 min</td><td>Anticlockwise or alternating, low to high</td><td>Either side of the spine, never on it.</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>Full-body sessions:</b> keep the total under 60 minutes, small areas before large ones and light before firm. Up to 3–4 sessions a week, with 2–3 days between sessions on the same area.</div>
+
+  <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>05</span></div>
+</section>
+
+<!-- 6 · OPERATION -->
+<section class="page">
+  <span class="eyebrow">05 &nbsp;/&nbsp; Operation</span>
+  <h2>Seven steps, start to finish</h2>
+  <ol class="steps">
+    <li><b>Check the unit</b><span>Housing, power lead and roller drum undamaged; rollers turn freely without catching or unusual noise.</span></li>
+    <li><b>Power on</b><span>Plug in and switch on at the main switch. The self-test runs and the unit goes to standby.</span></li>
+    <li><b>Set the program</b><span>Choose speed, direction and time on the touchscreen for the area and the user.</span></li>
+    <li><b>Prepare the user</b><span>Close-fitting activewear, long hair tied up, water and a towel within reach.</span></li>
+    <li><b>Run the session</b><span>The user lines the area up against the drum and starts. The rollers run automatically; no hands needed.</span></li>
+    <li><b>Next area</b><span>The unit stops when the time is up. Reset the program for the next area and check in on how the user feels.</span></li>
+    <li><b>Shut down</b><span>Switch off, unplug, and wipe down the rollers and contact surfaces before the next user.</span></li>
+  </ol>
+  <h3 style="margin-top:14mm">On the machine</h3>
+  <div class="rules">
+    <p>Keep the area in full, even contact with the rollers. The feeling should be a firm roll, never forced pressure.</p>
+    <p>Keep the body moving along the rollers; do not hold one spot for long.</p>
+    <p>Stay off bony points: kneecaps, spine, hip bones and collarbones.</p>
+    <p>Stop straight away if anything stings, reddens badly or hurts, then lower the speed.</p>
+    <p>For sensitive areas, turn the infrared heat off or reduce the speed.</p>
+    <p>One user at a time. Not for use by anyone under 18.</p>
+  </div>
+  <div class="note" style="margin-top:10mm"><b>Positions:</b> standing against the drum for the glutes and the back of the legs; seated on it for the thighs. The arm rests are there to brace against.</div>
+  <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>06</span></div>
+</section>
+
+<!-- 7 · SAFETY -->
+<section class="page">
+  <span class="eyebrow">06 &nbsp;/&nbsp; Safety</span>
+  <h2>Before anyone gets on</h2>
+  <div class="donts">
+    <figure><img src="img/no-hands.png" alt="Hand near the roller gap, crossed out"><figcaption><b>Hands and feet clear</b>Never put hands or feet into the roller gap.</figcaption></figure>
+    <figure><img src="img/no-hair.png" alt="Loose hair near the rollers, crossed out"><figcaption><b>Hair tied up</b>Long hair must be tied back so it cannot hang into the gap.</figcaption></figure>
+    <figure class="txt" style="flex-direction:column">Close-fitting<br>activewear</figure>
+  </div>
+
+  <h3 style="margin-top:10mm">Who should not use it</h3>
+  <p class="muted" style="margin-top:2mm">Ask every new user. If any of these apply, they should not use the machine without clearance from their doctor.</p>
+  <div class="contra">
+    <p>Pregnant or breastfeeding; menstruating (abdomen only).</p>
+    <p>Broken, infected or inflamed skin, open wounds or recent injury in the area.</p>
+    <p>Serious heart or circulatory conditions, uncontrolled high blood pressure, bleeding disorders or blood thinners.</p>
+    <p>Pacemakers, metal stents, prostheses or other implants; cancer.</p>
+    <p>Blood clots, varicose veins in the area, or active lymphatic conditions.</p>
+    <p>Fever of 38°C or more, an active infection, or severe weakness or anaemia.</p>
+    <p>Advanced osteoporosis, diabetes with nerve damage, or very low tolerance to pressure.</p>
+    <p>Sensitive, thin or keloid-prone skin, or allergy to the contact materials.</p>
+    <p>Surgery, liposuction or injectables in the area in the last 3 months; fillers or botulinum toxin in the last 6.</p>
+    <p>Less than 3 months after a vaginal birth or 6 months after a caesarean.</p>
+    <p>Undiagnosed lumps, cysts or nodules in the area.</p>
+    <p>Abdomen: within an hour of alcohol, or when very hungry or very full.</p>
+    <p>Do not use alongside high-frequency or RF devices on the same area.</p>
+  </div>
+  <div class="foot"><img src="img/mk-wordmark.svg" alt=""><span>Recovery Roller</span><span>07</span></div>
+</section>
+
+<!-- 8 · BACK -->
+<section class="page dark back">
+  <span class="eyebrow">07 &nbsp;/&nbsp; Ownership</span>
+  <h2>Looked after by MasterKraft</h2>
+  <div class="cols">
+    <div>
+      <span class="rule"></span><h3>Care</h3>
+      <ul>
+        <li>Wipe down rollers and contact surfaces after every user.</li>
+        <li>Check the drum turns freely before the first session of the day.</li>
+        <li>Keep the power lead clear of traffic and the roller gap.</li>
+        <li>Report any catching, grinding or unusual noise and stop using the unit.</li>
+      </ul>
+    </div>
+    <div>
+      <span class="rule"></span><h3>Warranty &amp; support</h3>
+      <ul>
+        <li>12 months on the main unit from the date on your proof of purchase.</li>
+        <li>Support and parts direct from MasterKraft, not a third party.</li>
+        <li>Room planning with our fitout team when the roller is part of a fitout.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="strip"><img class="ph" src="img/roller-detail.jpg" alt="" style="object-position:50% 45%"></div>
+  <div class="cta">
+    <h2>See it in the<br><em>showroom.</em></h2>
+    <div class="contact">
+      <div><b>Call</b>+61 3 9044 9575</div>
+      <div><b>Web</b>masterkraft.com/recovery-roller</div>
+    </div>
+  </div>
+  <img class="mk" src="img/mk-wordmark-white.svg" alt="MasterKraft">
+  <span class="tag">Engineered for Fitness</span>
+</section>
+
+</body>
+</html>
