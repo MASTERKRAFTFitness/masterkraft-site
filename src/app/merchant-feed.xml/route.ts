@@ -3,6 +3,7 @@ import { getUnleashedMap } from "@/lib/unleashed";
 import { buildFeed, feedToXml } from "@/lib/merchant-feed";
 import { isIndexableHost } from "@/lib/site";
 import { getProductContent } from "@/lib/product-content";
+import { loadPromotionLabels } from "@/lib/merchant-promotion";
 
 export const runtime = "nodejs";
 
@@ -43,7 +44,7 @@ export async function GET() {
   // to {}, which is the JSON-and-snapshot behaviour, so a content outage costs
   // an edit rather than the feed.
   const content = await getProductContent();
-  const { items } = buildFeed(map, { content });
+  const { items } = buildFeed(map, { content, promotion: loadPromotionLabels() });
   if (!items.length) {
     return new Response("Catalogue empty", {
       status: 503,

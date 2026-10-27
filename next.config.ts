@@ -11,6 +11,11 @@ import legacyRedirects from "./src/data/legacy-redirects.json";
 const BLOG_IMAGES_ORIGIN = `${process.env.SUPABASE_URL ?? "https://vnemkpduafnjxhkasqif.supabase.co"}/storage/v1/object/public/blog-images`;
 
 const nextConfig: NextConfig = {
+  // The feed reads the promotion list from /public (lib/merchant-promotion.ts),
+  // which is served from the CDN and is not on the function's disk unless traced.
+  outputFileTracingIncludes: {
+    "/merchant-feed.xml": ["./public/merchant-center-promotion.csv"],
+  },
   images: {
     // Every image the site serves now lives in /public (the 27 August mirror), and
     // all of it is already re-encoded at q88 by scripts/compress-assets.py - the
