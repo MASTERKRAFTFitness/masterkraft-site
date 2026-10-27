@@ -1,5 +1,6 @@
 // Lightweight event tracking. Fires GA4 events (when gtag is loaded), best-effort
-// HubSpot custom behavioral events, and Opinly. No-ops until analytics load (after consent).
+// HubSpot custom behavioral events, and Opinly. gtag is on the page for every
+// visitor (Consent Mode: cookieless until Accept); HubSpot and Meta no-op until consent.
 //
 // OPINLY TAKES THE FUNNEL, not the whole GA4 firehose, and it takes it in its OWN
 // vocabulary: flat props, no `items` array, and Opinly's standard event names.

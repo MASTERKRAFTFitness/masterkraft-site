@@ -17,6 +17,12 @@ const ADS_ID = GOOGLE_ADS_ID;
 // exactly how it went missing before). Change the pixel by changing this line.
 const META_PIXEL_ID = "517991158551582";
 
+/** The four Consent Mode v2 types, all granted or all denied - the banner has one button each way. */
+function consentState(granted: boolean) {
+  const v = granted ? "granted" : "denied";
+  return { ad_storage: v, ad_user_data: v, ad_personalization: v, analytics_storage: v };
+}
+
 export default function CookieConsent() {
   const [choice, setChoice] = useState<"accepted" | "declined" | null>(null);
   const [ready, setReady] = useState(false);
@@ -39,30 +45,47 @@ export default function CookieConsent() {
   const decide = (v: "accepted" | "declined") => {
     localStorage.setItem(KEY, v);
     setChoice(v);
+    // gtag is already on the page (see below), so the answer goes to it as a
+    // consent update rather than by loading anything new.
+    const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
+    if (typeof gtag === "function") gtag("consent", "update", consentState(v === "accepted"));
   };
 
   const tracking = ready && live && choice === "accepted";
 
   return (
     <>
-      {/* Analytics load only after explicit consent, and only if IDs are configured */}
-      {tracking && (GA_ID || ADS_ID) && (
+      {/* GOOGLE CONSENT MODE v2. gtag loads for EVERY visitor on the live domain,
+          not only after Accept, with all four consent types DENIED by default.
+          Until the visitor accepts, Google sets no cookies and gets only
+          cookieless pings, which is enough for Ads to see the tag (its
+          diagnostics flagged it "stopped sending data" when no visitor accepted
+          for 48 hours) and to model the conversions it cannot count. Accept
+          sends a consent update and the same tag starts counting normally.
+
+          The default MUST be queued before gtag.js reads the dataLayer, so the
+          init script comes first, and it carries a stored "accepted" with it.
+          Meta and HubSpot have no consent mode and stay behind the banner. */}
+      {ready && live && (GA_ID || ADS_ID) && (
         <>
+          <Script id="ga4-init" strategy="afterInteractive">
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}` +
+              `gtag('consent','default',${JSON.stringify({ ...consentState(false), wait_for_update: 500 })});` +
+              (choice === "accepted" ? `gtag('consent','update',${JSON.stringify(consentState(true))});` : "") +
+              `gtag('set','ads_data_redaction',true);gtag('js',new Date());` +
+              (GA_ID ? `gtag('config','${GA_ID}');` : "") +
+              (ADS_ID ? `gtag('config','${ADS_ID}');` : "")}
+          </Script>
           {/* ONE gtag.js serves both properties — loading it twice would double
-              every event. What turns a property on is its own config line below,
+              every event. What turns a property on is its own config line above,
               but the src id must be one Google will SERVE: G-HNLFD90XBN was set
               up as a destination of the Ads Google tag, not a tag of its own, so
               gtag/js?id=G-HNLFD90XBN is a 404 and nothing at all ran from
               2026-10-15 to 10-19. The Ads id serves a script carrying both. */}
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${ADS_ID || GA_ID}`} strategy="afterInteractive" />
-          <Script id="ga4-init" strategy="afterInteractive">
-            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());` +
-              (GA_ID ? `gtag('config','${GA_ID}');` : "") +
-              (ADS_ID ? `gtag('config','${ADS_ID}');` : "")}
-          </Script>
         </>
       )}
-      {/* Meta Pixel. BEHIND THE BANNER, with GA4 and Ads, not beside Opinly in
+      {/* Meta Pixel. BEHIND THE BANNER, unlike gtag above, and not beside Opinly in
           layout.tsx: this is an advertising tracker that builds retargeting
           audiences off a visitor's browsing, which is exactly the processing the
           Accept button exists to authorise. Opinly's placement outside the banner

@@ -77,12 +77,13 @@ missing var fails **silently** — that's why each must be checked deliberately.
   currently default to the staging URL (`src/lib/site.ts`). Point it at the launch
   domain or every canonical/share link is wrong.
 - ⚙️ `NEXT_PUBLIC_GA_ID` — **already set (G-86MEH5QL99) and working on staging.**
-  GA4 loads after cookie consent. Re-check it is present on the production domain
+  GA4 loads for every visitor under Google Consent Mode v2 (cookieless until Accept). Re-check it is present on the production domain
   after the cutover, since a redeploy is what bakes it in.
 - ✅ Google Ads quote conversion — **live, pinned in code** (`src/lib/google-ads.ts`):
   account `AW-18485786308`, "Submit quote" label `ZPQ0CJe6-ZMdEMTt2u5E`. Fires only
   after a fitout brief (/fitout-solution) or contact form (/contact) is accepted by
-  the server, and after cookie consent. `NEXT_PUBLIC_GOOGLE_ADS_ID` /
+  the server. Before cookie consent it goes as a cookieless ping Ads can model;
+  after Accept it counts normally (Consent Mode v2, 2026-10-27). `NEXT_PUBLIC_GOOGLE_ADS_ID` /
   `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` override the defaults if set.
   ⚙️ `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` is still **not set**: card orders do not
   reach Ads until a purchase action exists and its label is added (needs a redeploy).
@@ -93,8 +94,9 @@ missing var fails **silently** — that's why each must be checked deliberately.
   is the check that tells the truth — it resolves. Don't "fix" a phantom missing key.
   Opinly's pixel key is publishable and already compiled in, so page views, add-to-cart,
   sign-ups and leads work with no config. Note the Opinly pixel loads on EVERY page and
-  is **not** gated on the cookie banner, unlike GA4/Ads/HubSpot — a deliberate exception
-  (Michael, 2026-09-16) and the one to mention if the banner or privacy policy is ever
+  is **not** gated on the cookie banner, unlike Meta/HubSpot — a deliberate exception
+  (Michael, 2026-09-16). gtag (GA4/Ads) also loads before the banner since 2026-10-27,
+  but with consent denied until Accept (Consent Mode v2). Both are the ones to mention if the banner or privacy policy is ever
   rewritten to spell out what loads when. This one is the SERVER key, and it is what
   `/api/order` uses to report a paid order from the back end — the copy that survives a
   customer closing the tab on the confirmation screen, an ad-blocker, or a declined
