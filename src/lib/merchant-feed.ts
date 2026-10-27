@@ -28,6 +28,7 @@ import { resolveCopy, type ContentMap } from "@/lib/product-content";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 import { regionLabel } from "@/lib/landed-price";
+import type { PromotionLabels } from "@/lib/merchant-promotion";
 
 export type FeedItem = {
   id: string;
@@ -56,6 +57,8 @@ export type FeedItem = {
    * customLabel0 is freight-verified. See lib/landed-price.ts.
    */
   customLabel3?: string;
+  /** custom_label_4 — the landed-price promotion list. See lib/merchant-promotion.ts. */
+  customLabel4?: string;
 };
 
 /**
@@ -251,6 +254,7 @@ function itemFor(
   entry: UnleashedEntry,
   isVerified: boolean,
   content: ContentMap | undefined,
+  promotion: PromotionLabels | undefined,
 ): FeedItem {
   const image = entry.image ?? unit.image ?? "";
   return {
@@ -277,6 +281,7 @@ function itemFor(
     customLabel1: priceBand(entry.price),
     customLabel2: freightLabel(code, entry),
     customLabel3: isVerified ? regionLabel(code) : undefined,
+    customLabel4: promotion?.[code.toUpperCase()],
   };
 }
 
@@ -303,6 +308,11 @@ export type BuildOptions = {
    * stays synchronous and testable.
    */
   content?: ContentMap;
+  /**
+   * The promotion list from loadPromotionLabels(), emitted as custom_label_4.
+   * Passed in for the same reason as content.
+   */
+  promotion?: PromotionLabels;
 };
 
 /**
@@ -369,7 +379,7 @@ export function buildFeed(
         rejected.push({ code, unit: unit.slug, reason: "no image" });
         return;
       }
-      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified, opts.content));
+      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified, opts.content, opts.promotion));
     });
   }
 
@@ -421,6 +431,7 @@ export function feedToXml(items: FeedItem[], now = new Date()): string {
         tag("g:custom_label_1", it.customLabel1),
         tag("g:custom_label_2", it.customLabel2),
         tag("g:custom_label_3", it.customLabel3),
+        tag("g:custom_label_4", it.customLabel4),
         "  </item>",
       ]
         .filter(Boolean)

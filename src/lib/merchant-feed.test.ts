@@ -300,3 +300,15 @@ describe("range names that carry one of their own sizes", () => {
   });
 });
 
+
+describe("promotion label", () => {
+  it("carries the promotion list as custom_label_4 on the feed's own items", () => {
+    const { items } = buildFeed(map(), { promotion: { MWWPCP01: "ads-vic" } });
+    const label = Object.fromEntries(items.map((i) => [i.id, i.customLabel4]));
+    expect(label.MWWPCP01).toBe("ads-vic");
+    expect(label.MWWPCP02).toBeUndefined();
+    const xml = feedToXml(items);
+    expect(xml).toContain("<g:custom_label_4>ads-vic</g:custom_label_4>");
+    expect(xml.match(/custom_label_4/g)).toHaveLength(2);
+  });
+});
