@@ -195,6 +195,10 @@ describe("chargeable weight", () => {
 
   it("is dead weight only when the factor is 0", () => {
     expect(chargeableKg([{ weight: 2, length: 50, width: 40, height: 30 }], 0)).toBe(2);
+    // 0.06m3 x 333 = 19.98kg, plus 25% for packing = 24.98kg.
+    expect(chargeableKg([{ weight: 2, length: 50, width: 40, height: 30 }], 333, 25)).toBe(24.98);
+    // The allowance is on cubic weight only: a dense carton bills at its dead weight.
+    expect(chargeableKg([{ weight: 40, length: 50, width: 40, height: 30 }], 333, 25)).toBe(40);
   });
 
   it("sums the cartons of a consignment", () => {

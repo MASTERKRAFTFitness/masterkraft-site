@@ -10,11 +10,11 @@ THE CARD IS HOURLY HIRE, the matrix is zone x weight. Capital Group's
 pickup to delivery plus return, with a minimum hire per truck size. A cart's
 real cost depends on the drive, which nothing here knows, so each truck is
 priced at its MINIMUM HIRE (minimum hours x hourly rate): the least the job can
-cost, and an underestimate for a run to the far side of Melbourne. One row per
-truck, carrying its payload, pallet count and bed length off the card
-(max_pallets, max_length_cm), so the cheapest truck the cart FITS is priced - a
-light rig that fills four pallets needs the 4 tonne. Cubic weight is off (0):
-pallets, not kilograms of air, decide the truck.
+cost, and an underestimate for a run to the far side of Melbourne. One weight
+band per truck, on chargeable weight: Steve's rule (27 Oct 2026) of cubic at
+333 plus 25% for packing and pallet space, against the truck's payload. Pallet
+counts and bed lengths are deliberately NOT modelled - Capital carries anything
+we sell, and checkout is not to guess at pallet configurations.
 
 Only the Tray / Tautliner rates are priced; they are identical. Hydraulic
 (tailgate) and Crane/Hiab hire carry a 4-hour minimum and are recorded in the
@@ -38,6 +38,7 @@ CARDS = Path(__file__).resolve().parent.parent / "supabase" / "rate-cards"
 CODE = "capital-taxi-mel"
 
 # (label, kg up to, min hours, hourly rate ex GST, pallets, bed cm) - Tray / Tautliner.
+# Pallets and bed are the card's, kept for reference; they are not loaded.
 TRUCKS = [
     ("2 tonne", 2000, 1.5, 36.86, 3, 360),
     ("4 tonne", 4000, 1.5, 38.91, 6, 420),
@@ -55,7 +56,7 @@ NOTES = (
     "Rates ex GST and ex fuel: Fuel levy 35% (set 27/10/26). "
     "Not priced: Hydraulic tailgate 6T $46.80/h, 8T $53.95, 12T $62.40, 14T $68.90; Crane/Hiab 8T $97.50, 12T $104.00, 14T $110.50 (4h minimum). "
     "Booked 6am-4pm Mon-Fri; VIP/after-4pm surcharges, 60-120 min specialised pickups, mobile and toll charges not modelled. "
-    "Capital also quoted 1T courier rates (SC/SSW/SLV/SH/S1, 4-5h standard) - that card is not loaded yet."
+    "Capital also quoted 1T courier rates (SC/SSW/SLV/SH/S1, 4-5h standard) - deliberately not loaded (Michael, 27/10/26: their advantage is the taxi truck)."
 )
 
 
@@ -76,18 +77,18 @@ def main():
         "-- Capital Group taxi truck, Standard Hourly Hire - VIC (supplied 27/10/26), priced at minimum hire.",
         "begin;",
         f"delete from freight_matrices where code = '{CODE}';",
-        "insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3, fuel_levy_percent, margin_percent, consolidate, notes) values "
-        f"('{CODE}', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 0, 35, 15, true, {sql_str(NOTES)});",
+        "insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3, cubic_allowance_percent, fuel_levy_percent, margin_percent, consolidate, notes) values "
+        f"('{CODE}', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 333, 25, 35, 15, true, {sql_str(NOTES)});",
         "insert into freight_zones (matrix_code, code, name, notes) values "
         f"('{CODE}', 'MELBOURNE', 'Melbourne metro', 'Same postcodes as Mainfreight MELBOURNE + MEL CENTRAL');",
         "insert into freight_zone_postcodes (matrix_code, zone_code, postcode_from, postcode_to) values",
         ",\n".join(f"  ('{CODE}', 'MELBOURNE', {a}, {b})" for a, b in ranges) + ";",
-        "insert into freight_matrix_rates (matrix_code, zone_code, service, service_level, applies_to, weight_from_kg, weight_to_kg, price, per_kg, minimum, days_from, days_to, max_pallets, max_length_cm) values",
+        "insert into freight_matrix_rates (matrix_code, zone_code, service, service_level, applies_to, weight_from_kg, weight_to_kg, price, per_kg, minimum, days_from, days_to) values",
     ]
     rows, lo = [], 0
     for label, hi, hours, rate, pallets, bed in TRUCKS:
         price = (Decimal(str(hours)) * Decimal(str(rate))).quantize(Decimal("0.01"), ROUND_HALF_UP)
-        rows.append(f"  ('{CODE}', 'MELBOURNE', {sql_str('Taxi truck (' + label + ')')}, 'standard', 'any', {lo}, {hi}, {price}, 0, 0, 0, 1, {pallets}, {bed})")
+        rows.append(f"  ('{CODE}', 'MELBOURNE', {sql_str('Taxi truck (' + label + ')')}, 'standard', 'any', {lo}, {hi}, {price}, 0, 0, 0, 1)")
         lo = hi
     lines += [",\n".join(rows) + ";", "commit;", ""]
     out = CARDS / "capital-taxi-truck-vic.sql"
