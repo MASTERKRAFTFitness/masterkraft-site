@@ -54,6 +54,8 @@ export type Matrix = {
   basis: "price" | "cost";
   perKgOn: "excess" | "total";
   cubicFactorKgM3: number;
+  /** Added to cubic weight for packing and pallet space, percent. */
+  cubicAllowancePercent: number;
   fuelLevyPercent: number;
   /** This card's margin on 'cost' rates, replacing FREIGHT_MARGIN_PERCENT. Null = the site's. */
   marginPercent: number | null;
@@ -119,6 +121,7 @@ export function buildMatrixConfig(raw: {
         basis: m.basis === "cost" ? "cost" : "price",
         perKgOn: m.per_kg_on === "total" ? "total" : "excess",
         cubicFactorKgM3: n(m.cubic_factor_kg_m3) ?? 250,
+        cubicAllowancePercent: n(m.cubic_allowance_percent) ?? 0,
         fuelLevyPercent: n(m.fuel_levy_percent) ?? 0,
         marginPercent: n(m.margin_percent),
         consolidate: m.consolidate === true,
@@ -277,10 +280,14 @@ export function matrixCarriesOversize(config: MatrixConfig, postcode: string): b
 /**
  * What a consignment bills at: each carton's greater of dead and cubic weight,
  * summed. Rounded UP to 0.01kg so a band edge is never undercut by a float.
+ *
+ * `allowancePercent` is Steve's rule for freight (27 Oct 2026): cubic at 333,
+ * plus about 25% for packaging and pallet space. It stands in for working out
+ * how an order actually packs, which checkout deliberately does not try to do.
  */
-export function chargeableKg(parcels: Parcel[], cubicFactorKgM3: number): number {
+export function chargeableKg(parcels: Parcel[], cubicFactorKgM3: number, allowancePercent = 0): number {
   const kg = parcels.reduce((sum, p) => {
-    const cubic = ((p.length * p.width * p.height) / 1e6) * cubicFactorKgM3;
+    const cubic = ((p.length * p.width * p.height) / 1e6) * cubicFactorKgM3 * (1 + allowancePercent / 100);
     return sum + Math.max(p.weight, cubic);
   }, 0);
   return Math.ceil(kg * 100 - 1e-9) / 100;
@@ -316,7 +323,7 @@ export type MatrixQuoteInput = {
 export function quoteOneMatrix(m: Matrix, input: MatrixQuoteInput): FreightOption[] {
   const zone = zoneFor(m, input.postcode);
   if (!zone || input.parcels.length === 0) return [];
-  const kg = chargeableKg(input.parcels, m.cubicFactorKgM3);
+  const kg = chargeableKg(input.parcels, m.cubicFactorKgM3, m.cubicAllowancePercent);
   const pallets = palletsFor(input.parcels);
   const longest = Math.max(...input.parcels.map((p) => Math.max(p.length, p.width, p.height)));
   const options: FreightOption[] = [];

@@ -2,7 +2,7 @@
 -- Capital Group taxi truck, Standard Hourly Hire - VIC (supplied 27/10/26), priced at minimum hire.
 begin;
 delete from freight_matrices where code = 'capital-taxi-mel';
-insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3, fuel_levy_percent, margin_percent, consolidate, notes) values ('capital-taxi-mel', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 0, 35, 15, true, 'Capital Group Standard Hourly Hire - VIC, supplied 27/10/26. Ex Thomastown. Priced at MINIMUM HIRE (min hours x hourly rate) - real jobs bill pickup to delivery plus return, so this is a floor. Rates ex GST and ex fuel: Fuel levy 35% (set 27/10/26). Not priced: Hydraulic tailgate 6T $46.80/h, 8T $53.95, 12T $62.40, 14T $68.90; Crane/Hiab 8T $97.50, 12T $104.00, 14T $110.50 (4h minimum). Booked 6am-4pm Mon-Fri; VIP/after-4pm surcharges, 60-120 min specialised pickups, mobile and toll charges not modelled. Capital also quoted 1T courier rates (SC/SSW/SLV/SH/S1, 4-5h standard) - that card is not loaded yet.');
+insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3, cubic_allowance_percent, fuel_levy_percent, margin_percent, consolidate, notes) values ('capital-taxi-mel', 'Capital Group taxi truck ex Thomastown', 'Capital Group', false, 'cost', 'excess', 333, 25, 35, 15, true, 'Capital Group Standard Hourly Hire - VIC, supplied 27/10/26. Ex Thomastown. Priced at MINIMUM HIRE (min hours x hourly rate) - real jobs bill pickup to delivery plus return, so this is a floor. Rates ex GST and ex fuel: Fuel levy 35% (set 27/10/26). Not priced: Hydraulic tailgate 6T $46.80/h, 8T $53.95, 12T $62.40, 14T $68.90; Crane/Hiab 8T $97.50, 12T $104.00, 14T $110.50 (4h minimum). Booked 6am-4pm Mon-Fri; VIP/after-4pm surcharges, 60-120 min specialised pickups, mobile and toll charges not modelled. Capital also quoted 1T courier rates (SC/SSW/SLV/SH/S1, 4-5h standard) - deliberately not loaded (Michael, 27/10/26: their advantage is the taxi truck).');
 insert into freight_zones (matrix_code, code, name, notes) values ('capital-taxi-mel', 'MELBOURNE', 'Melbourne metro', 'Same postcodes as Mainfreight MELBOURNE + MEL CENTRAL');
 insert into freight_zone_postcodes (matrix_code, zone_code, postcode_from, postcode_to) values
   ('capital-taxi-mel', 'MELBOURNE', 3000, 3000),
@@ -54,13 +54,13 @@ insert into freight_zone_postcodes (matrix_code, zone_code, postcode_from, postc
   ('capital-taxi-mel', 'MELBOURNE', 8007, 8008),
   ('capital-taxi-mel', 'MELBOURNE', 8012, 8012),
   ('capital-taxi-mel', 'MELBOURNE', 9999, 9999);
-insert into freight_matrix_rates (matrix_code, zone_code, service, service_level, applies_to, weight_from_kg, weight_to_kg, price, per_kg, minimum, days_from, days_to, max_pallets, max_length_cm) values
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (2 tonne)', 'standard', 'any', 0, 2000, 55.29, 0, 0, 0, 1, 3, 360),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (4 tonne)', 'standard', 'any', 2000, 4000, 58.37, 0, 0, 0, 1, 6, 420),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (6 tonne)', 'standard', 'any', 4000, 6000, 84.64, 0, 0, 0, 1, 8, 540),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (8 tonne)', 'standard', 'any', 6000, 8000, 99.66, 0, 0, 0, 1, 10, 600),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (12 tonne)', 'standard', 'any', 8000, 12000, 176.10, 0, 0, 0, 1, 12, 720),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (14 tonne)', 'standard', 'any', 12000, 14000, 196.56, 0, 0, 0, 1, 14, 840),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (20 tonne semi)', 'standard', 'any', 14000, 20000, 338.00, 0, 0, 0, 1, 22, 1320),
-  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (32 tonne B-double)', 'standard', 'any', 20000, 32000, 650.00, 0, 0, 0, 1, 32, 2040);
+insert into freight_matrix_rates (matrix_code, zone_code, service, service_level, applies_to, weight_from_kg, weight_to_kg, price, per_kg, minimum, days_from, days_to) values
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (2 tonne)', 'standard', 'any', 0, 2000, 55.29, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (4 tonne)', 'standard', 'any', 2000, 4000, 58.37, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (6 tonne)', 'standard', 'any', 4000, 6000, 84.64, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (8 tonne)', 'standard', 'any', 6000, 8000, 99.66, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (12 tonne)', 'standard', 'any', 8000, 12000, 176.10, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (14 tonne)', 'standard', 'any', 12000, 14000, 196.56, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (20 tonne semi)', 'standard', 'any', 14000, 20000, 338.00, 0, 0, 0, 1),
+  ('capital-taxi-mel', 'MELBOURNE', 'Taxi truck (32 tonne B-double)', 'standard', 'any', 20000, 32000, 650.00, 0, 0, 0, 1);
 commit;

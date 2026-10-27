@@ -167,8 +167,8 @@ def main():
         "begin;",
         f"delete from freight_matrices where code = {q(CODE)};",
         "insert into freight_matrices (code, name, carrier, active, basis, per_kg_on, cubic_factor_kg_m3,"
-        " fuel_levy_percent, consolidate, notes) values"
-        f" ({q(CODE)}, 'Mainfreight ex Melbourne (0390679)', 'Mainfreight', false, 'cost', 'total', 333, 0, true,"
+        " cubic_allowance_percent, fuel_levy_percent, consolidate, notes) values"
+        f" ({q(CODE)}, 'Mainfreight ex Melbourne (0390679)', 'Mainfreight', false, 'cost', 'total', 333, 25, 0, true,"
         " 'Rates ex GST and ex FAF. SET fuel_levy_percent BEFORE ACTIVATING. Surcharges (DG 20%, residential,"
         " tailgate, >4m, un-crated machinery at 2.88m height) are NOT modelled. Postcodes approximated.');",
         "insert into freight_zones (matrix_code, code, name, notes) values",
