@@ -85,8 +85,9 @@ missing var fails **silently** — that's why each must be checked deliberately.
   the server. Before cookie consent it goes as a cookieless ping Ads can model;
   after Accept it counts normally (Consent Mode v2, 2026-10-27). `NEXT_PUBLIC_GOOGLE_ADS_ID` /
   `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` override the defaults if set.
-  ⚙️ `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` is still **not set**: card orders do not
-  reach Ads until a purchase action exists and its label is added (needs a redeploy).
+  ✅ Purchase conversion — **live, pinned in code** since 2026-10-27: "Purchase" label
+  `Zsn1CPn8x5IdEMTt2u5E`, fired by trackPurchase with the order total and order number.
+  `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` overrides it if set.
 - ✅ `OPINLY_API_KEY` — **set and live** (added 15 Sep 2026, in place before the
   16 Sep deploy, so server-side reporting has worked from its first request).
   It is a **Team-level Shared** variable, not a project one: `vercel env ls` does NOT
