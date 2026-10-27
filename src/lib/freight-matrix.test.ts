@@ -42,7 +42,7 @@ vi.mock("@/lib/admin-db", () => ({
 }));
 
 const { clearFreightCache } = await import("@/lib/freight-cache");
-const { buildMatrixConfig, chargeableKg, clearMatrixCache, loadMatrixConfig, quoteMatrices, zoneFor } =
+const { buildMatrixConfig, chargeableKg, clearMatrixCache, loadMatrixConfig, palletsFor, quoteMatrices, zoneFor } =
   await import("@/lib/freight-matrix");
 const { freightAvailable, quoteFreight } = await import("@/lib/freight");
 type FreightItem = import("@/lib/freight").FreightItem;
@@ -264,6 +264,54 @@ describe("pricing a carrier's cost card", () => {
     const big = [{ weight: 10, length: 200, width: 50, height: 50 }];
     expect(quoteMatrices(mf(), { ...input(0), parcels: big })?.[0].price).toBe(priced(27.39 + 166.5 * 0.7835));
   });
+
+  // Capital Group carries 15% even on a bulky consignment, where the site's default is 20%.
+  it("uses the card's own margin in place of the site's", () => {
+    const own = config({
+      matrices: withMf().map((m) => (m.code === "MF" ? { ...m, margin_percent: "15" } : m)),
+      rates: rates.filter((r) => r.matrix_code === "MF"),
+    });
+    expect(quoteMatrices(own, { ...input(21), marginPercent: 20 })?.[0].price).toBe(priced(102.7));
+  });
+});
+
+// Capital-shaped: trucks, each with a payload, a pallet count and a bed.
+describe("pricing a truck card", () => {
+  const truck = (id: number, kg: number, pallets: number, bed: number, price: string) =>
+    rate({ id, zone_code: "VIC", applies_to: "any", service: `Truck ${kg}`, weight_from_kg: "0", weight_to_kg: String(kg), price, max_pallets: pallets, max_length_cm: bed });
+  const trucks = () =>
+    config({
+      matrices: [{ ...matrices[0], cubic_factor_kg_m3: "0" }],
+      rates: [truck(30, 2000, 3, 360, "55"), truck(31, 4000, 6, 420, "58"), truck(32, 8000, 10, 600, "100")],
+    });
+  const box = (n: number, side: number, weight: number) =>
+    Array.from({ length: n }, () => ({ weight, length: side, width: side, height: side }));
+  const quote = (parcels: ReturnType<typeof box>) =>
+    quoteMatrices(trucks(), { parcels, oversize: true, postcode: "3074", marginPercent: 0 });
+
+  it("counts pallets by volume or by 1,000kg, whichever needs more", () => {
+    expect(palletsFor(box(1, 50, 20))).toBe(1);
+    // 5 x 1m3 = 5m3, over two 2.44m3 pallets.
+    expect(palletsFor(box(5, 100, 20))).toBe(3);
+    expect(palletsFor(box(1, 50, 2500))).toBe(3);
+  });
+
+  it("offers only the cheapest truck that fits", () => {
+    expect(quote(box(1, 50, 20))?.map((o) => o.id)).toEqual(["matrix:OWN:VIC:30"]);
+  });
+
+  // 400kg of rig is nowhere near 2 tonnes, but it fills 4 pallets.
+  it("moves a light, bulky load up to the truck with room for it", () => {
+    expect(quote(box(8, 110, 50))?.map((o) => o.id)).toEqual(["matrix:OWN:VIC:31"]);
+  });
+
+  it("needs a bed long enough for the longest carton", () => {
+    expect(quote([{ weight: 60, length: 400, width: 30, height: 30 }])?.map((o) => o.id)).toEqual(["matrix:OWN:VIC:31"]);
+  });
+
+  it("offers nothing when no truck fits", () => {
+    expect(quote([{ weight: 60, length: 700, width: 30, height: 30 }])).toBeNull();
+  });
 });
 
 describe("loading", () => {
@@ -410,6 +458,25 @@ describe("the router, by source", () => {
     const q = await quoteFreight([{ ...barbell, quantity: 3 }], to("3074"));
     const once = Math.round(102.7 * 1.1 * 1.1 * 100) / 100;
     expect(q.ok && q.options[0]).toMatchObject({ id: "whole:matrix:MF:MELBOURNE:20", price: once });
+  });
+
+  // Ten barbells are ten consignments to the carriers, over the cap, but one
+  // pallet to a line-haul card - so the card prices it instead of refusing it.
+  it("puts a cart past the consignment cap on a pallet", async () => {
+    useDb("pooled", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
+    const fetch = stubCarrier();
+    const q = await quoteFreight([{ ...barbell, quantity: 10 }], to("3074"));
+    expect(q.ok && q.options[0].id).toMatch(/^whole:matrix:MF:MELBOURNE:/);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("still sends a cart past the cap to the quote flow where no card delivers", async () => {
+    useDb("pooled", { matrices: withMf(), rates: rates.filter((r) => r.matrix_code === "MF") });
+    stubCarrier();
+    expect(await quoteFreight([{ ...barbell, quantity: 10 }], to("2650"))).toMatchObject({
+      ok: false,
+      reason: "too_many_parcels",
+    });
   });
 
   // The pallet that started this: a heavy cart the carriers price over the cap,
