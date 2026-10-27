@@ -4,7 +4,7 @@
 // the payment-intent route (which decides what to actually charge) go through
 // here, so the two can never disagree about what a delivery costs.
 
-import { productById, variationsFor } from "@/lib/catalogue";
+import { productById, productBySku, variationBySku, variationsFor } from "@/lib/catalogue";
 import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 import {
   quoteFreight,
@@ -71,11 +71,22 @@ export async function refsToFreightItems(refs: CartRefLike[]): Promise<FreightIt
 
   for (const ref of refs) {
     const quantity = Math.max(1, Math.floor(ref.quantity ?? 1));
-    const product = ref.productId ? productById(ref.productId) : undefined;
+    // A line with only a code (the partner portals' checkout sends codes, never
+    // WooCommerce ids) is found in the snapshot by that code: a size of a range
+    // first, since those codes are variations, then a product. Without this
+    // such a line saw the ERP's cartons alone, and the snapshot's 84% coverage
+    // never applied to it. The id, when given, still decides.
+    const bySku = !ref.productId && ref.sku ? variationBySku(ref.sku) : undefined;
+    const productId = ref.productId || bySku?.productId || 0;
+    const product = productId
+      ? productById(productId)
+      : ref.sku
+        ? productBySku(ref.sku)
+        : undefined;
     // A variation can carry its own carton; fall back to the parent's.
     const variation = ref.variationId
       ? variationsFor(ref.productId).find((v) => v.id === ref.variationId)
-      : undefined;
+      : bySku?.variation;
 
     const code = (ref.sku || variation?.sku || product?.sku || "").trim();
     const unit = code ? lookupBySku(erp, code) : null;

@@ -134,6 +134,14 @@ const erp: UnleashedMap = {
 vi.mock("@/lib/catalogue", () => ({
   productById: (id: number) => snapshot.find((p) => p.id === id),
   variationsFor: (id: number) => (variations as Record<number, unknown[]>)[id] ?? [],
+  productBySku: (sku: string) => snapshot.find((p) => p.sku === sku.trim().toUpperCase()),
+  variationBySku: (sku: string) => {
+    for (const [productId, list] of Object.entries(variations)) {
+      const variation = list.find((v) => v.sku === sku.trim().toUpperCase());
+      if (variation) return { productId: Number(productId), variation };
+    }
+    return undefined;
+  },
 }));
 vi.mock("@/lib/unleashed", async (orig) => ({
   ...(await orig<typeof import("@/lib/unleashed")>()),
@@ -168,6 +176,37 @@ describe("cartons come from the committed snapshot", () => {
     const [item] = await refsToFreightItems([{ productId: 101, variationId: 9002, quantity: 1 }]);
     expect(item.weightKg).toBe(35);
     expect(item.lengthCm).toBe(77);
+  });
+});
+
+// The partner portals send product codes and no WooCommerce ids. Those lines
+// must see the snapshot too, or only the ERP's cartons ever price them.
+describe("a line with only a code finds its snapshot carton", () => {
+  it("finds a product by its code", async () => {
+    const [item] = await refsToFreightItems([{ productId: 0, sku: "MBPB3I101", quantity: 1 }]);
+    expect(item).toMatchObject({ sku: "MBPB3I101", name: "Plyometric Box", weightKg: 35, lengthCm: 77, widthCm: 52, heightCm: 62 });
+  });
+
+  it("finds a size of a range by the variation's own code", async () => {
+    const [item] = await refsToFreightItems([{ productId: 0, sku: "mbpb3i101-l", quantity: 1 }]);
+    expect(item.weightKg).toBe(40);
+    expect(item.lengthCm).toBe(80);
+  });
+
+  it("falls back to the parent's carton for a size that has none", async () => {
+    const [item] = await refsToFreightItems([{ productId: 0, sku: "MBPB3I101-S", quantity: 1 }]);
+    expect(item.weightKg).toBe(35);
+    expect(item.lengthCm).toBe(77);
+  });
+
+  it("still lets the ERP overrule a snapshot carton it contradicts", async () => {
+    const [item] = await refsToFreightItems([{ productId: 0, sku: "MWBBFUR03", quantity: 1 }]);
+    expect(item.lengthCm).toBe(116);
+  });
+
+  it("uses the ERP alone for a code the snapshot has never had", async () => {
+    const [item] = await refsToFreightItems([{ productId: 0, sku: "MERPONLY1", quantity: 1 }]);
+    expect(item).toMatchObject({ lengthCm: 77, widthCm: 52, heightCm: 62, weightKg: 35 });
   });
 });
 
