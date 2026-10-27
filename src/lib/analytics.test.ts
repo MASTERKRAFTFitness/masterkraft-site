@@ -159,6 +159,16 @@ describe("trackEnquiry", () => {
   });
 });
 
+describe("an enquiry that cannot become a sale", () => {
+  it("still records the enquiry, but sends no Ads conversion", async () => {
+    const calls = gtagSpy();
+    const { trackEnquiry } = await withEnv(configured);
+    trackEnquiry("contact", "dana@example.com", { adsLead: false });
+
+    expect(calls).toEqual([["event", "generate_lead", { method: "contact" }]]);
+  });
+});
+
 describe("the Meta pixel conversion", () => {
   it("sends Meta's standard Lead when the pixel has loaded", async () => {
     gtagSpy();

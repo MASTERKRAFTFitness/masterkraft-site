@@ -108,6 +108,26 @@ export function toEnquiryKind(raw: string | null | undefined): EnquiryKind {
   return ALL_ENQUIRY_KINDS.find((k) => k === value) ?? ENQUIRY_KIND.general;
 }
 
+/**
+ * Which kinds count as a Google Ads "Quote request" conversion.
+ *
+ * THE ADS ACTION IS VALUED AT A$1,500 AND PERFORMANCE MAX BIDS ON IT. Every
+ * kind used to count, so an order or delivery question, a supplier offering to
+ * sell to us, and "something else" each scored as a fitout-sized lead, and the
+ * bidder learned to find more of them. Only the three kinds that can become a
+ * sale count; the rest still reach HubSpot and GA4 as ordinary enquiries.
+ */
+const ADS_LEAD_KINDS: ReadonlySet<EnquiryKind> = new Set([
+  ENQUIRY_KIND.fitout,
+  ENQUIRY_KIND.equipment,
+  ENQUIRY_KIND.wholesale,
+]);
+
+/** True when an enquiry of this kind should fire the Ads quote conversion. */
+export function countsAsAdsLead(kind: EnquiryKind): boolean {
+  return ADS_LEAD_KINDS.has(kind);
+}
+
 /** The value to put on the wire for a kind. Always one HubSpot will store. */
 export function portalEnquiryType(kind: EnquiryKind): PortalEnquiryType {
   return TO_PORTAL[kind];

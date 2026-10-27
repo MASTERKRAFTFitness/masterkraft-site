@@ -215,9 +215,11 @@ export function trackSignUp(source: string, email?: string) {
  * with trackLead is deliberate: both are leads, and Ads should count them
  * together. What must NOT be shared is the value, which is why none is sent.
  */
-export function trackEnquiry(source: string, email?: string) {
+export function trackEnquiry(source: string, email?: string, opts: { adsLead?: boolean } = {}) {
   track("generate_lead", { method: source });
-  adsConversion(ADS_LEAD_LABEL, {}, email);
+  // `adsLead: false` keeps an enquiry that cannot become a sale out of the Ads
+  // quote conversion. See countsAsAdsLead in lib/enquiry-type.
+  if (opts.adsLead !== false) adsConversion(ADS_LEAD_LABEL, {}, email);
   // Meta's standard `Lead`. Named exactly that because Meta only optimises
   // toward events it recognises - a custom name would leave campaigns bidding
   // on link clicks, which is most of the value of paid social gone.

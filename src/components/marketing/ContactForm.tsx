@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
-import { ENQUIRY_TOPICS } from "@/lib/enquiry-type";
+import { ENQUIRY_TOPICS, countsAsAdsLead, toEnquiryKind } from "@/lib/enquiry-type";
 import { trackEnquiry } from "@/lib/analytics";
 
 const fieldClass =
@@ -36,7 +36,11 @@ export default function ContactForm() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      if (data.accepted) trackEnquiry("contact", String(f.get("email") ?? ""));
+      if (data.accepted) {
+        trackEnquiry("contact", String(f.get("email") ?? ""), {
+          adsLead: countsAsAdsLead(toEnquiryKind(String(f.get("topic") ?? ""))),
+        });
+      }
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
