@@ -123,7 +123,7 @@ export default function CheckoutPage() {
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
         identifyUser(contact.email);
-        trackLead(subtotal, items.length);
+        trackLead(subtotal, items.length, contact.email);
       }
       clear();
       setDone(true);

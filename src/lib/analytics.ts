@@ -50,12 +50,20 @@ export function track(event: string, params: Params = {}): void {
  * One Google Ads conversion. Separate from track() because it is addressed
  * differently — `send_to` names the conversion action, and Ads ignores an event
  * without it — and because it must not reach HubSpot, which has its own funnel.
+ *
+ * ENHANCED CONVERSIONS. When the form gave us an email it is set as `user_data`
+ * just before the conversion, which is what both Ads actions are configured to
+ * read ("managed through Google tag"). gtag normalises and SHA-256 hashes it in
+ * the browser, so the address itself never leaves the page, and under Consent
+ * Mode it is dropped entirely until the visitor accepts (ad_user_data).
  */
-function adsConversion(label: string | undefined, params: Params = {}): void {
+function adsConversion(label: string | undefined, params: Params = {}, email?: string): void {
   if (typeof window === "undefined") return;
   if (!ADS_ID || !label) return;
   const w = window as AnalyticsWindow;
   if (typeof w.gtag !== "function") return;
+  const address = email?.trim().toLowerCase();
+  if (address && address.includes("@")) w.gtag("set", "user_data", { email: address });
   w.gtag("event", "conversion", { send_to: `${ADS_ID}/${label}`, currency: "AUD", ...params });
 }
 
@@ -159,9 +167,9 @@ export function trackBeginCheckout(
  * confirmation is reloaded or the tag fires twice, and a purchase counted twice
  * teaches the bidder the wrong price for a click.
  */
-export function trackPurchase(order: { id: string; value: number }) {
+export function trackPurchase(order: { id: string; value: number; email?: string }) {
   track("purchase", { currency: "AUD", value: order.value, transaction_id: order.id });
-  adsConversion(ADS_PURCHASE_LABEL, { value: order.value, transaction_id: order.id });
+  adsConversion(ADS_PURCHASE_LABEL, { value: order.value, transaction_id: order.id }, order.email);
   // `order.id` is the order NUMBER, and /api/order reports the same one to Opinly
   // server-side. Matching ids are what collapse the two into a single sale
   // instead of double-counting the revenue. Do not change one side alone.
@@ -174,9 +182,9 @@ export function trackPurchase(order: { id: string; value: number }) {
  * fitout funnel's front door, and a quote is a lead, not revenue. `value` is the
  * cart subtotal — an indication of size, not money taken.
  */
-export function trackLead(value: number, itemCount: number) {
+export function trackLead(value: number, itemCount: number, email?: string) {
   track("generate_lead", { currency: "AUD", value, items: itemCount });
-  adsConversion(ADS_LEAD_LABEL, { value });
+  adsConversion(ADS_LEAD_LABEL, { value }, email);
   opinlyTrack("generate_lead", { value, currency: "AUD", items: itemCount });
 }
 
@@ -209,7 +217,7 @@ export function trackSignUp(source: string, email?: string) {
  */
 export function trackEnquiry(source: string, email?: string) {
   track("generate_lead", { method: source });
-  adsConversion(ADS_LEAD_LABEL);
+  adsConversion(ADS_LEAD_LABEL, {}, email);
   // Meta's standard `Lead`. Named exactly that because Meta only optimises
   // toward events it recognises - a custom name would leave campaigns bidding
   // on link clicks, which is most of the value of paid social gone.

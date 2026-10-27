@@ -129,7 +129,7 @@ describe("trackEnquiry", () => {
     trackEnquiry("fitout-brief", "dana@example.com");
 
     expect(calls[0]).toEqual(["event", "generate_lead", { method: "fitout-brief" }]);
-    expect(calls[1]).toEqual([
+    expect(calls[2]).toEqual([
       "event",
       "conversion",
       { send_to: "AW-123456789/leadLabel", currency: "AUD" },
@@ -182,5 +182,26 @@ describe("the Meta pixel conversion", () => {
     const { trackEnquiry } = await withEnv(configured);
     expect(() => trackEnquiry("contact")).not.toThrow();
     expect(calls.some((c) => c[1] === "generate_lead")).toBe(true);
+  });
+});
+
+describe("enhanced conversions", () => {
+  it("sets the customer's email as user_data immediately before the Ads conversion", async () => {
+    const calls = gtagSpy();
+    const { trackPurchase } = await withEnv(configured);
+    trackPurchase({ id: "MK-1001", value: 192.5, email: "  Dana@Example.com " });
+
+    expect(calls).toHaveLength(3);
+    expect(calls[1]).toEqual(["set", "user_data", { email: "dana@example.com" }]);
+    expect(calls[2][1]).toBe("conversion");
+  });
+
+  it("sets no user_data when there is no usable email", async () => {
+    const calls = gtagSpy();
+    const { trackLead } = await withEnv(configured);
+    trackLead(500, 2);
+    trackLead(500, 2, "not an email");
+
+    expect(JSON.stringify(calls)).not.toContain("user_data");
   });
 });

@@ -344,7 +344,7 @@ export default function StripeCheckout({
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
         identifyUser(b.email);
-        trackLead(subtotal, items.length);
+        trackLead(subtotal, items.length, b.email);
       }
       forgetCheckoutId();
       onQuoted?.({ email: b.email });
@@ -632,7 +632,7 @@ function PayForm({
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Order could not be recorded.");
-      trackPurchase({ id: String(data.orderNumber), value: charge });
+      trackPurchase({ id: String(data.orderNumber), value: charge, email: billing.email });
       // Hand the confirmation up to the page BEFORE clearing the cart: clearing
       // flips the page's canPay gate and unmounts this component, so the page
       // must own the "order confirmed" screen for it to survive.
