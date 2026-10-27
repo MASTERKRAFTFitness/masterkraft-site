@@ -1,9 +1,9 @@
 // Guards the Google Ads conversion calls. The ID and labels are read at import
 // time, so each case reloads the module — the same shape as site.test.ts.
 //
-// The ID and lead label have in-code defaults (lib/google-ads); the purchase
-// label does not. The failure mode to avoid is a missing label quietly turning
-// into a conversion sent to "AW-123/undefined".
+// The ID and both labels have in-code defaults (lib/google-ads). The failure mode
+// to avoid is a missing label quietly turning into a conversion sent to
+// "AW-123/undefined", or no conversion at all because a Vercel variable is unset.
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 
 type GtagCall = unknown[];
@@ -79,7 +79,7 @@ describe("trackPurchase", () => {
     ]);
   });
 
-  it("sends no purchase conversion when env is unset (no default purchase label)", async () => {
+  it("sends the pinned purchase conversion when env is unset", async () => {
     const calls = gtagSpy();
     const { trackPurchase } = await withEnv({
       NEXT_PUBLIC_GOOGLE_ADS_ID: undefined,
@@ -88,20 +88,17 @@ describe("trackPurchase", () => {
     });
     trackPurchase({ id: "MK-1001", value: 192.5 });
 
-    expect(calls).toHaveLength(1);
-    expect(calls[0][1]).toBe("purchase");
-  });
-
-  it("sends nothing to Ads when the account has an ID but no label yet", async () => {
-    const calls = gtagSpy();
-    const { trackPurchase } = await withEnv({
-      ...configured,
-      NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL: undefined,
-    });
-    trackPurchase({ id: "MK-1001", value: 192.5 });
-
-    expect(calls).toHaveLength(1);
-    expect(JSON.stringify(calls)).not.toContain("undefined");
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toEqual([
+      "event",
+      "conversion",
+      {
+        send_to: "AW-18485786308/Zsn1CPn8x5IdEMTt2u5E",
+        currency: "AUD",
+        value: 192.5,
+        transaction_id: "MK-1001",
+      },
+    ]);
   });
 });
 
