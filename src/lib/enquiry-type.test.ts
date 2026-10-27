@@ -101,3 +101,12 @@ describe("the fitout brief", () => {
     expect(value).toBe("Commercial Equipment Enquiry");
   });
 });
+
+describe("countsAsAdsLead", () => {
+  // The Ads quote action is valued at A$1,500, so only kinds that can become a
+  // sale may fire it.
+  it("counts fitout, equipment and wholesale, and nothing else", async () => {
+    const { countsAsAdsLead, ALL_ENQUIRY_KINDS } = await import("@/lib/enquiry-type");
+    expect(ALL_ENQUIRY_KINDS.filter(countsAsAdsLead).sort()).toEqual(["equipment", "fitout", "wholesale"]);
+  });
+});

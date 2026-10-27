@@ -71,7 +71,8 @@ export default function DistributorApplicationForm() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
-      if (data.accepted) trackEnquiry("distributor", String(f.get("email") ?? ""));
+      // A distributor is a supplier, not a buyer: not an Ads quote lead.
+      if (data.accepted) trackEnquiry("distributor", String(f.get("email") ?? ""), { adsLead: false });
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
