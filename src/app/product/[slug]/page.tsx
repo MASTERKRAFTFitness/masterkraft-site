@@ -33,7 +33,8 @@ import { hashCode } from "@/lib/checkout-link";
 import ViewItemTracker from "@/components/shop/ViewItemTracker";
 import ProductCard from "@/components/shop/ProductCard";
 import JsonLd from "@/components/seo/JsonLd";
-import { SITE_URL, absoluteUrl, priceValidUntil } from "@/lib/site";
+import { SITE_URL, absoluteUrl, priceValidUntil, productUrl } from "@/lib/site";
+import { offerAvailability, productGroupSchema } from "@/lib/product-schema";
 import { merchantReturnPolicy } from "@/lib/return-policy";
 import { stockLabel } from "@/lib/stock-label";
 
@@ -309,55 +310,49 @@ export default async function ProductPage({
   // freight is quoted per address, and a flat rate here would be a claim the
   // checkout contradicts. Shipping is configured in the Merchant Center account.
   const returnPolicy = merchantReturnPolicy();
-  const offerUrl = `${SITE_URL}/product/${product.slug}`;
+  const schemaImages = (product.images ?? []).map((i) => absoluteUrl(i.src)).filter(Boolean).slice(0, 5);
+  const schemaDescription = plainText(product.short_description) || undefined;
 
-  const offers = usesVariants
-    ? variantPrices.length > 0
-      ? {
-          offers: {
-            "@type": "AggregateOffer",
-            // url and itemCondition were on the single-Offer branch and missing
-            // here, so a ranged product - every dumbbell and barbell on the site
-            // - published a less complete offer than a one-size one.
-            url: offerUrl,
-            priceCurrency: "AUD",
-            lowPrice: Math.min(...variantPrices).toFixed(2),
-            highPrice: Math.max(...variantPrices).toFixed(2),
-            offerCount: variants.length,
-            priceValidUntil: validUntil,
-            availability: variants.some((v) => v.inStock)
-              ? "https://schema.org/InStock"
-              : "https://schema.org/PreOrder",
-            itemCondition: "https://schema.org/NewCondition",
-            hasMerchantReturnPolicy: returnPolicy,
-          },
-        }
-      : {}
-    : enriched.priceValue > 0
+  // A RANGE IS A ProductGroup, one variant per size; see lib/product-schema.ts.
+  // Null when no size has a price, which falls through to a Product with no
+  // offer, as a range with no prices always has.
+  const groupSchema = usesVariants
+    ? productGroupSchema({
+        slug: product.slug,
+        name: unit?.name ?? range?.name ?? product.name,
+        description: schemaDescription,
+        images: schemaImages,
+        brand: schemaBrand,
+        variants: variants.map((v) => ({ ...v, image: v.image ? absoluteUrl(v.image) : undefined })),
+        priceValidUntil: validUntil,
+        returnPolicy,
+      })
+    : null;
+
+  const offers =
+    !usesVariants && enriched.priceValue > 0
       ? {
           offers: {
             "@type": "Offer",
-            url: offerUrl,
+            url: productUrl(product.slug),
             priceCurrency: "AUD",
             price: enriched.priceValue.toFixed(2),
             priceValidUntil: validUntil,
-            availability: inStock
-              ? "https://schema.org/InStock"
-              : "https://schema.org/PreOrder",
+            availability: offerAvailability(inStock),
             itemCondition: "https://schema.org/NewCondition",
             hasMerchantReturnPolicy: returnPolicy,
           },
         }
       : {};
 
-  const productSchema: Record<string, unknown> = {
+  const productSchema: Record<string, unknown> = groupSchema ?? {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     // Absolute, because the mirror serves these as bare /product-images paths
     // and Google rejects a relative URL in structured data. See absoluteUrl.
-    image: (product.images ?? []).map((i) => absoluteUrl(i.src)).filter(Boolean).slice(0, 5),
-    description: plainText(product.short_description) || undefined,
+    image: schemaImages,
+    description: schemaDescription,
     sku: product.sku || undefined,
     // The ERP's own code is the manufacturer part number for the ranges we
     // make; there are no GTINs in Unleashed to offer alongside it.

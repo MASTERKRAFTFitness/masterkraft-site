@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useVariantSelection } from "@/components/shop/VariantSelection";
 import { trackAddToCart } from "@/lib/analytics";
@@ -22,6 +22,21 @@ export type Variant = {
   wooVariationId?: number;
 };
 
+// The query string never changes under this component except by its own
+// replaceState, so there is nothing to subscribe to.
+const noSubscribe = () => () => {};
+
+/**
+ * The ERP code in `?size=`, upper-cased, or undefined. "" on the server: the
+ * page is ISR-cached, so the server render cannot depend on the query, and
+ * useSyncExternalStore swaps in the real value after hydration without a
+ * mismatch.
+ */
+function useSizeParam(): string | undefined {
+  const search = useSyncExternalStore(noSubscribe, () => window.location.search, () => "");
+  return new URLSearchParams(search).get("size")?.toUpperCase() || undefined;
+}
+
 export default function VariantSelector({
   productName,
   productSlug,
@@ -34,9 +49,17 @@ export default function VariantSelector({
 }) {
   const { add } = useCart();
   const selection = useVariantSelection();
-  const [selectedId, setSelectedId] = useState(
-    (variants.find((v) => v.inStock) ?? variants[0])?.id
-  );
+  // ?size=<ERP code> picks that size on arrival. It is the link Google
+  // Shopping gives each size (lib/site.ts productUrl), so a click on the 4kg
+  // lands on the 4kg rather than whatever the range opens on. Otherwise the
+  // first size in stock. A shopper's own choice, once made, wins over both.
+  const sizeParam = useSizeParam();
+  const [chosenId, setSelectedId] = useState<number | undefined>(undefined);
+  const selectedId =
+    chosenId ??
+    (variants.find((v) => v.code.toUpperCase() === sizeParam) ??
+      variants.find((v) => v.inStock) ??
+      variants[0])?.id;
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
@@ -68,6 +91,17 @@ export default function VariantSelector({
   useEffect(() => {
     setSelected?.(selectedCode, selectedImage);
   }, [setSelected, selectedCode, selectedImage]);
+
+  // A size the shopper picks goes into the address, so a copied link opens on
+  // it. Only once they have picked: arriving on the default leaves the URL bare.
+  const chosen = chosenId !== undefined;
+  useEffect(() => {
+    if (!chosen || !selectedCode) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("size") === selectedCode) return;
+    url.searchParams.set("size", selectedCode);
+    window.history.replaceState(window.history.state, "", url);
+  }, [chosen, selectedCode]);
 
   if (!selected) return null;
 

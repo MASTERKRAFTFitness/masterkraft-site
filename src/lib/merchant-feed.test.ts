@@ -75,6 +75,14 @@ describe("building the feed", () => {
     expect(items.find((i) => i.id === "MBSARO01")?.itemGroupId).toBeUndefined();
   });
 
+  // The same URL as the size's offer in the page's ProductGroup, which opens the
+  // page with that size picked. A single product keeps its bare page.
+  it("links each size of a range to its own ?size= URL", () => {
+    const { items } = buildFeed(map());
+    expect(items.find((i) => i.id === "MWWPCP02")?.link).toMatch(/\/product\/change-plates\?size=MWWPCP02$/);
+    expect(items.find((i) => i.id === "MBSARO01")?.link).toMatch(/\/product\/speed-rope$/);
+  });
+
   it("never claims a GTIN it does not have", () => {
     const xml = feedToXml(buildFeed(map()).items);
     expect(xml).toContain("<g:identifier_exists>no</g:identifier_exists>");
