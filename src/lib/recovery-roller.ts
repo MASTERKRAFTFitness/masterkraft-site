@@ -6,7 +6,8 @@
 //
 // TWO EDITING RULES, both deliberate:
 //
-// 1. NO BENEFIT CLAIMS. The light is described as "integrated" and nothing more.
+// 1. NO BENEFIT CLAIMS. The heat is described as "infrared, beneath the
+//    rollers", the published brochure's spec-sheet wording, and nothing more.
 //    Nothing on this page says what the machine does for a member, pending the
 //    TGA question. That is a compliance position, not an oversight - do not add
 //    recovery, circulation, healing or performance claims here.
@@ -22,7 +23,7 @@ export const RELEASE_LABEL = "First look September";
 export const SPEC_ROWS: { label: string; value: string | null }[] = [
   { label: "Product", value: "Recovery Roller" },
   { label: "Type", value: "Motorised roller bed" },
-  { label: "Light", value: "Integrated, beneath the rollers" },
+  { label: "Heat", value: "Infrared, beneath the rollers" },
   { label: "Control", value: "Touchscreen" },
   { label: "Housing", value: "Commercial grade, upholstered" },
   { label: "Manufacture", value: "Built by MasterKraft" },

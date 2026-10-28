@@ -4,7 +4,7 @@ import WaitlistForm from "@/components/recovery-roller/WaitlistForm";
 import { ARGUMENTS, RELEASE_LABEL, SPEC_ROWS } from "@/lib/recovery-roller";
 
 // NO BENEFIT CLAIMS ANYWHERE ON THIS PAGE. See the note in lib/recovery-roller.ts.
-// The light is "integrated" and nothing more, pending the TGA question.
+// The heat is "infrared, beneath the rollers" and nothing more, pending the TGA question.
 
 export const metadata: Metadata = {
   title: "Recovery Roller | Commercial Recovery Machine",
