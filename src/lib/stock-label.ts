@@ -11,6 +11,8 @@
 // The lead time is the business's figure (22 Oct 2026), not the ERP's: Unleashed
 // records where stock sits, not how long it takes to arrive. Change it here.
 export const CHINA_LEAD_TIME = "6–8 weeks";
+/** The top of that range, for anything that needs a date rather than words (the Merchant feed). */
+export const CHINA_LEAD_TIME_WEEKS = 8;
 
 export type StockLabel = {
   /** The line under the price. */

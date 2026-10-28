@@ -82,10 +82,33 @@ describe("building the feed", () => {
     expect(xml).toContain("<g:mpn>MWWPCP01</g:mpn>");
   });
 
-  it("drops a code that is out of stock", () => {
-    const { items, rejected } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0 }) }));
-    expect(items.map((i) => i.id)).not.toContain("MWWPCP02");
-    expect(rejected).toContainEqual({ code: "MWWPCP02", unit: "change-plates", reason: "out of stock" });
+  // Left out, Google crawled the page and listed it anyway, with no weight.
+  it("lists a code that is out of stock as a preorder, with its weight and a date", () => {
+    const now = new Date("2026-10-28T03:00:00Z");
+    const { items } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0 }) }), { now });
+    const item = items.find((i) => i.id === "MWWPCP02");
+    expect(item?.availability).toBe("preorder");
+    expect(item?.availabilityDate).toBe("2026-12-23T00:00:00Z");
+    expect(item?.shippingWeightKg).toBe(8);
+    const xml = feedToXml(items);
+    expect(xml).toContain("<g:availability>preorder</g:availability>");
+    expect(xml).toContain("<g:availability_date>2026-12-23T00:00:00Z</g:availability_date>");
+  });
+
+  it("never labels a preorder for spend, even on the verified allowlist", () => {
+    const { items } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0 }) }), {
+      promotion: { MWWPCP02: "ads-vic" },
+    });
+    const item = items.find((i) => i.id === "MWWPCP02");
+    expect(item?.customLabel0).toBe("preorder");
+    expect(item?.customLabel3).toBeUndefined();
+    expect(item?.customLabel4).toBeUndefined();
+  });
+
+  it("gives an in-stock code no availability_date", () => {
+    const { items } = buildFeed(map());
+    expect(items.every((i) => i.availability === "in_stock")).toBe(true);
+    expect(feedToXml(items)).not.toContain("availability_date");
   });
 
   it("drops a code with no price rather than advertising it at zero", () => {
