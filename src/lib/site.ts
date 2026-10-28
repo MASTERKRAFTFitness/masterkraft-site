@@ -28,6 +28,20 @@ export function absoluteUrl(src: string | undefined | null): string {
 }
 
 /**
+ * A product page's absolute URL, or ONE SIZE of it with `size` given.
+ *
+ * `?size=<ERP code>` opens a range's page with that size picked (see
+ * VariantSelector). It is the URL Google is given for each size, in the
+ * Merchant feed and in the page's ProductGroup structured data, and the two
+ * must match exactly for Google to tie a feed item to the variant on the page;
+ * that is why both build it here. The canonical stays the bare page.
+ */
+export function productUrl(slug: string, size?: string): string {
+  const base = `${SITE_URL}/product/${slug}`;
+  return size ? `${base}?size=${encodeURIComponent(size)}` : base;
+}
+
+/**
  * The `priceValidUntil` for an Offer in Product structured data: a rolling date
  * one year out.
  *

@@ -34,7 +34,7 @@ import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unlea
 import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
 import { resolveCopy, type ContentMap } from "@/lib/product-content";
-import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { SITE_URL, absoluteUrl, productUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 import { regionLabel } from "@/lib/landed-price";
 import { CHINA_LEAD_TIME_WEEKS } from "@/lib/stock-label";
@@ -305,7 +305,9 @@ function itemFor(
     itemGroupId: unit.isRange ? unit.slug : undefined,
     title: feedTitle(unit, size),
     description: descriptionFor(unit, content),
-    link: `${SITE_URL}/product/${unit.slug}`,
+    // A range's size lands on its page with that size picked, and is the same
+    // URL as the variant's offer in the page's ProductGroup (lib/site.ts).
+    link: productUrl(unit.slug, unit.isRange ? code : undefined),
     imageLink: absoluteUrl(image),
     price: feedPrice(entry.price),
     brand: brandDisplayName(unit.brand),
