@@ -17,9 +17,15 @@
 //   rate the feed expects. `shipping_weight` goes out instead and the rates are
 //   configured account-side in Merchant Center, which is where a carrier-rate
 //   calculation belongs.
-// - Out-of-stock and preorder items. Merchant Center accepts them; a campaign
-//   budget should not. 162 of the 285 live products are PreOrder, and paying
-//   for a click on one buys a customer a wait, not a sale.
+//
+// PREORDER ITEMS ARE LISTED, BUT NEVER LABELLED FOR SPEND. Leaving them out
+// did not keep them out of Merchant Center: Google crawled their pages instead
+// and listed them itself, with no weight (the page markup carries none). On
+// 28 Oct 2026 that was 149 products disapproved for "Missing delivery weight"
+// and 5 for a missing availability_date. Listing them here gives Google the
+// weight and the date. They carry custom_label_0 "preorder" rather than
+// "freight-verified", so no paid campaign filtering on that label can bid on
+// one: a click on a preorder buys a customer a wait, not a sale.
 import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
@@ -28,6 +34,7 @@ import { resolveCopy, type ContentMap } from "@/lib/product-content";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 import { regionLabel } from "@/lib/landed-price";
+import { CHINA_LEAD_TIME_WEEKS } from "@/lib/stock-label";
 import type { PromotionLabels } from "@/lib/merchant-promotion";
 
 export type FeedItem = {
@@ -40,7 +47,9 @@ export type FeedItem = {
   price: string;
   brand?: string;
   mpn: string;
-  availability: "in_stock";
+  availability: "in_stock" | "preorder";
+  /** availability_date, required by Merchant Center on a preorder. See availabilityDate. */
+  availabilityDate?: string;
   condition: "new";
   googleProductCategory: string;
   productType: string;
@@ -247,6 +256,21 @@ function freightLabel(code: string, entry: UnleashedEntry): string | undefined {
   return parcel === null ? undefined : parcel ? "parcel" : "freight";
 }
 
+/**
+ * availability_date for a preorder: today plus the longest lead time the site
+ * quotes (stock-label.ts), as an ISO 8601 date. Recomputed on every fetch, so it
+ * never goes stale and never falls inside the window Google says a preorder
+ * cannot be shipped in.
+ *
+ * ONE FIGURE FOR BOTH KINDS OF PREORDER. China stock is the business's 6–8
+ * weeks; "made to order" has no figure of its own anywhere, and inventing one
+ * here would put a date in front of shoppers that nobody has agreed to.
+ */
+export function availabilityDate(now: Date): string {
+  const d = new Date(now.getTime() + CHINA_LEAD_TIME_WEEKS * 7 * 24 * 60 * 60 * 1000);
+  return `${d.toISOString().slice(0, 10)}T00:00:00Z`;
+}
+
 function itemFor(
   unit: ErpUnit,
   code: string,
@@ -255,7 +279,9 @@ function itemFor(
   isVerified: boolean,
   content: ContentMap | undefined,
   promotion: PromotionLabels | undefined,
+  now: Date,
 ): FeedItem {
+  const preorder = !(entry.stock > 0);
   const image = entry.image ?? unit.image ?? "";
   return {
     id: code,
@@ -270,18 +296,25 @@ function itemFor(
     price: feedPrice(entry.price),
     brand: brandDisplayName(unit.brand),
     mpn: code,
-    availability: "in_stock",
+    availability: preorder ? "preorder" : "in_stock",
+    availabilityDate: preorder ? availabilityDate(now) : undefined,
     condition: "new",
     googleProductCategory: googleCategory(unit),
     productType: unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group,
     shippingWeightKg: entry.weightKg,
     // A unit on the allowlist can still hold sizes that lost on landed price
     // everywhere; those are listed for free but not advertised.
-    customLabel0: isVerified && regionLabel(code) ? FREIGHT_VERIFIED_LABEL : UNVERIFIED_LABEL,
+    customLabel0: preorder
+      ? PREORDER_LABEL
+      : isVerified && regionLabel(code)
+        ? FREIGHT_VERIFIED_LABEL
+        : UNVERIFIED_LABEL,
     customLabel1: priceBand(entry.price),
     customLabel2: freightLabel(code, entry),
-    customLabel3: isVerified ? regionLabel(code) : undefined,
-    customLabel4: promotion?.[code.toUpperCase()],
+    // The region and promotion labels are what campaigns target; a preorder
+    // gets neither, so no campaign can pick one up by either route.
+    customLabel3: isVerified && !preorder ? regionLabel(code) : undefined,
+    customLabel4: preorder ? undefined : promotion?.[code.toUpperCase()],
   };
 }
 
@@ -313,6 +346,8 @@ export type BuildOptions = {
    * Passed in for the same reason as content.
    */
   promotion?: PromotionLabels;
+  /** The clock availability_date counts from. Passed in to keep buildFeed testable. */
+  now?: Date;
 };
 
 /**
@@ -325,6 +360,8 @@ export type BuildOptions = {
  */
 const FREIGHT_VERIFIED_LABEL = "freight-verified";
 const UNVERIFIED_LABEL = "unverified";
+/** Listed for free, never bid on. See the note at the top of this file. */
+const PREORDER_LABEL = "preorder";
 
 /**
  * Build the feed. Pure: takes the ERP map, returns items plus the reason every
@@ -365,10 +402,6 @@ export function buildFeed(
         rejected.push({ code, unit: unit.slug, reason: "no price" });
         return;
       }
-      if (!(entry.stock > 0)) {
-        rejected.push({ code, unit: unit.slug, reason: "out of stock" });
-        return;
-      }
       // The same gate the site uses to decide a product can be bought at all.
       // A code that cannot be freight-quoted reaches checkout and stops there.
       if (!codeIsShippable(code, entry)) {
@@ -379,7 +412,7 @@ export function buildFeed(
         rejected.push({ code, unit: unit.slug, reason: "no image" });
         return;
       }
-      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified, opts.content, opts.promotion));
+      items.push(itemFor(unit, code, unit.sizes[i], entry, isVerified, opts.content, opts.promotion, opts.now ?? new Date()));
     });
   }
 
@@ -417,6 +450,7 @@ export function feedToXml(items: FeedItem[], now = new Date()): string {
         tag("g:link", it.link),
         tag("g:image_link", it.imageLink),
         tag("g:availability", it.availability),
+        tag("g:availability_date", it.availabilityDate),
         tag("g:condition", it.condition),
         tag("g:price", it.price),
         tag("g:brand", it.brand),
