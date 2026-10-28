@@ -29,7 +29,7 @@ describe("productGroupSchema", () => {
     hasVariant: { sku: string; image: string[]; offers: { availability: string } }[];
   };
 
-  it("is a ProductGroup keyed by the slug the feed uses as item_group_id", () => {
+  it("is a ProductGroup keyed by the unit slug", () => {
     expect(schema["@type"]).toBe("ProductGroup");
     expect(schema.productGroupID).toBe("premium-rubber-hex-dumbbell-3");
     expect(schema.variesBy).toBe("https://schema.org/size");

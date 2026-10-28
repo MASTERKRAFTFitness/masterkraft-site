@@ -6,7 +6,8 @@
 // price of any single size the Merchant feed sent (one item per ERP code), and
 // the products Google found by crawling were listed as families. Each variant
 // here carries the same code, price and URL as its feed item, and
-// productGroupID is the feed's item_group_id (the unit's slug).
+// productGroupID is the unit's slug. The feed no longer sends item_group_id
+// (each size is its own Merchant Center product); the page still groups them.
 import { productUrl } from "@/lib/site";
 
 export type SchemaVariant = {
