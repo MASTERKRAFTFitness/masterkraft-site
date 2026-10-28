@@ -4,8 +4,12 @@
 // query against an item, and "15kg competition bumper plate" is a code, not a
 // range. A range published as one item advertises its cheapest size at the
 // range's landing page and gets a price mismatch the moment Google reads the
-// page for a different size. Sizes are tied back together with item_group_id,
-// which is what lets Google show them as one product with variants.
+// page for a different size.
+//
+// NO item_group_id. Grouping sizes made Google treat a range as one product
+// with a size picker, so a search for "20kg hex dumbbell" competed as the whole
+// family. Each size is listed as a product in its own right, with its own title,
+// price, weight and ?size= link (28 Oct 2026).
 //
 // WHAT IS DELIBERATELY NOT IN HERE:
 //
@@ -42,7 +46,6 @@ import type { PromotionLabels } from "@/lib/merchant-promotion";
 
 export type FeedItem = {
   id: string;
-  itemGroupId?: string;
   title: string;
   description: string;
   link: string;
@@ -299,10 +302,6 @@ function itemFor(
   const image = entry.image ?? unit.image ?? "";
   return {
     id: code,
-    // Only a real range is grouped. A single-code unit given an item_group_id
-    // becomes a one-variant group, which Merchant Center renders as a product
-    // with a size picker holding one size.
-    itemGroupId: unit.isRange ? unit.slug : undefined,
     title: feedTitle(unit, size),
     description: descriptionFor(unit, content),
     // A range's size lands on its page with that size picked, and is the same
@@ -466,7 +465,6 @@ export function feedToXml(items: FeedItem[], now = new Date()): string {
       [
         "  <item>",
         tag("g:id", it.id),
-        tag("g:item_group_id", it.itemGroupId),
         tag("g:title", it.title),
         tag("g:description", it.description),
         tag("g:link", it.link),

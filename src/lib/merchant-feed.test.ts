@@ -68,11 +68,11 @@ describe("building the feed", () => {
     expect(byId.MWWPCP02).toBe("46.00 AUD");
   });
 
-  it("ties a range together with item_group_id and leaves a single product alone", () => {
+  it("lists each size of a range as its own product, with no item_group_id", () => {
     const { items } = buildFeed(map());
     const plates = items.filter((i) => i.id.startsWith("MWWPCP"));
-    expect(new Set(plates.map((i) => i.itemGroupId))).toEqual(new Set(["change-plates"]));
-    expect(items.find((i) => i.id === "MBSARO01")?.itemGroupId).toBeUndefined();
+    expect(plates.length).toBeGreaterThan(1);
+    expect(feedToXml(items)).not.toContain("item_group_id");
   });
 
   // The same URL as the size's offer in the page's ProductGroup, which opens the
