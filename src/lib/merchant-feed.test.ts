@@ -83,24 +83,34 @@ describe("building the feed", () => {
   });
 
   // Left out, Google crawled the page and listed it anyway, with no weight.
-  it("lists a code that is out of stock as a preorder, with its weight and a date", () => {
+  it("lists China stock as a backorder 8 weeks out, with its weight", () => {
     const now = new Date("2026-10-28T03:00:00Z");
-    const { items } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0 }) }), { now });
+    const { items } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0, stockChina: 40 }) }), { now });
     const item = items.find((i) => i.id === "MWWPCP02");
-    expect(item?.availability).toBe("preorder");
+    expect(item?.availability).toBe("backorder");
     expect(item?.availabilityDate).toBe("2026-12-23T00:00:00Z");
+    expect(item?.customLabel0).toBe("backorder-overseas");
     expect(item?.shippingWeightKg).toBe(8);
     const xml = feedToXml(items);
-    expect(xml).toContain("<g:availability>preorder</g:availability>");
+    expect(xml).toContain("<g:availability>backorder</g:availability>");
     expect(xml).toContain("<g:availability_date>2026-12-23T00:00:00Z</g:availability_date>");
   });
 
-  it("never labels a preorder for spend, even on the verified allowlist", () => {
+  it("lists a made-to-order code as a backorder 12 weeks out", () => {
+    const now = new Date("2026-10-28T03:00:00Z");
+    const { items } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0 }) }), { now });
+    const item = items.find((i) => i.id === "MWWPCP02");
+    expect(item?.availability).toBe("backorder");
+    expect(item?.availabilityDate).toBe("2027-01-20T00:00:00Z");
+    expect(item?.customLabel0).toBe("backorder-made-to-order");
+  });
+
+  it("never labels a backorder for spend, even on the verified allowlist", () => {
     const { items } = buildFeed(map({ MWWPCP02: entry("Change Plates - 1kg", { stock: 0 }) }), {
       promotion: { MWWPCP02: "ads-vic" },
     });
     const item = items.find((i) => i.id === "MWWPCP02");
-    expect(item?.customLabel0).toBe("preorder");
+    expect(item?.customLabel0).toBe("backorder-made-to-order");
     expect(item?.customLabel3).toBeUndefined();
     expect(item?.customLabel4).toBeUndefined();
   });

@@ -18,14 +18,17 @@
 //   configured account-side in Merchant Center, which is where a carrier-rate
 //   calculation belongs.
 //
-// PREORDER ITEMS ARE LISTED, BUT NEVER LABELLED FOR SPEND. Leaving them out
+// BACKORDER ITEMS ARE LISTED, BUT NEVER LABELLED FOR SPEND. Leaving them out
 // did not keep them out of Merchant Center: Google crawled their pages instead
 // and listed them itself, with no weight (the page markup carries none). On
 // 28 Oct 2026 that was 149 products disapproved for "Missing delivery weight"
 // and 5 for a missing availability_date. Listing them here gives Google the
-// weight and the date. They carry custom_label_0 "preorder" rather than
-// "freight-verified", so no paid campaign filtering on that label can bid on
-// one: a click on a preorder buys a customer a wait, not a sale.
+// weight and the date. They are "backorder", not "preorder": Google reserves
+// preorder for a product not yet released, and these are released products
+// waiting on stock. They carry custom_label_0 "backorder-overseas" or
+// "backorder-made-to-order" rather than "freight-verified", so no paid campaign
+// filtering on that label can bid on one: a click on a backorder buys a
+// customer a wait, not a sale.
 import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
@@ -47,8 +50,8 @@ export type FeedItem = {
   price: string;
   brand?: string;
   mpn: string;
-  availability: "in_stock" | "preorder";
-  /** availability_date, required by Merchant Center on a preorder. See availabilityDate. */
+  availability: "in_stock" | "backorder";
+  /** availability_date, required by Merchant Center on a backorder. See availabilityDate. */
   availabilityDate?: string;
   condition: "new";
   googleProductCategory: string;
@@ -257,17 +260,28 @@ function freightLabel(code: string, entry: UnleashedEntry): string | undefined {
 }
 
 /**
- * availability_date for a preorder: today plus the longest lead time the site
- * quotes (stock-label.ts), as an ISO 8601 date. Recomputed on every fetch, so it
- * never goes stale and never falls inside the window Google says a preorder
- * cannot be shipped in.
- *
- * ONE FIGURE FOR BOTH KINDS OF PREORDER. China stock is the business's 6–8
- * weeks; "made to order" has no figure of its own anywhere, and inventing one
- * here would put a date in front of shoppers that nobody has agreed to.
+ * Weeks until a made-to-order code ships, for its availability_date. The
+ * business's figure for the feed (28 Oct 2026). The product page states no
+ * lead time for made to order, so this lives here rather than in stock-label.ts.
  */
-export function availabilityDate(now: Date): string {
-  const d = new Date(now.getTime() + CHINA_LEAD_TIME_WEEKS * 7 * 24 * 60 * 60 * 1000);
+export const MADE_TO_ORDER_LEAD_TIME_WEEKS = 12;
+
+/** Why a code with no Melbourne stock can still be ordered. Mirrors stockLabel(). */
+export type BackorderKind = "overseas" | "made-to-order";
+
+export function backorderKind(entry: UnleashedEntry): BackorderKind {
+  return (entry.stockChina ?? 0) > 0 ? "overseas" : "made-to-order";
+}
+
+/**
+ * availability_date for a backorder: today plus the lead time for its kind, as
+ * an ISO 8601 date. China stock takes the top of the 6–8 weeks the page quotes
+ * (stock-label.ts); made to order takes MADE_TO_ORDER_LEAD_TIME_WEEKS.
+ * Recomputed on every fetch, so it never goes stale.
+ */
+export function availabilityDate(now: Date, kind: BackorderKind = "overseas"): string {
+  const weeks = kind === "overseas" ? CHINA_LEAD_TIME_WEEKS : MADE_TO_ORDER_LEAD_TIME_WEEKS;
+  const d = new Date(now.getTime() + weeks * 7 * 24 * 60 * 60 * 1000);
   return `${d.toISOString().slice(0, 10)}T00:00:00Z`;
 }
 
@@ -281,7 +295,7 @@ function itemFor(
   promotion: PromotionLabels | undefined,
   now: Date,
 ): FeedItem {
-  const preorder = !(entry.stock > 0);
+  const backorder = entry.stock > 0 ? undefined : backorderKind(entry);
   const image = entry.image ?? unit.image ?? "";
   return {
     id: code,
@@ -296,25 +310,25 @@ function itemFor(
     price: feedPrice(entry.price),
     brand: brandDisplayName(unit.brand),
     mpn: code,
-    availability: preorder ? "preorder" : "in_stock",
-    availabilityDate: preorder ? availabilityDate(now) : undefined,
+    availability: backorder ? "backorder" : "in_stock",
+    availabilityDate: backorder ? availabilityDate(now, backorder) : undefined,
     condition: "new",
     googleProductCategory: googleCategory(unit),
     productType: unit.subgroup ? `${unit.group} > ${unit.subgroup}` : unit.group,
     shippingWeightKg: entry.weightKg,
     // A unit on the allowlist can still hold sizes that lost on landed price
     // everywhere; those are listed for free but not advertised.
-    customLabel0: preorder
-      ? PREORDER_LABEL
+    customLabel0: backorder
+      ? BACKORDER_LABEL[backorder]
       : isVerified && regionLabel(code)
         ? FREIGHT_VERIFIED_LABEL
         : UNVERIFIED_LABEL,
     customLabel1: priceBand(entry.price),
     customLabel2: freightLabel(code, entry),
-    // The region and promotion labels are what campaigns target; a preorder
+    // The region and promotion labels are what campaigns target; a backorder
     // gets neither, so no campaign can pick one up by either route.
-    customLabel3: isVerified && !preorder ? regionLabel(code) : undefined,
-    customLabel4: preorder ? undefined : promotion?.[code.toUpperCase()],
+    customLabel3: isVerified && !backorder ? regionLabel(code) : undefined,
+    customLabel4: backorder ? undefined : promotion?.[code.toUpperCase()],
   };
 }
 
@@ -360,8 +374,14 @@ export type BuildOptions = {
  */
 const FREIGHT_VERIFIED_LABEL = "freight-verified";
 const UNVERIFIED_LABEL = "unverified";
-/** Listed for free, never bid on. See the note at the top of this file. */
-const PREORDER_LABEL = "preorder";
+/**
+ * Listed for free, never bid on. See the note at the top of this file. Split by
+ * kind so a campaign or report can tell a wait of weeks from a build to order.
+ */
+const BACKORDER_LABEL: Record<BackorderKind, string> = {
+  overseas: "backorder-overseas",
+  "made-to-order": "backorder-made-to-order",
+};
 
 /**
  * Build the feed. Pure: takes the ERP map, returns items plus the reason every
