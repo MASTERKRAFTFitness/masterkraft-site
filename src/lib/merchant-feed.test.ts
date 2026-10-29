@@ -19,6 +19,14 @@ vi.mock("@/lib/catalogue", () => ({
       : undefined,
 }));
 
+// Authored copy is a fixture too, so a new entry in product-copy.json cannot
+// change what these tests read. Empty unless a test fills it.
+const authored = vi.hoisted(() => ({ copy: {} as Record<string, { short: string; body?: string[]; features?: string[] }> }));
+vi.mock("@/lib/product-copy", () => ({
+  productCopy: (slug: string) => authored.copy[slug],
+  productCopyHtml: () => undefined,
+}));
+
 // Only the slugs under test are advertised, so the fixtures below do not have
 // to be kept in step with the real allowlist.
 vi.mock("@/lib/merchant-feed-allowlist", () => ({
@@ -196,6 +204,31 @@ describe("descriptions", () => {
       content: { "change-plates": { short: "The edited sentence." } },
     });
     expect(items.find((i) => i.id === "MWWPCP01")!.description).toBe("The edited sentence.");
+  });
+
+  it("sends the authored body and features, not just the one-line summary", () => {
+    // The bug this pins: only `short` reached the feed, so a page with written
+    // paragraphs advertised twenty words and Merchant Center scored it thin.
+    authored.copy["change-plates"] = {
+      short: "Change plates for the small jumps.",
+      body: ["A pair adds 2.5kg to the bar."],
+      features: ["1.25kg and 2.5kg", "Olympic fit"],
+    };
+    try {
+      const { items } = buildFeed(withPage());
+      expect(items.find((i) => i.id === "MWWPCP01")!.description).toBe(
+        "Change plates for the small jumps. A pair adds 2.5kg to the bar. Features: 1.25kg and 2.5kg; Olympic fit.",
+      );
+    } finally {
+      authored.copy = {};
+    }
+  });
+
+  it("uses an editor's body over the authored one, as prose", () => {
+    const { items } = buildFeed(withPage(), {
+      content: { "change-plates": { short: "Edited.", html: "<p>Edited body.</p><ul><li>One</li><li>Two</li></ul>" } },
+    });
+    expect(items.find((i) => i.id === "MWWPCP01")!.description).toBe("Edited. Edited body. One; Two.");
   });
 
   it("falls back to the generated string only when nothing else exists", () => {
