@@ -153,6 +153,16 @@ export default function StripeCheckout({
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A promo code, as /api/promo/check accepted it. Display only: the server
+  // judges it again when the payment is created (lib/promo-codes).
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; discount: number; minSpendOver: number } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoChecking, setPromoChecking] = useState(false);
+  // The code stays applied if the cart drops under its minimum, but takes
+  // nothing off and says why, rather than vanishing.
+  const promoActive = promo !== null && subtotal > promo.minSpendOver;
+  const discount = promoActive ? Math.min(promo.discount, subtotal) : 0;
 
   // Safety net: never leave the cart locked if the customer navigates away
   // mid-payment (unmount) without going back or completing.
@@ -254,10 +264,26 @@ export default function StripeCheckout({
       headers: { "Content-Type": "application/json" },
       // billing and anonId are stored on the intent, so an Afterpay or Zip
       // payment can become an order without this page - see lib/order-intent.
-      body: JSON.stringify({ items: refs, delivery, freightServiceId, checkoutId, billing: b, anonId: opinlyAnonId() }),
+      body: JSON.stringify({
+        items: refs,
+        delivery,
+        freightServiceId,
+        checkoutId,
+        billing: b,
+        anonId: opinlyAnonId(),
+        promoCode: promoActive ? promo.code : undefined,
+      }),
     });
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || "Could not start payment.");
+    if (!res.ok || !data.ok) {
+      // The code no longer applies (already used with this email, say). Take it
+      // off so the next press of Continue pays full price knowingly.
+      if (data.promo === false) {
+        setPromo(null);
+        setPromoError(data.error ?? null);
+      }
+      throw new Error(data.error || "Could not start payment.");
+    }
     // The storefront has no login, so this is the identity surface: a customer
     // who has reached the card screen has given us a real, deliverable email.
     // Deliberately not on the freight step above — that one is re-run on every
@@ -331,7 +357,8 @@ export default function StripeCheckout({
             location: [b.address_1, b.city, b.state, b.postcode].filter(Boolean).join(", "),
             notes:
               `From the card checkout: freight could not be priced automatically${reason ? ` (${reason})` : ""}.` +
-              (automatic ? " Sent without the customer pressing Request a Quote." : ""),
+              (automatic ? " Sent without the customer pressing Request a Quote." : "") +
+              (promoActive ? ` Promo code ${promo.code} applied (${aud.format(discount)} off), please honour it on the quote.` : ""),
           },
           items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
           subtotal,
@@ -351,6 +378,32 @@ export default function StripeCheckout({
       clear();
     } finally {
       setQuoteSending(false);
+    }
+  }
+
+  async function applyPromo() {
+    const code = promoInput.trim();
+    if (!code) return;
+    setPromoChecking(true);
+    setPromoError(null);
+    try {
+      const email = formRef.current ? String(new FormData(formRef.current).get("email") ?? "") : "";
+      const res = await fetch("/api/promo/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, items: refsFrom(items), email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setPromoError(data.error || "That code isn't valid.");
+        return;
+      }
+      setPromo({ code: data.code, discount: data.discount, minSpendOver: data.minSpendOver });
+      setPromoInput("");
+    } catch {
+      setPromoError("We couldn't check that code just now. Please try again.");
+    } finally {
+      setPromoChecking(false);
     }
   }
 
@@ -495,6 +548,57 @@ export default function StripeCheckout({
           <span className="text-ash">Subtotal (inc. GST)</span>
           <span>{aud.format(subtotal)}</span>
         </div>
+        {promo && (
+          <div className="flex justify-between gap-3 font-mono text-sm pb-3">
+            <span className="text-ash">
+              Promo {promo.code}
+              {phase === "details" && (
+                <button
+                  type="button"
+                  onClick={() => setPromo(null)}
+                  className="ml-2 font-sans text-xs underline hover:text-accent-600"
+                >
+                  Remove
+                </button>
+              )}
+              {!promoActive && (
+                <span className="block font-sans text-[11px]">
+                  Spend over {aud.format(promo.minSpendOver)} to use this code.
+                </span>
+              )}
+            </span>
+            <span>{promoActive ? `-${aud.format(discount)}` : aud.format(0)}</span>
+          </div>
+        )}
+        {!promo && phase === "details" && (
+          <div className="pb-3">
+            <div className="flex gap-2">
+              <input
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void applyPromo();
+                  }
+                }}
+                aria-label="Promo code"
+                placeholder="Promo code"
+                autoCapitalize="characters"
+                className={`${fieldClass} !py-2 text-sm uppercase placeholder:normal-case`}
+              />
+              <button
+                type="button"
+                onClick={applyPromo}
+                disabled={promoChecking || !promoInput.trim()}
+                className="btn btn-out !text-ink !py-2 text-sm shrink-0 disabled:opacity-60"
+              >
+                {promoChecking ? "…" : "Apply"}
+              </button>
+            </div>
+            {promoError && <p className="mt-2 text-xs text-accent-600">{promoError}</p>}
+          </div>
+        )}
         <div className="flex justify-between font-mono text-sm">
           <span className="text-ash">Freight</span>
           {freight ? (
@@ -521,7 +625,7 @@ export default function StripeCheckout({
           {/* serverTotal is authoritative once the intent exists. Before that,
               show the quoted freight added on, so the number the customer agrees
               to is the number on screen. */}
-          <span>{aud.format(serverTotal ?? subtotal + (freight?.price ?? 0))}</span>
+          <span>{aud.format(serverTotal ?? subtotal - discount + (freight?.price ?? 0))}</span>
         </div>
       </aside>
     </div>

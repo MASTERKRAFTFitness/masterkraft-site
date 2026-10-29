@@ -7,6 +7,7 @@ import { freightMessage } from "@/lib/freight-message";
 import { scheduleCheckoutLead, validCheckoutId } from "@/lib/checkout-leads";
 import { orderIntentMetadata } from "@/lib/order-intent";
 import type { OrderAddress } from "@/lib/order-lines";
+import { alreadyRedeemed, evaluatePromo, promoMetadata, type AppliedPromo } from "@/lib/promo-codes";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
@@ -34,8 +35,9 @@ export async function POST(request: Request) {
   let checkoutId: unknown;
   let billing: OrderAddress | undefined;
   let anonId: unknown;
+  let promoCode: unknown;
   try {
-    ({ items, delivery, freightServiceId, checkoutId, billing, anonId } = await request.json());
+    ({ items, delivery, freightServiceId, checkoutId, billing, anonId, promoCode } = await request.json());
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
@@ -77,7 +79,39 @@ export async function POST(request: Request) {
     );
   }
   const freightCost = freight.selected?.price ?? 0;
-  const chargeTotal = Math.round((total + freightCost) * 100) / 100;
+
+  // A PROMO CODE IS JUDGED HERE, against the cart just repriced, whatever the
+  // checkout showed. A code that no longer applies is refused with the reason,
+  // rather than quietly charging full price to someone who thinks it worked.
+  let promo: AppliedPromo | null = null;
+  if (promoCode) {
+    const verdict = evaluatePromo(promoCode, total);
+    if (!verdict.ok) return NextResponse.json({ ok: false, error: verdict.error, promo: false }, { status: 422 });
+    if (!billing?.email) {
+      return NextResponse.json({ ok: false, error: "Enter your email to use a promo code.", promo: false }, { status: 422 });
+    }
+    if (verdict.promo.onePerCustomer) {
+      let used: boolean;
+      try {
+        used = await alreadyRedeemed(verdict.promo.code, billing.email);
+      } catch (e) {
+        console.error("[payment-intent] promo redemption lookup failed", e);
+        return NextResponse.json(
+          { ok: false, error: "We couldn't check your promo code just now. Please try again.", promo: false },
+          { status: 503 }
+        );
+      }
+      if (used) {
+        return NextResponse.json(
+          { ok: false, error: `${verdict.promo.code} has already been used with this email.`, promo: false },
+          { status: 422 }
+        );
+      }
+    }
+    promo = { code: verdict.promo.code, amount: verdict.discount };
+  }
+  const discount = promo?.amount ?? 0;
+  const chargeTotal = Math.round((total - discount + freightCost) * 100) / 100;
 
   // The cart and the buyer, stored ON the intent, so the order can be placed
   // from the intent alone when the customer pays with Afterpay or Zip and the
@@ -141,6 +175,9 @@ export async function POST(request: Request) {
         // metadata value at 500 characters; a split id is a few UUIDs long.
         freight_option_id: (freight.selected?.id ?? "").slice(0, 500),
         freight: freight.selected ? `${freight.selected.service} ${freightCost}` : "quoted separately",
+        // Read back by lib/fulfil-order to check the amount and put the discount
+        // on the order, and searched by lib/promo-codes for one use per customer.
+        ...(promo && billing?.email ? promoMetadata(promo, billing.email) : {}),
         ...orderData,
       },
     });
@@ -158,6 +195,7 @@ export async function POST(request: Request) {
     clientSecret: intent.client_secret,
     amount: chargeTotal,
     goodsTotal: total,
+    promo,
     freight: freight.selected
       ? { service: freight.selected.service, carrier: freight.selected.carrier, price: freightCost }
       : null,

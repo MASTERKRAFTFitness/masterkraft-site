@@ -131,6 +131,29 @@ describe("freight is a line, and never a free one", () => {
   });
 });
 
+describe("a promo code is a negative MKDISC line, the way staff key a discount", () => {
+  it("takes the discount off with its GST, so the order totals what the card paid", () => {
+    process.env.UNLEASHED_FREIGHT_CODE = "FREIGHT01";
+    delete process.env.UNLEASHED_DISCOUNT_CODE;
+    const input = { ...base, freight: { amount: 36.8 }, discount: { code: "THANKS50", amount: 50 } };
+    const p = build(input) as Record<string, unknown>;
+    const lines = p.SalesOrderLines as Record<string, unknown>[];
+    const disc = lines.at(-1)!;
+    expect(disc.Product).toEqual({ ProductCode: "MKDISC" });
+    expect(disc.UnitPrice).toBe(-45.4545);
+    expect(disc.LineTax).toBe(-4.55);
+    expect(disc.Comments).toBe("Promo code THANKS50");
+    // 110 goods + 36.80 freight - 50 promo, all inc GST
+    expect(p.Total).toBe(96.8);
+    expect(buildComments(input)).toMatch(/Promo code THANKS50: 50.00 off inc GST/);
+  });
+
+  it("adds no line when there is no discount", () => {
+    const p = build(base) as Record<string, unknown[]>;
+    expect(p.SalesOrderLines).toHaveLength(1);
+  });
+});
+
 describe("the buyer survives a shared customer account", () => {
   it("writes who bought it into Comments, where a picker will read it", () => {
     const c = buildComments(base);

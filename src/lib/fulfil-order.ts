@@ -21,6 +21,7 @@ import { refsToFreightItems } from "@/lib/freight-server";
 import { shipmentSyncEnabled, syncShipmentsToEasyship, type ShipmentOrder } from "@/lib/easyship-shipments";
 import { orderIntentData } from "@/lib/order-intent";
 import { claimOrder, completeClaim, releaseClaim } from "@/lib/order-claims";
+import { promoFromMetadata } from "@/lib/promo-codes";
 
 export type FulfilInput = {
   paymentIntentId?: string;
@@ -126,7 +127,12 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
   // that has already been paid for).
   const freightCharged = Number(intent.metadata?.freight_amount ?? 0);
   const freightAmount = Number.isFinite(freightCharged) && freightCharged > 0 ? freightCharged : 0;
-  const chargedTotal = Math.round((total + freightAmount) * 100) / 100;
+  // A promo code's discount, as /api/payment-intent took it off. Read from the
+  // intent for the same reason as freight: the code is not judged again after
+  // the customer has paid, so a code switched off mid-payment cannot turn a
+  // paid order into a mismatch.
+  const discount = promoFromMetadata(intent.metadata);
+  const chargedTotal = Math.round((total - (discount?.amount ?? 0) + freightAmount) * 100) / 100;
 
   if (intent.amount_received !== Math.round(chargedTotal * 100) || intent.currency !== "aud") {
     return fail(409, "Payment amount mismatch");
@@ -153,7 +159,16 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
           total: chargedTotal,
           backend: "unleashed",
         }
-      : await placeOrder({ billing, shipping, lines, paymentIntentId, customerNote, chargedTotal, freight });
+      : await placeOrder({
+          billing,
+          shipping,
+          lines,
+          paymentIntentId,
+          customerNote,
+          chargedTotal,
+          freight,
+          ...(discount ? { discount } : {}),
+        });
   } catch (e) {
     console.error("[order] create failed", e);
     await releaseClaim(paymentIntentId);
@@ -204,6 +219,7 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
     freight,
     chargedTotal,
     customerNote,
+    ...(discount ? { discount } : {}),
   });
   console.log("[order] placed", { orderNumber: order.orderNumber, ...notified });
   scheduleCheckoutLead(checkoutId, { status: "paid", orderNumber: String(order.orderNumber) });
