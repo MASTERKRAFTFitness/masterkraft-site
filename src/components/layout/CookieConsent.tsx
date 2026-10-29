@@ -85,11 +85,9 @@ export default function CookieConsent() {
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${ADS_ID || GA_ID}`} strategy="afterInteractive" />
         </>
       )}
-      {/* Meta Pixel. BEHIND THE BANNER, unlike gtag above, and not beside Opinly in
-          layout.tsx: this is an advertising tracker that builds retargeting
-          audiences off a visitor's browsing, which is exactly the processing the
-          Accept button exists to authorise. Opinly's placement outside the banner
-          was a specific, documented decision; it is not a precedent.
+      {/* Meta Pixel. BEHIND THE BANNER, unlike gtag above: this is an advertising
+          tracker that builds retargeting audiences off a visitor's browsing, which
+          is exactly the processing the Accept button exists to authorise.
 
           PageView fires here. The `Lead` conversion does NOT - it fires from
           lib/analytics.ts where the brief actually submits, so Meta counts a

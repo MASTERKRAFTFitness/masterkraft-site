@@ -6,7 +6,6 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CookieConsent from "@/components/layout/CookieConsent";
-import OpinlyPixel from "@/components/layout/OpinlyPixel";
 import ChatWidget from "@/components/chat/ChatWidget";
 import NavProgress from "@/components/layout/NavProgress";
 import { SITE_URL, ALLOW_INDEX } from "@/lib/site";
@@ -76,14 +75,6 @@ export default function RootLayout({
           <CartDrawer />
           <CookieConsent />
           <ChatWidget />
-          {/* Opinly. Loads on every page, NOT behind the cookie banner — Michael's
-              call, 2026-09-16. Unlike GA4/Ads/HubSpot below the Accept button, this
-              one fires for everyone, so it is the only tag whose anonId, page views,
-              clicks and form-submission capture start before a visitor has answered
-              the banner. If that banner or the privacy policy is ever rewritten to
-              enumerate what loads when, this is the exception to describe. */}
-          {/* Public domain only - see lib/live-host. */}
-          <OpinlyPixel />
         </CartProvider>
       </body>
     </html>
