@@ -87,6 +87,20 @@ describe("the ERP is the catalogue", () => {
     expect([...units.values()].every((u) => !u.isRange)).toBe(true);
   });
 
+  it("makes a range of a plain product and its named variant", () => {
+    // MEFRBB04/05 in Unleashed: only the second names its variant.
+    const units = erpUnits(
+      erp([
+        ["MEFRBB04", "Barbell Storage Box (9 Bar Holder)", 280, "Equipment Storage"],
+        ["MEFRBB05", "Barbell Storage Box (9 Bar Holder) - Versatile", 280, "Equipment Storage"],
+      ])
+    );
+    expect(units.size).toBe(1);
+    const box = [...units.values()][0];
+    expect(box.isRange).toBe(true);
+    expect(box.sizes).toEqual(["Standard", "Versatile"]);
+  });
+
   it("reads a trailing garment size as a size, and nothing else in brackets", () => {
     const units = erpUnits(
       erp([
