@@ -53,6 +53,14 @@ const warehouseCode = () => process.env.UNLEASHED_WAREHOUSE_CODE || "MELB WHS";
  */
 const freightCode = () => process.env.UNLEASHED_FREIGHT_CODE || "";
 
+/**
+ * A promo code's discount is a line too: MKDISC "Customer Discount" at a
+ * negative price, which is how staff already key a discount on a sales order
+ * (SO-00000773, SO-00000813). Configurable like freight, defaulting to the code
+ * the ERP has.
+ */
+const discountCode = () => process.env.UNLEASHED_DISCOUNT_CODE || "MKDISC";
+
 // ---------------------------------------------------------------------------
 // THE CUSTOMER DECISION
 //
@@ -158,6 +166,8 @@ export type CreateUnleashedOrderInput = {
   /** What the card was actually charged, goods + freight, inc GST. */
   chargedTotal?: number;
   freight?: { amount: number; service?: string; carrier?: string };
+  /** A promo code's discount, inc GST. */
+  discount?: { code: string; amount: number };
 };
 
 export type UnleashedOrderResult = {
@@ -201,6 +211,9 @@ export function buildComments(input: CreateUnleashedOrderInput): string {
       ? `Freight charged: ${input.freight.amount.toFixed(2)} inc GST` +
         `${[input.freight.carrier, input.freight.service].filter(Boolean).join(" ") ? ` (${[input.freight.carrier, input.freight.service].filter(Boolean).join(" ")})` : ""}`
       : "FREIGHT NOT CHARGED — quote before dispatch.",
+    input.discount && input.discount.amount > 0
+      ? `Promo code ${input.discount.code}: ${input.discount.amount.toFixed(2)} off inc GST`
+      : "",
     input.customerNote ? `Customer note: ${input.customerNote}` : "",
   ];
   return parts.filter(Boolean).join("\n");
@@ -268,6 +281,24 @@ export function buildSalesOrderPayload(
       LineTax: round2(unitEx * TAX_RATE),
       XeroTaxCode: XERO_TAX_CODE,
       Comments: [input.freight.carrier, input.freight.service].filter(Boolean).join(" ") || "Freight",
+    });
+  }
+
+  // The discount, as a negative line with GST, so the order's total is what the
+  // card was charged and the invoice shows why.
+  if (input.discount && input.discount.amount > 0) {
+    const unitEx = -exGst(input.discount.amount);
+    lines.push({
+      LineNumber: lines.length + 1,
+      Product: { ProductCode: discountCode() },
+      OrderQuantity: 1,
+      UnitPrice: unitEx,
+      LineTotal: unitEx,
+      DiscountRate: 0,
+      TaxRate: TAX_RATE,
+      LineTax: round2(unitEx * TAX_RATE),
+      XeroTaxCode: XERO_TAX_CODE,
+      Comments: `Promo code ${input.discount.code}`,
     });
   }
 

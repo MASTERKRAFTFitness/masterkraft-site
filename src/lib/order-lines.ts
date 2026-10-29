@@ -122,5 +122,7 @@ export type CreateOrderInput = {
   chargedTotal?: number;
   /** What freight was charged, so the order records it instead of "free". */
   freight?: { amount: number; service?: string; carrier?: string };
+  /** A promo code's discount, inc GST, as the card was charged less it. */
+  discount?: { code: string; amount: number };
 };
 

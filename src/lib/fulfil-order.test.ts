@@ -105,6 +105,18 @@ describe("fulfilPaymentIntent", () => {
     expect(r.status).toBe(402);
   });
 
+  it("places a promo order for goods less the discount on the intent, plus freight", async () => {
+    // 100 goods - 50 THANKS50 + 40 freight = 90
+    retrieve.mockResolvedValue({
+      ...paidIntent({ ...orderIntentMetadata({ items, billing }), promo_code: "THANKS50", promo_amount: "50.00" }),
+      amount_received: 9000,
+    });
+    const r = await fulfilPaymentIntent({ paymentIntentId: "pi_123" });
+    expect(r.body).toMatchObject({ ok: true, value: 90 });
+    expect(placeOrder.mock.calls[0][0]).toMatchObject({ chargedTotal: 90, discount: { code: "THANKS50", amount: 50 } });
+    expect(notifyOrderPlaced.mock.calls[0]).toMatchObject([{ discount: { code: "THANKS50", amount: 50 } }]);
+  });
+
   it("refuses a payment that does not match the repriced total", async () => {
     retrieve.mockResolvedValue({ ...paidIntent(orderIntentMetadata({ items, billing })), amount_received: 100 });
     const r = await fulfilPaymentIntent({ paymentIntentId: "pi_123" });

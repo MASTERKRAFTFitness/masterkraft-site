@@ -23,6 +23,8 @@ export type PlacedOrderNotice = {
   freight: { amount: number; service?: string; carrier?: string };
   chargedTotal: number;
   customerNote?: string;
+  /** A promo code's discount, inc GST. */
+  discount?: { code: string; amount: number };
 };
 
 type StepResult = "sent" | "skipped" | "error";
@@ -135,6 +137,7 @@ async function submitOrderDeal(o: PlacedOrderNotice): Promise<"sent" | "skipped"
     description:
       o.lines.map((l) => `${l.quantity}× ${l.name}${l.sku ? ` (${l.sku})` : ""}`).join("\n") +
       (o.freight.amount > 0 ? `\nFreight ${aud.format(o.freight.amount)}` : "") +
+      (o.discount ? `\nPromo ${o.discount.code} -${aud.format(o.discount.amount)}` : "") +
       (b.company ? `\nCompany: ${b.company}` : ""),
   });
   return r === "submitted" ? "sent" : "skipped";
@@ -174,8 +177,11 @@ function orderTable(o: PlacedOrderNotice): string {
     o.freight.amount > 0
       ? `<tr><td style="${cell}">${escape(freightLabel)}</td><td></td><td style="padding:6px 0;text-align:right">${aud.format(o.freight.amount)}</td></tr>`
       : "";
+  const discountRow = o.discount
+    ? `<tr><td style="${cell}">Promo code ${escape(o.discount.code)}</td><td></td><td style="padding:6px 0;text-align:right">-${aud.format(o.discount.amount)}</td></tr>`
+    : "";
   return `
-    <table style="border-collapse:collapse;margin-top:12px"><tbody>${rows}${freightRow}
+    <table style="border-collapse:collapse;margin-top:12px"><tbody>${rows}${discountRow}${freightRow}
     <tr><td style="${cell}"><strong>Total paid (inc. GST)</strong></td><td></td><td style="padding:6px 0;text-align:right"><strong>${aud.format(o.chargedTotal)}</strong></td></tr>
     </tbody></table>`;
 }
