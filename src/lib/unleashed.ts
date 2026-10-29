@@ -329,6 +329,11 @@ type MirrorRow = {
   name: string | null;
   price: number | string | null;
   stock: number | string | null;
+  /** Every warehouse's figures, keyed by warehouse code. Only CHINA WHS is read here. */
+  stock_by_warehouse: Record<string, { available?: number | string | null } | null> | null;
+  /** When the stock columns were last read. Not synced_at: a failed stock read
+   *  leaves the old figures in place under a fresh synced_at. */
+  stock_synced_at: string | null;
   brand: string | null;
   group_name: string | null;
   subgroup: string | null;
@@ -373,7 +378,7 @@ export async function buildMapFromMirror(): Promise<UnleashedMap | null> {
       const { data, error } = await db
         .from("erp_products")
         .select(
-          "erp_code, guid, name, price, stock, brand, group_name, subgroup, sellable, image, weight_kg, width_cm, depth_cm, height_cm, synced_at"
+          "erp_code, guid, name, price, stock, stock_by_warehouse, stock_synced_at, brand, group_name, subgroup, sellable, image, weight_kg, width_cm, depth_cm, height_cm, synced_at"
         )
         // OBSOLETE ROWS ARE EXCLUDED TO MATCH buildMap, which fetches Products
         // without includeObsolete=true on purpose. Carrying them here would put
@@ -420,6 +425,24 @@ export async function buildMapFromMirror(): Promise<UnleashedMap | null> {
       return null;
     }
 
+    // STOCK HAS ITS OWN CLOCK. The loader keeps the last good stock when a
+    // stock read fails (lib/erp-mirror stockColumns), so a row can be fresh
+    // while its stock is not. Same ceiling: past it, live Unleashed. Judged by
+    // the NEWEST stamp, because a product added during a failed read has none
+    // and that one row must not disqualify the rest.
+    let stockAt = -Infinity;
+    for (const r of rows) {
+      const t = r.stock_synced_at ? Date.parse(r.stock_synced_at) : NaN;
+      if (Number.isFinite(t)) stockAt = Math.max(stockAt, t);
+    }
+    if (Date.now() - stockAt > MIRROR_MAX_AGE_MS) {
+      console.error(
+        `[unleashed] mirror stock is ${Number.isFinite(stockAt) ? `${Math.round((Date.now() - stockAt) / 3_600_000)}h old` : "unstamped"}, ` +
+          `ceiling is ${MIRROR_MAX_AGE_MS / 3_600_000}h — using live Unleashed. Is the StockOnHand read failing?`
+      );
+      return null;
+    }
+
     const map: UnleashedMap = {};
     for (const r of rows) {
       const code = (r.erp_code ?? "").trim().toUpperCase();
@@ -431,6 +454,8 @@ export async function buildMapFromMirror(): Promise<UnleashedMap | null> {
         // of nothing.
         price: price > 0 ? Math.round(price * GST * 100) / 100 : 0,
         stock: n(r.stock) ?? 0,
+        // As buildMap: CHINA WHS available, left out when zero.
+        stockChina: n(r.stock_by_warehouse?.[CHINA_WAREHOUSE]?.available ?? null) || undefined,
         name: r.name?.trim() || undefined,
         image: IMAGE_OVERRIDES[code] ?? r.image ?? undefined,
         brand: r.brand?.trim() || undefined,
@@ -451,9 +476,11 @@ export async function buildMapFromMirror(): Promise<UnleashedMap | null> {
   }
 }
 
-const cachedMirrorMap = unstable_cache(buildMapFromMirror, ["erp-mirror-map-v1"], {
+const cachedMirrorMap = unstable_cache(buildMapFromMirror, ["erp-mirror-map-v2"], {
   // Shorter than the live map's hour: this read costs one query rather than 16
   // seconds, so there is no reason to hold a stale answer as long.
+  // v2 (2026-10-29): entries carry stockChina. A warm v1 map would keep calling
+  // China-only stock made to order for the ten minutes.
   revalidate: 600,
   tags: ["unleashed"],
 });
