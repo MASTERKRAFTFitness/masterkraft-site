@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveOrderLines, type CartRef } from "@/lib/order-lines";
-import { alreadyRedeemed, evaluatePromo } from "@/lib/promo-codes";
+import { alreadyRedeemed, alreadyUsedMessage, evaluatePromo } from "@/lib/promo-codes";
 
 // Lets the checkout SHOW a promo code's discount before payment. It decides
 // nothing: /api/payment-intent checks the code again against the cart it
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     try {
       if (await alreadyRedeemed(verdict.promo.code, email)) {
         return NextResponse.json(
-          { ok: false, error: `${verdict.promo.code} has already been used with this email.` },
+          { ok: false, error: alreadyUsedMessage(verdict.promo) },
           { status: 422 }
         );
       }
