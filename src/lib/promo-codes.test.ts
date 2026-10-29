@@ -4,7 +4,10 @@ const search = vi.fn();
 vi.mock("@/lib/stripe", () => ({ stripe: { paymentIntents: { search: (...a: unknown[]) => search(...a) } } }));
 
 import {
+  PROMO_CODES,
   alreadyRedeemed,
+  alreadyUsedMessage,
+  codesSharingUse,
   evaluatePromo,
   normaliseCode,
   promoFromMetadata,
@@ -34,6 +37,25 @@ describe("evaluatePromo: THANKS50, as the thank-you card words it", () => {
   });
 });
 
+describe("the thank-you card codes", () => {
+  it("THANKYOU20 is $20 off over $200", () => {
+    expect(evaluatePromo("THANKYOU20", 200.01)).toMatchObject({ ok: true, discount: 20 });
+    expect(evaluatePromo("THANKYOU20", 200).ok).toBe(false);
+  });
+
+  it("THANKYOU50 is $50 off over $500, not over $200", () => {
+    expect(evaluatePromo("THANKYOU50", 500.01)).toMatchObject({ ok: true, discount: 50 });
+    const v = evaluatePromo("THANKYOU50", 400);
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.error).toMatch(/over \$500/);
+  });
+
+  it("all three share the one-use rule, and say so", () => {
+    expect(codesSharingUse("THANKYOU20").sort()).toEqual(["THANKS50", "THANKYOU20", "THANKYOU50"]);
+    expect(alreadyUsedMessage(PROMO_CODES.THANKYOU20)).toMatch(/already had a thank-you discount/);
+  });
+});
+
 describe("alreadyRedeemed", () => {
   // Braces matter: a function returned from beforeEach is run as a teardown.
   beforeEach(() => {
@@ -48,10 +70,18 @@ describe("alreadyRedeemed", () => {
     expect(search.mock.calls[0][0].query).toContain("metadata['promo_email']:'sam@example.com'");
   });
 
-  it("is false when no paid or settling intent used it", async () => {
+  it("is false when no paid or settling intent used any thank-you code", async () => {
     search.mockResolvedValue({ data: [] });
     expect(await alreadyRedeemed("THANKS50", "new@example.com")).toBe(false);
-    expect(search).toHaveBeenCalledTimes(2);
+    // three codes in the group, two statuses each
+    expect(search).toHaveBeenCalledTimes(6);
+  });
+
+  it("counts THANKS50 already used against THANKYOU50: one thank-you discount per customer", async () => {
+    search.mockImplementation(async ({ query }: { query: string }) => ({
+      data: query.includes("promo_code']:'THANKS50'") && query.includes("succeeded") ? [{ id: "pi_old" }] : [],
+    }));
+    expect(await alreadyRedeemed("THANKYOU50", "sam@example.com")).toBe(true);
   });
 
   it("will not build a query from an email that could break out of its quotes", async () => {

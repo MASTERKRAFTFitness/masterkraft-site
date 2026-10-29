@@ -25,14 +25,38 @@ export type PromoCode = {
   minSpendOver: number;
   onePerCustomer: boolean;
   active: boolean;
+  /**
+   * Codes in one group share the one-use rule: a customer who has used any of
+   * them has had their discount. The thank-you codes are one offer at three
+   * sizes, not three offers.
+   */
+  group?: string;
 };
 
-// The card reads: "$50 off your next order. Spend over $200 and use code
-// THANKS50 at checkout. One use per customer. Can't be combined with other
-// offers." One code per order is how the last sentence is kept.
+// THANKS50 is the first printed card: "$50 off your next order. Spend over $200
+// and use code THANKS50 at checkout. One use per customer. Can't be combined with
+// other offers." It stays live for cards already sent. From 29 Oct the card
+// offers THANKYOU20 ($20 off over $200) or THANKYOU50 ($50 off over $500)
+// instead (Michael). One code per order is how "not combined" is kept, and the
+// shared group is how "one use per customer" survives there being three codes.
 export const PROMO_CODES: Record<string, PromoCode> = {
-  THANKS50: { code: "THANKS50", amountOff: 50, minSpendOver: 200, onePerCustomer: true, active: true },
+  THANKS50: { code: "THANKS50", amountOff: 50, minSpendOver: 200, onePerCustomer: true, active: true, group: "thank-you" },
+  THANKYOU20: { code: "THANKYOU20", amountOff: 20, minSpendOver: 200, onePerCustomer: true, active: true, group: "thank-you" },
+  THANKYOU50: { code: "THANKYOU50", amountOff: 50, minSpendOver: 500, onePerCustomer: true, active: true, group: "thank-you" },
 };
+
+/** The codes a redemption of `code` counts against: its group, or itself. */
+export function codesSharingUse(code: string): string[] {
+  const group = PROMO_CODES[code]?.group;
+  return group ? Object.values(PROMO_CODES).filter((p) => p.group === group).map((p) => p.code) : [code];
+}
+
+/** What the customer is told when the one-use rule refuses a code. */
+export function alreadyUsedMessage(promo: PromoCode): string {
+  return codesSharingUse(promo.code).length > 1
+    ? `${promo.code} can't be used: this email has already had a thank-you discount.`
+    : `${promo.code} has already been used with this email.`;
+}
 
 export type AppliedPromo = { code: string; amount: number };
 
@@ -64,8 +88,9 @@ export function evaluatePromo(rawCode: unknown, goodsTotal: number): PromoVerdic
 }
 
 /**
- * Has this email already paid for an order with this code? Throws when Stripe
- * cannot answer, so the caller can refuse the code rather than guess.
+ * Has this email already paid for an order with this code, or with any code in
+ * its group? Throws when Stripe cannot answer, so the caller can refuse the
+ * code rather than guess.
  */
 export async function alreadyRedeemed(code: string, rawEmail: string): Promise<boolean> {
   const email = normaliseEmail(rawEmail);
@@ -77,11 +102,13 @@ export async function alreadyRedeemed(code: string, rawEmail: string): Promise<b
   // Stripe search cannot mix AND with OR, so one query per status. Processing
   // covers an Afterpay or Zip payment still settling.
   const found = await Promise.all(
-    ["succeeded", "processing"].map((status) =>
-      stripe!.paymentIntents.search({
-        query: `status:'${status}' AND metadata['promo_code']:'${code}' AND metadata['promo_email']:'${email}'`,
-        limit: 1,
-      })
+    codesSharingUse(code).flatMap((c) =>
+      ["succeeded", "processing"].map((status) =>
+        stripe!.paymentIntents.search({
+          query: `status:'${status}' AND metadata['promo_code']:'${c}' AND metadata['promo_email']:'${email}'`,
+          limit: 1,
+        })
+      )
     )
   );
   return found.some((r) => r.data.length > 0);

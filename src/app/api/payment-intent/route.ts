@@ -7,7 +7,7 @@ import { freightMessage } from "@/lib/freight-message";
 import { scheduleCheckoutLead, validCheckoutId } from "@/lib/checkout-leads";
 import { orderIntentMetadata } from "@/lib/order-intent";
 import type { OrderAddress } from "@/lib/order-lines";
-import { alreadyRedeemed, evaluatePromo, promoMetadata, type AppliedPromo } from "@/lib/promo-codes";
+import { alreadyRedeemed, alreadyUsedMessage, evaluatePromo, promoMetadata, type AppliedPromo } from "@/lib/promo-codes";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
 // client-sent prices). Returns the client secret for the Payment Element.
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       }
       if (used) {
         return NextResponse.json(
-          { ok: false, error: `${verdict.promo.code} has already been used with this email.`, promo: false },
+          { ok: false, error: alreadyUsedMessage(verdict.promo), promo: false },
           { status: 422 }
         );
       }
