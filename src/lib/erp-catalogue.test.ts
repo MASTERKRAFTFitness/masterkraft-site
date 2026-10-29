@@ -15,6 +15,7 @@ import {
   unitDescription,
 } from "@/lib/erp-catalogue";
 import type { UnleashedMap } from "@/lib/unleashed";
+import { sizesFromCodes } from "@/lib/ranges";
 import { allProducts } from "@/lib/catalogue";
 
 type Row = [code: string, name: string, price: number, group: string, brand?: string, sub?: string];
@@ -99,6 +100,12 @@ describe("the ERP is the catalogue", () => {
     const box = [...units.values()][0];
     expect(box.isRange).toBe(true);
     expect(box.sizes).toEqual(["Standard", "Versatile"]);
+    // The page's picker labels it the same way, not with the bare code.
+    const map = erp([
+      ["MEFRBB04", "Barbell Storage Box (9 Bar Holder)", 280, "Equipment Storage"],
+      ["MEFRBB05", "Barbell Storage Box (9 Bar Holder) - Versatile", 280, "Equipment Storage"],
+    ]);
+    expect(sizesFromCodes(box.codes, map).map((s) => s.label)).toEqual(["Standard", "Versatile"]);
   });
 
   it("reads a trailing garment size as a size, and nothing else in brackets", () => {

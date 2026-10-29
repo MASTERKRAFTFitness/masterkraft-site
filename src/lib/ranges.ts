@@ -207,6 +207,11 @@ export function sizesFromCodes(codes: string[], map: UnleashedMap): RangeSize[] 
       });
     }
   }
+  // A plain name beside named sizes is the "Standard" one, as erpUnits reads it
+  // (MEFRBB04 beside "... - Versatile"), not a bare code in the picker.
+  if (rows.some((r) => r.label !== r.code)) {
+    for (const r of rows) if (r.label === r.code) r.label = "Standard";
+  }
   return rows.sort((a, b) => compareSizeLabels(a.label, b.label));
 }
 
