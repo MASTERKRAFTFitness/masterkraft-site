@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sellPriceTiers, stockByWarehouse } from "./erp-mirror";
+import { sellPriceTiers, stockByWarehouse, stockColumns } from "./erp-mirror";
 
 describe("sellPriceTiers", () => {
   it("keeps positive tier values keyed by tier number", () => {
@@ -53,5 +53,35 @@ describe("stockByWarehouse", () => {
     ]);
     expect(m.get("Z")).toEqual({ "MELB WHS": { onHand: 0, allocated: 0, available: 0 } });
     expect([...m.keys()]).toEqual(["Z"]);
+  });
+});
+
+describe("stockColumns", () => {
+  const now = "2026-10-29T01:17:00.000Z";
+  const byWarehouse = stockByWarehouse([
+    { warehouse: "MELB WHS", rows: [{ ProductCode: "A", AvailableQty: 5 }] },
+    { warehouse: "CHINA WHS", rows: [{ ProductCode: "A", AvailableQty: 40 }, { ProductCode: "CN", AvailableQty: 9 }] },
+  ]);
+
+  it("sends Melbourne as stock, every warehouse, and the date", () => {
+    expect(stockColumns("A", byWarehouse, now)).toEqual({
+      stock: 5,
+      stock_by_warehouse: {
+        "MELB WHS": { onHand: 0, allocated: 0, available: 5 },
+        "CHINA WHS": { onHand: 0, allocated: 0, available: 40 },
+      },
+      stock_synced_at: now,
+    });
+  });
+
+  it("sends null, not zero, for a product Melbourne has no record of", () => {
+    expect(stockColumns("CN", byWarehouse, now).stock).toBeNull();
+    expect(stockColumns("NONE", byWarehouse, now)).toEqual({ stock: null, stock_by_warehouse: null, stock_synced_at: now });
+  });
+
+  it("sends no stock key at all when the stock read failed, so the last good figures survive", () => {
+    // THE FIX. `stock` used to go out as null on every row here, blanking
+    // Melbourne stock across the catalogue on one failed read.
+    expect(stockColumns("A", null, now)).toEqual({});
   });
 });

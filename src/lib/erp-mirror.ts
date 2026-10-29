@@ -165,6 +165,37 @@ export function stockByWarehouse(
 }
 
 /**
+ * A row's stock columns: all three, or none at all.
+ *
+ * NONE WHEN THE STOCK READ FAILED, and that includes `stock`. Until 29 Oct only
+ * the per-warehouse pair was held back; `stock` was sent on every row as null,
+ * so one failed StockOnHand read blanked Melbourne stock across the catalogue.
+ * The live map shows a blank as 0, which with the mirror switched on would have
+ * put the whole shop out of stock for an hour. Leaving the keys out of the
+ * whole upsert keeps the last good figures, and stock_synced_at dates them, so
+ * the read path can refuse them once they are old (lib/unleashed).
+ *
+ * Every row or no row, never some: see 20261001_erp_products_tags.sql for what
+ * sending a key on some rows only does.
+ */
+export function stockColumns(
+  code: string,
+  byWarehouse: Map<string, Record<string, WarehouseStock>> | null,
+  now: string,
+): { stock?: number | null; stock_by_warehouse?: Record<string, WarehouseStock> | null; stock_synced_at?: string } {
+  if (!byWarehouse) return {};
+  const w = byWarehouse.get(code);
+  return {
+    // MELBOURNE ONLY, to match lib/unleashed: `stock` means what ships now.
+    // China is read out of stock_by_warehouse.
+    stock: w?.["MELB WHS"]?.available ?? null,
+    // Every warehouse, for the partner portals and the site's China stock.
+    stock_by_warehouse: w ?? null,
+    stock_synced_at: now,
+  };
+}
+
+/**
  * Every current warehouse's StockOnHand, one warehouse after another. Without a
  * warehouseCode filter Unleashed returns one summed row per product with the
  * warehouse blank, which is why each is read on its own. The list is read
@@ -190,7 +221,9 @@ export type MirrorRefresh = {
   withPrice: number;
   withTiers: number;
   withCarton: number;
-  withStock: number;
+  /** Products with Melbourne stock; null when the stock read failed and the
+   *  stored stock was left as it was. */
+  withStock: number | null;
   /** Products with a per-warehouse stock record; null when the stock read failed
    *  and the stored per-warehouse stock was left as it was. */
   withStockByWarehouse: number | null;
@@ -217,7 +250,7 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
     withPrice: 0,
     withTiers: 0,
     withCarton: 0,
-    withStock: 0,
+    withStock: null,
     withStockByWarehouse: null,
     before: 0,
     written: 0,
@@ -246,17 +279,6 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
   ]);
   const byWarehouse = perWarehouse ? stockByWarehouse(perWarehouse) : null;
 
-  // `stock` is MELBOURNE ONLY, to match lib/unleashed: it means what ships now.
-  // The site reads nothing else; a mirror-served map would show China-only stock
-  // as made to order rather than with its lead time — the mirror is off in
-  // production (ERP_MIRROR_ENABLED unset, 22 Oct 2026). stock_by_warehouse
-  // already carries CHINA WHS for when it is turned on.
-  const stock = new Map<string, number>();
-  for (const [code, w] of byWarehouse ?? []) {
-    const melb = w["MELB WHS"];
-    if (melb) stock.set(code, melb.available);
-  }
-
   const now = new Date().toISOString();
   const rows = products
     .filter((p) => p.ProductCode)
@@ -272,14 +294,10 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
         price: num(p.DefaultSellPrice),
         // EX GST, like price. See sellPriceTiers.
         sell_price_tiers: sellPriceTiers(p),
-        stock: stock.get(code) ?? null,
-        // Every warehouse, for the partner portals (stockByWarehouse). Sent on
-        // EVERY row or on none: when the stock read failed both keys are left
-        // out of the whole upsert, so the last good figures and their date
-        // survive rather than being nulled (see 20261001_erp_products_tags.sql
-        // for what sending a key on some rows only does). The portals date
-        // them by stock_synced_at and stop showing them when it is old.
-        ...(byWarehouse ? { stock_by_warehouse: byWarehouse.get(code) ?? null, stock_synced_at: now } : {}),
+        // stock, stock_by_warehouse, stock_synced_at — or, when the stock read
+        // failed, none of them, so the last good figures survive. See
+        // stockColumns.
+        ...stockColumns(code, byWarehouse, now),
         brand: p.ProductBrand?.BrandName?.trim() || null,
         group_name: p.ProductGroup?.GroupName?.trim() || null,
         subgroup: p.ProductSubGroup?.GroupName?.trim() || null,
@@ -309,7 +327,7 @@ export async function refreshErpMirror({ write = false } = {}): Promise<MirrorRe
     withPrice: rows.filter((r) => r.price).length,
     withTiers: rows.filter((r) => r.sell_price_tiers).length,
     withCarton: rows.filter((r) => r.width_cm && r.depth_cm && r.height_cm).length,
-    withStock: rows.filter((r) => r.stock !== null).length,
+    withStock: byWarehouse ? rows.filter((r) => r.stock != null).length : null,
     withStockByWarehouse: byWarehouse ? rows.filter((r) => r.stock_by_warehouse).length : null,
     before,
     shrinkPct: Math.round(shrink * 1000) / 10,

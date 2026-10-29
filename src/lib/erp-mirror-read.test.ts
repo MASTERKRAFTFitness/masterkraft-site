@@ -53,6 +53,8 @@ const row = (over: Record<string, unknown> = {}) => ({
   name: "Rubber Hex Dumbbell - 10kg",
   price: 50,
   stock: 4,
+  stock_by_warehouse: { "MELB WHS": { onHand: 4, allocated: 0, available: 4 } },
+  stock_synced_at: fresh(),
   brand: "MK",
   group_name: "Weightlifting",
   subgroup: "Dumbbells",
@@ -115,6 +117,19 @@ describe("it falls back rather than serving something wrong", () => {
     expect(await buildMapFromMirror()).toBeNull();
   });
 
+  it("returns null when the stock is stale, even though the rows are fresh", async () => {
+    // A failed StockOnHand read keeps the last good stock under a fresh
+    // synced_at. Hours of failed reads must not serve hours-old stock as live.
+    const old = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+    rows = many(1_200, () => ({ stock_synced_at: old }));
+    expect(await buildMapFromMirror()).toBeNull();
+  });
+
+  it("does not let a product added during a failed stock read disqualify the rest", async () => {
+    rows = many(1_200, (i) => (i === 0 ? { stock_synced_at: null } : {}));
+    expect(await buildMapFromMirror()).not.toBeNull();
+  });
+
   it("returns null when a row has no timestamp to vouch for it", async () => {
     rows = many(1_200, (i) => (i === 500 ? { synced_at: null } : {}));
     expect(await buildMapFromMirror()).toBeNull();
@@ -172,6 +187,34 @@ describe("a mirror row means the same thing as an API response", () => {
   it("treats a null sellable as sellable, matching buildMap", async () => {
     rows = many(1_200, (i) => (i === 0 ? { sellable: null } : {}));
     expect((await buildMapFromMirror())?.CODE00000.sellable).toBe(true);
+  });
+
+  it("reads China stock out of stock_by_warehouse, as buildMap reads CHINA WHS", async () => {
+    // Without it a mirror-served map shows China-only stock as made to order
+    // rather than with its lead time.
+    rows = many(1_200, (i) =>
+      i === 0
+        ? {
+            stock: -7,
+            stock_by_warehouse: {
+              "MELB WHS": { onHand: 8, allocated: 15, available: -7 },
+              "CHINA WHS": { onHand: 23, allocated: 16, available: 7 },
+            },
+          }
+        : {}
+    );
+    const e = (await buildMapFromMirror())?.CODE00000;
+    expect(e?.stock).toBe(-7);
+    expect(e?.stockChina).toBe(7);
+  });
+
+  it("leaves stockChina out when China holds none or has no record, as buildMap does", async () => {
+    rows = many(1_200, (i) =>
+      i === 0 ? { stock_by_warehouse: { "CHINA WHS": { onHand: 0, allocated: 0, available: 0 } } } : i === 1 ? { stock_by_warehouse: null } : {}
+    );
+    const map = await buildMapFromMirror();
+    expect(map?.CODE00000.stockChina).toBeUndefined();
+    expect(map?.CODE00001.stockChina).toBeUndefined();
   });
 
   it("carries a missing carton as undefined rather than zero", async () => {
