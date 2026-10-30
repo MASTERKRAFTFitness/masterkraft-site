@@ -78,7 +78,7 @@ export default function JoinForm() {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Something went wrong.");
       track("form_submit", { form_id: FORM_ID });
-      trackSignUp(FORM_ID, body.email);
+      trackSignUp(FORM_ID);
       const chosen = windows?.find((w) => windowLabel(w) === body.window);
       setJoined({ name: body.firstName, window: chosen?.name ?? windows?.[0]?.name ?? "next" });
       setState("done");
