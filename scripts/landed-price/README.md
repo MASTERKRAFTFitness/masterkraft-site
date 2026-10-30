@@ -22,6 +22,8 @@ handle here.
 Center fetches daily from https://masterkraft.com/merchant-center-promotion.csv.
 It refuses to publish while any quote is missing, so a throttled run can't drop
 products from the campaigns. Re-run with the same `--out` to fill the gaps.
+Add `--checked-only` to publish only sizes priced against Little Bloke, leaving
+out the `no-match` ones (they qualify with no competitor price behind them).
 
 ## Batches (October 2026)
 
@@ -30,3 +32,7 @@ is only the sizes measured at least 5% *cheaper* landed than Little Bloke in
 every region they are shown: 20 sizes. **Batch 2** is the first scheduled re-run,
 which proposes the full rule (within 5%, plus sizes Little Bloke doesn't sell) as
 a pull request; the additions in that PR are the second batch to approve.
+
+**30 Oct 2026** published with `--checked-only`: 52 of the 79 qualifying sizes.
+The 27 with no Little Bloke equivalent (urethane plates, 6/18/36/40kg kettlebells,
+racks) stay out until they have been priced against someone else.
