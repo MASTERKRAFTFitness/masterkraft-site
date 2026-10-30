@@ -403,6 +403,13 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
   const draft: (ErpUnit & { page?: WcProduct })[] = [];
   for (const [key, members] of groups) {
     const [brand, group, name] = key.split("\u0000");
+    // THE PLAIN ONE IS A SIZE TOO. "Barbell Storage Box (9 Bar Holder)" sits
+    // beside "... - Versatile": two products, but only one of them names its
+    // variant. Left sizeless it stops the pair being a range, so both feed items
+    // shared one link and the page could only sell the first.
+    if (members.length > 1 && members.some((m) => m.size)) {
+      for (const m of members) if (!m.size) m.size = "Standard";
+    }
     members.sort((a, b) => compareSizeLabels(a.size, b.size));
 
     const priced = members.filter((m) => m.entry.price > 0);
