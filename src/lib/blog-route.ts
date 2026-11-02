@@ -11,8 +11,13 @@ import {
   postPath,
 } from "@/lib/blog";
 
-/** The index shows this many posts. */
-export const INDEX_COUNT = 12;
+/**
+ * The index lists every live post. It once showed only the newest 12 with no
+ * way to page back, so anything older (all of September 2026, backdated on
+ * 30 Oct) had no link from /blog at all. The Journal is a few dozen posts and
+ * the cards lazy-load their images, so one list is fine; revisit with real
+ * pagination if it passes a hundred or so.
+ */
 
 /**
  * Resolve a blog URL once, for both generateMetadata and the render.
@@ -34,7 +39,7 @@ export const INDEX_COUNT = 12;
  */
 export async function loadRoute(slug: string[]) {
   if (slug.length === 0) {
-    return { type: "home" as const, data: { posts: await listPosts(INDEX_COUNT) } };
+    return { type: "home" as const, data: { posts: await listPosts() } };
   }
 
   if (slug[0] === "authors") {
