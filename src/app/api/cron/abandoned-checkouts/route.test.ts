@@ -68,4 +68,22 @@ describe("abandoned checkout alert", () => {
     expect(sent[0].subject).toBe("Abandoned checkout: $20.00 - Violet Atkinson");
     expect(sent[0].html).not.toContain("stopped them");
   });
+
+  it("offers a ready-written email to the shopper asking what held them up", async () => {
+    abandonedCheckoutLeads.mockResolvedValue([lead()]);
+    await run();
+    const href = /href="(mailto:[^"]+)"/.exec(sent[0].html)?.[1];
+    expect(href).toBeDefined();
+    const url = new URL(href!.replace(/&amp;/g, "&"));
+    expect(url.pathname).toBe("violet@example.com");
+    expect(url.searchParams.get("body")).toContain("Was there anything that held you up?");
+    expect(sent[0].html).toContain("Email them asking what held them up");
+  });
+
+  it("answers what they said instead of asking again", async () => {
+    abandonedCheckoutLeads.mockResolvedValue([lead({ abandon_reason: "quote" })]);
+    await run();
+    expect(sent[0].html).toContain("Email them a reply");
+    expect(decodeURIComponent(sent[0].html)).toContain("You mentioned you needed a formal quote");
+  });
 });

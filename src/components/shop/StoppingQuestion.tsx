@@ -44,10 +44,13 @@ async function save(checkoutId: string, reason: AbandonReason, note?: string): P
 export default function StoppingQuestion({
   checkoutId,
   onRequestQuote,
+  onAnswered,
 }: {
   checkoutId: string;
   /** Present when the card path is open; the quote button is already on screen otherwise. */
   onRequestQuote?: () => void;
+  /** Called once an answer has saved, so the checkout stops asking before they leave. */
+  onAnswered?: () => void;
 }) {
   const [reason, setReason] = useState<AbandonReason | null>(null);
   const [note, setNote] = useState("");
@@ -59,8 +62,10 @@ export default function StoppingQuestion({
     setReason(r);
     setNoteSent(false);
     setBusy(true);
-    setFailed(!(await save(checkoutId, r)));
+    const ok = await save(checkoutId, r);
+    setFailed(!ok);
     setBusy(false);
+    if (ok) onAnswered?.();
   }
 
   async function sendNote() {
