@@ -9,6 +9,7 @@ import { identifyUser, trackLead, trackPurchase } from "@/lib/analytics";
 import { opinlyAnonId } from "@/lib/opinly";
 import { freightMessage, quotesAutomatically } from "@/lib/freight-message";
 import StoppingQuestion from "@/components/shop/StoppingQuestion";
+import { useLeaveIntent } from "@/components/shop/useLeaveIntent";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -150,6 +151,9 @@ export default function StripeCheckout({
   // never be the price charged for another.
   const [quoted, setQuoted] = useState(false);
   const [freightReason, setFreightReason] = useState<string | null>(null);
+  // "Anything stopping you?" answered, so it is not put in front of them again
+  // as they leave. See useLeaveIntent.
+  const [answered, setAnswered] = useState(false);
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +175,15 @@ export default function StripeCheckout({
   // required but could not be priced there is no card path, so the button stays
   // on Calculate Freight and the message below explains why.
   const canContinue = quoted && !(freightRequired && !freight);
+  const { leaving, dismiss } = useLeaveIntent(checkoutId, phase === "details" && quoted && !answered);
+  const leavePanelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!leaving) return;
+    leavePanelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [leaving, dismiss]);
   const freightNotice = !quoted || !freightRequired || freight
     ? null
     : autoQuoting
@@ -437,10 +450,24 @@ export default function StripeCheckout({
                 the one reminder email (lib/cart-reminders); a pre-ticked
                 box would not be. Changing it clears the freight quote like any
                 other field, so the choice is re-sent before payment and an
-                untick always reaches the server before the email could. */}
-            <label className="flex items-start gap-2 text-sm text-ash cursor-pointer">
+                untick always reaches the server before the email could.
+
+                SAYS EXACTLY WHAT THEY GET (2026-11-04). It was one grey line
+                that read like small print, and few ticked it. The words "Email
+                me my cart if I don't finish" stay as they are, because the
+                reminder quotes them back as the reason it was sent; the line
+                under them is what consent covers, and is true of
+                lib/cart-reminders: one email, from about an hour later, never
+                overnight, with an unsubscribe. */}
+            <label className="flex items-start gap-3 border border-line px-4 py-3 text-sm text-ink cursor-pointer">
               <input type="checkbox" name="cart_reminder" className="mt-[3px] h-4 w-4 flex-none accent-accent" />
-              <span>Email me my cart if I don&apos;t finish</span>
+              <span>
+                <span className="font-medium">Email me my cart if I don&apos;t finish</span>
+                <span className="block text-xs text-ash mt-0.5">
+                  One email with your cart, about an hour after you leave
+                  (or next morning if it&apos;s late). No newsletters.
+                </span>
+              </span>
             </label>
             <input name="company" aria-label="Company / gym name (optional)" placeholder="Company / gym name (optional)" className={fieldClass} />
             <input name="address_1" required aria-label="Delivery address" placeholder="Delivery address" className={fieldClass} />
@@ -499,13 +526,54 @@ export default function StripeCheckout({
         )}
 
         {/* After the freight quote, whatever it said. Keyed on the checkout so
-            a fresh checkout starts unanswered. */}
+            a fresh checkout starts unanswered.
+
+            BEFORE YOU GO. When they look to be leaving (useLeaveIntent), the
+            SAME question is lifted into a dialog over the page, by restyling
+            the two wrappers rather than rendering a second copy: the question
+            keeps its place in the tree, so an answer or a half-typed note
+            carries across, and closing the dialog puts it back below the form. */}
         {phase === "details" && quoted && (
-          <StoppingQuestion
-            key={checkoutId}
-            checkoutId={checkoutId}
-            onRequestQuote={freightNotice ? undefined : requestQuote}
-          />
+          <div
+            className={leaving ? "fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4" : ""}
+            onClick={leaving ? (e) => e.target === e.currentTarget && dismiss() : undefined}
+          >
+            <div
+              ref={leavePanelRef}
+              tabIndex={-1}
+              role={leaving ? "dialog" : undefined}
+              aria-modal={leaving || undefined}
+              aria-labelledby={leaving ? "stopping-question" : undefined}
+              className={leaving ? "relative w-full max-w-lg bg-white p-6 shadow-xl outline-none [&>section]:mt-0" : ""}
+            >
+              {leaving && (
+                <p className="font-display uppercase tracking-wide text-lg mb-4 pr-8">Before you go</p>
+              )}
+              <StoppingQuestion
+                key={checkoutId}
+                checkoutId={checkoutId}
+                onRequestQuote={
+                  freightNotice
+                    ? undefined
+                    : () => {
+                        dismiss();
+                        requestQuote();
+                      }
+                }
+                onAnswered={() => setAnswered(true)}
+              />
+              {leaving && (
+                <button
+                  type="button"
+                  onClick={dismiss}
+                  aria-label="Close"
+                  className="absolute top-3 right-3 h-8 w-8 text-xl leading-none text-ash hover:text-ink"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {phase === "payment" && clientSecret && billing && (

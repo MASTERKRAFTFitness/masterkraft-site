@@ -26,6 +26,7 @@ import {
 import { internalRecipients } from "@/lib/notify-recipients";
 import { sendCartReminders } from "@/lib/cart-reminders";
 import { ABANDON_REASONS, validAbandonReason } from "@/lib/abandon-reasons";
+import { followUpMailto } from "@/lib/abandon-followup";
 
 export const dynamic = "force-dynamic";
 
@@ -69,11 +70,20 @@ function abandonedEmailHtml(row: CheckoutLeadRow): string {
         row.abandon_reason_note ? `<br/>&ldquo;${escape(row.abandon_reason_note).replace(/\n/g, "<br/>")}&rdquo;` : ""
       }</p>`
     : "";
+  // A ready-written personal email asking what held them up (or answering what
+  // they said), for whoever follows up to read over and send. See lib/abandon-followup.
+  const mailto = followUpMailto(row);
+  const draft = mailto
+    ? `<p><a href="${escape(mailto)}" style="display:inline-block;padding:8px 14px;background:#111;color:#fff;text-decoration:none;border-radius:4px">${
+        reason ? "Email them a reply" : "Email them asking what held them up"
+      }</a><br/><span style="color:#666;font-size:12px">Opens a short draft addressed to them. Read it over, sign it and send.</span></p>`
+    : "";
   return `
     <h2>Abandoned checkout</h2>
     <p>This customer ${STAGE[row.status] ?? "left the checkout"}. Worth a call or a personal reply.</p>
     ${said}
     ${row.reminder_opt_in ? `<p>They asked to be emailed their cart, so an automatic reminder goes to them now (or from 9am, if it's after hours) asking what stopped them. Their answer will be emailed here.</p>` : ""}
+    ${draft}
     <p><strong>${escape(row.name ?? "")}</strong>${row.company ? ` (${escape(row.company)})` : ""}<br/>
     ${escape(row.email ?? "")}${row.phone ? ` · ${escape(row.phone)}` : ""}<br/>
     ${where ? `Delivery: ${escape(where)}` : ""}</p>
