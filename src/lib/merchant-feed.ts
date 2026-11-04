@@ -38,6 +38,7 @@ import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unlea
 import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
 import { resolveCopy, type ContentMap } from "@/lib/product-content";
+import { productCopy } from "@/lib/product-copy";
 import { SITE_URL, absoluteUrl, productUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 import { regionLabel } from "@/lib/landed-price";
@@ -227,10 +228,31 @@ function descriptionFor(unit: ErpUnit, content: ContentMap | undefined): string 
   // the slug we advertise is what guarantees the description belongs to the
   // page the shopper lands on.
   const snapshot = productBySlug(unit.slug)?.short_description;
-  const text = plainText(resolved.short ?? "") || plainText(snapshot ?? "");
+  const short = plainText(resolved.short ?? "") || plainText(snapshot ?? "");
+  const text = [short, authoredBody(unit.slug, content)].filter(Boolean).join(" ");
   // 5000 is Merchant Center's limit. Nothing in this catalogue is close, but a
   // description that silently overruns is rejected rather than truncated.
   return (text || unitDescription(unit)).slice(0, 5000);
+}
+
+/**
+ * The body copy a person wrote for this page, as prose, or "".
+ *
+ * THE ONE-LINE SUMMARY WAS ALL GOOGLE SAW. The feed sent only `short`, so a page
+ * with three written paragraphs advertised one sentence of twenty words, and
+ * Merchant Center scores that as thin. Only AUTHORED bodies are appended: an
+ * editor's row, then product-copy.json. The snapshot's long description is left
+ * out on purpose, because it is the per-family copy that sometimes describes
+ * the wrong weight (an 8kg kettlebell on a 250kg set), and the feed should not
+ * spread it further than the page already does.
+ */
+function authoredBody(slug: string, content: ContentMap | undefined): string {
+  const row = content?.[slug]?.html;
+  if (row) return plainText(row.replace(/<\/li>/g, "; ").replace(/<\/(p|h\d)>/g, " ")).replace(/;$/, ".");
+  const copy = productCopy(slug);
+  if (!copy) return "";
+  const features = copy.features?.length ? `Features: ${copy.features.join("; ")}.` : "";
+  return [...(copy.body ?? []), features].filter(Boolean).join(" ");
 }
 
 /**

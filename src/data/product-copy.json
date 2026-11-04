@@ -1954,5 +1954,197 @@
       "Gym merchandise does two jobs at once: it puts the name on somebody outside the building, and it gives the team something to wear on shift that is not a uniform.",
       "The trucker cut answers both — it works behind the desk, and away from the gym it still reads as a choice rather than something issued."
     ]
+  },
+  "pro-bumper-plates": {
+    "short": "A 5kg Pro bumper plate for Olympic bars, built to be dropped from overhead without damaging the bar or the floor.",
+    "body": [
+      "Bumper plates are built to be dropped, so a missed lift can be put down from overhead safely, which is what makes them the standard plate on a lifting platform.",
+      "The 5kg is the light end of a bumper loadout, for warm-ups, technique work and the small jumps between heavier plates."
+    ],
+    "features": [
+      "5kg bumper plate",
+      "Fits Olympic bars",
+      "Built to be dropped on a platform"
+    ]
+  },
+  "competition-kettlebells-set-of-12-250kg-rack": {
+    "short": "Twelve competition kettlebells totalling 250kg, supplied with a rack: a full commercial kettlebell floor in one order.",
+    "body": [
+      "Competition kettlebells keep the same size and shape at every weight, so a lifter's grip, rack position and swing path stay the same as the load goes up. Only the number changes.",
+      "Twelve bells and the rack to hold them means a group class or a strength floor can be fitted out in one delivery, with every bell off the floor and easy to find."
+    ],
+    "features": [
+      "Set of 12 competition kettlebells, 250kg total",
+      "Rack included",
+      "Same size and shape across every weight"
+    ]
+  },
+  "olympic-premium-rubber-weight-plates-4-grip": {
+    "short": "Premium rubber Olympic weight plates with a four-grip design, in seven sizes from 1.25kg to 25kg.",
+    "body": [
+      "Four grips cast into the plate give a hand-hold from any angle, so a plate can be carried from a tree to a bar and loaded without fumbling for the edge.",
+      "Sold by the plate from 1.25kg to 25kg, so a home gym or a commercial floor can build exactly the loads it needs and add the small plates for progression."
+    ],
+    "features": [
+      "1.25kg, 2.5kg, 5kg, 10kg, 15kg, 20kg and 25kg",
+      "Four-grip design",
+      "Premium rubber, Olympic fit"
+    ]
+  },
+  "competition-bumper-plates-3": {
+    "short": "Competition bumper plates for Olympic bars, sold individually in 5kg, 10kg, 15kg, 20kg and 25kg.",
+    "body": [
+      "Competition bumpers are made to be dropped from overhead, and to load a bar to the weight it says. That accuracy matters on a platform where lifters test, compete or coach to a standard.",
+      "Bought by the plate, so a floor can match an existing set, replace a worn pair or build a competition loadout one size at a time."
+    ],
+    "features": [
+      "5kg, 10kg, 15kg, 20kg and 25kg",
+      "Competition bumper construction",
+      "Fits Olympic bars"
+    ]
+  },
+  "competition-kettlebells-set-of-3-36kg": {
+    "short": "A set of three competition kettlebells, in a 36kg or a 72kg total: a matched progression in one order.",
+    "body": [
+      "Competition kettlebells keep the same size and shape at every weight, so moving up a bell changes the load and nothing else. Technique learned on the light bell carries straight to the heavy one.",
+      "Three bells is the working minimum for progression: one to learn on, one to train with and one to work towards. The 36kg set suits a home gym or PT studio; the 72kg set suits a stronger floor."
+    ],
+    "features": [
+      "Set of 3 competition kettlebells",
+      "36kg or 72kg total",
+      "Same size and shape across every weight"
+    ]
+  },
+  "chrome-110-dumbbells-1kg-10kg-pairs-rack": {
+    "short": "Chrome dumbbells in pairs from 1kg to 10kg, 110kg in all, with a vertical rack to keep them on one small footprint.",
+    "body": [
+      "Ten pairs, every kilogram from 1kg to 10kg, so every exercise in a light session has the right weight on hand and nobody is left waiting for a pair.",
+      "The vertical rack stands the whole set up in a corner instead of along a wall, which suits a PT studio, a class room or a home gym where floor space is the limit."
+    ],
+    "features": [
+      "10 pairs, 1kg to 10kg, 110kg total",
+      "Vertical dumbbell rack included",
+      "Chrome finish"
+    ]
+  },
+  "change-plates": {
+    "short": "Change plates for Olympic bars in 1.25kg and 2.5kg: the small jumps that keep a lifter progressing near their limit.",
+    "body": [
+      "Without change plates a bar moves in 5kg steps at best, which is too coarse for presses and for anyone working close to a maximum. A 1.25kg pair adds 2.5kg to the bar; a 2.5kg pair adds 5kg.",
+      "Sold by the plate, so a platform can carry as many pairs as its lifters need."
+    ],
+    "features": [
+      "1.25kg and 2.5kg",
+      "Fits Olympic bars",
+      "Small increments for steady progression"
+    ]
+  },
+  "olympic-urethane-weight-plates-3": {
+    "short": "Urethane Olympic weight plates with a three-grip design, sold individually in seven sizes up to 25kg.",
+    "body": [
+      "Urethane is a hard-wearing plate finish that holds its look on a busy commercial floor. The three grips make each plate easy to carry and load.",
+      "Sold by the plate, so a floor can build its plate trees to the loads its members actually use and add the light plates for progression."
+    ],
+    "features": [
+      "Seven sizes up to 25kg",
+      "Three-grip design",
+      "Urethane finish, Olympic fit"
+    ]
+  },
+  "coloured-bumper-plates": {
+    "short": "Coloured bumper plates for Olympic bars, sold individually in 5kg, 10kg, 15kg, 20kg and 25kg.",
+    "body": [
+      "Bumper plates are built to be dropped, so cleans, snatches and deadlifts can be put down from height without damaging the bar or the floor.",
+      "Colour-coding means a coach can read the load on a bar from across the room. Bought by the plate, they suit a new platform or topping up an existing set."
+    ],
+    "features": [
+      "5kg, 10kg, 15kg, 20kg and 25kg",
+      "Colour-coded by weight",
+      "Built to be dropped, fits Olympic bars"
+    ]
+  },
+  "urethane-fixed-dumbbells-2": {
+    "short": "Urethane fixed dumbbells from 1kg to 50kg: a hard-wearing, single-piece dumbbell for a commercial rack.",
+    "body": [
+      "A fixed dumbbell has nothing to loosen or adjust, which is what a busy floor needs. Urethane is a hard-wearing finish that keeps a rack looking new for longer.",
+      "Available from 1kg, and from 10kg to 50kg in 2.5kg steps, so a rack can be built to the range its members actually lift."
+    ],
+    "features": [
+      "1kg, then 10kg to 50kg in 2.5kg steps",
+      "Fixed, single-piece dumbbell",
+      "Urethane finish"
+    ]
+  },
+  "virgin-rubber-fixed-dumbbells": {
+    "short": "Virgin rubber fixed dumbbells from 10kg to 60kg in 2.5kg steps, for a commercial rack built to last.",
+    "body": [
+      "A fixed dumbbell has nothing to loosen or adjust, and a virgin rubber head takes the knocks of a busy floor while protecting the floor beneath it.",
+      "The range runs from 10kg to 60kg in 2.5kg steps, which covers the heavy end of a commercial rack where most adjustable and light sets stop."
+    ],
+    "features": [
+      "10kg to 60kg in 2.5kg steps",
+      "Fixed, single-piece dumbbell",
+      "Virgin rubber head"
+    ]
+  },
+  "olympic-premium-rubber-weight-plates-2": {
+    "short": "Premium rubber Olympic weight plates with a three-grip design, in seven sizes from 1.25kg to 25kg.",
+    "body": [
+      "Three grips cast into the plate make it easy to carry and to load onto a bar, and the rubber finish is kinder to floors and quieter on a rack than bare iron.",
+      "Sold by the plate from 1.25kg to 25kg, so a home gym can start with what it needs and a commercial floor can fill its plate trees size by size."
+    ],
+    "features": [
+      "1.25kg, 2.5kg, 5kg, 10kg, 15kg, 20kg and 25kg",
+      "Three-grip design",
+      "Premium rubber, Olympic fit"
+    ]
+  },
+  "chrome-110-dumbbells-1kg-10kg-pairs": {
+    "short": "Chrome dumbbells in pairs from 1kg to 10kg, 110kg in all: every light weight a class or studio uses, in one set.",
+    "body": [
+      "Ten pairs, every kilogram from 1kg to 10kg, so every exercise in a light or rehab session has the right weight and nobody is left waiting for a pair.",
+      "A complete light set for a PT studio, a group class or a home gym. The same set is also available with a vertical rack."
+    ],
+    "features": [
+      "10 pairs, 1kg to 10kg, 110kg total",
+      "Chrome finish",
+      "Also available with a vertical rack"
+    ]
+  },
+  "premium-rubber-hex-dumbbell-3": {
+    "short": "Premium rubber hex dumbbells from 1kg to 45kg: a dumbbell that stays put when it is set down.",
+    "body": [
+      "The hex head stops a dumbbell rolling when it is put down, so it stays where it was left on the floor or a bench, and it can double as a stable base for push-ups and renegade rows.",
+      "Every weight from 1kg to 10kg, then 2.5kg steps to 45kg, so a home gym can buy just the weights it uses and a commercial floor can fill gaps in an existing rack."
+    ],
+    "features": [
+      "1kg to 45kg",
+      "Hex head that will not roll",
+      "Premium rubber finish"
+    ]
+  },
+  "rubber-hex-dumbbell-group": {
+    "short": "Rubber hex dumbbells from 1kg to 45kg: the everyday dumbbell for home gyms and commercial racks.",
+    "body": [
+      "The hex head stops a dumbbell rolling when it is put down, and the rubber finish protects floors and keeps the noise down. It is the most practical dumbbell for most gyms.",
+      "The range runs from 1kg to 45kg, including the in-between weights, so a home gym can buy only what it uses and a commercial floor can complete its rack."
+    ],
+    "features": [
+      "1kg to 45kg",
+      "Hex head that will not roll",
+      "Rubber finish, kind to floors"
+    ]
+  },
+  "urethane-competition-kettlebell-3": {
+    "short": "Urethane competition kettlebells, sold individually in 8kg, 10kg, 12kg, 16kg, 20kg and 24kg.",
+    "body": [
+      "Competition kettlebells keep the same size and shape at every weight, so moving up a bell changes the load and nothing else about the swing, clean or press.",
+      "The urethane finish is hard-wearing and kinder to floors. Sold individually from 8kg to 24kg, so a gym can build a progression one bell at a time."
+    ],
+    "features": [
+      "8kg, 10kg, 12kg, 16kg, 20kg and 24kg",
+      "Same size and shape across every weight",
+      "Urethane finish"
+    ]
   }
 }
