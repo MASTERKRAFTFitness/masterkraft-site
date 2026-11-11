@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
 import CategoryBrowser, { type BrowserSearchParams } from "@/components/shop/CategoryBrowser";
 import { categories, getCategory } from "@/lib/categories";
+import { getSubcategory } from "@/lib/subcategories";
 
 export function generateStaticParams() {
   return categories.map((c) => ({ category: c.slug }));
@@ -34,9 +35,20 @@ export async function generateMetadata({
   // from the facet bar — see lib/subcategories.ts. The parameter still works,
   // still filters, and still collapses here, because a filter with no page
   // behind it is exactly that.
+  //
+  // BUT A FILTER THAT HAS A PAGE NAMES THAT PAGE. `?sub=squat-and-power-racks`
+  // lists the same products as /equipment/rigs-racks/squat-and-power-racks, and
+  // collapsing it to the category told Google the copy belonged to a page with
+  // different contents; the 10 Nov site audit flagged it as a canonical
+  // conflict. Page 1 only: a filtered page 2 has no written counterpart.
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
-  const canonical = page > 1 ? `/equipment/${c.slug}?page=${page}` : `/equipment/${c.slug}`;
+  const written = page === 1 && sp.sub ? getSubcategory(c.slug, sp.sub) : undefined;
+  const canonical = written
+    ? `/equipment/${c.slug}/${written.slug}`
+    : page > 1
+      ? `/equipment/${c.slug}?page=${page}`
+      : `/equipment/${c.slug}`;
 
   // THE TITLE IS NOT THE H1. `seoTitle` where the category has one — see the
   // field in lib/categories.ts for why ten of these were a single word plus the

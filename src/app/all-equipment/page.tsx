@@ -9,12 +9,28 @@ import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleash
 import { CLEARANCE_GROUP, erpSubgroups, erpUnits, unitCard, type ErpUnit } from "@/lib/erp-catalogue";
 import { categories } from "@/lib/categories";
 
-export const metadata: Metadata = {
-  title: "All Gym Equipment | Shop the Full Range",
-  description:
-    "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.",
-  alternates: { canonical: "/all-equipment" },
-};
+// Page 2 is its own URL, for the reason the category pages give
+// (app/equipment/[category]/page.tsx): it shows different products, and a
+// canonical to page 1 asks Google to drop it. `sort` still collapses.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}): Promise<Metadata> {
+  const page = Math.max(1, parseInt((await searchParams).page ?? "1", 10) || 1);
+  const first: Metadata = {
+    title: "All Gym Equipment | Shop the Full Range",
+    description:
+      "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.",
+    alternates: { canonical: "/all-equipment" },
+  };
+  if (page === 1) return first;
+  return {
+    ...first,
+    title: `All Gym Equipment — Page ${page}`,
+    alternates: { canonical: `/all-equipment?page=${page}` },
+  };
+}
 
 const PER_PAGE = 24;
 
