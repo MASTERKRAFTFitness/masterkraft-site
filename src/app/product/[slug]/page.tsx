@@ -23,7 +23,7 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
-import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
+import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 import { getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 
@@ -119,6 +119,9 @@ export async function generateMetadata({
   // that order and degrades to exactly this line's old behaviour on an empty
   // map, so the metadata and the body cannot disagree about which words won.
   const authored = resolveCopy(slug, content);
+  // An ex-display listing that copies one of our own pages names that page. See
+  // ownUnitForClearance.
+  const canonicalSlug = (wooProduct && ownUnitForClearance(unleashed, wooProduct)?.slug) || slug;
   return {
     title: productTitle(p),
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
@@ -127,7 +130,7 @@ export async function generateMetadata({
       authored?.short ||
       plainText(p.short_description).slice(0, 155) ||
       (unit ? unitDescription(unit) : undefined),
-    alternates: { canonical: `/product/${slug}` },
+    alternates: { canonical: `/product/${canonicalSlug}` },
     openGraph: {
       title: p.name,
       images: p.images?.[0]?.src ? [{ url: p.images[0].src }] : undefined,

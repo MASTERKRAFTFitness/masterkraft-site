@@ -528,6 +528,33 @@ export function erpUnitBySlug(map: UnleashedMap, slug: string): ErpUnit | undefi
 }
 
 /**
+ * The page a third-party clearance listing should name as its canonical, when
+ * we sell the same thing new under our own code.
+ *
+ * THE OLD STORE HELD BOTH. `drop-in-core-trainer` is ABCTDR01, ex-display stock,
+ * and `drop-in-core-trainer-2` is MBCTDR01, the one we sell new; the snapshot
+ * gave them the same name and the same words. Both answered 200 with a canonical
+ * to themselves, so Google was shown two pages about one product and left to
+ * pick, and the 10 Nov site audit flagged the pairs at 98–100% duplicate. The
+ * clearance page still serves (somebody may want the ex-display one) but points
+ * search at the page for the product itself.
+ *
+ * Only a non-brand SKU on an exact name match: a "(Black)" or a different size
+ * in the name is a different listing, not a copy.
+ */
+export function ownUnitForClearance(
+  map: UnleashedMap,
+  p: { slug: string; sku?: string; name: string }
+): ErpUnit | undefined {
+  if (isBrandSku(p.sku)) return undefined;
+  const name = p.name.trim().toLowerCase();
+  for (const u of erpUnits(map).values()) {
+    if (u.group !== CLEARANCE_GROUP && u.slug !== p.slug && u.name.trim().toLowerCase() === name) return u;
+  }
+  return undefined;
+}
+
+/**
  * A unit rendered as the WooCommerce-shaped product the listing components
  * already take, so ProductCard, sorting and the grids are untouched.
  */
