@@ -203,6 +203,12 @@ export type FreightDecision = {
   reason?: string;
   /** SKUs with no carton data, when reason is `incomplete_dimensions`. */
   missing?: string[];
+  /**
+   * Where the time went, for the [freight/quote] log line: resolving cartons
+   * (which reads the live Unleashed map) and pricing them. Absent on the
+   * early returns, which do neither.
+   */
+  ms?: { items: number; quote: number };
 };
 
 /**
@@ -232,7 +238,9 @@ export async function quoteFreightForRefs(
     return { required: true, selected: null, options: [], reason: "no_delivery_address" };
   }
 
+  const started = Date.now();
   const items = await refsToFreightItems(refs);
+  const resolved = Date.now();
   const quote = await quoteFreight(items, {
     city,
     state: delivery?.state?.trim(),
@@ -240,11 +248,12 @@ export async function quoteFreightForRefs(
     country: delivery?.country?.trim() || "Australia",
     line1: delivery?.line1?.trim(),
   });
+  const ms = { items: resolved - started, quote: Date.now() - resolved };
 
   if (!quote.ok) {
-    return { required: true, selected: null, options: [], reason: quote.reason, missing: quote.missing };
+    return { required: true, selected: null, options: [], reason: quote.reason, missing: quote.missing, ms };
   }
   const selected =
     quote.options.find((o) => o.id === chosenServiceId) ?? quote.options[0] ?? null;
-  return { required: true, selected, options: quote.options };
+  return { required: true, selected, options: quote.options, ms };
 }

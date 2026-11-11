@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       price: decision.selected?.price ?? null,
       carrier: decision.selected ? `${decision.selected.carrier} ${decision.selected.service}`.trim() : null,
       options: decision.options.length,
+      ms: decision.ms ?? null,
     })
   );
 

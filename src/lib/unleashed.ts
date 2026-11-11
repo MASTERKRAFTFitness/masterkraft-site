@@ -17,6 +17,7 @@ import { skuAliases } from "@/lib/unleashed-aliases";
 import { getRange } from "@/lib/ranges";
 import erpImageOverrides from "@/lib/erp-image-overrides.json";
 import { adminDb } from "@/lib/admin-db";
+import { ERP_MIRROR_TAG } from "@/lib/erp-mirror-tag";
 
 const BASE = "https://api.unleashedsoftware.com";
 const GST = 1.1; // DefaultSellPrice is ex-GST; masterkraft.com shows inc-GST
@@ -482,7 +483,12 @@ const cachedMirrorMap = unstable_cache(buildMapFromMirror, ["erp-mirror-map-v2"]
   // v2 (2026-10-29): entries carry stockChina. A warm v1 map would keep calling
   // China-only stock made to order for the ten minutes.
   revalidate: 600,
-  tags: ["unleashed"],
+  // ITS OWN TAG, not "unleashed". The hourly mirror cron expires this one
+  // outright, which costs one query. It used to share the live map's tag, so
+  // every run also threw away the live map, and the next freight quote or
+  // payment-intent rebuilt it from 12 Unleashed pages while the shopper waited
+  // (12-58 seconds at checkout, Nov 2026).
+  tags: [ERP_MIRROR_TAG],
 });
 
 export async function getUnleashedMap(): Promise<UnleashedMap> {
