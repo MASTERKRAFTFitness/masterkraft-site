@@ -1,10 +1,10 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { ADMIN_COOKIE, adminSecret, readSession } from "@/lib/admin-auth";
 import { actorFrom } from "@/lib/agent/audit";
-import { clearMatrixCache } from "@/lib/freight-matrix";
+import { FREIGHT_MATRIX_TAG, clearMatrixCache } from "@/lib/freight-matrix";
 import { parseLevy, setFuelLevy } from "@/lib/fuel-levy";
 
 export type LevyFormState = { ok: boolean; message: string } | null;
@@ -32,8 +32,10 @@ export async function updateFuelLevy(_prev: LevyFormState, formData: FormData): 
   if (!result.ok) return { ok: false, message: result.error };
 
   // This instance quotes on the new levy straight away; every other instance
-  // within FREIGHT_MATRIX_TTL_SECONDS (a minute by default).
+  // within FREIGHT_MATRIX_TTL_SECONDS (a minute by default). The shared copy
+  // is expired outright, so no instance reloads the old levy from it.
   clearMatrixCache();
+  revalidateTag(FREIGHT_MATRIX_TAG, { expire: 0 });
   revalidatePath("/admin/freight");
 
   const changed =

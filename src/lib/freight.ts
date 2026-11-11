@@ -53,6 +53,7 @@ import {
   cacheErrorTtlSeconds,
   cacheTtlSeconds,
   getCached,
+  getOrQuote,
   setCached,
 } from "@/lib/freight-cache";
 import {
@@ -1242,83 +1243,82 @@ export async function quoteFreight(
   // that would actually reach a carrier. This is the WHOLE-CART entry; each
   // consignment caches itself separately inside quoteCarriers.
   const key = cacheKey(parcels, collection, delivery, `${source}|${matrix.version}`);
-  const cached = getCached<FreightQuote>(key);
-  if (cached) return cached;
+  // SHARED ACROSS INSTANCES, not just this one: the checkout prices the address
+  // in the background before Calculate Freight is pressed, and on Vercel the
+  // button's request usually lands on a different instance. See getOrQuote.
+  return getOrQuote(key, cacheableFor, async (): Promise<FreightQuote> => {
+    // Canonical order, so the composite option id below is stable for identical
+    // carts however the lines happened to be added.
+    const groups = partitionConsignments(parcels).sort((a, b) =>
+      boxSignature(a).localeCompare(boxSignature(b))
+    );
+    // PAST THE CAPS, IT GOES ON A PALLET. The caps exist to stop a big cart
+    // becoming a burst of carrier calls, not to refuse it: ten barbells are ten
+    // consignments to TNT but one pallet to a line-haul card (Michael, 27 Oct
+    // 2026). So the consolidating matrices price the whole cart, and only a cart
+    // none of them covers still goes to the quote flow.
+    const overCap =
+      parcels.length > MAX_TOTAL_PARCELS
+        ? `${parcels.length} cartons`
+        : groups.length > MAX_CONSIGNMENTS
+          ? `${groups.length} consignments`
+          : null;
+    if (overCap) {
+      const pallet = usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
+      const quote: FreightQuote =
+        pallet.length > 0 ? pickOptions(pallet) : { ok: false, reason: "too_many_parcels", detail: overCap };
+      return quote;
+    }
 
-  // Canonical order, so the composite option id below is stable for identical
-  // carts however the lines happened to be added.
-  const groups = partitionConsignments(parcels).sort((a, b) =>
-    boxSignature(a).localeCompare(boxSignature(b))
-  );
-  // PAST THE CAPS, IT GOES ON A PALLET. The caps exist to stop a big cart
-  // becoming a burst of carrier calls, not to refuse it: ten barbells are ten
-  // consignments to TNT but one pallet to a line-haul card (Michael, 27 Oct
-  // 2026). So the consolidating matrices price the whole cart, and only a cart
-  // none of them covers still goes to the quote flow.
-  const overCap =
-    parcels.length > MAX_TOTAL_PARCELS
-      ? `${parcels.length} cartons`
-      : groups.length > MAX_CONSIGNMENTS
-        ? `${groups.length} consignments`
-        : null;
-  if (overCap) {
-    const pallet = usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
-    const quote: FreightQuote =
-      pallet.length > 0 ? pickOptions(pallet) : { ok: false, reason: "too_many_parcels", detail: overCap };
-    setCached(key, quote, cacheableFor(quote));
+    // PRE-FLIGHT, AND IT MUST STAY BEFORE THE FIRST CALL. If nothing on the
+    // account can carry an over-limit carton, this cart is going to the quote flow
+    // whatever the other consignments come back with - so asking is a wasted call
+    // and a slower checkout. Splitting made this worth stating explicitly: without
+    // it the parcel-sized group of a cart carrying an unshippable rack would go to
+    // a carrier on its own, and with Easyship enabled that is a METERED call spent
+    // on an answer that cannot be used.
+    const carriesOversize =
+      (usesApi(source) && enabledCarriers().has("easyship") && Boolean(process.env.EASYSHIP_API_TOKEN)) ||
+      (usesMatrix(source) && matrixCarriesOversize(matrix, delivery.postcode));
+    if (!carriesOversize && groups.some((g) => g.some((p) => isOversize(p)))) {
+      return { ok: false, reason: "oversize", oversize: oversizeSkus(items) };
+    }
+
+    const results = await Promise.all(
+      groups.map((g) => quoteConsignment(g, collection, delivery, route))
+    );
+
+    const failures = results.filter((r): r is Extract<ConsignmentResult, { ok: false }> => !r.ok);
+
+    // A split cart is ALSO offered to each consolidating matrix as one
+    // consignment - see `consolidate` in the migration. It can rescue a cart whose
+    // split could not be carried, and it competes on price with one that could.
+    const whole =
+      groups.length > 1 && usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
+
+    let quote: FreightQuote;
+    if (failures.length > 0 && whole.length === 0) {
+      // One unshippable consignment is an unshippable cart. Report the most
+      // explanatory reason rather than the first: "oversize" tells the customer
+      // this is freight and a person will price it, which is both true and
+      // actionable, where "error" tells them nothing.
+      const oversize = oversizeSkus(items);
+      const errors = failures.filter((f) => f.reason === "error").map((f) => f.detail ?? "");
+      quote = failures.some((f) => f.reason === "oversize")
+        ? { ok: false, reason: "oversize", oversize }
+        : errors.length > 0
+          ? { ok: false, reason: "error", detail: errors.join("; ") }
+          : { ok: false, reason: "no_services" };
+    } else {
+      quote = pickOptions([
+        ...(failures.length === 0
+          ? combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options))
+          : []),
+        ...whole,
+      ]);
+    }
     return quote;
-  }
-
-  // PRE-FLIGHT, AND IT MUST STAY BEFORE THE FIRST CALL. If nothing on the
-  // account can carry an over-limit carton, this cart is going to the quote flow
-  // whatever the other consignments come back with - so asking is a wasted call
-  // and a slower checkout. Splitting made this worth stating explicitly: without
-  // it the parcel-sized group of a cart carrying an unshippable rack would go to
-  // a carrier on its own, and with Easyship enabled that is a METERED call spent
-  // on an answer that cannot be used.
-  const carriesOversize =
-    (usesApi(source) && enabledCarriers().has("easyship") && Boolean(process.env.EASYSHIP_API_TOKEN)) ||
-    (usesMatrix(source) && matrixCarriesOversize(matrix, delivery.postcode));
-  if (!carriesOversize && groups.some((g) => g.some((p) => isOversize(p)))) {
-    return { ok: false, reason: "oversize", oversize: oversizeSkus(items) };
-  }
-
-  const results = await Promise.all(
-    groups.map((g) => quoteConsignment(g, collection, delivery, route))
-  );
-
-  const failures = results.filter((r): r is Extract<ConsignmentResult, { ok: false }> => !r.ok);
-
-  // A split cart is ALSO offered to each consolidating matrix as one
-  // consignment - see `consolidate` in the migration. It can rescue a cart whose
-  // split could not be carried, and it competes on price with one that could.
-  const whole =
-    groups.length > 1 && usesMatrix(source) ? wholeCartOptions(parcels, delivery, matrix) : [];
-
-  let quote: FreightQuote;
-  if (failures.length > 0 && whole.length === 0) {
-    // One unshippable consignment is an unshippable cart. Report the most
-    // explanatory reason rather than the first: "oversize" tells the customer
-    // this is freight and a person will price it, which is both true and
-    // actionable, where "error" tells them nothing.
-    const oversize = oversizeSkus(items);
-    const errors = failures.filter((f) => f.reason === "error").map((f) => f.detail ?? "");
-    quote = failures.some((f) => f.reason === "oversize")
-      ? { ok: false, reason: "oversize", oversize }
-      : errors.length > 0
-        ? { ok: false, reason: "error", detail: errors.join("; ") }
-        : { ok: false, reason: "no_services" };
-  } else {
-    quote = pickOptions([
-      ...(failures.length === 0
-        ? combineConsignments(results.map((r) => (r as { options: FreightOption[] }).options))
-        : []),
-      ...whole,
-    ]);
-  }
-
-  setCached(key, quote, cacheableFor(quote));
-  return quote;
+  });
 }
 
 /** The options a priced cart offers, after the auto-quote cap. */
