@@ -9,6 +9,7 @@ import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
 import IndieIronCallout from "@/components/indie-iron/IndieIronCallout";
 import { fitouts, getFitout } from "@/lib/fitouts";
+import { locations } from "@/lib/locations";
 import { withQualifier } from "@/lib/page-title";
 
 // Fit-out pages that carry the Indie Iron callout. Not the franchise page: the
@@ -100,6 +101,25 @@ export default async function FitoutTypePage({
                 </Link>
               </li>
             ))}
+          </ul>
+
+          {/* The city pages, by name, from every fitout type: see the comment
+              on the matching block in app/gym-fitouts/[city]/page.tsx. */}
+          <h3 className="text-sm tracking-widest text-ash mt-10 mb-4">Where We Deliver</h3>
+          <ul className="grid grid-cols-2 gap-x-6">
+            {locations
+              .filter((l) => !l.international)
+              .map((l) => (
+                <li key={l.slug}>
+                  <Link
+                    href={`/gym-fitouts/${l.slug}`}
+                    className="flex items-center justify-between border-b border-line py-3 font-display uppercase tracking-wide text-sm hover:text-accent-600 transition-colors"
+                  >
+                    {l.city}
+                    <span aria-hidden>→</span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </aside>
       </section>
