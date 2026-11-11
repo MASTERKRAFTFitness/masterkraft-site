@@ -171,10 +171,46 @@ export default function StripeCheckout({
   // Safety net: never leave the cart locked if the customer navigates away
   // mid-payment (unmount) without going back or completing.
   useEffect(() => unlock, [unlock]);
+
+  // PRICED BEFORE THEY ASK (2026-11-11). A live carrier quote takes 4-15s, most
+  // of it Easyship, and the customer used to spend all of it watching
+  // "Calculating…". Once suburb, state and postcode are in, the same question is
+  // asked quietly in the background, so the server's freight cache already
+  // holds the answer when Calculate Freight is pressed.
+  //
+  // A PROBE, NOT A QUOTE. No checkoutId and no contact go with it, so it records
+  // no lead, and it never sends the automatic quote - that still happens only
+  // behind the button, in calculateFreight. The answer is not shown either: the
+  // price on screen always comes from the button's own call.
+  const probe = useRef<{ key: string; done: Promise<unknown> } | null>(null);
+  const probeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (probeTimer.current) clearTimeout(probeTimer.current);
+  }, []);
   // Freight was quoted AND there is something to charge for. When freight is
   // required but could not be priced there is no card path, so the button stays
   // on Calculate Freight and the message below explains why.
   const canContinue = quoted && !(freightRequired && !freight);
+  // Seconds spent on the current freight calculation, for the progress line
+  // under the button. Only the calculation: Continue to Payment is quick.
+  const calculating = phase === "details" && loading && !canContinue;
+  const [waited, setWaited] = useState(0);
+  useEffect(() => {
+    if (!calculating) return;
+    const started = Date.now();
+    const tick = setInterval(() => setWaited(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => {
+      clearInterval(tick);
+      setWaited(0);
+    };
+  }, [calculating]);
+  const progress = !calculating
+    ? null
+    : waited >= 8
+      ? "Still checking. Some carriers take up to 15 seconds to answer, so please keep this page open."
+      : waited >= 3
+        ? "Checking live rates with our carriers…"
+        : null;
   const { leaving, dismiss } = useLeaveIntent(checkoutId, phase === "details" && quoted && !answered);
   const leavePanelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -218,8 +254,43 @@ export default function StripeCheckout({
     country: "Australia",
   });
 
+  /** The probe's request body, or null until the address is complete enough to price. */
+  function probeFor(b: Billing) {
+    if (!b.city.trim() || !b.state || !/^\d{4}$/.test(b.postcode.trim())) return null;
+    return { items: refsFrom(items), delivery: deliveryFrom(b), prefetch: true };
+  }
+
+  function startProbe() {
+    const form = formRef.current;
+    const body = form ? probeFor(billingFrom(form)) : null;
+    if (!body) return;
+    const key = JSON.stringify(body);
+    if (probe.current?.key === key) return;
+    probe.current = {
+      key,
+      done: fetch("/api/freight/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }).catch(() => null),
+    };
+  }
+
+  function onFormChange() {
+    invalidateQuote();
+    if (probeTimer.current) clearTimeout(probeTimer.current);
+    probeTimer.current = setTimeout(startProbe, 600);
+  }
+
   /** Step one: price the delivery and show it, charging nothing. */
   async function calculateFreight(b: Billing) {
+    // A probe still waiting on its timer is now pointless: this call asks the
+    // same question. One already in flight for this same address is waited
+    // for, so this call is answered from the warm cache rather than asking the
+    // carriers a second time.
+    if (probeTimer.current) clearTimeout(probeTimer.current);
+    const body = probeFor(b);
+    if (body && probe.current?.key === JSON.stringify(body)) await probe.current.done;
     const fq = await fetch("/api/freight/quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -436,7 +507,7 @@ export default function StripeCheckout({
     <div className="grid lg:grid-cols-[1.4fr_1fr] gap-12">
       <div>
         {phase === "details" && (
-          <form ref={formRef} onSubmit={onSubmit} onChange={invalidateQuote} className="relative space-y-4">
+          <form ref={formRef} onSubmit={onSubmit} onChange={onFormChange} className="relative space-y-4">
             <h2 className="font-display uppercase tracking-wide text-lg mb-2">Billing & Delivery</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <input name="first_name" required aria-label="First name" placeholder="First name" className={fieldClass} />
@@ -516,6 +587,9 @@ export default function StripeCheckout({
               <span aria-hidden>→</span>
             </button>
             )}
+            <p aria-live="polite" className="text-xs text-ash empty:hidden">
+              {progress}
+            </p>
             {canContinue && (
               <p className="text-xs text-ash">
                 Delivery is priced for the address above. Change any detail and it is

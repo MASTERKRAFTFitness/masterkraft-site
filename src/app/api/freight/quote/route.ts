@@ -22,6 +22,9 @@ type Body = {
   subtotal?: number;
   // The checkout's "Email me my cart if I don't finish" box - see cart-reminders.
   reminderOptIn?: boolean;
+  // The checkout's background probe, sent before Calculate Freight is pressed.
+  // Priced exactly like any other quote; flagged only so the log can tell them apart.
+  prefetch?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -67,6 +70,7 @@ export async function POST(request: Request) {
       carrier: decision.selected ? `${decision.selected.carrier} ${decision.selected.service}`.trim() : null,
       options: decision.options.length,
       ms: decision.ms ?? null,
+      prefetch: body.prefetch === true,
     })
   );
 
