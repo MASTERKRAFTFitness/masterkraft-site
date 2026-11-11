@@ -7,7 +7,8 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site";
-import { locations, getLocation } from "@/lib/locations";
+import { locations, getLocation, type Location } from "@/lib/locations";
+import { fitouts } from "@/lib/fitouts";
 import { withQualifier } from "@/lib/page-title";
 import { revlClubsForRegion } from "@/lib/revl";
 
@@ -30,6 +31,13 @@ export async function generateMetadata({
     description: loc.meta,
     alternates: { canonical: `/gym-fitouts/${loc.slug}` },
   };
+}
+
+// Every other location in the same group (Australian or international), same
+// state first, then in the order lib/locations.ts lists them.
+function otherLocations(loc: Location): Location[] {
+  const peers = locations.filter((l) => l.slug !== loc.slug && !!l.international === !!loc.international);
+  return [...peers.filter((l) => l.state && l.state === loc.state), ...peers.filter((l) => !l.state || l.state !== loc.state)];
 }
 
 const capabilities = [
@@ -231,6 +239,53 @@ export default async function LocationPage({
             </Link>
           </div>
         </aside>
+      </section>
+
+      {/* LINKS ACROSS THE FITOUT PAGES. Each city page had one internal link
+          pointing at it, from the /fitout hub, and the 10 Nov site audit flagged
+          all 17. Google weighs a page partly by how the rest of the site links
+          to it, and these were competing with each other for "gym fitout" at
+          positions 35-70 with nothing to say which page was for what. The
+          fitout types are linked by name, so "commercial gym fitout" points at
+          the page built for it; the other cities follow, same state first. */}
+      <section className="border-t border-line">
+        <div className="container-mk py-16 grid lg:grid-cols-2 gap-14">
+          <div>
+            <h2 className="font-mono text-xs tracking-widest uppercase text-accent-600 mb-4">
+              Fitouts we deliver in {loc.city}
+            </h2>
+            <ul className="space-y-2">
+              {fitouts.map((f) => (
+                <li key={f.slug}>
+                  <Link
+                    href={`/fitout/${f.slug}`}
+                    className="flex items-center justify-between border-b border-line py-3 font-display uppercase tracking-wide text-sm hover:text-accent-600 transition-colors"
+                  >
+                    {f.name} Fitouts
+                    <span aria-hidden>→</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="font-mono text-xs tracking-widest uppercase text-accent-600 mb-4">
+              {loc.international ? "Other fitout locations" : "Gym fitouts across Australia"}
+            </h2>
+            <div className="grid grid-cols-2 gap-x-6">
+              {otherLocations(loc).map((l) => (
+                <Link
+                  key={l.slug}
+                  href={`/gym-fitouts/${l.slug}`}
+                  className="flex items-center justify-between border-b border-line py-3 font-display uppercase tracking-wide text-sm hover:text-accent-600 transition-colors"
+                >
+                  {l.city}
+                  <span aria-hidden>→</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* FAQ */}
