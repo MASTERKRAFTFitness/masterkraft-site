@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
-import { identifyUser, trackAddToCart, trackBeginCheckout, trackLead } from "@/lib/analytics";
+import { trackAddToCart, trackBeginCheckout, trackLead } from "@/lib/analytics";
 import type { CheckoutLine } from "@/lib/checkout-link";
 import { cartSellableByCard } from "@/lib/cart-eligibility";
 import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
@@ -122,7 +122,6 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
-        identifyUser(contact.email);
         trackLead(subtotal, items.length, contact.email);
       }
       clear();
