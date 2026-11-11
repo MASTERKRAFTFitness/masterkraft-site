@@ -69,6 +69,11 @@ import {
 
 const SERVICE_URL = "https://digitalapi.auspost.com.au/postage/parcel/domestic/service.json";
 const EASYSHIP_RATES_URL = "https://public-api.easyship.com/2024-09/rates";
+// A BACKSTOP AGAINST A HANG, not a speed target. Easyship answers in 2-4s and
+// PAC in well under 1s; a call still open at 15s is not coming back, and the
+// customer is watching "Calculating…" the whole time. A timeout is an ordinary
+// carrier failure: the other carrier and the matrix still answer.
+const CARRIER_TIMEOUT_MS = 15_000;
 const GST = 1.1;
 
 // Handling margin on top of the carrier's rate: packing labour, and the gap
@@ -593,6 +598,7 @@ async function quoteParcel(
       method: "GET",
       headers: { Accept: "application/json", "AUTH-KEY": apiKey },
       cache: "no-store",
+      signal: AbortSignal.timeout(CARRIER_TIMEOUT_MS),
     });
     // PAC returns its own error body with a 4xx, so read it before giving up.
     const body = (await res.json().catch(() => null)) as PacResponse | null;
@@ -791,6 +797,7 @@ async function quoteEasyship(
       },
       body: JSON.stringify(body),
       cache: "no-store",
+      signal: AbortSignal.timeout(CARRIER_TIMEOUT_MS),
     });
     const parsed = (await res.json().catch(() => null)) as
       | {
@@ -1034,14 +1041,26 @@ async function quoteCarriers(
   const askAusPost = on.has("auspost") && Boolean(auspostKey) && !oversize;
   const askEasyship = on.has("easyship") && Boolean(easyshipToken);
 
+  const ms: Record<string, number> = {};
+  const timed = async <T>(name: string, run: () => Promise<T>): Promise<T> => {
+    const started = Date.now();
+    try {
+      return await run();
+    } finally {
+      ms[name] = Date.now() - started;
+    }
+  };
   const [ap, es] = await Promise.all([
     askAusPost
-      ? quoteAusPost(parcels, collection, delivery, auspostKey as string)
+      ? timed("auspost", () => quoteAusPost(parcels, collection, delivery, auspostKey as string))
       : Promise.resolve(null),
     askEasyship
-      ? quoteEasyship(parcels, collection, delivery, easyshipToken as string)
+      ? timed("easyship", () => quoteEasyship(parcels, collection, delivery, easyshipToken as string))
       : Promise.resolve(null),
   ]);
+  // Only on a cache miss, so a line here means a carrier was actually asked.
+  // Same request id as the [freight/quote] line, which is how the two join.
+  if (askAusPost || askEasyship) console.log("[freight/carriers]", JSON.stringify(ms));
 
   const options: FreightOption[] = [];
   const errors: string[] = [];

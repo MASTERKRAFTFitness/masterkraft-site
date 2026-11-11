@@ -7,7 +7,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const refreshErpMirror = vi.fn();
 vi.mock("@/lib/erp-mirror", () => ({ refreshErpMirror: (...a: unknown[]) => refreshErpMirror(...a) }));
-vi.mock("next/cache", () => ({ revalidateTag: () => {} }));
+const revalidateTag = vi.fn();
+vi.mock("next/cache", () => ({ revalidateTag: (...a: unknown[]) => revalidateTag(...a) }));
 
 const { GET } = await import("./route");
 
@@ -31,6 +32,7 @@ const call = (headers: Record<string, string> = {}) =>
   GET(new Request("https://masterkraft.com/api/cron/erp-mirror", { headers }));
 
 beforeEach(() => {
+  revalidateTag.mockReset();
   refreshErpMirror.mockReset();
   refreshErpMirror.mockResolvedValue(ok);
   process.env.CRON_SECRET = "s3cret";
@@ -73,6 +75,15 @@ describe("it runs for the scheduler", () => {
     expect(res.status).toBe(200);
     expect(refreshErpMirror).toHaveBeenCalledWith({ write: true });
     await expect(res.json()).resolves.toMatchObject({ ok: true, written: 1648 });
+  });
+
+  it("expires the mirror map only, never the live Unleashed map", async () => {
+    // The live map takes 12-25s to rebuild from Unleashed, and checkout's
+    // freight quote waits on it. Expiring it here every hour put that wait in
+    // front of the next shopper (Nov 2026).
+    await call({ authorization: "Bearer s3cret" });
+    expect(revalidateTag).toHaveBeenCalledWith("erp-mirror", { expire: 0 });
+    expect(revalidateTag).not.toHaveBeenCalledWith("unleashed", expect.anything());
   });
 
   it("surfaces a refusal as a failure, not a quiet 200", async () => {

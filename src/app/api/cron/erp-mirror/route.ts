@@ -17,6 +17,7 @@
 // right way round.
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { ERP_MIRROR_TAG } from "@/lib/erp-mirror-tag";
 import { refreshErpMirror } from "@/lib/erp-mirror";
 
 // The refresh reads ~9 pages of Products and StockOnHand for each warehouse
@@ -70,12 +71,14 @@ export async function GET(req: Request) {
       return NextResponse.json(result, { status: 500 });
     }
 
-    // Drop the cached maps so the refreshed rows are served now rather than up
-    // to ten minutes from now. Tagged "unleashed", same as the live map — both
-    // are the catalogue and both are stale the moment this finishes.
-    // `{ expire: 0 }` because Next 16 requires the profile argument; same shape
-    // api/revalidate/product-content already uses.
-    revalidateTag("unleashed", { expire: 0 });
+    // Drop the cached MIRROR map so the refreshed rows are served now rather
+    // than up to ten minutes from now. Rebuilding it is one query.
+    //
+    // NOT THE LIVE MAP. That one is paged out of Unleashed (12 pages, 12-25s),
+    // and freight and payment-intent read it at checkout. Expiring it every hour
+    // made the next shopper wait on that rebuild. It keeps its own hourly
+    // revalidate, which is exactly how fresh it was before the mirror existed.
+    revalidateTag(ERP_MIRROR_TAG, { expire: 0 });
 
     console.log(
       `[cron/erp-mirror] ${result.written} written, ${result.pruned} pruned, ` +
