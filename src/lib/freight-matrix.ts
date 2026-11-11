@@ -17,6 +17,7 @@
 
 import { createHash } from "node:crypto";
 import { adminDb } from "@/lib/admin-db";
+import { unstable_cache } from "next/cache";
 import type { FreightOption, Parcel } from "@/lib/freight";
 
 export const FREIGHT_SOURCES = ["api", "matrix", "matrix_then_api", "api_then_matrix", "pooled"] as const;
@@ -195,6 +196,62 @@ async function readAll(db: Db, table: string, codes: string[]): Promise<Row[]> {
   }
 }
 
+/** The matrices and mode, read from the database. Throws on any failure. */
+async function readMatrixConfig(): Promise<MatrixConfig> {
+  const db = adminDb();
+  if (!db) throw new Error("no database configured");
+  const [settings, matrices] = await Promise.all([
+    db.from("freight_matrix_settings").select("*").maybeSingle(),
+    db.from("freight_matrices").select("*").eq("active", true),
+  ]);
+  const error = settings.error ?? matrices.error;
+  if (error) throw new Error(error.message);
+  const codes = ((matrices.data ?? []) as Row[]).map((m) => String(m.code));
+  const [zones, postcodes, rates] = codes.length
+    ? await Promise.all([
+        readAll(db, "freight_zones", codes),
+        readAll(db, "freight_zone_postcodes", codes),
+        readAll(db, "freight_matrix_rates", codes),
+      ])
+    : [[], [], []];
+  return buildMatrixConfig({
+    settings: settings.data as Row | null,
+    matrices: (matrices.data ?? []) as Row[],
+    zones,
+    postcodes,
+    rates,
+  });
+}
+
+/** Cache tag on the shared copy. Expire it when a matrix or the levy changes. */
+export const FREIGHT_MATRIX_TAG = "freight-matrix";
+
+/**
+ * SHARED ACROSS INSTANCES (2026-11-11). Every new Vercel instance used to read
+ * all the matrices from Supabase on its first quote, about 2s of a 3.7s
+ * Calculate Freight. The Next data cache holds one copy for all of them (it is
+ * about 0.5MB). A failed read throws, so it is never stored.
+ *
+ * Outside Next (tests, scripts) there is no shared cache and unstable_cache
+ * fails before running anything; the matrices are then read directly.
+ */
+async function sharedMatrixConfig(): Promise<MatrixConfig> {
+  let started = false;
+  const run = async () => {
+    started = true;
+    return readMatrixConfig();
+  };
+  try {
+    return await unstable_cache(run, ["freight-matrix-config-v1"], {
+      revalidate: 60,
+      tags: [FREIGHT_MATRIX_TAG],
+    })();
+  } catch (e) {
+    if (!started) return readMatrixConfig();
+    throw e;
+  }
+}
+
 /**
  * The current matrices and mode. NEVER THROWS: every failure is the empty
  * config, i.e. FREIGHT_SOURCE or `api` with nothing to price from.
@@ -204,30 +261,9 @@ async function readAll(db: Db, table: string, codes: string[]): Promise<Row[]> {
  */
 export async function loadMatrixConfig(): Promise<MatrixConfig> {
   if (cached && Date.now() - cached.at < ttlMs()) return cached.config;
-  const db = adminDb();
-  if (!db) return emptyConfig();
+  if (!adminDb()) return emptyConfig();
   try {
-    const [settings, matrices] = await Promise.all([
-      db.from("freight_matrix_settings").select("*").maybeSingle(),
-      db.from("freight_matrices").select("*").eq("active", true),
-    ]);
-    const error = settings.error ?? matrices.error;
-    if (error) throw new Error(error.message);
-    const codes = ((matrices.data ?? []) as Row[]).map((m) => String(m.code));
-    const [zones, postcodes, rates] = codes.length
-      ? await Promise.all([
-          readAll(db, "freight_zones", codes),
-          readAll(db, "freight_zone_postcodes", codes),
-          readAll(db, "freight_matrix_rates", codes),
-        ])
-      : [[], [], []];
-    const config = buildMatrixConfig({
-      settings: settings.data as Row | null,
-      matrices: (matrices.data ?? []) as Row[],
-      zones,
-      postcodes,
-      rates,
-    });
+    const config = await sharedMatrixConfig();
     cached = { config, at: Date.now() };
     return config;
   } catch (e) {
