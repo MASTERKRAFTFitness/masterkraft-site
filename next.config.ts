@@ -218,14 +218,9 @@ const nextConfig: NextConfig = {
       // wizard. /contact is the form again; the wizard is /fitout-solution.
       { source: "/contact/enquiry", destination: "/contact", permanent: true },
 
-      // The Commercial Gym fit-out page became Independent Gym on 19 Oct 2026,
-      // when the Indie Iron buying group launched. Same page, new name; the old
-      // URL had rankings and inbound links worth keeping.
-      {
-        source: "/fitout/commercial-gym-fitout",
-        destination: "/fitout/independent-gym-fitout",
-        permanent: true,
-      },
+      // No redirect for /fitout/commercial-gym-fitout: it pointed at Independent
+      // Gym from 19 Oct to 12 Nov 2026 and cost the page its ranking, so it is a
+      // page of its own again (lib/fitouts.ts).
     ];
   },
   async rewrites() {

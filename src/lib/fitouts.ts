@@ -22,8 +22,25 @@ export const fitouts: Fitout[] = [
     ],
   },
   {
-    // Was "Commercial Gym" at /fitout/commercial-gym-fitout until 19 Oct 2026;
-    // next.config.ts redirects the old URL here.
+    // Back from 12 Nov 2026. It was redirected to Independent Gym on 19 Oct and
+    // its "commercial gym fit outs" ranking (position ~3, the site's strongest
+    // non-brand query) went with it: Google read the new page as a different
+    // topic. Same copy as before the rename, because that is what ranked.
+    slug: "commercial-gym-fitout",
+    name: "Commercial Gym",
+    blurb: "Complete commercial gym solutions - from a single zone to a full multi-level facility.",
+    image: "/home/fitouts.jpg",
+    intro:
+      "A commercial floor has to satisfy every member, from first-timers to serious lifters. We deliver a complete, cohesive fitout across strength, weightlifting, cardio and functional training.",
+    points: [
+      "End-to-end design, supply and installation",
+      "Balanced equipment mix across every training modality",
+      "Volume pricing and staged delivery to your build schedule",
+    ],
+  },
+  {
+    // Took over the Commercial Gym page on 19 Oct 2026 when Indie Iron
+    // launched; since 12 Nov the two are separate pages again.
     slug: "independent-gym-fitout",
     name: "Independent Gym",
     blurb: "Fitouts for independently owned gyms - the commercial-grade gear the big networks run, built around your brand.",
