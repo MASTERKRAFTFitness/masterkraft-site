@@ -5,12 +5,36 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { fitouts } from "@/lib/fitouts";
 import { locations, comingSoonMarkets } from "@/lib/locations";
+import PageSchema, { PUBLISHER } from "@/components/seo/PageSchema";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Gym Fitouts | Design, Supply & Install",
   description:
     "Gym fitouts designed, supplied and installed: boutique, commercial, elite sports, home, PT studio and education. Made by fitness professionals.",
   alternates: { canonical: "/fitout" },
+};
+
+// What the page is about, as structured data: the fit-out service, the types
+// it comes in (each with its own page) and where it is delivered. Area served
+// is the homepage Organization's own claim: Australia and the Asia-Pacific.
+const fitoutService = {
+  "@type": "Service",
+  serviceType: "Gym fitout",
+  name: "Gym fitouts: design, supply and install",
+  provider: PUBLISHER,
+  areaServed: [
+    { "@type": "Country", name: "Australia" },
+    { "@type": "Place", name: "Asia-Pacific" },
+  ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Fitout types",
+    itemListElement: fitouts.map((f) => ({
+      "@type": "Offer",
+      itemOffered: { "@type": "Service", name: `${f.name} Fitouts`, url: `${SITE_URL}/fitout/${f.slug}` },
+    })),
+  },
 };
 
 const valueProps = [
@@ -28,6 +52,7 @@ const valueProps = [
 export default function FitoutLanding() {
   return (
     <>
+      <PageSchema path="/fitout" name="Gym Fitouts" description={metadata.description} mainEntity={fitoutService} />
       <PageHero
         eyebrow="Fitouts"
         title="Transform Your Training Space"

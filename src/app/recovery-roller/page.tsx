@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import WaitlistForm from "@/components/recovery-roller/WaitlistForm";
 import { ARGUMENTS, RELEASE_LABEL, SPEC_ROWS } from "@/lib/recovery-roller";
+import PageSchema from "@/components/seo/PageSchema";
 
 // NO BENEFIT CLAIMS ANYWHERE ON THIS PAGE. See the note in lib/recovery-roller.ts.
 // The heat is "infrared, beneath the rollers" and nothing more, pending the TGA question.
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 export default function RecoveryRollerPage() {
   return (
     <>
+      <PageSchema path="/recovery-roller" name="Recovery Roller" description={metadata.description} />
       {/* ---------- hero ---------- */}
       <section className="bg-[var(--color-ink)] text-white">
         <div className="container-mk grid grid-cols-1 items-center gap-10 py-16 md:grid-cols-[1.05fr_0.95fr] md:py-24">

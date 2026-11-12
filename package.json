@@ -74,7 +74,8 @@
     "export:copy": "node scripts/catalogue-copy.export.mjs",
     "export:copy:write": "node scripts/catalogue-copy.export.mjs --write",
     "upload:images": "node scripts/product-images.upload.mjs",
-    "upload:images:write": "IMAGES_UPLOAD_WRITE=true node scripts/product-images.upload.mjs"
+    "upload:images:write": "IMAGES_UPLOAD_WRITE=true node scripts/product-images.upload.mjs",
+    "indexnow:submit": "node scripts/indexnow-submit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

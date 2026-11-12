@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "Equipment Finance | Afterpay, Zip & GRENKE",
@@ -70,6 +71,7 @@ const process = [
 export default function FinancePage() {
   return (
     <>
+      <PageSchema path="/finance" name="Finance" description={metadata.description} />
       <PageHero
         eyebrow="Support"
         title="Finance"

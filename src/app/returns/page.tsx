@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ContentPage {...data} />;
+  return <ContentPage {...data} path="/returns" />;
 }

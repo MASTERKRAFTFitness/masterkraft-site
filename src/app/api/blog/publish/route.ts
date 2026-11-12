@@ -24,10 +24,11 @@
 //   heroImage: { base64, contentType, alt }               optional
 // }
 import { createHash } from "node:crypto";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { adminDb } from "@/lib/admin-db";
 import { BLOG_TAG, postUrl, slugify } from "@/lib/blog";
+import { submitToIndexNow } from "@/lib/indexnow";
 
 export const dynamic = "force-dynamic";
 
@@ -171,6 +172,14 @@ export async function POST(req: Request) {
   revalidateTag(BLOG_TAG, { expire: 0 });
   revalidatePath("/blog/[[...slug]]", "page");
   for (const p of ["/blog/rss.xml", "/sitemap.xml", "/resources"]) revalidatePath(p);
+
+  // Tell Bing the post is there (lib/indexnow). Only once it is live: a post
+  // dated ahead 404s until its time, and pinging a 404 teaches Bing nothing.
+  // A scheduled post is picked up from the sitemap instead.
+  if (row.published_at && new Date(row.published_at).getTime() <= Date.now()) {
+    const url = postUrl(slug);
+    after(() => submitToIndexNow([url]));
+  }
 
   console.log(`[blog/publish] ${existing.data ? "updated" : "created"} /blog/${slug} for ${row.published_at}`);
   return NextResponse.json({

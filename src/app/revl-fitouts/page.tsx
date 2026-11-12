@@ -4,6 +4,7 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { revlSites, revlNetwork, revlOperatingMarketCount } from "@/lib/revl";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "REVL Fitouts | Global Studio Equipment Supply",
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 export default function RevlLanding() {
   return (
     <>
+      <PageSchema path="/revl-fitouts" name="REVL Fitouts" description={metadata.description} type="CollectionPage" />
       <PageHero
         eyebrow="Partnership"
         title="REVL Training Fitouts"

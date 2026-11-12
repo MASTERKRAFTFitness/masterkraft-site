@@ -8,6 +8,7 @@ import JoinForm from "@/components/indie-iron/JoinForm";
 import JoinHeading from "@/components/indie-iron/JoinHeading";
 import PricingTable from "@/components/indie-iron/PricingTable";
 import { ALONE, FAQ, IN_GROUP, RANGE, STEPS } from "@/lib/indie-iron";
+import PageSchema from "@/components/seo/PageSchema";
 
 // Indie Iron: a programme inside MasterKraft, so it keeps the global header and
 // footer and the site's body type. Big Shoulders is for the Indie Iron headings
@@ -72,6 +73,7 @@ function SectionHead({ eyebrow, title, children }: { eyebrow: string; title: str
 export default function IndieIronPage() {
   return (
     <div className={`${bigShoulders.variable} bg-[var(--ii-zinc)] text-[var(--ii-graphite)]`} style={tokens}>
+      <PageSchema path="/indie-iron" name="Indie Iron" description={metadata.description} />
       {/* ---------- hero ----------
           Dark, like every other hero on the site: the global header is
           transparent white-on-dark until the page scrolls. The lighter cobalt
