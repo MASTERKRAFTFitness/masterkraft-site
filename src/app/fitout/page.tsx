@@ -9,7 +9,7 @@ import { locations, comingSoonMarkets } from "@/lib/locations";
 export const metadata: Metadata = {
   title: "Gym Fitouts | Design, Supply & Install",
   description:
-    "Transform your training space. Made by fitness professionals for fitness professionals - boutique, commercial, elite sports, home, PT studio and education fitouts.",
+    "Gym fitouts designed, supplied and installed: boutique, commercial, elite sports, home, PT studio and education. Made by fitness professionals.",
   alternates: { canonical: "/fitout" },
 };
 

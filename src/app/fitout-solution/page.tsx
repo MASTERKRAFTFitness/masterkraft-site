@@ -31,7 +31,7 @@ import { SITE_URL, portalLoginHref } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Gym Fitout Enquiry | Free 3D Design & Quote",
   description:
-    "Tell us about your space and our design team comes back within one business day with a 3D concept and an indicative price. Commercial gyms, boutique studios, PT and home setups.",
+    "Tell us about your space and our design team comes back within one business day with a 3D concept and an indicative price for your gym, studio or home setup.",
   alternates: { canonical: "/fitout-solution" },
 };
 
