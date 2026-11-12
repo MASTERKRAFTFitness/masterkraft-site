@@ -543,7 +543,7 @@ export default async function ProductPage({
               )}
               {detail.features.length > 0 && (
                 <>
-                  <h3 className="font-semibold text-ink mt-2 mb-3">Features</h3>
+                  <h3 className="font-semibold text-ink mt-8 mb-3">Features</h3>
                   <ul className="list-disc pl-5 space-y-2 text-ash leading-relaxed">
                     {detail.features.map((f, i) => (
                       <li key={i}>{f}</li>
