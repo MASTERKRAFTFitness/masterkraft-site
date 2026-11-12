@@ -99,7 +99,9 @@ export function routeMetadata(route: BlogRoute): Metadata {
     case "author":
       return {
         title: route.data.name,
-        description: route.data.bio ?? undefined,
+        // The bio runs to a paragraph on the page; the meta tag takes as much
+        // of it as a search snippet shows. Steve's was 379 characters.
+        description: fitDescription(route.data.bio ?? undefined),
         alternates: { canonical: `${BLOG_SITE_URL}${authorPath(route.data.slug)}` },
       };
     case "authors":

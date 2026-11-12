@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   // The root layout appends " | MASTERKRAFT".
   title: "Indie Iron: independent gym buying group",
   description:
-    "Franchise buying power for independent gyms. Up to 10% off MasterKraft equipment any time, and up to 20% off in four quarterly buy windows, with your logo on plates, kettlebells, dumbbells, medicine balls and fixed barbells.",
+    "Franchise buying power for independent gyms: up to 10% off MasterKraft equipment any time, up to 20% in quarterly buy windows, with your logo on the gear.",
   alternates: { canonical: "/indie-iron" },
 };
 
