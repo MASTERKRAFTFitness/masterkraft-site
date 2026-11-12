@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ContentPage {...data} collapsible />;
+  return <ContentPage {...data} collapsible path="/shipping" />;
 }

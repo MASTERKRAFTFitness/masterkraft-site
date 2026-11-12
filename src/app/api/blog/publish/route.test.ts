@@ -5,6 +5,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }));
+// `after` needs a request scope a unit test does not have; run the callback inline.
+vi.mock("next/server", async (orig) => ({
+  ...(await orig<typeof import("next/server")>()),
+  after: (fn: () => unknown) => void fn(),
+}));
+const submitted: string[][] = [];
+vi.mock("@/lib/indexnow", () => ({
+  submitToIndexNow: async (urls: string[]) => {
+    submitted.push(urls);
+    return 200;
+  },
+}));
 
 type Row = Record<string, unknown>;
 let posts: Row[] = [];
@@ -71,6 +83,7 @@ beforeEach(() => {
   posts = [];
   authors = [{ slug: "steve_callanan" }];
   uploads.length = 0;
+  submitted.length = 0;
 });
 
 describe("POST /api/blog/publish", () => {
@@ -93,6 +106,14 @@ describe("POST /api/blog/publish", () => {
     const out = await res.json();
     expect(out).toMatchObject({ ok: true, created: true, slug: "commercial-kettlebells-a-buyers-guide" });
     expect(posts[0]).toMatchObject({ source: "ptcmo", source_ref: "ci_1", published_at: base.publishedAt });
+  });
+
+  it("submits a live post to IndexNow, and not one dated ahead", async () => {
+    await send(base);
+    expect(submitted).toEqual([["https://masterkraft.com/blog/commercial-kettlebells-a-buyers-guide"]]);
+    submitted.length = 0;
+    await send({ ...base, sourceRef: "ci_2", title: "Later", publishedAt: "2099-01-01T00:00:00.000Z" });
+    expect(submitted).toEqual([]);
   });
 
   it("updates the same post on a re-send and keeps its URL", async () => {

@@ -8,6 +8,10 @@ import { getAllProducts, type WcProduct } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
 import { CLEARANCE_GROUP, erpSubgroups, erpUnits, unitCard, type ErpUnit } from "@/lib/erp-catalogue";
 import { categories } from "@/lib/categories";
+import PageSchema from "@/components/seo/PageSchema";
+
+const ALL_EQUIPMENT_DESCRIPTION =
+  "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.";
 
 // Page 2 is its own URL, for the reason the category pages give
 // (app/equipment/[category]/page.tsx): it shows different products, and a
@@ -20,8 +24,7 @@ export async function generateMetadata({
   const page = Math.max(1, parseInt((await searchParams).page ?? "1", 10) || 1);
   const first: Metadata = {
     title: "All Gym Equipment | Shop the Full Range",
-    description:
-      "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.",
+    description: ALL_EQUIPMENT_DESCRIPTION,
     alternates: { canonical: "/all-equipment" },
   };
   if (page === 1) return first;
@@ -137,6 +140,7 @@ export default async function AllEquipmentPage({
 
   return (
     <>
+      <PageSchema path="/all-equipment" name="All Gym Equipment" description={ALL_EQUIPMENT_DESCRIPTION} type="CollectionPage" />
       <PageHero
         eyebrow="Shop Equipment"
         title="All Equipment"
