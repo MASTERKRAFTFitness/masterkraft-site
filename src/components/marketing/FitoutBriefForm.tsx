@@ -125,12 +125,18 @@ function Legend({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function FitoutBriefForm() {
+/**
+ * `initialMessage` starts the brief's message with text the visitor can edit:
+ * the fitout planner puts its layout link and equipment list there.
+ */
+export default function FitoutBriefForm({ initialMessage }: { initialMessage?: string } = {}) {
   const elapsed = useFillTimer();
   const headingRef = useRef<HTMLDivElement>(null);
 
   const [step, setStep] = useState(0);
-  const [brief, setBrief] = useState<FitoutBrief>(emptyBrief);
+  const [brief, setBrief] = useState<FitoutBrief>(() =>
+    initialMessage ? { ...emptyBrief, message: initialMessage } : emptyBrief,
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
