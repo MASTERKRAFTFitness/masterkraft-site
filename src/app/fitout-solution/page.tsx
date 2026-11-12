@@ -185,6 +185,13 @@ export default function FitoutSolutionPage() {
               equipment and prices it - back to you within one business day. No deposit, no
               obligation.
             </p>
+            <p className="mt-4 text-white/75">
+              Want to sketch it yourself first?{" "}
+              <Link href="/fitout-planner" className="font-medium text-accent-300 underline underline-offset-2 hover:text-white">
+                Try the 3D fitout planner
+              </Link>
+              .
+            </p>
           </div>
 
           {/* The wizard renders on a white card, so it reads as the one thing on
