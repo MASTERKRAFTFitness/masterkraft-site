@@ -11,6 +11,9 @@ import IndieIronCallout from "@/components/indie-iron/IndieIronCallout";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { locations } from "@/lib/locations";
 import { withQualifier } from "@/lib/page-title";
+import JsonLd from "@/components/seo/JsonLd";
+import { PUBLISHER } from "@/components/seo/PageSchema";
+import { SITE_URL } from "@/lib/site";
 
 // Fit-out pages that carry the Indie Iron callout. Not the franchise page: the
 // buying group is for independents.
@@ -55,11 +58,32 @@ export default async function FitoutTypePage({
 
   const others = fitouts.filter((x) => x.slug !== f.slug);
 
+  // The service this page sells, as structured data — the city pages have had
+  // the same since launch. The 12 Nov page audit scored the commercial page
+  // down for having none. Area served is the homepage Organization's own claim.
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "Gym fitout",
+    name: `${f.name} Fitouts`,
+    description: f.intro,
+    url: `${SITE_URL}/fitout/${f.slug}`,
+    provider: PUBLISHER,
+    areaServed: [
+      { "@type": "Country", name: "Australia" },
+      { "@type": "Place", name: "Asia-Pacific" },
+    ],
+  };
+
   return (
     <>
+      <JsonLd data={serviceSchema} />
+      {/* The H1 carries "Fitouts": "Commercial Gym" alone missed the phrase
+          people search, and the page audit flagged the keyword absent from
+          the H1. The eyebrow above it says what section this is instead. */}
       <PageHero
-        eyebrow={`${f.name} Fitouts`}
-        title={f.name}
+        eyebrow="Gym Fitouts"
+        title={`${f.name} Fitouts`}
         subtitle={f.blurb}
         image={f.image}
         breadcrumbs={[
@@ -125,11 +149,13 @@ export default async function FitoutTypePage({
       </section>
 
       {/* Boutique fitness: showcase the real REVL studio fitout as proof. */}
-      {f.slug === "boutique-fitness-fitout" && <RevlFeature />}
+      {(f.slug === "boutique-fitness-fitout" || f.slug === "commercial-gym-fitout") && <RevlFeature />}
 
       {/* Franchise gyms: a real club, Fernwood Pakenham, as proof. Not on the
-          independent page, which this used to share: Fernwood is a franchise. */}
-      {f.slug === "franchise-gym-fitout" && <FernwoodPakenhamCaseStudy />}
+          independent page, which this used to share: Fernwood is a franchise.
+          The commercial page carries both, since a commercial fitout is what
+          each of them is; the 12 Nov page audit found it had no proof at all. */}
+      {(f.slug === "franchise-gym-fitout" || f.slug === "commercial-gym-fitout") && <FernwoodPakenhamCaseStudy />}
 
       {/* The buying group, on the pages independent gym owners land on. */}
       {INDIE_IRON_FITOUTS.has(f.slug) && <IndieIronCallout />}
