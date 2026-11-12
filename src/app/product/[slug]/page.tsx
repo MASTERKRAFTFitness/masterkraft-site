@@ -26,6 +26,7 @@ import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 import { getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
+import { fitDescription } from "@/lib/meta-description";
 
 // The cart key for a size with no WooCommerce variation id. Shared with the
 // Merchant Center checkout link so both build the same line; see lib/checkout-link.
@@ -126,10 +127,19 @@ export async function generateMetadata({
     title: productTitle(p),
     // The ERP holds no marketing copy, so an ERP-only page describes itself with
     // the sizes and price its card carries rather than going out bare.
-    description:
-      authored?.short ||
-      plainText(p.short_description).slice(0, 155) ||
-      (unit ? unitDescription(unit) : undefined),
+    //
+    // Fitted to a search snippet (lib/meta-description): 77 authored `short`
+    // lines ran to 161-478 characters, and the snapshot fallback was sliced at
+    // 155 mid-word. The page body and JSON-LD still carry the full copy.
+    //
+    // plainText on `short` too: resolveCopy's third level is the database row's
+    // WooCommerce short description, which is HTML, and 127 pages were sending
+    // "<p>Upgrade your gym&#8217;s…" to Google as their description.
+    description: fitDescription(
+      plainText(authored?.short) ||
+        plainText(p.short_description) ||
+        (unit ? unitDescription(unit) : undefined)
+    ),
     alternates: { canonical: `/product/${canonicalSlug}` },
     openGraph: {
       title: p.name,

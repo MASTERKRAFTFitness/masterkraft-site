@@ -10,6 +10,8 @@ import {
   listPosts,
   postPath,
 } from "@/lib/blog";
+import { fitDescription } from "@/lib/meta-description";
+import { withoutBrandIfLong } from "@/lib/page-title";
 
 /**
  * The index lists every live post. It once showed only the newest 12 with no
@@ -70,11 +72,16 @@ export function routeMetadata(route: BlogRoute): Metadata {
       const p = route.data;
       const title = p.metaTitle || p.title;
       const description = p.metaDescription || p.description;
+      // The <title> drops the brand past 65 characters, as product titles do
+      // (lib/page-title); 34 posts were rendering at 66-125. og:title and the
+      // share card keep the full title and description.
+      const headTitle = withoutBrandIfLong(title);
+      const headDescription = fitDescription(description);
       const url = `${BLOG_SITE_URL}${postPath(p.slug)}`;
       const image = p.heroImageKey ? `${BLOG_SITE_URL}${blogImagePath(p.heroImageKey)}` : undefined;
       return {
-        title,
-        description,
+        title: headTitle,
+        description: headDescription,
         alternates: { canonical: url },
         openGraph: {
           type: "article",
