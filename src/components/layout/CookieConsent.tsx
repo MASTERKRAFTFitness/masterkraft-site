@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 import { isLiveHost } from "@/lib/live-host";
 import { GOOGLE_ADS_ID } from "@/lib/google-ads";
+import { captureAdClick, clearAdClick } from "@/lib/ad-click";
 
 const KEY = "mk_cookie_consent";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -36,6 +37,9 @@ export default function CookieConsent() {
   // is a hydration mismatch. Hence the disable.
   useEffect(() => {
     const stored = localStorage.getItem(KEY) as "accepted" | "declined" | null;
+    // Keep the Google click id from an ad landing, so a lead or order can be
+    // matched to its click even when no cookie was ever accepted - see lib/ad-click.
+    captureAdClick();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoice(stored);
     setLive(isLiveHost());
@@ -44,6 +48,7 @@ export default function CookieConsent() {
 
   const decide = (v: "accepted" | "declined") => {
     localStorage.setItem(KEY, v);
+    if (v === "declined") clearAdClick();
     setChoice(v);
     // gtag is already on the page (see below), so the answer goes to it as a
     // consent update rather than by loading anything new.

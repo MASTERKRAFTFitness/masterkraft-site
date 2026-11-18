@@ -10,6 +10,7 @@ import { checkoutMode, paymentsConfigured } from "@/lib/stripe-client";
 import StripeCheckout, { type PaidBuyer } from "@/components/shop/StripeCheckout";
 import CustomerReviewsOptIn from "@/components/shop/CustomerReviewsOptIn";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import { readAdClick } from "@/lib/ad-click";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const money = (n: number) => (n > 0 ? aud.format(n) : "Contact for pricing");
@@ -116,6 +117,8 @@ export default function CheckoutPage() {
           contact,
           items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price, sku: i.sku })),
           subtotal,
+          // The Google ad click they landed from, if any - see lib/ad-click.
+          adClick: readAdClick(),
           ...guardValues(form, elapsed()),
         }),
       });

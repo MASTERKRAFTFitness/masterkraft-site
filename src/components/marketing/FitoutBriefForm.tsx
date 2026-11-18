@@ -43,6 +43,7 @@ import {
   type Choice,
   type FitoutBrief,
 } from "@/lib/fitout-brief";
+import { readAdClick } from "@/lib/ad-click";
 
 const STEPS = ["Project", "Space", "Zones", "Budget", "Details"];
 
@@ -237,6 +238,9 @@ export default function FitoutBriefForm({ initialMessage }: { initialMessage?: s
     // The page's query string, so the route can record which ad or campaign
     // sent this visitor. The route reads only the UTM tags out of it.
     body.append("landing", window.location.search);
+    // The Google ad click from their first landing, if any - see lib/ad-click.
+    const adClick = readAdClick();
+    if (adClick) body.append("adClick", JSON.stringify(adClick));
 
     try {
       const res = await fetch("/api/fitout-brief", { method: "POST", body });

@@ -11,6 +11,7 @@ const TABS = [
   { href: "/admin", label: "Support desk", full: false },
   { href: "/admin/analytics", label: "Web analytics", full: false },
   { href: "/admin/checkouts", label: "Checkouts", full: true },
+  { href: "/admin/ad-clicks", label: "Ad clicks", full: true },
   { href: "/admin/activity", label: "Activity", full: true },
   { href: "/admin/dead-links", label: "Dead links", full: true },
   { href: "/admin/freight", label: "Freight", full: true },
