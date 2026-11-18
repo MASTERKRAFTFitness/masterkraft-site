@@ -8,19 +8,12 @@
 // we already owe a void. So the link is not degraded, it is absent — and the
 // fix is to remove the two hops rather than repair them.
 //
-// STATUS: NOT WIRED UP. Nothing calls createUnleashedOrder yet and it refuses to
-// run unless UNLEASHED_WRITE_ENABLED is "true". Two things are outstanding and
-// neither is code:
-//
-//   1. WRITE SCOPE on the API key is unconfirmed. Unleashed grants read and
-//      write separately and our reads prove nothing about writes.
-//   2. THE CUSTOMER DECISION, below. It changes the payload, not a field.
-//
-// The payload builder is pure and fully tested, so when both land this is a
-// matter of turning it on rather than writing it.
+// LIVE since the WooCommerce cutover (2026-09-15, see lib/orders.ts). It refuses
+// to run unless UNLEASHED_WRITE_ENABLED is "true".
 import { createHmac, randomUUID } from "node:crypto";
 import { getUnleashedMapLive, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
 import type { OrderLine } from "@/lib/order-lines";
+import { resolveBuyerCustomer } from "@/lib/unleashed-customers";
 
 const BASE = "https://api.unleashedsoftware.com";
 
@@ -64,28 +57,25 @@ const discountCode = () => process.env.UNLEASHED_DISCOUNT_CODE || "MKDISC";
 // ---------------------------------------------------------------------------
 // THE CUSTOMER DECISION
 //
-// This is the one real difference between the two systems. WooCommerce took the
-// buyer's details inline on the order; Unleashed requires an existing Customer
-// record, and there are 4,108 of them with no generic web account among them.
-// The one Woo-sourced order in the ERP was matched to BFT-MACQUARIE PARK, a real
-// trade account, which is Wbsync's doing and not a convention we can inherit.
+// WooCommerce took the buyer's details inline on the order; Unleashed requires
+// an existing Customer record. Three ways to answer it:
 //
-// Three ways to answer it, and they are not equivalent:
+//   "generic"     One account (UNLEASHED_WEB_CUSTOMER_CODE), every web order
+//                 against it, the buyer's details in the delivery fields and
+//                 Comments. What ran from launch to 2026-11-18. Its cost turned
+//                 out to be the invoice: Unleashed syncs it to Xero addressed to
+//                 "MasterKraft Website", so a business buyer (TAFE NSW,
+//                 SO-00000877) has no correct invoice to be sent.
 //
-//   "generic"     One account, every web order against it, the buyer's details
-//                 in the delivery fields and Comments. Keeps a 4,108-row master
-//                 file clean. Costs you per-customer reporting on web sales.
+//   "match-email" The buyer's own Customer: matched on email, created when
+//                 absent, the shared account only as a fallback. Chosen by
+//                 Michael on 2026-11-18. See lib/unleashed-customers.ts.
 //
-//   "per-order"   A new Customer for every order. Best records per sale, and it
-//                 fills the master file with one-off retail buyers who will
-//                 never order again.
+//   "per-order"   A new Customer for every order. Not implemented: it would
+//                 duplicate every repeat buyer.
 //
-//   "match-email" Look the buyer up by email, create only if absent. Best data
-//                 and the most work, with real duplicate risk against 4,108
-//                 existing records that were not deduplicated on email.
-//
-// Steve decides. Until then only "generic" is implemented, and it
-// still needs an account to exist — it will not invent one.
+// Set by UNLEASHED_CUSTOMER_STRATEGY; anything else means "generic". Quote
+// requests always use the shared account: a lead is not a customer yet.
 // ---------------------------------------------------------------------------
 
 export type CustomerStrategy = "generic" | "per-order" | "match-email";
@@ -121,36 +111,59 @@ export function customerStrategy(): CustomerStrategy {
   return s === "per-order" || s === "match-email" ? s : "generic";
 }
 
+function webAccount(): CustomerRef {
+  const code = process.env.UNLEASHED_WEB_CUSTOMER_CODE;
+  // Refuse rather than guess. Writing a web order against an arbitrary trade
+  // account is worse than not writing it: it lands in somebody's real ledger.
+  if (!code) {
+    throw new Error(
+      "UNLEASHED_WEB_CUSTOMER_CODE is not set. The generic strategy needs a web " +
+        "sales account to exist in Unleashed; it will not create or guess one."
+    );
+  }
+  return { CustomerCode: code };
+}
+
+export type CustomerChoice = {
+  ref: CustomerRef;
+  /** One line for the order's Comments saying how the customer was chosen. */
+  note?: string;
+};
+
 /**
  * Which Customer the order is written against.
  *
  * Isolated deliberately: the decision above changes only this function and the
- * Comments block that carries the buyer's details when the account is shared.
- * Everything else in the payload is the same whichever way it goes.
+ * Comments line it returns. Everything else in the payload is the same whichever
+ * way it goes.
  */
-export async function resolveCustomer(billing: Billing): Promise<CustomerRef> {
+export async function resolveCustomer(
+  billing: Billing,
+  opts: { shipping?: Billing; paymentIntentId?: string; forceWebAccount?: boolean } = {}
+): Promise<CustomerChoice> {
   const strategy = customerStrategy();
 
-  if (strategy === "generic") {
-    const code = process.env.UNLEASHED_WEB_CUSTOMER_CODE;
-    // Refuse rather than guess. Writing a web order against an arbitrary trade
-    // account is worse than not writing it: it lands in somebody's real ledger.
-    if (!code) {
-      throw new Error(
-        "UNLEASHED_WEB_CUSTOMER_CODE is not set. The generic strategy needs a web " +
-          "sales account to exist in Unleashed; it will not create or guess one."
-      );
+  if (strategy === "generic" || opts.forceWebAccount) return { ref: webAccount() };
+
+  if (strategy === "match-email") {
+    const r = await resolveBuyerCustomer(billing, opts);
+    if (r.how === "fallback") {
+      return { ref: webAccount(), note: `Customer: booked to the shared web account because ${r.reason}.` };
     }
-    return { CustomerCode: code };
+    return {
+      ref: r.ref,
+      note:
+        r.how === "matched"
+          ? `Customer: existing account ${r.code}, matched on email.`
+          : `Customer: new account ${r.code}, created for this order.`,
+    };
   }
 
-  // Deliberately unimplemented. Both remaining strategies need decisions that
-  // have not been made — whether one-off buyers belong in the customer master,
-  // and how to match against 4,108 records that were never deduplicated on
-  // email. Guessing either would put bad rows in the ERP.
+  // "per-order" is deliberately unimplemented: it would duplicate every repeat
+  // buyer in a 4,000-row customer master.
   throw new Error(
-    `Customer strategy "${strategy}" is not implemented yet, so the order for ` +
-      `${billing.email ?? "an unknown buyer"} was not written — see the decision note in lib/unleashed-orders.ts`
+    `Customer strategy "${strategy}" is not implemented, so the order for ` +
+      `${billing.email ?? "an unknown buyer"} was not written. See the decision note in lib/unleashed-orders.ts`
   );
 }
 
@@ -168,6 +181,13 @@ export type CreateUnleashedOrderInput = {
   freight?: { amount: number; service?: string; carrier?: string };
   /** A promo code's discount, inc GST. */
   discount?: { code: string; amount: number };
+  /**
+   * "web" books it to the shared web account whatever the strategy. Quote
+   * requests pass it: a lead is not a customer yet.
+   */
+  customer?: "buyer" | "web";
+  /** Set by createUnleashedOrder: how the customer was chosen, for Comments. */
+  bookingNote?: string;
 };
 
 export type UnleashedOrderResult = {
@@ -215,6 +235,7 @@ export function buildComments(input: CreateUnleashedOrderInput): string {
       ? `Promo code ${input.discount.code}: ${input.discount.amount.toFixed(2)} off inc GST`
       : "",
     input.customerNote ? `Customer note: ${input.customerNote}` : "",
+    input.bookingNote ?? "",
   ];
   return parts.filter(Boolean).join("\n");
 }
@@ -374,14 +395,18 @@ export async function createUnleashedOrder(
   const [erp, customer] = await Promise.all([
     // LIVE, NOT THE MIRROR — this writes the order lines that get invoiced.
     getUnleashedMapLive().catch(() => ({})),
-    resolveCustomer(input.billing),
+    resolveCustomer(input.billing, {
+      shipping: input.shipping,
+      paymentIntentId: input.paymentIntentId,
+      forceWebAccount: input.customer === "web",
+    }),
   ]);
 
   // OUR Guid, not theirs. Unleashed takes the key from the caller, which makes a
   // retry idempotent in a way the WooCommerce POST never was: the same Guid is
   // the same order, so a timeout that actually succeeded cannot bill twice.
   const guid = randomUUID();
-  const body = buildSalesOrderPayload(input, customer, erp, { guid });
+  const body = buildSalesOrderPayload({ ...input, bookingNote: customer.note }, customer.ref, erp, { guid });
 
   const res = await fetch(`${BASE}/SalesOrders/${guid}`, {
     method: "POST",

@@ -954,6 +954,8 @@ function buyerOn(raw: RawSalesOrder): { name: string | null; email: string | nul
 export type DispatchedShipment = Shipment & {
   orderNumber: string;
   customerCode: string | null;
+  /** The sales order's reference. A card web order carries its Stripe PaymentIntent (pi_...). */
+  customerRef: string | null;
   deliveryName: string | null;
   lines: { name: string | null; code: string | null; qty: number }[];
 };
@@ -987,6 +989,7 @@ export async function getShipmentsModifiedSince(sinceIso: string): Promise<Dispa
         OrderNumber?: string;
         DeliveryName?: string | null;
         Customer?: { CustomerCode?: string | null } | null;
+        CustomerRef?: string | null;
       })[];
       Pagination?: { NumberOfPages?: number };
     };
@@ -995,6 +998,7 @@ export async function getShipmentsModifiedSince(sinceIso: string): Promise<Dispa
       out.push({
         orderNumber: s.OrderNumber,
         customerCode: s.Customer?.CustomerCode ?? null,
+        customerRef: s.CustomerRef ?? null,
         deliveryName: s.DeliveryName ?? null,
         shipmentNumber: s.ShipmentNumber ?? null,
         status: s.ShipmentStatus ?? null,

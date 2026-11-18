@@ -179,6 +179,8 @@ export async function placeQuote(
 
   const [first, ...rest] = (contact.name ?? "").split(" ");
   await createUnleashedOrder({
+    // A lead is not a customer yet: quotes stay on the shared web account.
+    customer: "web",
     billing: {
       first_name: first,
       last_name: rest.join(" "),
