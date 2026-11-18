@@ -11,6 +11,7 @@ import { freightMessage, quotesAutomatically } from "@/lib/freight-message";
 import StoppingQuestion from "@/components/shop/StoppingQuestion";
 import { useLeaveIntent } from "@/components/shop/useLeaveIntent";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import { readAdClick } from "@/lib/ad-click";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
@@ -310,6 +311,8 @@ export default function StripeCheckout({
         cart: items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, price: i.price })),
         subtotal,
         reminderOptIn: formRef.current ? new FormData(formRef.current).get("cart_reminder") === "on" : false,
+        // The Google ad click they landed from, if any - see lib/ad-click.
+        adClick: readAdClick(),
       }),
     })
       .then((r) => r.json())
@@ -448,6 +451,7 @@ export default function StripeCheckout({
           subtotal,
           checkoutId,
           freightQuote: true,
+          adClick: readAdClick(),
           ...guardValues(form ? new FormData(form) : new FormData(), elapsed()),
         }),
       });

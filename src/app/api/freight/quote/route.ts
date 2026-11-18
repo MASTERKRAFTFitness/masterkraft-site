@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { quoteFreightForRefs, type DeliveryInput } from "@/lib/freight-server";
 import { scheduleCheckoutLead, type CheckoutLeadContact, type CheckoutLeadItem } from "@/lib/checkout-leads";
 import { reportMissingDimensions } from "@/lib/freight-alert";
+import { scheduleAdClickLead } from "@/lib/ad-click-leads";
 
 // Freight options for the checkout summary. The Australia Post key stays on the
 // server, and the weights and dimensions are resolved from WooCommerce rather
@@ -25,6 +26,9 @@ type Body = {
   // The checkout's background probe, sent before Calculate Freight is pressed.
   // Priced exactly like any other quote; flagged only so the log can tell them apart.
   prefetch?: boolean;
+  // The Google ad click this visitor landed from, if any - see lib/ad-click.
+  // Stored beside the checkout so a paid order can be uploaded to Ads.
+  adClick?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -97,6 +101,12 @@ export async function POST(request: Request) {
       reason: decision.reason ?? null,
     },
   });
+  if (body.checkoutId && body.prefetch !== true) {
+    scheduleAdClickLead(
+      { kind: "checkout", ref: String(body.checkoutId), email: body.contact?.email, value: body.subtotal },
+      body.adClick
+    );
+  }
   return NextResponse.json({
     ok: decision.selected !== null,
     required: decision.required,

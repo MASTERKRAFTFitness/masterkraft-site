@@ -22,6 +22,7 @@ import {
   type BriefAttribution,
   type FitoutBrief,
 } from "@/lib/fitout-brief";
+import { scheduleAdClickLead } from "@/lib/ad-click-leads";
 
 // The fitout brief from /fitout-solution's wizard.
 //
@@ -276,6 +277,9 @@ export async function POST(request: Request) {
   // The page's query string, sent by the wizard as `landing` - see
   // briefAttribution for why the brief carries it and how it is cleaned.
   const attribution = briefAttribution(String(form.get("landing") ?? ""));
+  // The Google ad click from the visitor's first landing, which `landing` above
+  // loses once they have browsed to this page - see lib/ad-click.
+  scheduleAdClickLead({ kind: "brief", ref: crypto.randomUUID(), email: brief.email }, parseJson(form.get("adClick")));
 
   const baseFields = briefHubspotFields(brief, kept, attribution);
   const propertyFields = briefPropertyFields(brief);
@@ -356,4 +360,14 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true, accepted: true, hubspot, notified, confirmed });
+}
+
+/** A form field holding JSON, or null when it is absent or not JSON. */
+function parseJson(value: FormDataEntryValue | null): unknown {
+  if (typeof value !== "string" || value.length > 2000) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
