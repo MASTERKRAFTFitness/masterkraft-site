@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import { permanentRedirect } from "next/navigation";
 import PageHero from "@/components/marketing/PageHero";
 import CategoryBrowser, { type BrowserSearchParams } from "@/components/shop/CategoryBrowser";
+import CustomTurfCalculator from "@/components/shop/CustomTurfCalculator";
 import { getCategory } from "@/lib/categories";
 import { getSubcategory, subcategories } from "@/lib/subcategories";
 
@@ -81,6 +82,9 @@ export default async function SubcategoryPage({
           { name: s.label, href: `/equipment/${c.slug}/${s.slug}` },
         ]}
       />
+      {/* Made-to-measure turf is priced by size, not stocked, so it has a
+          calculator here rather than a product card. */}
+      {s.slug === "astro-turf-sled-tracks" && <CustomTurfCalculator />}
       <CategoryBrowser
         category={c}
         subgroup={s.erpSubgroup}
