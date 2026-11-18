@@ -15,6 +15,7 @@
 // charge taken first. Turning the ERP path off is now a decision someone has to
 // make, not something a missing variable does quietly.
 import { type CreateOrderInput } from "@/lib/order-lines";
+import { describeCustomTurf, isQuoteOnlyCode, priceCustomTurf, type TurfSize } from "@/lib/custom-turf";
 import {
   createUnleashedOrder,
   ordersEnabled as unleashedOrdersEnabled,
@@ -130,6 +131,8 @@ export type QuoteItemInput = {
   sku?: string;
   name: string;
   qty: number;
+  /** Custom turf only: the size the customer chose. See lib/custom-turf. */
+  size?: TurfSize;
 };
 
 export type QuoteContactInput = {
@@ -165,6 +168,21 @@ export async function placeQuote(
     .filter((i) => !!i.sku)
     .map((i) => {
       const entry = lookupBySku(erp, i.sku);
+      // Custom turf is one line priced by its size: area x the ERP's per-m²
+      // rate plus the fee, worked out here from the size the customer chose,
+      // never from the price their browser sent. No size means no price (POA).
+      if (isQuoteOnlyCode(i.sku)) {
+        const w = Number(i.size?.widthM), l = Number(i.size?.lengthM);
+        const sized = Number.isFinite(w) && Number.isFinite(l) && w > 0 && l > 0;
+        const q = sized ? priceCustomTurf(w, l) : null;
+        return {
+          productId: 0,
+          sku: i.sku,
+          quantity: 1,
+          unitPrice: q ? q.totalIncGst : 0,
+          name: q ? describeCustomTurf(q) : entry?.name ?? i.name,
+        };
+      }
       return {
         productId: 0,
         sku: i.sku,

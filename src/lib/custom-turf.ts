@@ -10,12 +10,12 @@
 //
 // Pure and dependency-free so the client and the tests share the same arithmetic.
 
-// The Unleashed products (created 19 Nov 2026). MFATCT01 is the turf itself,
-// one unit per m², filed with the other turf so it lists on the site.
-// MFATCT02 is the once-off fee, filed under Other Costs so it never lists.
-// Unleashed has no m² unit in use, so both are EA and the quantity is the area.
+// The Unleashed product (created 19 Nov 2026), filed with the other turf so it
+// lists on the site. ONE PRODUCT, ONE LINE (Michael, 19 Nov): a quote carries
+// MFATCT01 x 1 at the whole price for the size, fee included. Its ERP price is
+// the $75 per m² rate, which is what the card shows; the line price is worked
+// out here from the size, never taken from the browser.
 export const CUSTOM_TURF_CODE = "MFATCT01";
-export const CUSTOM_TURF_FEE_CODE = "MFATCT02";
 
 /**
  * Codes that are sold by quote only, never by card. A custom piece needs the
@@ -23,8 +23,7 @@ export const CUSTOM_TURF_FEE_CODE = "MFATCT02";
  * plus a fee, which a cart line priced per unit cannot express.
  */
 export function isQuoteOnlyCode(sku: string | undefined | null): boolean {
-  const code = (sku ?? "").trim().toUpperCase();
-  return code === CUSTOM_TURF_CODE || code === CUSTOM_TURF_FEE_CODE;
+  return (sku ?? "").trim().toUpperCase() === CUSTOM_TURF_CODE;
 }
 
 export const TURF_RATE_PER_M2_EX_GST = 75;
@@ -74,6 +73,9 @@ export function priceCustomTurf(width: number, length: number): TurfQuote {
     totalIncGst: cents(totalExGst + gst),
   };
 }
+
+/** The width and length a quote line for custom turf carries. */
+export type TurfSize = { widthM: number; lengthM: number };
 
 /** One line a person in the team can read in the quote email and in HubSpot. */
 export function describeCustomTurf(q: TurfQuote): string {

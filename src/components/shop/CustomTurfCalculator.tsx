@@ -6,10 +6,10 @@
 // A QUOTE, NOT A CART LINE. A custom piece needs the customer's artwork and a
 // person to confirm it before anything is cut, so it goes through /api/quote
 // like a POA cart does, never to card checkout (lib/custom-turf isQuoteOnlyCode
-// keeps it out of the cart and the payment path too). The request carries the
-// real codes, MFATCT01 x the area and MFATCT02 x 1, so a quote written to
-// Unleashed is priced from the ERP like any other. The size also goes in the
-// notes, because the ERP line only says "Custom Turf" x 30.
+// keeps it out of the cart and the payment path too). The request is one line,
+// MFATCT01 x 1, carrying the size; the server works the price out from the size
+// (lib/orders placeQuote) rather than trusting this one. The size also leads
+// the notes, so it reads plainly in the email and HubSpot.
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
@@ -17,8 +17,6 @@ import { identifyUser, trackLead } from "@/lib/analytics";
 import { readAdClick } from "@/lib/ad-click";
 import {
   CUSTOM_TURF_CODE,
-  CUSTOM_TURF_FEE_CODE,
-  GST_RATE,
   TURF_CUSTOM_FEE_EX_GST,
   TURF_MAX_LENGTH_M,
   TURF_MAX_WIDTH_M,
@@ -132,21 +130,15 @@ export default function CustomTurfCalculator() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contact,
-          // Prices are inc. GST, the same as every cart line sent here.
+          // Inc. GST, the same as every cart line sent here.
           items: [
             {
               id: 0,
               name: describeCustomTurf(q),
               sku: CUSTOM_TURF_CODE,
-              qty: q.areaM2,
-              price: TURF_RATE_PER_M2_EX_GST * (1 + GST_RATE),
-            },
-            {
-              id: 0,
-              name: "Custom design, print, cut & production",
-              sku: CUSTOM_TURF_FEE_CODE,
               qty: 1,
-              price: TURF_CUSTOM_FEE_EX_GST * (1 + GST_RATE),
+              price: q.totalIncGst,
+              size: { widthM: q.widthM, lengthM: q.lengthM },
             },
           ],
           subtotal: q.totalIncGst,
@@ -158,7 +150,7 @@ export default function CustomTurfCalculator() {
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
         identifyUser(contact.email);
-        trackLead(q.totalIncGst, 2, contact.email);
+        trackLead(q.totalIncGst, 1, contact.email);
       }
       setDone(true);
     } catch (err) {

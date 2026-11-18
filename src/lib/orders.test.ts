@@ -183,6 +183,28 @@ describe("a quote is not a sale", () => {
     expect(createUnleashedOrder.mock.calls[0][0].lines[0].unitPrice).toBe(0);
   });
 
+  it("prices custom turf as one line from its size, not from the browser", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    createUnleashedOrder.mockResolvedValue({ guid: "g", orderNumber: "SO-9", status: "Parked", total: 0 });
+    // 3m x 12m = 36 m² x $75 + $500 = $3,200 ex, $3,520 inc. The $1 the
+    // browser claims never reaches the ERP.
+    await placeQuote(contact, [
+      { id: 0, sku: "MFATCT01", name: "x", qty: 99, price: 1, size: { widthM: 3, lengthM: 12 } } as never,
+    ]);
+    expect(createUnleashedOrder.mock.calls[0][0].lines).toEqual([
+      expect.objectContaining({ sku: "MFATCT01", quantity: 1, unitPrice: 3520, name: expect.stringContaining("3m x 12m (36 m²)") }),
+    ]);
+  });
+
+  it("leaves custom turf unpriced when the size is missing", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    createUnleashedOrder.mockResolvedValue({ guid: "g", orderNumber: "SO-9", status: "Parked", total: 0 });
+    await placeQuote(contact, [{ id: 0, sku: "MFATCT01", name: "Custom Turf", qty: 1 }]);
+    expect(createUnleashedOrder.mock.calls[0][0].lines[0].unitPrice).toBe(0);
+  });
+
   it("skips lines with no ERP code rather than inventing one", async () => {
     process.env.UNLEASHED_WRITE_ENABLED = "true";
     process.env.UNLEASHED_QUOTE_ORDERS = "true";

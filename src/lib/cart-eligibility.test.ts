@@ -13,9 +13,9 @@ describe("what makes a line payable by card", () => {
     expect(lineSellableByCard(line())).toBe(true);
   });
 
-  it("refuses custom turf and its fee, which are sold by quote only", () => {
-    expect(lineSellableByCard(line({ sku: "MFATCT01", price: 82.5 }))).toBe(false);
-    expect(lineSellableByCard(line({ sku: "mfatct02 ", price: 550 }))).toBe(false);
+  it("refuses custom turf, which is sold by quote only", () => {
+    expect(lineSellableByCard(line({ sku: "MFATCT01", price: 2200 }))).toBe(false);
+    expect(lineSellableByCard(line({ sku: "mfatct01 ", price: 2200 }))).toBe(false);
   });
 
   // THE CHANGE. An ERP-only size has productId 0 and used to be refused, because

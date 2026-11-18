@@ -34,9 +34,9 @@ describe("describeCustomTurf", () => {
 });
 
 describe("isQuoteOnlyCode", () => {
-  it("covers the turf and its fee, and nothing else", () => {
+  it("covers custom turf and nothing else", () => {
     expect(isQuoteOnlyCode("MFATCT01")).toBe(true);
-    expect(isQuoteOnlyCode(" mfatct02")).toBe(true);
+    expect(isQuoteOnlyCode(" mfatct01")).toBe(true);
     expect(isQuoteOnlyCode("MFATSY04")).toBe(false);
     expect(isQuoteOnlyCode(undefined)).toBe(false);
   });
