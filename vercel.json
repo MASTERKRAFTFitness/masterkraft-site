@@ -6,6 +6,10 @@
       "schedule": "17 * * * *"
     },
     {
+      "path": "/api/cron/erp-customers",
+      "schedule": "37 * * * *"
+    },
+    {
       "path": "/api/cron/abandoned-checkouts",
       "schedule": "*/30 * * * *"
     },

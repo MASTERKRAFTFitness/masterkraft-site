@@ -4,13 +4,13 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import {
   buildCustomerPayload,
   customerCodeBase,
-  emailQueryPrefix,
   nextCustomerCode,
   normaliseEmail,
   pickMatch,
   resolveBuyerCustomer,
   type RawCustomer,
 } from "@/lib/unleashed-customers";
+import type { CustomerIndex } from "@/lib/erp-customers";
 
 // Jodie's real order, SO-00000877, the one that started this.
 const jodie = {
@@ -57,11 +57,6 @@ describe("matching a buyer to an existing customer", () => {
 
   it("forgives the trailing full stop staff left on some records", () => {
     expect(normaliseEmail(" blackopsfit@gmail.com. ")).toBe("blackopsfit@gmail.com");
-  });
-
-  it("sends only what can go unencoded, since an encoded query 403s", () => {
-    expect(emailQueryPrefix("jo@tafensw.edu.au")).toBe("jo@tafensw.edu.au");
-    expect(emailQueryPrefix("jo+gym@x.com")).toBe("jo");
   });
 });
 
@@ -118,7 +113,7 @@ describe("the new customer record", () => {
   });
 });
 
-describe("resolving against Unleashed", () => {
+describe("resolving a buyer", () => {
   const fetchMock = vi.fn();
   beforeEach(() => {
     fetchMock.mockReset();
@@ -127,44 +122,72 @@ describe("resolving against Unleashed", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  const json = (body: unknown, status = 200) =>
+  const reply = (body: unknown, status = 200) =>
     Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } }));
 
-  it("uses the one existing customer and creates nothing", async () => {
-    fetchMock.mockReturnValueOnce(json({ Items: [cust({ Guid: "g-alex", CustomerCode: "ALEXV01", Email: "valexellis@gmail.com" })] }));
-    const r = await resolveBuyerCustomer({ email: "valexellis@gmail.com" });
+  /** The Supabase copy, faked. */
+  const index = (customers: RawCustomer[], codes: string[] = []) => {
+    const remembered: RawCustomer[] = [];
+    const idx: CustomerIndex & { remembered: RawCustomer[] } = {
+      remembered,
+      byEmail: async (e) => customers.filter((c) => normaliseEmail(c.Email) === normaliseEmail(e) && !c.Obsolete),
+      codesLike: async (p) => codes.filter((c) => c.toUpperCase().startsWith(p)),
+      remember: async (c) => void remembered.push(c),
+    };
+    return idx;
+  };
+
+  it("uses the one existing customer and asks Unleashed nothing", async () => {
+    const idx = index([cust({ Guid: "g-alex", CustomerCode: "ALEXV01", Email: "valexellis@gmail.com" })]);
+    const r = await resolveBuyerCustomer({ email: "VAlexellis@gmail.com" }, { index: idx });
     expect(r).toEqual({ how: "matched", ref: { Guid: "g-alex" }, code: "ALEXV01" });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(String(fetchMock.mock.calls[0][0])).toContain("contactEmail=valexellis@gmail.com");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("creates a customer with the next free code when there is no match", async () => {
-    fetchMock
-      .mockReturnValueOnce(json({ Items: [] }))
-      .mockReturnValueOnce(json({ Items: [cust({ CustomerCode: "FRIEJ01" })] }))
-      .mockReturnValueOnce(json({}, 201));
-    const r = await resolveBuyerCustomer(jodie);
+  it("creates a customer with the next free code, and remembers it", async () => {
+    fetchMock.mockReturnValueOnce(reply({}, 201));
+    const idx = index([], ["FRIEJ01"]);
+    const r = await resolveBuyerCustomer(jodie, { index: idx });
     expect(r).toMatchObject({ how: "created", code: "FRIEJ02" });
-    const [url, init] = fetchMock.mock.calls[2];
+    const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toMatch(/\/Customers\/[0-9a-f-]{36}$/);
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body).CustomerCode).toBe("FRIEJ02");
+    expect(idx.remembered).toEqual([expect.objectContaining({ CustomerCode: "FRIEJ02", Email: "jodie.friedrich1@tafensw.edu.au" })]);
   });
 
-  it("falls back, never throws, when Unleashed refuses", async () => {
-    fetchMock.mockReturnValueOnce(json({ Items: [] })).mockReturnValueOnce(json({ Items: [] })).mockReturnValueOnce(json({ description: "nope" }, 403));
-    const r = await resolveBuyerCustomer(jodie);
+  it("moves to the next code when Unleashed says one is taken", async () => {
+    fetchMock
+      .mockReturnValueOnce(
+        reply({ Items: [{ Field: "CustomerCode", Description: "Customer 'FRIEJ01' already exists but with a different Guid (x)." }] }, 400)
+      )
+      .mockReturnValueOnce(reply({}, 201));
+    const r = await resolveBuyerCustomer(jodie, { index: index([]) });
+    expect(r).toMatchObject({ how: "created", code: "FRIEJ02" });
+  });
+
+  it("falls back, never throws, when Unleashed refuses for another reason", async () => {
+    fetchMock.mockReturnValueOnce(reply({ description: "nope" }, 403));
+    const idx = index([]);
+    const r = await resolveBuyerCustomer(jodie, { index: idx });
     expect(r).toMatchObject({ how: "fallback" });
     if (r.how === "fallback") expect(r.reason).toMatch(/403/);
+    expect(idx.remembered).toEqual([]);
   });
 
   it("falls back on an ambiguous email without creating anything", async () => {
-    fetchMock.mockReturnValueOnce(
-      json({ Items: [cust({ CustomerCode: "24FIT", Email: "adam@masterkraft.com" }), cust({ CustomerCode: "INPUT", Email: "adam@masterkraft.com" })] })
-    );
-    const r = await resolveBuyerCustomer({ email: "adam@masterkraft.com" });
-    expect(r).toMatchObject({ how: "fallback" });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const idx = index([
+      cust({ CustomerCode: "24FIT", Email: "adam@masterkraft.com" }),
+      cust({ CustomerCode: "INPUT", Email: "adam@masterkraft.com" }),
+    ]);
+    expect(await resolveBuyerCustomer({ email: "adam@masterkraft.com" }, { index: idx })).toMatchObject({ how: "fallback" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("falls back when the copy can't be trusted", async () => {
+    const r = await resolveBuyerCustomer(jodie, { index: { unavailable: "the customer copy is empty" } });
+    expect(r).toEqual({ how: "fallback", reason: "the customer copy is empty" });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("falls back with no email at all", async () => {
