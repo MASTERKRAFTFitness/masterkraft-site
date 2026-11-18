@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   decide,
+  isWebOrder,
   emailsFrom,
   reviewAfterDays,
   reviewDue,
@@ -18,6 +19,7 @@ import type { DispatchedShipment } from "./unleashed";
 const shipment = (over: Partial<DispatchedShipment> = {}): DispatchedShipment => ({
   orderNumber: "SO-00000862",
   customerCode: "WEB-MASTERKRAFT",
+  customerRef: "pi_3SHIPPED862",
   deliveryName: "Mirinda O'Gorman",
   shipmentNumber: "SS-00000862",
   status: "Dispatched",
@@ -55,7 +57,7 @@ describe("decide", () => {
   });
 
   it("never emails a trade customer's dispatch", () => {
-    const trade = shipment({ customerCode: "FERNWOOD-PAK", trackingNumber: "FE1" });
+    const trade = shipment({ customerCode: "FERNWOOD-PAK", customerRef: "FERNWOOD PO 4411", trackingNumber: "FE1" });
     expect(decide(trade, opts).action).toBe("ignore");
   });
 
@@ -148,7 +150,7 @@ describe("review request", () => {
 
   it("never asks a trade customer, or about an order before the start date", () => {
     const later = { ...ropts, now: new Date("2026-10-25T00:00:00Z") };
-    expect(reviewDue(shipment({ customerCode: "FERNWOOD-PAK" }), later)).toBe(false);
+    expect(reviewDue(shipment({ customerCode: "FERNWOOD-PAK", customerRef: "FERNWOOD PO 4411" }), later)).toBe(false);
     expect(reviewDue(shipment({ dispatchedAt: "2026-09-30T00:00:00.000Z" }), later)).toBe(false);
   });
 
@@ -203,5 +205,25 @@ describe("withLabelTracking", () => {
 
   it("changes nothing without a label", () => {
     expect(withLabelTracking(shipment(), undefined)).toEqual(shipment());
+  });
+});
+
+describe("a web order is found by its Stripe reference, not only by the shared account", () => {
+  it("counts an order on the shared web account", () => {
+    expect(isWebOrder({ customerCode: "WEB-MASTERKRAFT", customerRef: null }, "WEB-MASTERKRAFT")).toBe(true);
+  });
+
+  it("counts a card order booked to the buyer's own customer", () => {
+    expect(isWebOrder({ customerCode: "FRIEJ01", customerRef: "pi_3UTC5cS2z0rvyg3E0ndpQVmC" }, "WEB-MASTERKRAFT")).toBe(true);
+  });
+
+  it("ignores a trade order with its own reference", () => {
+    expect(isWebOrder({ customerCode: "BBLITZ", customerRef: "BBLITZ-Gisbourne" }, "WEB-MASTERKRAFT")).toBe(false);
+    expect(isWebOrder({ customerCode: "BBLITZ", customerRef: null }, "WEB-MASTERKRAFT")).toBe(false);
+  });
+
+  it("emails a dispatched buyer-customer web order", () => {
+    const s = shipment({ customerCode: "FRIEJ01", customerRef: "pi_3UTC5cS2z0rvyg3E0ndpQVmC", trackingNumber: "CP1" });
+    expect(decide(s, { webCustomerCode: "WEB-MASTERKRAFT", from: new Date("2026-10-01"), now: new Date("2026-10-14T12:00:00Z"), waitHours: 4 }).action).toBe("send");
   });
 });

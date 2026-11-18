@@ -73,7 +73,7 @@ const RETRYABLE = new Set([429, 500, 502, 503, 504]);
  * first blip leaves the mirror stale, and stale past the read path's ceiling
  * means the site quietly goes back to paying the 16-second cold start.
  */
-async function pages<T>(path: string, extraQuery = ""): Promise<T[]> {
+export async function pages<T>(path: string, extraQuery = ""): Promise<T[]> {
   const items: T[] = [];
   for (let page = 1; page <= 40; page++) {
     const query = `pageSize=200${extraQuery}`;

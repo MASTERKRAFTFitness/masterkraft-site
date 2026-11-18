@@ -201,12 +201,32 @@ describe("the customer decision is a decision, not a default", () => {
 
   it("uses the configured account once one exists", async () => {
     process.env.UNLEASHED_WEB_CUSTOMER_CODE = "WEBSALES";
-    await expect(resolveCustomer(billing)).resolves.toEqual({ CustomerCode: "WEBSALES" });
+    await expect(resolveCustomer(billing)).resolves.toEqual({ ref: { CustomerCode: "WEBSALES" } });
   });
 
-  it("refuses the strategies nobody has chosen yet", async () => {
+  it("keeps quote requests on the web account under the buyer strategy", async () => {
     process.env.UNLEASHED_CUSTOMER_STRATEGY = "match-email";
-    await expect(resolveCustomer(billing)).rejects.toThrow(/not implemented yet/);
+    process.env.UNLEASHED_WEB_CUSTOMER_CODE = "WEBSALES";
+    await expect(resolveCustomer(billing, { forceWebAccount: true })).resolves.toEqual({
+      ref: { CustomerCode: "WEBSALES" },
+    });
+  });
+
+  it("refuses the per-order strategy nobody has chosen", async () => {
+    process.env.UNLEASHED_CUSTOMER_STRATEGY = "per-order";
+    await expect(resolveCustomer(billing)).rejects.toThrow(/not implemented/);
+  });
+});
+
+describe("how the customer was chosen is written on the order", () => {
+  it("adds the booking line to Comments, after the buyer's details", () => {
+    const c = buildComments({ ...base, bookingNote: "Customer: new account OKAFD01, created for this order." });
+    expect(c).toMatch(/^Website order\.\nBuyer: Dana Okafor\nEmail: dana@example.com/);
+    expect(c.split("\n").at(-1)).toBe("Customer: new account OKAFD01, created for this order.");
+  });
+
+  it("adds nothing when there is no note", () => {
+    expect(buildComments(base)).not.toMatch(/Customer:/);
   });
 });
 

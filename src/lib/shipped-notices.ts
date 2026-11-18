@@ -106,6 +106,18 @@ export function reviewUrl(raw = process.env.GOOGLE_REVIEW_URL): string | null {
 }
 
 /**
+ * Whether a shipment belongs to a website order. Two ways, because web orders
+ * are booked to the buyer's own Customer since 2026-11-18 (lib/unleashed-
+ * customers.ts) and to the shared web account before that and on fallback. A
+ * card order carries its Stripe PaymentIntent as CustomerRef; staff-keyed trade
+ * orders never start "pi_".
+ */
+export function isWebOrder(s: Pick<DispatchedShipment, "customerCode" | "customerRef">, webCustomerCode: string): boolean {
+  if (s.customerCode && s.customerCode === webCustomerCode) return true;
+  return /^pi_[A-Za-z0-9]+$/.test(s.customerRef?.trim() ?? "");
+}
+
+/**
  * Whether this shipment's order is due its review request. The once-per-ORDER
  * rule is the table's job (review_requests), not this function's.
  */
@@ -113,7 +125,7 @@ export function reviewDue(
   s: DispatchedShipment,
   opts: { webCustomerCode: string; from: Date; now: Date; reviewDays: number }
 ): boolean {
-  if (s.customerCode !== opts.webCustomerCode || s.status !== "Dispatched" || !s.dispatchedAt) return false;
+  if (!isWebOrder(s, opts.webCustomerCode) || s.status !== "Dispatched" || !s.dispatchedAt) return false;
   const dispatched = new Date(s.dispatchedAt);
   if (dispatched.toISOString().slice(0, 10) < opts.from.toISOString().slice(0, 10)) return false;
   return opts.now.getTime() - dispatched.getTime() >= opts.reviewDays * 86_400_000;
@@ -147,7 +159,7 @@ export function decide(
   s: DispatchedShipment,
   opts: { webCustomerCode: string; from: Date; now: Date; waitHours: number }
 ): Decision {
-  if (!s.customerCode || s.customerCode !== opts.webCustomerCode) {
+  if (!isWebOrder(s, opts.webCustomerCode)) {
     return { action: "ignore", reason: "not a website order" };
   }
   if (s.status !== "Dispatched") return { action: "wait", reason: `status ${s.status ?? "unknown"}` };
@@ -260,7 +272,7 @@ export async function sendShippedNotices(now = new Date()): Promise<RunResult> {
   // Easyship's tracking for web orders Unleashed has no number for. A failed
   // lookup costs the number, not the email, so it never stops the run.
   const labels = await labelTrackingFor(
-    fromUnleashed.filter((s) => !s.trackingNumber && s.customerCode === webCustomerCode).map((s) => s.orderNumber),
+    fromUnleashed.filter((s) => !s.trackingNumber && isWebOrder(s, webCustomerCode)).map((s) => s.orderNumber),
     db
   ).catch((e) => {
     console.error("[shipped-notices] easyship labels lookup failed", e);
