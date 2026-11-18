@@ -10,6 +10,23 @@
 //
 // Pure and dependency-free so the client and the tests share the same arithmetic.
 
+// The Unleashed products (created 19 Nov 2026). MFATCT01 is the turf itself,
+// one unit per m², filed with the other turf so it lists on the site.
+// MFATCT02 is the once-off fee, filed under Other Costs so it never lists.
+// Unleashed has no m² unit in use, so both are EA and the quantity is the area.
+export const CUSTOM_TURF_CODE = "MFATCT01";
+export const CUSTOM_TURF_FEE_CODE = "MFATCT02";
+
+/**
+ * Codes that are sold by quote only, never by card. A custom piece needs the
+ * customer's artwork confirmed before anything is cut, and its price is the area
+ * plus a fee, which a cart line priced per unit cannot express.
+ */
+export function isQuoteOnlyCode(sku: string | undefined | null): boolean {
+  const code = (sku ?? "").trim().toUpperCase();
+  return code === CUSTOM_TURF_CODE || code === CUSTOM_TURF_FEE_CODE;
+}
+
 export const TURF_RATE_PER_M2_EX_GST = 75;
 export const TURF_CUSTOM_FEE_EX_GST = 500;
 export const GST_RATE = 0.1;

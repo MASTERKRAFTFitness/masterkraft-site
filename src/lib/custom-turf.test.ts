@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampMetres, describeCustomTurf, priceCustomTurf } from "./custom-turf";
+import { clampMetres, describeCustomTurf, isQuoteOnlyCode, priceCustomTurf } from "./custom-turf";
 
 describe("priceCustomTurf", () => {
   it("charges $75/m² plus the $500 custom fee, ex GST", () => {
@@ -30,5 +30,14 @@ describe("describeCustomTurf", () => {
     expect(describeCustomTurf(priceCustomTurf(3, 12))).toBe(
       "Custom Artificial Turf 3m x 12m (36 m²), incl. custom design, print, cut & production"
     );
+  });
+});
+
+describe("isQuoteOnlyCode", () => {
+  it("covers the turf and its fee, and nothing else", () => {
+    expect(isQuoteOnlyCode("MFATCT01")).toBe(true);
+    expect(isQuoteOnlyCode(" mfatct02")).toBe(true);
+    expect(isQuoteOnlyCode("MFATSY04")).toBe(false);
+    expect(isQuoteOnlyCode(undefined)).toBe(false);
   });
 });

@@ -19,6 +19,8 @@ import {
 import { getUnleashedMap, enrich, enrichCard, lookupBySku, withErpImages, type EnrichedProduct } from "@/lib/unleashed";
 import { getGallery } from "@/lib/product-gallery";
 import AddToCartButton from "@/components/shop/AddToCartButton";
+import CustomTurfCalculator from "@/components/shop/CustomTurfCalculator";
+import { CUSTOM_TURF_CODE } from "@/lib/custom-turf";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
@@ -277,6 +279,7 @@ export default async function ProductPage({
     wooVariationId: s.wooVariationId,
   }));
   const usesVariants = variants.length > 0;
+  const isCustomTurf = product.sku?.trim().toUpperCase() === CUSTOM_TURF_CODE;
   const variantPrices = variants.map((v) => v.priceValue).filter((v) => v > 0);
 
   // Every size's photograph, from Unleashed's own CDN, with the snapshot's
@@ -467,7 +470,11 @@ export default async function ProductPage({
           )}
 
           <div className="mt-7">
-            {usesVariants ? (
+            {/* Custom turf is sized and priced by the customer and sold by quote,
+                so its buy box is the calculator. See lib/custom-turf. */}
+            {isCustomTurf ? (
+              <CustomTurfCalculator />
+            ) : usesVariants ? (
               <VariantSelector
                 productName={unit?.name ?? range?.name ?? product.name}
                 productSlug={product.slug}
@@ -504,10 +511,12 @@ export default async function ProductPage({
               </>
             )}
           </div>
-          <p className="mt-4 text-xs text-ash">
-            Add items to your cart and request a tailored quote - our team confirms
-            pricing, freight and lead times for your order.
-          </p>
+          {!isCustomTurf && (
+            <p className="mt-4 text-xs text-ash">
+              Add items to your cart and request a tailored quote - our team confirms
+              pricing, freight and lead times for your order.
+            </p>
+          )}
 
           {/* THE SIZE TABLE SITS UNDER THE BUY CONTROLS, in this column, because
               it is a buy control too: every row has its own Add. Under the
