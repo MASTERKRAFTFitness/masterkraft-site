@@ -6,7 +6,7 @@ const data = contentPages["process-overview"];
 
 export const metadata: Metadata = {
   title: `${data.title} Portal`,
-  description: data.subtitle,
+  description: data.seoDescription ?? data.subtitle,
 };
 
 export default function Page() {
