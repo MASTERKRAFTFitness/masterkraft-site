@@ -209,7 +209,7 @@ describe("a quote is not a sale", () => {
     const [line] = createUnleashedOrder.mock.calls[0][0].lines;
     expect(line).toMatchObject({ sku: "MFATCT01", quantity: 1, unitPrice: 2644.4 });
     expect(line.name).toContain("2.35m x 10.8m (25.38 m²)");
-    expect(line.comment).toBe("Custom Turf size: 2.35m x 10.8m (25.38 m²)");
+    expect(line.comment).toBe("Custom Turf size: 2.35m x 10.8m (25.38 sq m)");
   });
 
   it("leaves custom turf unpriced when the size is out of bounds or malformed", async () => {

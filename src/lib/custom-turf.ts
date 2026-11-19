@@ -144,5 +144,7 @@ export function describeCustomTurf(q: TurfQuote): string {
 
 /** The Comments on the Unleashed sales order line, so the size is on the order itself. */
 export function turfLineComment(q: TurfQuote): string {
-  return `Custom Turf size: ${turfSizeLabel(q)}`;
+  // ASCII on purpose: Unleashed comments are matched back by sync jobs, and a
+  // "²" that comes back changed would make a document look edited.
+  return `Custom Turf size: ${turfSizeLabel(q)}`.replace(/m²/g, "sq m");
 }

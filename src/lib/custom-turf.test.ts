@@ -120,7 +120,7 @@ describe("labels", () => {
   });
 
   it("gives the sales order line its size", () => {
-    expect(turfLineComment(price(2.35, 10.8))).toBe("Custom Turf size: 2.35m x 10.8m (25.38 m²)");
+    expect(turfLineComment(price(2.35, 10.8))).toBe("Custom Turf size: 2.35m x 10.8m (25.38 sq m)");
   });
 });
 
