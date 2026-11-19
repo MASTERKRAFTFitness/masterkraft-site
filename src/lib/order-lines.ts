@@ -9,6 +9,7 @@
 // the repricing and the types, both backend-neutral, hence the rename.
 
 import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
+import { isQuoteOnlyCode } from "@/lib/custom-turf";
 
 export type CartRef = {
   productId: number;
@@ -69,6 +70,10 @@ export async function resolveOrderLines(
     // charged, so it stops here.
     const erp = lookupBySku(map, code);
     if (!erp) throw new Error(`Unresolvable line item: ERP code ${code}`);
+
+    // Sold by quote only (custom turf). Refused here as well as in the cart,
+    // because this is the function that decides what a card is charged.
+    if (isQuoteOnlyCode(code)) throw new Error(`ERP code ${code} is quote only`);
 
     // A sellable product with no name in the ERP cannot be put on an order line
     // a human has to read in the warehouse.

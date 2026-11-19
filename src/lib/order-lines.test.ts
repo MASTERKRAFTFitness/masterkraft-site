@@ -8,6 +8,7 @@ const erp: UnleashedMap = {
   MBCTMA01: { price: 900, stock: 1, name: "Multi Adjustable Bench", sellable: true },
   MNONAME1: { price: 40, stock: 1, sellable: true }, // priced, but no name
   MPOA0001: { price: 0, stock: 0, name: "Custom Rig", sellable: true },
+  MFATCT01: { price: 82.5, stock: 0, name: "Custom Turf", sellable: true },
 };
 
 // BOTH, because the money path deliberately calls the live reader rather than
@@ -90,6 +91,11 @@ describe("it fails closed rather than charging the wrong number", () => {
     await expect(resolveOrderLines([{ productId: 55, quantity: 1, sku: "NOSUCH01" }])).rejects.toThrow(
       /ERP code NOSUCH01/
     );
+  });
+
+  it("refuses custom turf, which is sold by quote only", async () => {
+    // A real code with a real price: only the quote-only rule stops it being charged.
+    await expect(resolveOrderLines([{ productId: 0, quantity: 30, sku: "MFATCT01" }])).rejects.toThrow(/quote only/);
   });
 
   it("throws on a coded line the ERP cannot name", async () => {

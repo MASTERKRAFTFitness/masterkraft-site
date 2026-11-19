@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hubspotUtk, submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
+import type { TurfSize } from "@/lib/custom-turf";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
@@ -20,7 +21,7 @@ import { scheduleAdClickLead } from "@/lib/ad-click-leads";
 // `sku` is the Unleashed ProductCode. The ERP now carries sizes the old store
 // never listed, so the code is the only identifier that is certain to mean
 // something to whoever fulfils the quote.
-type QuoteItem = { id: number; name: string; qty: number; price: number; sku?: string };
+type QuoteItem = { id: number; name: string; qty: number; price: number; sku?: string; size?: TurfSize };
 type QuoteContact = {
   name?: string;
   email?: string;

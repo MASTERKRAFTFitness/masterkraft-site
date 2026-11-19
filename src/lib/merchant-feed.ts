@@ -42,6 +42,7 @@ import { SITE_URL, absoluteUrl, productUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 import { regionLabel } from "@/lib/landed-price";
 import { CHINA_LEAD_TIME_WEEKS } from "@/lib/stock-label";
+import { isQuoteOnlyCode } from "@/lib/custom-turf";
 import type { PromotionLabels } from "@/lib/merchant-promotion";
 
 export type FeedItem = {
@@ -415,6 +416,12 @@ export function buildFeed(
       const entry = lookupBySku(map, code);
       if (!entry) {
         rejected.push({ code, unit: unit.slug, reason: "no ERP entry" });
+        return;
+      }
+      // Custom turf is priced per m² plus a fee and sold by quote, so no single
+      // feed price is true and a Shopping click could not buy it.
+      if (isQuoteOnlyCode(code)) {
+        rejected.push({ code, unit: unit.slug, reason: "quote only" });
         return;
       }
       // "Contact for pricing". It cannot reach card checkout, so it cannot be
