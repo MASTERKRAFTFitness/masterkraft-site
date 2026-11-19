@@ -5,8 +5,9 @@ import { subcategories } from "@/lib/subcategories";
 import { fitouts } from "@/lib/fitouts";
 import { revlSites } from "@/lib/revl";
 import { locations } from "@/lib/locations";
-import { getAllProductSlugs } from "@/lib/woocommerce";
-import { erpUnits } from "@/lib/erp-catalogue";
+import { getAllProductSlugs, getProductBySlug } from "@/lib/woocommerce";
+import { erpUnits, ownUnitForClearance } from "@/lib/erp-catalogue";
+import nextConfig from "../../next.config";
 import { getUnleashedMap } from "@/lib/unleashed";
 import { BLOG_PREFIX, BLOG_SITE_URL, authorPath, blogEnabled, listAuthors, listPosts, postPath } from "@/lib/blog";
 
@@ -74,7 +75,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const products = units.length
       ? units.map((u) => ({ slug: u.slug, sku: u.codes[0], modified: undefined }))
       : await getAllProductSlugs();
+    // ONLY URLS THAT ARE THEIR OWN CANONICAL. The 10 Nov Rankability audit
+    // found two kinds of product URL in here that a crawler is told, by the
+    // page itself, not to index:
+    //  - a redirect source. /product/multi-dead-lift is a live ERP unit's slug
+    //    and next.config sends it to /product/multi-deadlift, so the sitemap
+    //    advertised a 308.
+    //  - an ex-display copy whose canonical names our own page (see
+    //    ownUnitForClearance). olympic-bar-easy-lock-collars-pair was listed
+    //    while its canonical said -3.
+    // Both checks reuse the code that makes those decisions, so this list cannot
+    // drift from what the pages say.
+    const redirected = new Set(
+      ((await nextConfig.redirects?.()) ?? []).map((r) => r.source)
+    );
+    const ownCanonical = async (slug: string) => {
+      if (redirected.has(`/product/${slug}`)) return false;
+      const woo = await getProductBySlug(slug).catch(() => null);
+      return !(woo && ownUnitForClearance(erp, woo));
+    };
     for (const p of products) {
+      if (!(await ownCanonical(p.slug))) continue;
       entries.push({
         url: `${SITE_URL}/product/${p.slug}`,
         lastModified: p.modified ? new Date(p.modified) : undefined,
