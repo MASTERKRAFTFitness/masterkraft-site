@@ -218,6 +218,14 @@ const nextConfig: NextConfig = {
       // wizard. /contact is the form again; the wizard is /fitout-solution.
       { source: "/contact/enquiry", destination: "/contact", permanent: true },
 
+      // /product/preacher-bench was a WordPress product we no longer sell, and
+      // it 404'd in the 10 Nov Rankability crawl. Nothing on the site links to it,
+      // but outside links and Google's index still do, so it goes to the benches
+      // rather than to nothing. If a preacher bench is listed again, its unit
+      // will take this slug: delete this line first, because redirects run
+      // before routing and would hide the new page.
+      { source: "/product/preacher-bench", destination: "/equipment/strength/weight-benches", permanent: true },
+
       // No redirect for /fitout/commercial-gym-fitout: it pointed at Independent
       // Gym from 19 Oct to 12 Nov 2026 and cost the page its ranking, so it is a
       // page of its own again (lib/fitouts.ts).
