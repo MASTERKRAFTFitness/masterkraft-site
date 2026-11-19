@@ -197,6 +197,39 @@ describe("a quote is not a sale", () => {
     ]);
   });
 
+  it("prices any size exactly as typed, rounded up to the dollar, with the size on the line", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    createUnleashedOrder.mockResolvedValue({ guid: "g", orderNumber: "SO-9", status: "Parked", total: 0 });
+    // 2.35m x 10.8m = 25.38 m² x $75 = $1,903.50 + $500 = $2,403.50 -> $2,404
+    // ex GST, $2,644.40 inc.
+    await placeQuote(contact, [
+      { id: 0, sku: "MFATCT01", name: "x", qty: 1, size: { widthM: 2.35, lengthM: 10.8 } },
+    ]);
+    const [line] = createUnleashedOrder.mock.calls[0][0].lines;
+    expect(line).toMatchObject({ sku: "MFATCT01", quantity: 1, unitPrice: 2644.4 });
+    expect(line.name).toContain("2.35m x 10.8m (25.38 m²)");
+    expect(line.comment).toBe("Custom Turf size: 2.35m x 10.8m (25.38 sq m)");
+  });
+
+  it("leaves custom turf unpriced when the size is out of bounds or malformed", async () => {
+    process.env.UNLEASHED_WRITE_ENABLED = "true";
+    process.env.UNLEASHED_QUOTE_ORDERS = "true";
+    createUnleashedOrder.mockResolvedValue({ guid: "g", orderNumber: "SO-9", status: "Parked", total: 0 });
+    for (const size of [
+      { widthM: 10.01, lengthM: 5 },
+      { widthM: 2.3456, lengthM: 5 },
+      { widthM: 0.05, lengthM: 5 },
+      { widthM: "2", lengthM: 5 },
+    ]) {
+      createUnleashedOrder.mockClear();
+      await placeQuote(contact, [{ id: 0, sku: "MFATCT01", name: "Custom Turf", qty: 1, size } as never]);
+      const [line] = createUnleashedOrder.mock.calls[0][0].lines;
+      expect(line.unitPrice).toBe(0);
+      expect(line.comment).toBeUndefined();
+    }
+  });
+
   it("leaves custom turf unpriced when the size is missing", async () => {
     process.env.UNLEASHED_WRITE_ENABLED = "true";
     process.env.UNLEASHED_QUOTE_ORDERS = "true";

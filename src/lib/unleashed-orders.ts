@@ -199,6 +199,8 @@ export type UnleashedOrderResult = {
 
 type PayloadLine = Record<string, unknown>;
 
+const LINE_COMMENT_MAX = 200;
+
 const round2 = (n: number) => Math.round(n * 100) / 100;
 /** GST-inclusive in, ex-GST out. Four places: Unleashed stores unit prices at 4dp. */
 const exGst = (incGst: number) => Math.round((incGst / GST) * 10000) / 10000;
@@ -275,6 +277,9 @@ export function buildSalesOrderPayload(
       TaxRate: TAX_RATE,
       LineTax: round2(lineEx * TAX_RATE),
       XeroTaxCode: XERO_TAX_CODE,
+      // A note on the line itself (custom turf's size), where whoever picks or
+      // cuts it reads it. Kept short; Unleashed line comments are not essays.
+      ...(l.comment?.trim() ? { Comments: l.comment.trim().slice(0, LINE_COMMENT_MAX) } : {}),
     };
   });
 
