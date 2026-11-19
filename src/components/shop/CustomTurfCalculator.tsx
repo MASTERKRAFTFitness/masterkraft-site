@@ -1,7 +1,9 @@
 "use client";
 
-// The buy box of the Custom Turf product page (MFATCT01): pick a width and
-// length in whole metres, see the price, and send it as a quote request.
+// The buy box of the Custom Turf product page (MFATCT01): enter any width and
+// length (to the millimetre, inside the bounds in lib/custom-turf), see the
+// price, and send it as a quote request. What is typed is used exactly; the
+// only rounding is the price, up to the whole dollar.
 //
 // A QUOTE, NOT A CART LINE. A custom piece needs the customer's artwork and a
 // person to confirm it before anything is cut, so it goes through /api/quote
@@ -22,33 +24,40 @@ import {
   TURF_MAX_WIDTH_M,
   TURF_MIN_M,
   TURF_RATE_PER_M2_EX_GST,
-  clampMetres,
   describeCustomTurf,
+  formatMetres,
+  parseTurfMetres,
   priceCustomTurf,
+  turfSizeLabel,
 } from "@/lib/custom-turf";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
   "w-full px-4 py-3 border border-line bg-white text-ink placeholder:text-ash/70 focus:outline-none focus:border-accent transition-colors";
 
+// The +/− buttons nudge by half a metre. Typing is never snapped to it.
+const NUDGE_M = 0.5;
+
 function MetrePicker({
   label,
-  value,
+  text,
   max,
   onChange,
 }: {
   label: string;
-  value: number;
+  /** Exactly what is in the box. The parent parses it; nothing here rewrites it. */
+  text: string;
   max: number;
-  onChange: (n: number) => void;
+  onChange: (text: string) => void;
 }) {
   const id = `turf-${label.toLowerCase()}`;
-  // What is typed, kept apart from the value so clearing the box to type "12"
-  // does not snap to 1 first. Clamped on blur; a valid number applies at once.
-  const [draft, setDraft] = useState<string | null>(null);
-  const step = (d: number) => {
-    setDraft(null);
-    onChange(clampMetres(value + d, max));
+  const value = parseTurfMetres(text, max);
+  const invalid = value === null;
+  const nudge = (d: number) => {
+    const from = value ?? TURF_MIN_M;
+    // Back to three places, so 0.1 + 0.5 does not show float noise.
+    const next = Math.min(max, Math.max(TURF_MIN_M, Math.round((from + d) * 1000) / 1000));
+    onChange(formatMetres(next));
   };
   return (
     <div>
@@ -58,58 +67,63 @@ function MetrePicker({
       <div className="flex">
         <button
           type="button"
-          onClick={() => step(-1)}
-          disabled={value <= TURF_MIN_M}
-          aria-label={`Decrease ${label.toLowerCase()}`}
+          onClick={() => nudge(-NUDGE_M)}
+          disabled={value !== null && value <= TURF_MIN_M}
+          aria-label={`Decrease ${label.toLowerCase()} by ${NUDGE_M}m`}
           className="w-12 border border-line text-xl disabled:opacity-40 hover:border-accent"
         >
           −
         </button>
         <input
           id={id}
-          type="number"
-          inputMode="numeric"
-          min={TURF_MIN_M}
-          max={max}
-          step={1}
-          value={draft ?? value}
-          onChange={(e) => {
-            setDraft(e.target.value);
-            const n = Number(e.target.value);
-            if (e.target.value !== "" && n >= TURF_MIN_M && n <= max) onChange(clampMetres(n, max));
-          }}
-          onBlur={() => {
-            if (draft !== null) onChange(clampMetres(draft === "" ? value : Number(draft), max));
-            setDraft(null);
-          }}
-          className="w-full min-w-0 border-y border-line text-center text-lg font-bold py-3 focus:outline-none focus:border-accent"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+          aria-invalid={invalid}
+          aria-describedby={invalid ? `${id}-error` : undefined}
+          className={`w-full min-w-0 border-y text-center text-lg font-bold py-3 focus:outline-none focus:border-accent ${
+            invalid ? "border-accent-600 text-accent-600" : "border-line"
+          }`}
         />
         <button
           type="button"
-          onClick={() => step(1)}
-          disabled={value >= max}
-          aria-label={`Increase ${label.toLowerCase()}`}
+          onClick={() => nudge(NUDGE_M)}
+          disabled={value !== null && value >= max}
+          aria-label={`Increase ${label.toLowerCase()} by ${NUDGE_M}m`}
           className="w-12 border border-line text-xl disabled:opacity-40 hover:border-accent"
         >
           +
         </button>
       </div>
+      {invalid && (
+        <p id={`${id}-error`} className="mt-1 text-xs text-accent-600">
+          Enter {TURF_MIN_M}m to {max}m, up to 3 decimal places.
+        </p>
+      )}
     </div>
   );
 }
 
 export default function CustomTurfCalculator() {
   const elapsed = useFillTimer();
-  const [width, setWidth] = useState(2);
-  const [length, setLength] = useState(10);
+  const [widthText, setWidthText] = useState("2");
+  const [lengthText, setLengthText] = useState("10");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const q = priceCustomTurf(width, length);
+  // Null while either box holds something we cannot price: nothing is shown
+  // as a price and the request cannot be sent.
+  const q = priceCustomTurf(
+    parseTurfMetres(widthText, TURF_MAX_WIDTH_M),
+    parseTurfMetres(lengthText, TURF_MAX_LENGTH_M)
+  );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!q) return;
     setSending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
@@ -120,7 +134,7 @@ export default function CustomTurfCalculator() {
       company: String(form.get("company") ?? ""),
       location: String(form.get("location") ?? ""),
       // The size leads the notes: it is the one thing the ERP lines cannot say.
-      notes: [`Size: ${q.widthM}m x ${q.lengthM}m (${q.areaM2} m²).`, String(form.get("notes") ?? "").trim()]
+      notes: [`Size: ${turfSizeLabel(q)}.`, String(form.get("notes") ?? "").trim()]
         .filter(Boolean)
         .join(" "),
     };
@@ -162,54 +176,69 @@ export default function CustomTurfCalculator() {
   return (
     <div id="custom-turf">
       <p className="text-sm text-ash">
-        Choose your width and length in 1m steps. {aud.format(TURF_RATE_PER_M2_EX_GST)} per m² plus a once-off{" "}
-        {aud.format(TURF_CUSTOM_FEE_EX_GST)} for design, print, cut and production (ex GST).
+        Any width and length you need, to the centimetre (up to {TURF_MAX_WIDTH_M}m wide and {TURF_MAX_LENGTH_M}m
+        long). {aud.format(TURF_RATE_PER_M2_EX_GST)} per m² plus a once-off {aud.format(TURF_CUSTOM_FEE_EX_GST)} for
+        design, print, cut and production (ex GST), rounded up to the nearest dollar.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-4">
-        <MetrePicker label="Width" value={width} max={TURF_MAX_WIDTH_M} onChange={setWidth} />
-        <MetrePicker label="Length" value={length} max={TURF_MAX_LENGTH_M} onChange={setLength} />
+        <MetrePicker label="Width" text={widthText} max={TURF_MAX_WIDTH_M} onChange={setWidthText} />
+        <MetrePicker label="Length" text={lengthText} max={TURF_MAX_LENGTH_M} onChange={setLengthText} />
       </div>
 
-      <dl className="mt-6 border border-line divide-y divide-line text-sm" aria-live="polite">
-        <div className="flex justify-between gap-4 px-4 py-3">
-          <dt className="text-ash">Area</dt>
-          <dd className="font-bold">{q.areaM2} m²</dd>
-        </div>
-        <div className="flex justify-between gap-4 px-4 py-3">
-          <dt className="text-ash">
-            Turf ({q.areaM2} m² × {aud.format(TURF_RATE_PER_M2_EX_GST)})
-          </dt>
-          <dd>{aud.format(q.turfExGst)}</dd>
-        </div>
-        <div className="flex justify-between gap-4 px-4 py-3">
-          <dt className="text-ash">Custom design, print, cut &amp; production</dt>
-          <dd>{aud.format(q.customFeeExGst)}</dd>
-        </div>
-        <div className="flex justify-between gap-4 px-4 py-3">
-          <dt className="text-ash">GST</dt>
-          <dd>{aud.format(q.gst)}</dd>
-        </div>
-        <div className="flex justify-between items-baseline gap-4 px-4 py-4 bg-carbon text-white">
-          <dt className="font-mono text-xs tracking-widest uppercase">Total inc. GST</dt>
-          <dd className="text-2xl font-bold">{aud.format(q.totalIncGst)}</dd>
-        </div>
-      </dl>
-      <p className="mt-2 text-xs text-ash">{aud.format(q.totalExGst)} ex GST. Freight is quoted separately.</p>
+      {q ? (
+        <>
+          <dl className="mt-6 border border-line divide-y divide-line text-sm" aria-live="polite">
+            <div className="flex justify-between gap-4 px-4 py-3">
+              <dt className="text-ash">Area</dt>
+              <dd className="font-bold">{formatMetres(q.areaM2)} m²</dd>
+            </div>
+            <div className="flex justify-between gap-4 px-4 py-3">
+              <dt className="text-ash">
+                Turf ({formatMetres(q.areaM2)} m² × {aud.format(TURF_RATE_PER_M2_EX_GST)})
+              </dt>
+              <dd>{aud.format(q.turfExGst)}</dd>
+            </div>
+            <div className="flex justify-between gap-4 px-4 py-3">
+              <dt className="text-ash">Custom design, print, cut &amp; production</dt>
+              <dd>{aud.format(q.customFeeExGst)}</dd>
+            </div>
+            {q.roundedUp && (
+              <div className="flex justify-between gap-4 px-4 py-3">
+                <dt className="text-ash">Rounded up to the nearest dollar</dt>
+                <dd>{aud.format(q.totalExGst - q.unroundedExGst)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between gap-4 px-4 py-3">
+              <dt className="text-ash">GST</dt>
+              <dd>{aud.format(q.gst)}</dd>
+            </div>
+            <div className="flex justify-between items-baseline gap-4 px-4 py-4 bg-carbon text-white">
+              <dt className="font-mono text-xs tracking-widest uppercase">Total inc. GST</dt>
+              <dd className="text-2xl font-bold">{aud.format(q.totalIncGst)}</dd>
+            </div>
+          </dl>
+          <p className="mt-2 text-xs text-ash">{aud.format(q.totalExGst)} ex GST. Freight is quoted separately.</p>
+        </>
+      ) : (
+        <p className="mt-6 border border-line px-4 py-6 text-sm text-ash text-center" aria-live="polite">
+          Enter a width and length to see your price.
+        </p>
+      )}
 
       <div className="mt-8">
         {done ? (
           <div className="border border-accent bg-accent/5 p-8 text-center">
             <p className="font-display uppercase tracking-wide text-lg">Thank you</p>
             <p className="mt-2 text-ash">
-              We&apos;ve got your {q.widthM}m × {q.lengthM}m turf request and will be in touch to confirm your design
+              We&apos;ve got your {q ? `${formatMetres(q.widthM)}m × ${formatMetres(q.lengthM)}m ` : ""}turf request and will be in touch to confirm your design
               and freight.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 relative">
             <p className="font-display uppercase tracking-wide text-lg">
-              Request this turf: {q.widthM}m × {q.lengthM}m
+              {q ? `Request this turf: ${formatMetres(q.widthM)}m × ${formatMetres(q.lengthM)}m` : "Request this turf"}
             </p>
             <input name="name" required aria-label="Name" placeholder="Name" className={fieldClass} />
             <div className="grid sm:grid-cols-2 gap-4">
@@ -229,8 +258,9 @@ export default function CustomTurfCalculator() {
             />
             <HoneypotField />
             {error && <p className="text-accent-600 text-sm">{error}</p>}
-            <button type="submit" disabled={sending} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
-              {sending ? "Sending…" : `Request quote: ${aud.format(q.totalIncGst)}`} <span aria-hidden>→</span>
+            <button type="submit" disabled={sending || !q} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
+              {sending ? "Sending…" : q ? `Request quote: ${aud.format(q.totalIncGst)}` : "Enter a valid size"}{" "}
+              <span aria-hidden>→</span>
             </button>
           </form>
         )}

@@ -101,6 +101,8 @@ export type OrderLine = {
   quantity: number;
   unitPrice: number; // GST-inclusive unit price (from Unleashed/cart)
   name: string;
+  /** Written to the Unleashed sales order line's Comments (custom turf's size). */
+  comment?: string;
 };
 
 export type OrderAddress = {

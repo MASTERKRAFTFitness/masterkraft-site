@@ -15,7 +15,7 @@
 // charge taken first. Turning the ERP path off is now a decision someone has to
 // make, not something a missing variable does quietly.
 import { type CreateOrderInput } from "@/lib/order-lines";
-import { describeCustomTurf, isQuoteOnlyCode, priceCustomTurf, type TurfSize } from "@/lib/custom-turf";
+import { describeCustomTurf, isQuoteOnlyCode, priceTurfSize, turfLineComment, type TurfSize } from "@/lib/custom-turf";
 import {
   createUnleashedOrder,
   ordersEnabled as unleashedOrdersEnabled,
@@ -170,17 +170,20 @@ export async function placeQuote(
       const entry = lookupBySku(erp, i.sku);
       // Custom turf is one line priced by its size: area x the ERP's per-m²
       // rate plus the fee, worked out here from the size the customer chose,
-      // never from the price their browser sent. No size means no price (POA).
+      // never from the price their browser sent. Any size inside the bounds,
+      // exactly as typed; the ex-GST total is rounded up to the whole dollar and
+      // carried inc GST like every other line here (the payload takes GST back
+      // off). No valid size means no price (POA). The size also rides on the
+      // order line's Comments, so the sales order itself says what to cut.
       if (isQuoteOnlyCode(i.sku)) {
-        const w = Number(i.size?.widthM), l = Number(i.size?.lengthM);
-        const sized = Number.isFinite(w) && Number.isFinite(l) && w > 0 && l > 0;
-        const q = sized ? priceCustomTurf(w, l) : null;
+        const q = priceTurfSize(i.size);
         return {
           productId: 0,
           sku: i.sku,
           quantity: 1,
           unitPrice: q ? q.totalIncGst : 0,
           name: q ? describeCustomTurf(q) : entry?.name ?? i.name,
+          ...(q ? { comment: turfLineComment(q) } : {}),
         };
       }
       return {
