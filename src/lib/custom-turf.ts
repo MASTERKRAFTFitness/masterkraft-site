@@ -16,6 +16,11 @@
 // the $75 per m² rate, which is what the card shows; the line price is worked
 // out here from the size, never taken from the browser.
 export const CUSTOM_TURF_CODE = "MFATCT01";
+// Fernwood's twin (created 19 Nov 2026, same $75 on every tier). This site never
+// lists Fernwood codes; it is named here so it can never be paid for by card
+// either. The Fernwood catalogue (masterkraft-catalogues) has its own calculator.
+export const FERNWOOD_CUSTOM_TURF_CODE = "FFATCT01";
+const QUOTE_ONLY = new Set([CUSTOM_TURF_CODE, FERNWOOD_CUSTOM_TURF_CODE]);
 
 /**
  * Codes that are sold by quote only, never by card. A custom piece needs the
@@ -23,7 +28,7 @@ export const CUSTOM_TURF_CODE = "MFATCT01";
  * plus a fee, which a cart line priced per unit cannot express.
  */
 export function isQuoteOnlyCode(sku: string | undefined | null): boolean {
-  return (sku ?? "").trim().toUpperCase() === CUSTOM_TURF_CODE;
+  return QUOTE_ONLY.has((sku ?? "").trim().toUpperCase());
 }
 
 export const TURF_RATE_PER_M2_EX_GST = 75;
