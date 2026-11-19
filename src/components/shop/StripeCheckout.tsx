@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { useCart, type CartItem } from "@/components/cart/CartProvider";
-import { identifyUser, trackLead, trackPurchase } from "@/lib/analytics";
-import { opinlyAnonId } from "@/lib/opinly";
+import { trackLead, trackPurchase } from "@/lib/analytics";
 import { freightMessage, quotesAutomatically } from "@/lib/freight-message";
 import StoppingQuestion from "@/components/shop/StoppingQuestion";
 import { useLeaveIntent } from "@/components/shop/useLeaveIntent";
@@ -357,7 +356,6 @@ export default function StripeCheckout({
         freightServiceId,
         checkoutId,
         billing: b,
-        anonId: opinlyAnonId(),
         promoCode: promoActive ? promo.code : undefined,
       }),
     });
@@ -371,11 +369,6 @@ export default function StripeCheckout({
       }
       throw new Error(data.error || "Could not start payment.");
     }
-    // The storefront has no login, so this is the identity surface: a customer
-    // who has reached the card screen has given us a real, deliverable email.
-    // Deliberately not on the freight step above — that one is re-run on every
-    // edit, and Opinly keeps the FIRST email it is given, forever.
-    identifyUser(b.email);
     setBilling(b);
     setOrderRefs(refs);
     setClientSecret(data.clientSecret);
@@ -458,7 +451,6 @@ export default function StripeCheckout({
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
-        identifyUser(b.email);
         trackLead(subtotal, items.length, b.email);
       }
       forgetCheckoutId();
@@ -873,10 +865,6 @@ function PayForm({
           billing,
           shipping: billing,
           paymentIntentId: paymentIntent?.id,
-          // Lets the server report this sale against the visit that produced it.
-          // Undefined when the pixel never loaded (cookies declined, blocker) —
-          // the server falls back to the billing email.
-          anonId: opinlyAnonId(),
           checkoutId,
         }),
       });

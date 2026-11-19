@@ -20,7 +20,7 @@ export default function NewsletterForm() {
         body: JSON.stringify({ email: f.get("email"), ...guardValues(f, elapsed()) }),
       });
       const data = await res.json().catch(() => ({}));
-      if (data.accepted) trackSignUp("newsletter", String(f.get("email") ?? ""));
+      if (data.accepted) trackSignUp("newsletter");
       setDone(true);
     } catch {
       // Not tracked on this path: the UI fails soft and thanks them anyway, but
