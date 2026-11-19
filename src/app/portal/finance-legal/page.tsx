@@ -6,7 +6,7 @@ const data = contentPages["finance-legal"];
 
 export const metadata: Metadata = {
   title: `${data.title} Portal`,
-  description: data.subtitle,
+  description: data.seoDescription ?? data.subtitle,
 };
 
 export default function Page() {

@@ -13,6 +13,25 @@
 
 export const DESCRIPTION_MAX = 160;
 
+/**
+ * Shortest description worth sending. Below this Google usually ignores the tag
+ * and writes its own snippet from the page; the 10 Nov audit's floor is 70 too.
+ */
+export const DESCRIPTION_MIN = 70;
+
+/**
+ * `text`, or `text` plus `extra` when `text` alone is under DESCRIPTION_MIN.
+ *
+ * For descriptions that come from a short on-page line (a card blurb, a
+ * subtitle, the ERP fallback) which is right where it is shown but too thin as
+ * a search snippet. `extra` must be true of every page it can reach.
+ */
+export function padDescription(text: string | undefined, extra: string): string | undefined {
+  if (!text) return text;
+  const t = text.replace(/\s+/g, " ").trim();
+  return fitDescription(t.length >= DESCRIPTION_MIN ? t : `${t} ${extra}`);
+}
+
 /** Below this, cutting at a sentence end would leave too little to be worth it. */
 const MIN_SENTENCE_CUT = 70;
 

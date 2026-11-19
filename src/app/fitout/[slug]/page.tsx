@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { padDescription } from "@/lib/meta-description";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { recordNotFound } from "@/lib/not-found-log";
@@ -36,7 +37,8 @@ export async function generateMetadata({
     // "Schools & University" run past what a search result shows with it.
     // See lib/page-title.
     title: withQualifier(`${f.name} Fitouts`, "Design, Supply & Install"),
-    description: f.blurb,
+    // The card blurb, topped up with the intro where it is too short for a snippet.
+    description: padDescription(f.blurb, f.intro),
     alternates: { canonical: `/fitout/${f.slug}` },
   };
 }

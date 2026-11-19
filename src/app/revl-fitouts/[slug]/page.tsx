@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { padDescription } from "@/lib/meta-description";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
@@ -12,6 +13,9 @@ export function generateStaticParams() {
   return revlSites.map((s) => ({ slug: s.slug }));
 }
 
+// True of every studio page, which is what lets it be appended to any of them.
+const REVL_DESCRIPTION_TAIL = "One of the REVL studios MasterKraft has fitted out across its network.";
+
 export async function generateMetadata({
   params,
 }: {
@@ -22,7 +26,8 @@ export async function generateMetadata({
   if (!s) return { title: "REVL Fitouts" };
   return {
     title: `${s.name} | REVL ${s.caseStudy ? "Case Study" : "Fitout"}`,
-    description: s.blurb,
+    // The card blurb; 19 of them are under 70 characters on their own.
+    description: padDescription(s.blurb, REVL_DESCRIPTION_TAIL),
     alternates: { canonical: `/revl-fitouts/${s.slug}` },
   };
 }

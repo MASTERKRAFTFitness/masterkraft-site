@@ -6,7 +6,8 @@ import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "Wholesale Store | Trade Ordering & Pricing",
-  description: "Wholesale ordering for MasterKraft trade partners.",
+  description:
+    "Wholesale ordering for MasterKraft trade partners: trade pricing on our commercial gym equipment range, ordered through the MasterKraft portal.",
   alternates: { canonical: "/wholesale-store" },
 };
 

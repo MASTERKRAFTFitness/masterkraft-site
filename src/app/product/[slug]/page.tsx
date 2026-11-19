@@ -28,7 +28,7 @@ import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
 import { getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
-import { fitDescription } from "@/lib/meta-description";
+import { padDescription } from "@/lib/meta-description";
 
 // The cart key for a size with no WooCommerce variation id. Shared with the
 // Merchant Center checkout link so both build the same line; see lib/checkout-link.
@@ -137,10 +137,15 @@ export async function generateMetadata({
     // plainText on `short` too: resolveCopy's third level is the database row's
     // WooCommerce short description, which is HTML, and 127 pages were sending
     // "<p>Upgrade your gym&#8217;s…" to Google as their description.
-    description: fitDescription(
+    //
+    // padDescription: the ERP fallback ("Buy X at MASTERKRAFT. $64.00 inc.
+    // GST.") and a few one-line shorts land under 70 characters, where Google
+    // tends to ignore the tag. The tail is true of every product.
+    description: padDescription(
       plainText(authored?.short) ||
         plainText(p.short_description) ||
-        (unit ? unitDescription(unit) : undefined)
+        (unit ? unitDescription(unit) : undefined),
+      "Wholesale pricing available to qualifying trade customers."
     ),
     alternates: { canonical: `/product/${canonicalSlug}` },
     openGraph: {
