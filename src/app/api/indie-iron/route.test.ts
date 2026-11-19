@@ -147,6 +147,11 @@ describe("Indie Iron sign-up", () => {
 
   describe("welcome email", () => {
     it("welcomes the gym with its window, the closing time and the pricing", async () => {
+      // Pinned while the founding round was open. Unpinned, this began failing
+      // at its close (23:59 Melbourne, 15 Nov 2026), because the email then
+      // correctly rolls the gym into the next window instead.
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-11-01T00:00:00Z"));
       process.env.HUBSPOT_FORM_INDIE_IRON = "guid-ii";
       await post(valid);
       const mail = welcome();
