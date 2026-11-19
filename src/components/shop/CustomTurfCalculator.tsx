@@ -13,7 +13,7 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
-import { identifyUser, trackLead } from "@/lib/analytics";
+import { trackLead } from "@/lib/analytics";
 import { readAdClick } from "@/lib/ad-click";
 import {
   CUSTOM_TURF_CODE,
@@ -149,7 +149,6 @@ export default function CustomTurfCalculator() {
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong.");
       if (data.accepted) {
-        identifyUser(contact.email);
         trackLead(q.totalIncGst, 1, contact.email);
       }
       setDone(true);
