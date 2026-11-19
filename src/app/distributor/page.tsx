@@ -8,11 +8,13 @@ import DistributorApplicationForm from "@/components/marketing/DistributorApplic
 import Eyebrow from "@/components/ui/Eyebrow";
 import JsonLd from "@/components/seo/JsonLd";
 import { blogEnabled, BLOG_PREFIX } from "@/lib/blog";
+import { withoutBrandIfLong } from "@/lib/page-title";
 
 export const metadata: Metadata = {
-  title: "Become a Distributor | International Gym Equipment Distribution",
+  // 77 characters with the brand appended; without it, 63. See lib/page-title.
+  title: withoutBrandIfLong("Become a Distributor | International Gym Equipment Distribution"),
   description:
-    "Distribute MasterKraft commercial gym equipment in your country. Premium design, custom branding, consolidated global logistics and full-service support for distribution partners worldwide.",
+    "Distribute MasterKraft commercial gym equipment in your country, with custom branding, consolidated global logistics and full-service partner support.",
   alternates: { canonical: "/distributor" },
 };
 

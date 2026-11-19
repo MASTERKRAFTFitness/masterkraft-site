@@ -29,6 +29,8 @@
 // flags are part of the key, so editing FREIGHT_MARGIN_PERCENT cannot leave old
 // prices being charged.
 
+import { unstable_cache } from "next/cache";
+
 /** 15 minutes: longer than a checkout, far shorter than a carrier's rate card. */
 const DEFAULT_TTL_SECONDS = 900;
 
@@ -88,6 +90,71 @@ export function setCached<T>(key: string, value: T, ttlSeconds: number): void {
     store.delete(oldest.value);
   }
 }
+
+/** Thrown out of the shared cache to hand back an answer it must not keep. */
+class NotShared<T> extends Error {
+  constructor(readonly value: T) {
+    super("not shared");
+  }
+}
+
+/**
+ * The whole-cart quote, from this instance's memory, then the SHARED cache,
+ * and only then from the carriers.
+ *
+ * WHY SHARED (2026-11-11). The checkout prices the address in the background
+ * as soon as it is typed, so Calculate Freight should be instant. On Vercel the
+ * button's request usually lands on a different instance from the probe's, and
+ * an in-memory cache alone priced the cart a second time: 3.7s instead of 0.1s.
+ * The Next data cache is shared by every instance, so the second request
+ * finds the first one's answer.
+ *
+ * ONLY A PRICED CART IS SHARED. A failure is cached here as before (briefly,
+ * or not at all - see cacheableFor in lib/freight), but never written to the
+ * shared cache: a carrier outage should not outlive the instance that saw it.
+ * The shared entry follows FREIGHT_CACHE_TTL_SECONDS and is served stale once
+ * past it while a fresh price is fetched, which is how Next revalidates.
+ *
+ * OUTSIDE NEXT (tests, scripts) there is no shared cache and unstable_cache
+ * throws before running anything; the cart is then priced directly.
+ */
+export async function getOrQuote<T extends { ok: boolean }>(
+  key: string,
+  ttlFor: (value: T) => number,
+  compute: () => Promise<T>
+): Promise<T> {
+  const local = getCached<T>(key);
+  if (local !== undefined) return local;
+
+  let value: T;
+  const ttl = cacheTtlSeconds();
+  if (ttl <= 0) {
+    value = await compute();
+  } else {
+    let started = false;
+    const run = async () => {
+      started = true;
+      const v = await compute();
+      if (!v.ok) throw new NotShared(v);
+      return v;
+    };
+    try {
+      value = await unstable_cache(run, ["freight-quote-v1", key], {
+        revalidate: ttl,
+        tags: [FREIGHT_QUOTE_TAG],
+      })();
+    } catch (e) {
+      if (e instanceof NotShared) value = e.value as T;
+      else if (!started) value = await compute();
+      else throw e;
+    }
+  }
+  setCached(key, value, ttlFor(value));
+  return value;
+}
+
+/** Cache tag on every shared freight quote. */
+export const FREIGHT_QUOTE_TAG = "freight-quote";
 
 /** For tests, and for anything that changes what a cached price would mean. */
 export function clearFreightCache(): void {

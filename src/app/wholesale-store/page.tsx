@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import { portalLoginHref } from "@/lib/site";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "Wholesale Store | Trade Ordering & Pricing",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export default function WholesaleStorePage() {
   return (
     <>
+      <PageSchema path="/wholesale-store" name="Wholesale Store" description={metadata.description} />
       <PageHero
         eyebrow="Wholesale"
         title="Wholesale Store"

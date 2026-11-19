@@ -1,5 +1,6 @@
 import PageHero from "@/components/marketing/PageHero";
 import AccordionSections from "@/components/marketing/AccordionSections";
+import PageSchema from "@/components/seo/PageSchema";
 
 export type ContentSection = { heading?: string; body: string[] };
 export type ContentPageData = {
@@ -25,9 +26,18 @@ export type ContentPageData = {
   collapsible?: boolean;
 };
 
-export default function ContentPage({ eyebrow, title, subtitle, intro, sections, collapsible }: ContentPageData) {
+export default function ContentPage({
+  eyebrow,
+  title,
+  subtitle,
+  intro,
+  sections,
+  collapsible,
+  path,
+}: ContentPageData & { /** The route, for structured data. See PageSchema. */ path?: string }) {
   return (
     <>
+      {path && <PageSchema path={path} name={title} description={subtitle} />}
       <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} />
       <section className="container-mk max-w-3xl py-16">
         {intro && <p className="text-xl text-ink leading-relaxed mb-10">{intro}</p>}

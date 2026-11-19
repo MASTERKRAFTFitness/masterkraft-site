@@ -158,6 +158,8 @@ def main():
     ap.add_argument("--only", help="comma-separated codes, for a quick test")
     ap.add_argument("--publish", action="store_true",
                     help="also write public/merchant-center-promotion.csv, the file Merchant Center fetches daily")
+    ap.add_argument("--checked-only", action="store_true",
+                    help="publish only sizes actually priced against Little Bloke, not the no-match ones")
     args = ap.parse_args()
 
     matches = json.load(open(os.path.join(HERE, "matches.json")))
@@ -234,8 +236,11 @@ def main():
         incomplete = [r["code"] for r in rows if r.get("decision") in ("incomplete", "review")]
         if incomplete:
             sys.exit(f"not publishing: incomplete or needs review: {', '.join(incomplete)}")
+        # --checked-only leaves out the no-match sizes: they qualify by default,
+        # with no competitor price behind them.
+        pub = [r for r in keep if not (args.checked_only and r.get("decision") == "no-match")]
         with open(os.path.join("public", "merchant-center-promotion.csv"), "w") as f:
-            f.write("id,custom_label_4\n" + "".join(f"{r['code']},ads-{r['label']}\n" for r in keep))
+            f.write("id,custom_label_4\n" + "".join(f"{r['code']},ads-{r['label']}\n" for r in pub))
     for lab in sorted({r["label"] for r in keep}):
         with open(os.path.join(args.out, f"google-ads-item-ids-{lab}.txt"), "w") as f:
             f.write("".join(r["code"] + "\n" for r in keep if r["label"] == lab))

@@ -4,17 +4,19 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import { revlSites, revlNetwork, revlOperatingMarketCount } from "@/lib/revl";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "REVL Fitouts | Global Studio Equipment Supply",
   description:
-    "MasterKraft is the exclusive global equipment supplier to REVL Training, fitting out studios across Australia, Singapore, Malaysia, Vietnam, Taiwan and beyond - delivered complete in a single container.",
+    "MasterKraft is REVL Training's exclusive global equipment supplier, fitting out studios across Australia and Asia, each delivered complete in one container.",
   alternates: { canonical: "/revl-fitouts" },
 };
 
 export default function RevlLanding() {
   return (
     <>
+      <PageSchema path="/revl-fitouts" name="REVL Fitouts" description={metadata.description} type="CollectionPage" />
       <PageHero
         eyebrow="Partnership"
         title="REVL Training Fitouts"

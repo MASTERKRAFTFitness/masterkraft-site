@@ -24,6 +24,8 @@
 // every line must be re-pricable server-side, and now it is the code that says
 // whether it is.
 
+import { isQuoteOnlyCode } from "@/lib/custom-turf";
+
 export type CartLine = {
   /** GST-inclusive, as the cart holds it. Zero means price on application. */
   price?: number;
@@ -40,6 +42,9 @@ export type CartLine = {
  * pricing" - it has a real ProductCode and still must not reach a card form.
  */
 export function lineSellableByCard(line: CartLine): boolean {
+  // Quote-only codes (custom turf) have a real code and a real price and
+  // still must not reach a card form. See lib/custom-turf.
+  if (isQuoteOnlyCode(line.sku)) return false;
   return (line.price ?? 0) > 0 && Boolean(line.sku?.trim());
 }
 

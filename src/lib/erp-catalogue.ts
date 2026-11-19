@@ -22,6 +22,7 @@
 // not hold. Units with no page get a slug from their name and a page generated
 // from ERP data alone.
 import { allProducts, variationsFor } from "@/lib/catalogue";
+import { isQuoteOnlyCode } from "@/lib/custom-turf";
 import type { UnleashedEntry, UnleashedMap } from "@/lib/unleashed";
 import { anchorCodes, compareSizeLabels, getRange } from "@/lib/ranges";
 import { cartonsContradict, defaultCartonFor, isOversize } from "@/lib/freight";
@@ -388,7 +389,9 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
     if (EXCLUDED_GROUPS.has(entry.group)) continue;
     // Drop the individual SIZE, not the whole range: a rack that is measured in
     // three sizes and not in a fourth should still sell the three.
-    if (hideUnshippable() && !codeIsShippable(code, entry) && !worthAnEnquiry(entry.price)) continue;
+    // Quote-only codes (custom turf) never reach an online freight quote, so an
+    // unmeasured carton cannot strand them at checkout. See lib/custom-turf.
+    if (hideUnshippable() && !codeIsShippable(code, entry) && !worthAnEnquiry(entry.price) && !isQuoteOnlyCode(code)) continue;
     const { name, size } = splitUnitName(entry.name, entry.brand);
     if (!name) continue;
     // NUL-joined, not space-joined: "Mixed Implements" and "Rubber Hex
@@ -528,6 +531,33 @@ export function erpUnitBySlug(map: UnleashedMap, slug: string): ErpUnit | undefi
 }
 
 /**
+ * The page a third-party clearance listing should name as its canonical, when
+ * we sell the same thing new under our own code.
+ *
+ * THE OLD STORE HELD BOTH. `drop-in-core-trainer` is ABCTDR01, ex-display stock,
+ * and `drop-in-core-trainer-2` is MBCTDR01, the one we sell new; the snapshot
+ * gave them the same name and the same words. Both answered 200 with a canonical
+ * to themselves, so Google was shown two pages about one product and left to
+ * pick, and the 10 Nov site audit flagged the pairs at 98–100% duplicate. The
+ * clearance page still serves (somebody may want the ex-display one) but points
+ * search at the page for the product itself.
+ *
+ * Only a non-brand SKU on an exact name match: a "(Black)" or a different size
+ * in the name is a different listing, not a copy.
+ */
+export function ownUnitForClearance(
+  map: UnleashedMap,
+  p: { slug: string; sku?: string; name: string }
+): ErpUnit | undefined {
+  if (isBrandSku(p.sku)) return undefined;
+  const name = p.name.trim().toLowerCase();
+  for (const u of erpUnits(map).values()) {
+    if (u.group !== CLEARANCE_GROUP && u.slug !== p.slug && u.name.trim().toLowerCase() === name) return u;
+  }
+  return undefined;
+}
+
+/**
  * A unit rendered as the WooCommerce-shaped product the listing components
  * already take, so ProductCard, sorting and the grids are untouched.
  */
@@ -644,7 +674,11 @@ export function unitCard(unit: ErpUnit): { product: WcProduct; enriched: Enriche
             ? `${formatPrice(unit.price)} – ${formatPrice(unit.priceMax)}`
             : unit.isRange && unit.pricedCount < unit.codes.length
               ? `From ${formatPrice(unit.price)}`
-              : formatPrice(unit.price)
+              : unit.codes.some(isQuoteOnlyCode)
+                ? // Custom turf's ERP price is per m², and a bare "$82.50" would
+                  // read as the price of the piece. See lib/custom-turf.
+                  `${formatPrice(unit.price)} per m²`
+                : formatPrice(unit.price)
           : "Contact for pricing",
       priceValue: unit.price,
       // "16 sizes · 6kg – 75kg". What a buyer scanning the grid actually wants

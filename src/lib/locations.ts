@@ -31,7 +31,7 @@ export const locations: Location[] = [
     city: "Melbourne",
     state: "Victoria",
     stateAbbr: "VIC",
-    meta: "Gym fitouts in Melbourne, designed, supplied and installed by MasterKraft. Complete commercial and boutique fitouts across metro Melbourne and regional Victoria.",
+    meta: "Gym fitouts in Melbourne, designed, supplied and installed by MasterKraft. Commercial and boutique fitouts across metro Melbourne and regional Victoria.",
     intro: [
       "Melbourne is MasterKraft's home ground. We design, supply and install complete gym fitouts right across the metro area and regional Victoria, from boutique studios in the inner suburbs to full commercial floors.",
       "It is where a lot of our work lives. We delivered the entire fitout for REVL's Collingwood studio, and we produce the custom-branded equipment used across Fernwood's Victorian clubs, most recently the strength and conditioning floor at Fernwood Pakenham. If you are building or refitting a gym in Melbourne, you are working with a local team, not a distant supplier.",

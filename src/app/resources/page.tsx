@@ -6,6 +6,7 @@ import ResourcesList, { type ResourceProduct } from "@/components/marketing/Reso
 import docs from "@/lib/resource-docs.json";
 import PostCardGrid from "@/components/blog/PostCardGrid";
 import { blogEnabled, listPosts, BLOG_PREFIX } from "@/lib/blog";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "Resources | Manuals, Guides & Spec Sheets",
@@ -44,6 +45,7 @@ export default async function ResourcesPage() {
 
   return (
     <>
+      <PageSchema path="/resources" name="Resources" description={metadata.description} />
       <PageHero
         eyebrow="Resources"
         title="Guides & Product Manuals"

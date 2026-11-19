@@ -8,13 +8,32 @@ import { getAllProducts, type WcProduct } from "@/lib/woocommerce";
 import { getUnleashedMap, enrichCard, type EnrichedProduct } from "@/lib/unleashed";
 import { CLEARANCE_GROUP, erpSubgroups, erpUnits, unitCard, type ErpUnit } from "@/lib/erp-catalogue";
 import { categories } from "@/lib/categories";
+import PageSchema from "@/components/seo/PageSchema";
 
-export const metadata: Metadata = {
-  title: "All Gym Equipment | Shop the Full Range",
-  description:
-    "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.",
-  alternates: { canonical: "/all-equipment" },
-};
+const ALL_EQUIPMENT_DESCRIPTION =
+  "Shop the full MasterKraft range - strength, weightlifting, cardio, rigs & racks, flooring, storage and more.";
+
+// Page 2 is its own URL, for the reason the category pages give
+// (app/equipment/[category]/page.tsx): it shows different products, and a
+// canonical to page 1 asks Google to drop it. `sort` still collapses.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}): Promise<Metadata> {
+  const page = Math.max(1, parseInt((await searchParams).page ?? "1", 10) || 1);
+  const first: Metadata = {
+    title: "All Gym Equipment | Shop the Full Range",
+    description: ALL_EQUIPMENT_DESCRIPTION,
+    alternates: { canonical: "/all-equipment" },
+  };
+  if (page === 1) return first;
+  return {
+    ...first,
+    title: `All Gym Equipment — Page ${page}`,
+    alternates: { canonical: `/all-equipment?page=${page}` },
+  };
+}
 
 const PER_PAGE = 24;
 
@@ -121,6 +140,7 @@ export default async function AllEquipmentPage({
 
   return (
     <>
+      <PageSchema path="/all-equipment" name="All Gym Equipment" description={ALL_EQUIPMENT_DESCRIPTION} type="CollectionPage" />
       <PageHero
         eyebrow="Shop Equipment"
         title="All Equipment"

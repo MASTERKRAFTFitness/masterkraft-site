@@ -3,11 +3,12 @@ import Image from "next/image";
 import PageHero from "@/components/marketing/PageHero";
 import Marquee from "@/components/marketing/Marquee";
 import Eyebrow from "@/components/ui/Eyebrow";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "Our Story | The People Behind the Equipment",
   description:
-    "The power of passion - expertly engineered gym equipment for commercial and corporate fitouts globally. Made by fitness professionals, for fitness professionals.",
+    "Expertly engineered gym equipment for commercial and corporate fitouts around the world. Made by fitness professionals, for fitness professionals.",
   alternates: { canonical: "/our-story" },
 };
 
@@ -29,6 +30,7 @@ const values = [
 export default function OurStoryPage() {
   return (
     <>
+      <PageSchema path="/our-story" name="Our Story" description={metadata.description} type="AboutPage" />
       <PageHero
         eyebrow="Our Story"
         title="The Power of Passion"

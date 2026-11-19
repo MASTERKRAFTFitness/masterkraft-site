@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <>
-      <ContentPage {...data} collapsible />
+      <ContentPage {...data} collapsible path="/warranty" />
       {/* The terms told people what was covered but gave them no way to act on
           it: the page had no claim form and no address to send one to. */}
       <section id="claim" className="border-t border-line bg-smoke">

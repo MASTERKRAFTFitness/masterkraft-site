@@ -10,9 +10,16 @@ import {
   listPosts,
   postPath,
 } from "@/lib/blog";
+import { fitDescription } from "@/lib/meta-description";
+import { withoutBrandIfLong } from "@/lib/page-title";
 
-/** The index shows this many posts. */
-export const INDEX_COUNT = 12;
+/**
+ * The index lists every live post. It once showed only the newest 12 with no
+ * way to page back, so anything older (all of September 2026, backdated on
+ * 30 Oct) had no link from /blog at all. The Journal is a few dozen posts and
+ * the cards lazy-load their images, so one list is fine; revisit with real
+ * pagination if it passes a hundred or so.
+ */
 
 /**
  * Resolve a blog URL once, for both generateMetadata and the render.
@@ -34,7 +41,7 @@ export const INDEX_COUNT = 12;
  */
 export async function loadRoute(slug: string[]) {
   if (slug.length === 0) {
-    return { type: "home" as const, data: { posts: await listPosts(INDEX_COUNT) } };
+    return { type: "home" as const, data: { posts: await listPosts() } };
   }
 
   if (slug[0] === "authors") {
@@ -65,11 +72,16 @@ export function routeMetadata(route: BlogRoute): Metadata {
       const p = route.data;
       const title = p.metaTitle || p.title;
       const description = p.metaDescription || p.description;
+      // The <title> drops the brand past 65 characters, as product titles do
+      // (lib/page-title); 34 posts were rendering at 66-125. og:title and the
+      // share card keep the full title and description.
+      const headTitle = withoutBrandIfLong(title);
+      const headDescription = fitDescription(description);
       const url = `${BLOG_SITE_URL}${postPath(p.slug)}`;
       const image = p.heroImageKey ? `${BLOG_SITE_URL}${blogImagePath(p.heroImageKey)}` : undefined;
       return {
-        title,
-        description,
+        title: headTitle,
+        description: headDescription,
         alternates: { canonical: url },
         openGraph: {
           type: "article",
@@ -87,7 +99,9 @@ export function routeMetadata(route: BlogRoute): Metadata {
     case "author":
       return {
         title: route.data.name,
-        description: route.data.bio ?? undefined,
+        // The bio runs to a paragraph on the page; the meta tag takes as much
+        // of it as a search snippet shows. Steve's was 379 characters.
+        description: fitDescription(route.data.bio ?? undefined),
         alternates: { canonical: `${BLOG_SITE_URL}${authorPath(route.data.slug)}` },
       };
     case "authors":

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
+import PageSchema from "@/components/seo/PageSchema";
 
 export const metadata: Metadata = {
   title: "Delivery Information",
@@ -20,6 +21,7 @@ const NEEDS = [
 export default function DeliveryInformationPage() {
   return (
     <>
+      <PageSchema path="/delivery-information" name="Delivery Information" description={metadata.description} />
       <PageHero
         eyebrow="Support"
         title="Delivery Information"

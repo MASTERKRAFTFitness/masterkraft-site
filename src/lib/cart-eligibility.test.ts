@@ -13,6 +13,11 @@ describe("what makes a line payable by card", () => {
     expect(lineSellableByCard(line())).toBe(true);
   });
 
+  it("refuses custom turf, which is sold by quote only", () => {
+    expect(lineSellableByCard(line({ sku: "MFATCT01", price: 2200 }))).toBe(false);
+    expect(lineSellableByCard(line({ sku: "mfatct01 ", price: 2200 }))).toBe(false);
+  });
+
   // THE CHANGE. An ERP-only size has productId 0 and used to be refused, because
   // repricing went to WooCommerce. It goes to the ERP now, and the code is what
   // it looks up - so the line is verifiable and can be charged.

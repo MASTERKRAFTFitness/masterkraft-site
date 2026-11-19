@@ -8,7 +8,9 @@ import { useCart, type CartItem } from "@/components/cart/CartProvider";
 import { trackLead, trackPurchase } from "@/lib/analytics";
 import { freightMessage, quotesAutomatically } from "@/lib/freight-message";
 import StoppingQuestion from "@/components/shop/StoppingQuestion";
+import { useLeaveIntent } from "@/components/shop/useLeaveIntent";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import { readAdClick } from "@/lib/ad-click";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
@@ -149,6 +151,9 @@ export default function StripeCheckout({
   // never be the price charged for another.
   const [quoted, setQuoted] = useState(false);
   const [freightReason, setFreightReason] = useState<string | null>(null);
+  // "Anything stopping you?" answered, so it is not put in front of them again
+  // as they leave. See useLeaveIntent.
+  const [answered, setAnswered] = useState(false);
   const [billing, setBilling] = useState<Billing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,10 +171,55 @@ export default function StripeCheckout({
   // Safety net: never leave the cart locked if the customer navigates away
   // mid-payment (unmount) without going back or completing.
   useEffect(() => unlock, [unlock]);
+
+  // PRICED BEFORE THEY ASK (2026-11-11). A live carrier quote takes 4-15s, most
+  // of it Easyship, and the customer used to spend all of it watching
+  // "Calculating…". Once suburb, state and postcode are in, the same question is
+  // asked quietly in the background, so the server's freight cache already
+  // holds the answer when Calculate Freight is pressed.
+  //
+  // A PROBE, NOT A QUOTE. No checkoutId and no contact go with it, so it records
+  // no lead, and it never sends the automatic quote - that still happens only
+  // behind the button, in calculateFreight. The answer is not shown either: the
+  // price on screen always comes from the button's own call.
+  const probe = useRef<{ key: string; done: Promise<unknown> } | null>(null);
+  const probeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (probeTimer.current) clearTimeout(probeTimer.current);
+  }, []);
   // Freight was quoted AND there is something to charge for. When freight is
   // required but could not be priced there is no card path, so the button stays
   // on Calculate Freight and the message below explains why.
   const canContinue = quoted && !(freightRequired && !freight);
+  // Seconds spent on the current freight calculation, for the progress line
+  // under the button. Only the calculation: Continue to Payment is quick.
+  const calculating = phase === "details" && loading && !canContinue;
+  const [waited, setWaited] = useState(0);
+  useEffect(() => {
+    if (!calculating) return;
+    const started = Date.now();
+    const tick = setInterval(() => setWaited(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => {
+      clearInterval(tick);
+      setWaited(0);
+    };
+  }, [calculating]);
+  const progress = !calculating
+    ? null
+    : waited >= 8
+      ? "Still checking. Some carriers take up to 15 seconds to answer, so please keep this page open."
+      : waited >= 3
+        ? "Checking live rates with our carriers…"
+        : null;
+  const { leaving, dismiss } = useLeaveIntent(checkoutId, phase === "details" && quoted && !answered);
+  const leavePanelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!leaving) return;
+    leavePanelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [leaving, dismiss]);
   const freightNotice = !quoted || !freightRequired || freight
     ? null
     : autoQuoting
@@ -204,8 +254,43 @@ export default function StripeCheckout({
     country: "Australia",
   });
 
+  /** The probe's request body, or null until the address is complete enough to price. */
+  function probeFor(b: Billing) {
+    if (!b.city.trim() || !b.state || !/^\d{4}$/.test(b.postcode.trim())) return null;
+    return { items: refsFrom(items), delivery: deliveryFrom(b), prefetch: true };
+  }
+
+  function startProbe() {
+    const form = formRef.current;
+    const body = form ? probeFor(billingFrom(form)) : null;
+    if (!body) return;
+    const key = JSON.stringify(body);
+    if (probe.current?.key === key) return;
+    probe.current = {
+      key,
+      done: fetch("/api/freight/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }).catch(() => null),
+    };
+  }
+
+  function onFormChange() {
+    invalidateQuote();
+    if (probeTimer.current) clearTimeout(probeTimer.current);
+    probeTimer.current = setTimeout(startProbe, 600);
+  }
+
   /** Step one: price the delivery and show it, charging nothing. */
   async function calculateFreight(b: Billing) {
+    // A probe still waiting on its timer is now pointless: this call asks the
+    // same question. One already in flight for this same address is waited
+    // for, so this call is answered from the warm cache rather than asking the
+    // carriers a second time.
+    if (probeTimer.current) clearTimeout(probeTimer.current);
+    const body = probeFor(b);
+    if (body && probe.current?.key === JSON.stringify(body)) await probe.current.done;
     const fq = await fetch("/api/freight/quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -225,6 +310,8 @@ export default function StripeCheckout({
         cart: items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, price: i.price })),
         subtotal,
         reminderOptIn: formRef.current ? new FormData(formRef.current).get("cart_reminder") === "on" : false,
+        // The Google ad click they landed from, if any - see lib/ad-click.
+        adClick: readAdClick(),
       }),
     })
       .then((r) => r.json())
@@ -357,6 +444,7 @@ export default function StripeCheckout({
           subtotal,
           checkoutId,
           freightQuote: true,
+          adClick: readAdClick(),
           ...guardValues(form ? new FormData(form) : new FormData(), elapsed()),
         }),
       });
@@ -415,7 +503,7 @@ export default function StripeCheckout({
     <div className="grid lg:grid-cols-[1.4fr_1fr] gap-12">
       <div>
         {phase === "details" && (
-          <form ref={formRef} onSubmit={onSubmit} onChange={invalidateQuote} className="relative space-y-4">
+          <form ref={formRef} onSubmit={onSubmit} onChange={onFormChange} className="relative space-y-4">
             <h2 className="font-display uppercase tracking-wide text-lg mb-2">Billing & Delivery</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <input name="first_name" required aria-label="First name" placeholder="First name" className={fieldClass} />
@@ -429,10 +517,24 @@ export default function StripeCheckout({
                 the one reminder email (lib/cart-reminders); a pre-ticked
                 box would not be. Changing it clears the freight quote like any
                 other field, so the choice is re-sent before payment and an
-                untick always reaches the server before the email could. */}
-            <label className="flex items-start gap-2 text-sm text-ash cursor-pointer">
+                untick always reaches the server before the email could.
+
+                SAYS EXACTLY WHAT THEY GET (2026-11-04). It was one grey line
+                that read like small print, and few ticked it. The words "Email
+                me my cart if I don't finish" stay as they are, because the
+                reminder quotes them back as the reason it was sent; the line
+                under them is what consent covers, and is true of
+                lib/cart-reminders: one email, from about an hour later, never
+                overnight, with an unsubscribe. */}
+            <label className="flex items-start gap-3 border border-line px-4 py-3 text-sm text-ink cursor-pointer">
               <input type="checkbox" name="cart_reminder" className="mt-[3px] h-4 w-4 flex-none accent-accent" />
-              <span>Email me my cart if I don&apos;t finish</span>
+              <span>
+                <span className="font-medium">Email me my cart if I don&apos;t finish</span>
+                <span className="block text-xs text-ash mt-0.5">
+                  One email with your cart, about an hour after you leave
+                  (or next morning if it&apos;s late). No newsletters.
+                </span>
+              </span>
             </label>
             <input name="company" aria-label="Company / gym name (optional)" placeholder="Company / gym name (optional)" className={fieldClass} />
             <input name="address_1" required aria-label="Delivery address" placeholder="Delivery address" className={fieldClass} />
@@ -481,6 +583,9 @@ export default function StripeCheckout({
               <span aria-hidden>→</span>
             </button>
             )}
+            <p aria-live="polite" className="text-xs text-ash empty:hidden">
+              {progress}
+            </p>
             {canContinue && (
               <p className="text-xs text-ash">
                 Delivery is priced for the address above. Change any detail and it is
@@ -491,13 +596,54 @@ export default function StripeCheckout({
         )}
 
         {/* After the freight quote, whatever it said. Keyed on the checkout so
-            a fresh checkout starts unanswered. */}
+            a fresh checkout starts unanswered.
+
+            BEFORE YOU GO. When they look to be leaving (useLeaveIntent), the
+            SAME question is lifted into a dialog over the page, by restyling
+            the two wrappers rather than rendering a second copy: the question
+            keeps its place in the tree, so an answer or a half-typed note
+            carries across, and closing the dialog puts it back below the form. */}
         {phase === "details" && quoted && (
-          <StoppingQuestion
-            key={checkoutId}
-            checkoutId={checkoutId}
-            onRequestQuote={freightNotice ? undefined : requestQuote}
-          />
+          <div
+            className={leaving ? "fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 p-4" : ""}
+            onClick={leaving ? (e) => e.target === e.currentTarget && dismiss() : undefined}
+          >
+            <div
+              ref={leavePanelRef}
+              tabIndex={-1}
+              role={leaving ? "dialog" : undefined}
+              aria-modal={leaving || undefined}
+              aria-labelledby={leaving ? "stopping-question" : undefined}
+              className={leaving ? "relative w-full max-w-lg bg-white p-6 shadow-xl outline-none [&>section]:mt-0" : ""}
+            >
+              {leaving && (
+                <p className="font-display uppercase tracking-wide text-lg mb-4 pr-8">Before you go</p>
+              )}
+              <StoppingQuestion
+                key={checkoutId}
+                checkoutId={checkoutId}
+                onRequestQuote={
+                  freightNotice
+                    ? undefined
+                    : () => {
+                        dismiss();
+                        requestQuote();
+                      }
+                }
+                onAnswered={() => setAnswered(true)}
+              />
+              {leaving && (
+                <button
+                  type="button"
+                  onClick={dismiss}
+                  aria-label="Close"
+                  className="absolute top-3 right-3 h-8 w-8 text-xl leading-none text-ash hover:text-ink"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {phase === "payment" && clientSecret && billing && (

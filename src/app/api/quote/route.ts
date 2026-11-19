@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { hubspotUtk, submitHubspotForm } from "@/lib/hubspot";
 import { placeQuote } from "@/lib/orders";
+import type { TurfSize } from "@/lib/custom-turf";
 import { RATE_LIMITED_MESSAGE, checkFormSubmission } from "@/lib/form-guard";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
 import { visitorKey } from "@/lib/agent/rate-limit";
-import { scheduleCheckoutLead } from "@/lib/checkout-leads";
+import { scheduleCheckoutLead, validCheckoutId } from "@/lib/checkout-leads";
+import { scheduleAdClickLead } from "@/lib/ad-click-leads";
 
 // Quote request handler. Does two things when configured:
 //   1. Emails the team (via Resend) — needs RESEND_API_KEY + QUOTE_FROM_EMAIL.
@@ -19,7 +21,7 @@ import { scheduleCheckoutLead } from "@/lib/checkout-leads";
 // `sku` is the Unleashed ProductCode. The ERP now carries sizes the old store
 // never listed, so the code is the only identifier that is certain to mean
 // something to whoever fulfils the quote.
-type QuoteItem = { id: number; name: string; qty: number; price: number; sku?: string };
+type QuoteItem = { id: number; name: string; qty: number; price: number; sku?: string; size?: TurfSize };
 type QuoteContact = {
   name?: string;
   email?: string;
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 
-  const { contact, items, subtotal, checkoutId, freightQuote } = (payload ?? {}) as {
+  const { contact, items, subtotal, checkoutId, freightQuote, adClick } = (payload ?? {}) as {
     contact?: QuoteContact;
     items?: QuoteItem[];
     subtotal?: number;
@@ -52,6 +54,8 @@ export async function POST(request: Request) {
     // freight price is coming by email, so the team is told that is what to send
     // and the customer gets a note confirming it.
     freightQuote?: boolean;
+    // The Google ad click this visitor landed from, if any - see lib/ad-click.
+    adClick?: unknown;
   };
 
   if (!contact?.name || !contact?.email || !contact?.phone?.trim() || !Array.isArray(items) || items.length === 0) {
@@ -129,6 +133,12 @@ export async function POST(request: Request) {
   };
 
   scheduleCheckoutLead(checkoutId, { status: "quote_requested" });
+  // Keyed by the checkout when there is one, so a checkout that became a quote
+  // is one lead, not two. Only reached by a submission the bot filter passed.
+  scheduleAdClickLead(
+    { kind: "quote", ref: validCheckoutId(checkoutId) ?? crypto.randomUUID(), email: contact.email, value: subtotal },
+    adClick
+  );
   console.log("[quote] processed", { customer: contact.email, items: items.length, ...results });
   return NextResponse.json({ ok: true, accepted: true, ...results });
 }

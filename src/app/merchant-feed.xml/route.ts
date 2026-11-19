@@ -15,7 +15,7 @@ export const revalidate = 3600;
 /**
  * The Google Merchant Center product feed, at /merchant-feed.xml.
  *
- * STAGING MUST NOT SERVE IT. The same reasoning as robots.ts: a feed fetched
+ * STAGING MUST NOT SERVE IT. The same reasoning as robots.txt/route.ts: a feed fetched
  * from a preview host advertises preview URLs, and Merchant Center will happily
  * accept them and send paid traffic to a deployment nobody is watching. The
  * host check is shared with robots so the two cannot disagree about which

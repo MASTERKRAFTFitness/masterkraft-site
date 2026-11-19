@@ -19,7 +19,7 @@ vi.mock("@/lib/blog", async (orig) => ({
   getAuthor,
 }));
 
-const { loadRoute, routeMetadata, INDEX_COUNT } = await import("@/lib/blog-route");
+const { loadRoute, routeMetadata } = await import("@/lib/blog-route");
 
 const post = {
   slug: "commercial-gym-fit-out",
@@ -48,7 +48,8 @@ describe("loadRoute", () => {
   it("treats no segments as the index", async () => {
     const route = await loadRoute([]);
     expect(route.type).toBe("home");
-    expect(listPosts).toHaveBeenCalledWith(INDEX_COUNT);
+    // Every post, not the newest few: older posts have no other way in from /blog.
+    expect(listPosts).toHaveBeenCalledWith();
   });
 
   it("resolves a flat post slug", async () => {
