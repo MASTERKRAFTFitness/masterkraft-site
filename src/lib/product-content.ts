@@ -287,6 +287,21 @@ export function resolveCopy(slug: string, content: ContentMap = {}): ContentEntr
 }
 
 /**
+ * Overview HTML that a person wrote for this slug, or undefined.
+ *
+ * Levels 1 and 2 of resolveCopy only: an editor's row, then product-copy.json.
+ * The product page shows this INSTEAD of the snapshot's WooCommerce overview
+ * meta. Without that, any product that had a WooCommerce overview kept showing
+ * it, and the authored body only reached the Merchant feed (found 23 Nov 2026
+ * on 18 pages). Level 3, the loader's copy of the WooCommerce description, is
+ * left out on purpose: it is the snapshot again and must not displace the
+ * snapshot's own overview.
+ */
+export function authoredOverviewHtml(slug: string, content: ContentMap = {}): string | undefined {
+  return content[slug]?.html ?? productCopyHtml(slug);
+}
+
+/**
  * The spec table a slug should render, database first.
  *
  * FIELD BY FIELD, like resolveCopy. An editor who corrects one warranty gets
