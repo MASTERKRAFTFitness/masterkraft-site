@@ -15,7 +15,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: (...a: unknown[]) => unknown) => fn,
 }));
 
-const { getProductContent, resolveCopy, resolveSpecs } = await import("@/lib/product-content");
+const { authoredOverviewHtml, getProductContent, resolveCopy, resolveSpecs } = await import("@/lib/product-content");
 
 /** A product_content row, with the loader's stamp unless told otherwise. */
 const row = (o: Partial<Record<string, unknown>> = {}) => ({
@@ -321,5 +321,19 @@ describe("the whole table is read, not the first page of it", () => {
     respond([row({ slug: "only-one", updated_by: "michael" })]);
     const map = await getProductContent();
     expect(Object.keys(map)).toEqual(["only-one"]);
+  });
+});
+
+describe("authoredOverviewHtml", () => {
+  it("returns product-copy.json's body for a slug that has one", () => {
+    expect(authoredOverviewHtml("change-plates")).toContain("<p>Without change plates");
+  });
+  it("prefers an editor's row over the JSON", () => {
+    expect(authoredOverviewHtml("change-plates", { "change-plates": { html: "<p>Edited</p>" } })).toBe("<p>Edited</p>");
+  });
+  // The loader's copy of the WooCommerce description is the snapshot again, so
+  // it must never displace the snapshot's own overview on the page.
+  it("ignores the loader's WooCommerce description", () => {
+    expect(authoredOverviewHtml("no-such-slug", { "no-such-slug": { description: "<p>Woo</p>" } })).toBeUndefined();
   });
 });

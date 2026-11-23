@@ -26,7 +26,7 @@ import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
 import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
-import { getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
+import { authoredOverviewHtml, getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 import { padDescription } from "@/lib/meta-description";
 
@@ -236,6 +236,10 @@ export default async function ProductPage({
     .map((c) => siteCategoryFor(c, categoryTerms()))
     .find(Boolean);
   const detail = parseProductDetail(product);
+  // Written copy (an editor's row or product-copy.json) replaces the snapshot's
+  // WooCommerce overview AND its feature list: the authored HTML carries its
+  // own Features. See authoredOverviewHtml.
+  const authoredOverview = authoredOverviewHtml(slug, content);
   // The spec table, human-edited row first. Same map and same rule as
   // resolveCopy above: a loader-owned row is the snapshot copied and is skipped,
   // so this is a no-op until somebody edits one — at which point their value
@@ -542,10 +546,15 @@ export default async function ProductPage({
           {/* The overview reads directly under the price rather than as a
               full-width band below the fold, so the copy that sells the thing
               is beside the control that buys it. */}
-          {(detail.overviewDescription || detail.features.length > 0 || product.description) && (
+          {(authoredOverview || detail.overviewDescription || detail.features.length > 0 || product.description) && (
             <div className="mt-12">
               <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Product Overview</h2>
-              {detail.overviewDescription ? (
+              {authoredOverview ? (
+                <div
+                  className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_strong]:text-ink [&_img]:my-4"
+                  dangerouslySetInnerHTML={{ __html: authoredOverview }}
+                />
+              ) : detail.overviewDescription ? (
                 <p className="text-ash leading-relaxed mb-6">{detail.overviewDescription}</p>
               ) : (
                 product.description && (
@@ -555,7 +564,7 @@ export default async function ProductPage({
                   />
                 )
               )}
-              {detail.features.length > 0 && (
+              {!authoredOverview && detail.features.length > 0 && (
                 <>
                   <h3 className="font-semibold text-ink mt-8 mb-3">Features</h3>
                   <ul className="list-disc pl-5 space-y-2 text-ash leading-relaxed">
