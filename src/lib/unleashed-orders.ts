@@ -13,6 +13,7 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { getUnleashedMapLive, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
 import type { OrderLine } from "@/lib/order-lines";
+import { financeComment, type FinanceSplit } from "@/lib/grenke-finance";
 import { resolveBuyerCustomer } from "@/lib/unleashed-customers";
 
 const BASE = "https://api.unleashedsoftware.com";
@@ -181,6 +182,8 @@ export type CreateUnleashedOrderInput = {
   freight?: { amount: number; service?: string; carrier?: string };
   /** A promo code's discount, inc GST. */
   discount?: { code: string; amount: number };
+  /** Set when the card paid a GRENKE deposit: the balance is not paid yet. */
+  finance?: FinanceSplit;
   /**
    * "web" books it to the shared web account whatever the strategy. Quote
    * requests pass it: a lead is not a customer yet.
@@ -236,6 +239,7 @@ export function buildComments(input: CreateUnleashedOrderInput): string {
     input.discount && input.discount.amount > 0
       ? `Promo code ${input.discount.code}: ${input.discount.amount.toFixed(2)} off inc GST`
       : "",
+    input.finance ? financeComment(input.finance) : "",
     input.customerNote ? `Customer note: ${input.customerNote}` : "",
     input.bookingNote ?? "",
   ];

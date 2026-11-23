@@ -7,6 +7,7 @@ import { freightMessage } from "@/lib/freight-message";
 import { scheduleCheckoutLead, validCheckoutId } from "@/lib/checkout-leads";
 import { orderIntentMetadata } from "@/lib/order-intent";
 import type { OrderAddress } from "@/lib/order-lines";
+import { financeMetadata, financeSplit } from "@/lib/grenke-finance";
 import { alreadyRedeemed, alreadyUsedMessage, evaluatePromo, promoMetadata, type AppliedPromo } from "@/lib/promo-codes";
 
 // Creates a Stripe PaymentIntent for the SERVER-repriced cart total (never the
@@ -36,8 +37,9 @@ export async function POST(request: Request) {
   let billing: OrderAddress | undefined;
   let anonId: unknown;
   let promoCode: unknown;
+  let finance: unknown;
   try {
-    ({ items, delivery, freightServiceId, checkoutId, billing, anonId, promoCode } = await request.json());
+    ({ items, delivery, freightServiceId, checkoutId, billing, anonId, promoCode, finance } = await request.json());
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
@@ -111,7 +113,26 @@ export async function POST(request: Request) {
     promo = { code: verdict.promo.code, amount: verdict.discount };
   }
   const discount = promo?.amount ?? 0;
-  const chargeTotal = Math.round((total - discount + freightCost) * 100) / 100;
+  const orderTotal = Math.round((total - discount + freightCost) * 100) / 100;
+
+  // GRENKE FINANCE: the card pays the 20% deposit and the team arranges the
+  // lease for the rest - see lib/grenke-finance. Judged here on the total just
+  // repriced, so a cart that dropped under the threshold is refused rather than
+  // quietly charged a deposit for an order that cannot be financed.
+  const split = finance === "grenke" ? financeSplit(orderTotal) : null;
+  if (finance === "grenke" && !split) {
+    return NextResponse.json(
+      { ok: false, error: "GRENKE finance is for orders over $5,000 ex GST. Please pay in full.", finance: false },
+      { status: 422 }
+    );
+  }
+  if (split && !billing?.company?.trim()) {
+    return NextResponse.json(
+      { ok: false, error: "GRENKE leases to businesses. Enter your company or gym name to use finance." },
+      { status: 422 }
+    );
+  }
+  const chargeTotal = split ? split.deposit : orderTotal;
 
   // The cart and the buyer, stored ON the intent, so the order can be placed
   // from the intent alone when the customer pays with Afterpay or Zip and the
@@ -142,7 +163,9 @@ export async function POST(request: Request) {
     intent = await stripe.paymentIntents.create({
       amount: Math.round(chargeTotal * 100), // cents
       currency: "aud",
-      automatic_payment_methods: { enabled: true },
+      // A deposit is card only (wallets ride on card): a lease deposit paid off
+      // through Afterpay or Zip would be a loan to pay for a loan.
+      ...(split ? { payment_method_types: ["card"] } : { automatic_payment_methods: { enabled: true } }),
       // Afterpay requires a shipping address on the intent, and every method's
       // fraud checks use it. Delivery goes to the billing address (the form
       // asks for one address), so it is the same address.
@@ -178,6 +201,7 @@ export async function POST(request: Request) {
         // Read back by lib/fulfil-order to check the amount and put the discount
         // on the order, and searched by lib/promo-codes for one use per customer.
         ...(promo && billing?.email ? promoMetadata(promo, billing.email) : {}),
+        ...(split ? financeMetadata(split) : {}),
         ...orderData,
       },
     });
@@ -195,6 +219,8 @@ export async function POST(request: Request) {
     clientSecret: intent.client_secret,
     amount: chargeTotal,
     goodsTotal: total,
+    orderTotal,
+    finance: split,
     promo,
     freight: freight.selected
       ? { service: freight.selected.service, carrier: freight.selected.carrier, price: freightCost }

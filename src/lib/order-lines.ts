@@ -10,6 +10,7 @@
 
 import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 import { isQuoteOnlyCode } from "@/lib/custom-turf";
+import type { FinanceSplit } from "@/lib/grenke-finance";
 
 export type CartRef = {
   productId: number;
@@ -131,5 +132,7 @@ export type CreateOrderInput = {
   freight?: { amount: number; service?: string; carrier?: string };
   /** A promo code's discount, inc GST, as the card was charged less it. */
   discount?: { code: string; amount: number };
+  /** Set when the card paid a GRENKE deposit, not the whole order. */
+  finance?: FinanceSplit;
 };
 
