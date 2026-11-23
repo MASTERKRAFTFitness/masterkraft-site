@@ -37,6 +37,8 @@ export default function CheckoutPage() {
   // Card order number, once paid. Held at the page level so the confirmation
   // survives the cart being cleared (which unmounts StripeCheckout).
   const [paidOrder, setPaidOrder] = useState<string | null>(null);
+  // The GRENKE balance still to finance, when the card paid only the deposit.
+  const [financeBalance, setFinanceBalance] = useState<number | null>(null);
   // Who paid, for the Google Customer Reviews offer on the confirmation.
   const [paidBuyer, setPaidBuyer] = useState<PaidBuyer | null>(null);
   // Set when a card checkout went to the team because freight needs a person to
@@ -180,6 +182,12 @@ export default function CheckoutPage() {
               Thanks, your order <strong>#{paidOrder}</strong>{" "}is in. You&apos;ll get a
               confirmation email shortly.
             </p>
+            {financeBalance !== null && (
+              <p className="mt-3 text-ash">
+                Your deposit is paid. We&apos;ll call you within one business day to complete the GRENKE
+                application for the balance of {money(financeBalance)}.
+              </p>
+            )}
             <Link href="/all-equipment" className="btn btn-accent mt-8">
               Keep Shopping
             </Link>
@@ -187,9 +195,10 @@ export default function CheckoutPage() {
           </div>
         ) : canPay ? (
           <StripeCheckout
-            onPaid={(num, buyer) => {
+            onPaid={(num, buyer, finance) => {
               setPaidOrder(num);
               setPaidBuyer(buyer);
+              setFinanceBalance(finance?.balance ?? null);
             }}
             onQuoted={({ email }) => {
               setFreightQuoteEmail(email);

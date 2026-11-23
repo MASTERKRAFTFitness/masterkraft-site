@@ -22,6 +22,7 @@ import { shipmentSyncEnabled, syncShipmentsToEasyship, type ShipmentOrder } from
 import { orderIntentData } from "@/lib/order-intent";
 import { claimOrder, completeClaim, releaseClaim } from "@/lib/order-claims";
 import { promoFromMetadata } from "@/lib/promo-codes";
+import { financeSplit, isFinanceIntent } from "@/lib/grenke-finance";
 
 export type FulfilInput = {
   paymentIntentId?: string;
@@ -134,7 +135,15 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
   const discount = promoFromMetadata(intent.metadata);
   const chargedTotal = Math.round((total - (discount?.amount ?? 0) + freightAmount) * 100) / 100;
 
-  if (intent.amount_received !== Math.round(chargedTotal * 100) || intent.currency !== "aud") {
+  // A GRENKE finance order charged only the deposit (lib/grenke-finance). The
+  // deposit is worked out again from the order just repriced, so the card must
+  // have paid exactly 20% of THIS order, and the order still records the whole
+  // total: GRENKE pays the balance, not the customer's card.
+  const finance = isFinanceIntent(intent.metadata) ? financeSplit(chargedTotal) : null;
+  if (isFinanceIntent(intent.metadata) && !finance) return fail(409, "Payment amount mismatch");
+  const expectedCharge = finance ? finance.deposit : chargedTotal;
+
+  if (intent.amount_received !== Math.round(expectedCharge * 100) || intent.currency !== "aud") {
     return fail(409, "Payment amount mismatch");
   }
 
@@ -168,6 +177,7 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
           chargedTotal,
           freight,
           ...(discount ? { discount } : {}),
+          ...(finance ? { finance } : {}),
         });
   } catch (e) {
     console.error("[order] create failed", e);
@@ -220,6 +230,7 @@ export async function fulfilPaymentIntent(input: FulfilInput): Promise<FulfilRes
     chargedTotal,
     customerNote,
     ...(discount ? { discount } : {}),
+    ...(finance ? { finance } : {}),
   });
   console.log("[order] placed", { orderNumber: order.orderNumber, ...notified });
   scheduleCheckoutLead(checkoutId, { status: "paid", orderNumber: String(order.orderNumber) });

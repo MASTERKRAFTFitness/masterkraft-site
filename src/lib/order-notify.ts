@@ -14,6 +14,7 @@
 import type { OrderAddress, OrderLine } from "@/lib/order-lines";
 import { internalRecipients, primaryRecipient } from "@/lib/notify-recipients";
 import { createHubspotOrderDeal, submitHubspotForm } from "@/lib/hubspot";
+import { financeComment, type FinanceSplit } from "@/lib/grenke-finance";
 
 export type PlacedOrderNotice = {
   orderNumber: string;
@@ -25,6 +26,8 @@ export type PlacedOrderNotice = {
   customerNote?: string;
   /** A promo code's discount, inc GST. */
   discount?: { code: string; amount: number };
+  /** Set when the card paid a GRENKE deposit: chargedTotal is still the whole order. */
+  finance?: FinanceSplit;
 };
 
 type StepResult = "sent" | "skipped" | "error";
@@ -64,8 +67,18 @@ async function sendCustomerEmail(o: PlacedOrderNotice): Promise<"sent" | "skippe
   const name = o.billing.first_name?.trim();
   const html = `
     <p>${name ? `Hi ${escape(name)},` : "Hi,"}</p>
-    <p>Thanks for your order with MasterKraft. We've received your payment and your order
-    <strong>#${escape(o.orderNumber)}</strong> is being prepared.</p>
+    ${
+      o.finance
+        ? `<p>Thanks for your order with MasterKraft. We've received your deposit of
+    <strong>${aud.format(o.finance.deposit)}</strong> for order <strong>#${escape(o.orderNumber)}</strong>.</p>
+    <p>You chose GRENKE lease finance for the balance of <strong>${aud.format(o.finance.balance)}</strong>
+    (inc. GST). Our team will call you within one business day to complete the GRENKE application,
+    which takes about 10 minutes over the phone and is signed electronically. Your order is prepared
+    for dispatch once GRENKE approves it. Estimated repayments are ${aud.format(o.finance.weekly)}/week
+    ex GST over ${o.finance.termMonths} months, subject to GRENKE's approval.</p>`
+        : `<p>Thanks for your order with MasterKraft. We've received your payment and your order
+    <strong>#${escape(o.orderNumber)}</strong> is being prepared.</p>`
+    }
     ${orderTable(o)}
     ${addressBlock("Delivering to", o.shipping?.address_1 ? o.shipping : o.billing)}
     <p>We'll be in touch when it ships. If anything looks wrong, just reply to this email.</p>
@@ -88,12 +101,18 @@ async function sendTeamEmail(o: PlacedOrderNotice): Promise<"sent" | "skipped"> 
     ${o.customerNote ? `<p><em>${escape(o.customerNote)}</em></p>` : ""}
     ${orderTable(o)}
     ${addressBlock("Ship to", o.shipping?.address_1 ? o.shipping : b)}
-    <p style="color:#666">Paid by card through Stripe. The sales order is in Unleashed.</p>
+    ${
+      o.finance
+        ? `<p style="background:#fff4e5;padding:10px;border-left:4px solid #c73e37"><strong>Finance order.</strong> ${escape(financeComment(o.finance))} Call the buyer to start the GRENKE application.</p>`
+        : `<p style="color:#666">Paid by card through Stripe. The sales order is in Unleashed.</p>`
+    }
   `;
   return resend({
     to: internalRecipients(),
     reply_to: b.email,
-    subject: `Web order #${o.orderNumber}: ${fullName(b) || b.email} (${aud.format(o.chargedTotal)})`,
+    subject: o.finance
+      ? `GRENKE finance order #${o.orderNumber}: ${fullName(b) || b.email} (${aud.format(o.chargedTotal)}, deposit ${aud.format(o.finance.deposit)} paid)`
+      : `Web order #${o.orderNumber}: ${fullName(b) || b.email} (${aud.format(o.chargedTotal)})`,
     html,
   });
 }
@@ -115,7 +134,9 @@ async function submitOrderToHubspot(o: PlacedOrderNotice): Promise<"sent" | "ski
       {
         name: "message",
         value:
-          `Web order #${o.orderNumber} (paid ${aud.format(o.chargedTotal)}): ${items}.` +
+          (o.finance
+            ? `Web order #${o.orderNumber} (${aud.format(o.chargedTotal)}, GRENKE finance: deposit ${aud.format(o.finance.deposit)} paid, balance ${aud.format(o.finance.balance)} to finance): ${items}.`
+            : `Web order #${o.orderNumber} (paid ${aud.format(o.chargedTotal)}): ${items}.`) +
           (b.company ? ` Company: ${b.company}.` : ""),
       },
     ],
@@ -138,7 +159,8 @@ async function submitOrderDeal(o: PlacedOrderNotice): Promise<"sent" | "skipped"
       o.lines.map((l) => `${l.quantity}× ${l.name}${l.sku ? ` (${l.sku})` : ""}`).join("\n") +
       (o.freight.amount > 0 ? `\nFreight ${aud.format(o.freight.amount)}` : "") +
       (o.discount ? `\nPromo ${o.discount.code} -${aud.format(o.discount.amount)}` : "") +
-      (b.company ? `\nCompany: ${b.company}` : ""),
+      (b.company ? `\nCompany: ${b.company}` : "") +
+      (o.finance ? `\n${financeComment(o.finance)}` : ""),
   });
   return r === "submitted" ? "sent" : "skipped";
 }
@@ -182,7 +204,13 @@ function orderTable(o: PlacedOrderNotice): string {
     : "";
   return `
     <table style="border-collapse:collapse;margin-top:12px"><tbody>${rows}${discountRow}${freightRow}
-    <tr><td style="${cell}"><strong>Total paid (inc. GST)</strong></td><td></td><td style="padding:6px 0;text-align:right"><strong>${aud.format(o.chargedTotal)}</strong></td></tr>
+    ${
+      o.finance
+        ? `<tr><td style="${cell}"><strong>Order total (inc. GST)</strong></td><td></td><td style="padding:6px 0;text-align:right"><strong>${aud.format(o.chargedTotal)}</strong></td></tr>
+    <tr><td style="${cell}">Deposit paid by card</td><td></td><td style="padding:6px 0;text-align:right">${aud.format(o.finance.deposit)}</td></tr>
+    <tr><td style="${cell}">Balance via GRENKE finance</td><td></td><td style="padding:6px 0;text-align:right">${aud.format(o.finance.balance)}</td></tr>`
+        : `<tr><td style="${cell}"><strong>Total paid (inc. GST)</strong></td><td></td><td style="padding:6px 0;text-align:right"><strong>${aud.format(o.chargedTotal)}</strong></td></tr>`
+    }
     </tbody></table>`;
 }
 
