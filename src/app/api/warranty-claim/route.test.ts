@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ELAPSED_FIELD, HONEYPOT_FIELD, RATE_LIMITED_MESSAGE, PER_WINDOW } from "@/lib/form-guard";
 
+// Storage is mocked: the claim route only needs to know whether the uploaded
+// files are really there. A path naming the "missing" folder is not.
+const EVIDENCE = ["claims/0b0c7d1e-2f3a-4b5c-8d9e-0f1a2b3c4d5e/1-belt.mp4"];
+vi.mock("@/lib/warranty-evidence-store", () => ({
+  confirmEvidence: async (paths: unknown) =>
+    Array.isArray(paths) && paths.length && !String(paths[0]).includes("missing")
+      ? paths.map((p) => ({ name: String(p).split("/").pop(), size: 1234, type: "video/mp4", url: `https://storage.example/${p}` }))
+      : null,
+}));
+
 // The warranty route emails a human on every submission by design, so it is the
 // form where an unfiltered bot costs the most: straight into the MD's inbox.
 // These tests are about one guarantee - a blocked submission reaches NOTHING,
@@ -45,6 +55,7 @@ const REAL_CLAIM = {
   orderRef: "INV-2026-8837",
   purchaseDate: "2024-11-02",
   fault: "The belt slips under load and the motor cuts out after about ten minutes of use.",
+  evidence: EVIDENCE,
   [ELAPSED_FIELD]: 62_000,
 };
 
@@ -105,6 +116,31 @@ describe("warranty claim", () => {
     const blocked = await (await post(REAL_SPAM)).json();
     expect(Object.keys(blocked).sort()).toEqual(["confirmed", "hubspot", "ok"]);
     expect(blocked.ok).toBe(true);
+  });
+
+  it("refuses a claim with no photo or video, and sends nothing", async () => {
+    const res = await post({ ...REAL_CLAIM, evidence: [] });
+    expect(res.status).toBe(400);
+    expect(reachedAnything()).toBe(0);
+  });
+
+  it("refuses a claim whose upload never arrived", async () => {
+    const res = await post({ ...REAL_CLAIM, evidence: ["claims/missing/1-x.jpg"] });
+    expect(res.status).toBe(400);
+    expect(reachedAnything()).toBe(0);
+  });
+
+  it("emails the team the evidence links even when HubSpot took the claim", async () => {
+    const bodies: string[] = [];
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      calls.push(String(url));
+      bodies.push(String(init?.body ?? ""));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    const res = await post(REAL_CLAIM);
+    expect(await res.json()).toMatchObject({ ok: true, hubspot: "submitted" });
+    const team = bodies.find((b) => b.includes("Photos and videos") && b.includes("hello@masterkraft.com"));
+    expect(team).toContain(`https://storage.example/${EVIDENCE[0]}`);
   });
 
   it("still tells a real person what they left out", async () => {

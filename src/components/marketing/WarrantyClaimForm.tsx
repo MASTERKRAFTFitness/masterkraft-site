@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
+import {
+  EVIDENCE_ACCEPT,
+  MAX_EVIDENCE_FILES,
+  evidenceProblem,
+  humanBytes,
+} from "@/lib/warranty-evidence";
 
 // Matches ContactForm's field styling so the two read as one system.
 const fieldClass =
@@ -12,13 +18,62 @@ export default function WarrantyClaimForm() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    const next = [...files];
+    for (const file of Array.from(list)) {
+      if (!next.some((f) => f.name === file.name && f.size === file.size)) next.push(file);
+    }
+    const problem = evidenceProblem(next.map((f) => ({ name: f.name, type: f.type, size: f.size })));
+    if (problem) {
+      setFileError(problem);
+      return;
+    }
+    setFileError(null);
+    setFiles(next);
+  }
+
+  // Straight to storage, one file at a time, so a big video never passes through
+  // our server. Returns the storage paths the claim route will check.
+  async function uploadEvidence(): Promise<string[]> {
+    const res = await fetch("/api/warranty-claim/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ files: files.map((f) => ({ name: f.name, type: f.type, size: f.size })) }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || "Your files could not be uploaded.");
+    const slots = data.slots as { path: string; signedUrl: string }[];
+    for (const [i, slot] of slots.entries()) {
+      setProgress(`Uploading ${i + 1} of ${slots.length}…`);
+      const part = new FormData();
+      part.append("cacheControl", "3600");
+      part.append("", files[i]);
+      const up = await fetch(slot.signedUrl, { method: "PUT", body: part, headers: { "x-upsert": "false" } });
+      if (!up.ok) throw new Error(`${files[i].name} did not upload. Please try again.`);
+    }
+    return slots.map((s) => s.path);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const problem = evidenceProblem(files.map((f) => ({ name: f.name, type: f.type, size: f.size })));
+    if (problem) {
+      setFileError(problem);
+      document.getElementById("wc-evidence-drop")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     setSending(true);
     setError(null);
     const f = new FormData(e.currentTarget);
     try {
+      const evidence = await uploadEvidence();
+      setProgress("Lodging claim…");
       const res = await fetch("/api/warranty-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -32,6 +87,7 @@ export default function WarrantyClaimForm() {
           orderRef: f.get("orderRef"),
           purchaseDate: f.get("purchaseDate"),
           fault: f.get("fault"),
+          evidence,
           ...guardValues(f, elapsed()),
         }),
       });
@@ -42,6 +98,7 @@ export default function WarrantyClaimForm() {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setSending(false);
+      setProgress(null);
     }
   }
 
@@ -101,15 +158,94 @@ export default function WarrantyClaimForm() {
         className={fieldClass}
       />
 
-      <p className="text-ash text-sm">
-        Photographs help us assess a claim quickly. Reply to the confirmation email with images
-        once you receive it.
-      </p>
+      <fieldset className="border-0 p-0 m-0">
+        <legend className="mb-2 text-sm font-semibold">
+          Photos or video of the fault <span className="text-accent-600">*</span>
+        </legend>
+        <div
+          id="wc-evidence-drop"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            addFiles(e.dataTransfer.files);
+          }}
+          className={`border border-dashed p-6 text-center transition-colors ${
+            dragging ? "border-accent bg-accent/5" : fileError ? "border-accent-600 bg-smoke" : "border-line bg-smoke"
+          }`}
+        >
+          <p className="text-sm">
+            <span className="font-semibold">Drag photos or a video in</span>
+            <span className="text-ash"> or </span>
+            <label
+              htmlFor="wc-evidence"
+              className="underline decoration-accent underline-offset-2 cursor-pointer hover:text-accent-600"
+            >
+              choose files
+            </label>
+          </p>
+          <input
+            id="wc-evidence"
+            type="file"
+            multiple
+            accept={EVIDENCE_ACCEPT}
+            className="sr-only"
+            aria-required="true"
+            onChange={(e) => {
+              addFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <p className="mt-2 text-ash text-xs leading-relaxed max-w-md mx-auto">
+            Required. Show the fault clearly; a short video of it happening is ideal.
+          </p>
+          <p className="mt-1.5 font-mono text-[10px] tracking-widest uppercase text-ash/80">
+            Photo or video · up to {MAX_EVIDENCE_FILES} files · 50 MB each
+          </p>
+        </div>
+
+        {fileError && (
+          <p className="mt-2 text-accent-600 text-sm" role="alert">
+            {fileError}
+          </p>
+        )}
+
+        {files.length > 0 && (
+          <ul className="mt-3 space-y-2">
+            {files.map((file) => (
+              <li
+                key={`${file.name}-${file.size}`}
+                className="flex items-center justify-between gap-3 border border-line bg-white px-4 py-3"
+              >
+                <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
+                <span className="font-mono text-[11px] tracking-widest uppercase text-ash shrink-0">
+                  {humanBytes(file.size)}
+                </span>
+                <button
+                  type="button"
+                  disabled={sending}
+                  onClick={() => setFiles((prev) => prev.filter((p) => p !== file))}
+                  className="shrink-0 text-ash hover:text-accent-600 transition-colors"
+                  aria-label={`Remove ${file.name}`}
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </fieldset>
 
       <HoneypotField />
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <button type="submit" disabled={sending} className="btn btn-accent w-full sm:w-auto disabled:opacity-60">
-        {sending ? "Sending…" : "Lodge Warranty Claim"} <span aria-hidden>→</span>
+        {sending ? progress ?? "Sending…" : "Lodge Warranty Claim"} <span aria-hidden>→</span>
       </button>
     </form>
   );
