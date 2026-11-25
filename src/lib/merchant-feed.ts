@@ -33,7 +33,7 @@
 // "backorder-made-to-order" rather than "freight-verified", so no paid campaign
 // filtering on that label can bid on one: a click on a backorder buys a
 // customer a wait, not a sale.
-import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
+import { erpUnits, nameWithFinish, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
@@ -162,7 +162,8 @@ export function displayName(unit: ErpUnit): string {
   // that for XML without decoding it first produces "&amp;amp;", and Merchant
   // Center advertises a product with a literal "&amp;" in its name. Same
   // decoder the category names go through; see woocommerce.ts.
-  const name = page?.name ? decodeEntities(page.name).trim() : unit.name;
+  // A snapshot name predates the split by finish; see nameWithFinish.
+  const name = page?.name ? nameWithFinish(decodeEntities(page.name).trim(), unit.name) : unit.name;
   return unit.isRange ? withoutSizeSuffix(name, unit.sizes) : name;
 }
 

@@ -13,7 +13,9 @@ import {
   slugify,
   unitCard,
   unitDescription,
+  withUnitFinish,
 } from "@/lib/erp-catalogue";
+import type { WcProduct } from "@/lib/woocommerce";
 import type { UnleashedMap } from "@/lib/unleashed";
 import { sizesFromCodes } from "@/lib/ranges";
 import { allProducts } from "@/lib/catalogue";
@@ -73,6 +75,56 @@ describe("the ERP is the catalogue", () => {
     expect(straight?.name).toBe("Fixed PU Straight Barbell");
     expect(units.get("fixed-pu-curl-barbell")?.name).toBe("Fixed PU Curl Barbell");
     expect(units.size).toBe(2);
+  });
+
+  it("gives each tile finish its own product, with its thicknesses as sizes", () => {
+    // Grey fleck, pink fleck and plain black are three products, not 12
+    // colour-and-size combinations behind one picker.
+    const units = erpUnits(
+      erp([
+        ["MFRFRR01G", "Impact-Lock Rubber Tiles - 20mm (Light Grey Fleck)", 53, "Flooring"],
+        ["MFRFRR03G", "Impact-Lock Rubber Tiles - 30mm (Light Grey Fleck)", 77, "Flooring"],
+        ["MFRFRR01P", "Impact-Lock Rubber Tiles - 20mm (Pink Fleck)", 53, "Flooring"],
+        ["MFRFRR04P", "Impact-Lock Rubber Tiles - 40mm (500 x 500mm) (4 Tiles) (Pink Fleck)", 99, "Flooring"],
+        ["MFRFRR01B", "Impact-Lock Rubber Tiles - 20mm (Plain Black)", 53, "Flooring"],
+      ])
+    );
+    const byName = new Map([...units.values()].map((u) => [u.name, u]));
+    expect([...byName.keys()].sort()).toEqual([
+      "Impact-Lock Rubber Tiles (Light Grey Fleck)",
+      "Impact-Lock Rubber Tiles (Pink Fleck)",
+      "Impact-Lock Rubber Tiles (Plain Black)",
+    ]);
+    expect(byName.get("Impact-Lock Rubber Tiles (Pink Fleck)")?.sizes).toEqual([
+      "20mm",
+      "40mm (500 x 500mm) (4 Tiles)",
+    ]);
+  });
+
+  it("sells the legacy uncoloured tile codes as Plain Black", () => {
+    const units = erpUnits(
+      erp([
+        ["MFRFRR01", "Impact-Lock Rubber Tiles - 20mm", 53, "Flooring"],
+        ["MFRFRR01B", "Impact-Lock Rubber Tiles - 20mm (Plain Black)", 53, "Flooring"],
+        ["MFRFRR04B", "Impact-Lock Rubber Tiles - 40mm (500 x 500mm) (4 Tiles) (Plain Black)", 99, "Flooring"],
+        ["MFRFRR01P", "Impact-Lock Rubber Tiles - 20mm (Pink Fleck)", 53, "Flooring"],
+      ])
+    );
+    const black = [...units.values()].find((u) => u.name === "Impact-Lock Rubber Tiles (Plain Black)")!;
+    expect(black.codes).toEqual(["MFRFRR01", "MFRFRR04B"]);
+    expect(black.sizes).toEqual(["20mm", "40mm (500 x 500mm) (4 Tiles)"]);
+    expect(units.size).toBe(2);
+  });
+
+  it("keeps a colour that marks a size inside the range", () => {
+    // Each power band's colour is its resistance: one product, not one per band.
+    const units = erpUnits(
+      erp([
+        ["MBRPPO07", "Power Bands - 21mm (Grey)", 25, "Mixed Implements"],
+        ["MBRPPO08", "Power Bands - 32mm (Black)", 30, "Mixed Implements"],
+      ])
+    );
+    expect(units.size).toBe(1);
   });
 
   it("reads a brand prefix as a brand, not as a range", () => {
@@ -463,5 +515,24 @@ describe("brandDisplayName", () => {
   it("title-cases a third-party clearance brand", () => {
     expect(brandDisplayName("AIR LOCKER")).toBe("Air Locker");
     expect(brandDisplayName("  snap  ")).toBe("Snap");
+  });
+});
+
+describe("withUnitFinish", () => {
+  it("names a snapshot page by the finish its unit sells", () => {
+    const map = erp([
+      ["MFRFRR01", "Impact-Lock Rubber Tiles - 20mm", 53, "Flooring"],
+      ["MFRFRR04B", "Impact-Lock Rubber Tiles - 40mm (500 x 500mm) (4 Tiles) (Plain Black)", 99, "Flooring"],
+    ]);
+    const unit = [...erpUnits(map).values()][0];
+    const page = { id: 1, name: "Impact Lock Rubber Tiles", slug: unit.slug } as WcProduct;
+    expect(withUnitFinish(page, map).name).toBe("Impact-Lock Rubber Tiles (Plain Black)");
+  });
+
+  it("leaves a page alone when its unit has no finish", () => {
+    const map = erp([["MBCTMA01", "Multi Adjustable Bench", 900, "Strength"]]);
+    const unit = [...erpUnits(map).values()][0];
+    const page = { id: 1, name: "Adjustable Bench", slug: unit.slug } as WcProduct;
+    expect(withUnitFinish(page, map).name).toBe("Adjustable Bench");
   });
 });
