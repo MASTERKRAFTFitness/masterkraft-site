@@ -4,6 +4,12 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import PageSchema from "@/components/seo/PageSchema";
+import {
+  FINANCE_DEPOSIT_SHARE,
+  FINANCE_TERM_MONTHS,
+  FINANCE_THRESHOLD_EX_GST,
+  leaseRepayment,
+} from "@/lib/grenke-finance";
 
 export const metadata: Metadata = {
   title: "Equipment Finance | Afterpay, Zip & GRENKE",
@@ -11,10 +17,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/finance" },
 };
 
+const aud = (n: number) =>
+  n.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: n % 1 ? 2 : 0 });
+
+// Worked example from the same calculator checkout uses: the threshold amount
+// ex GST (leaseRepayment takes inc GST), over the default term.
+const example = leaseRepayment(FINANCE_THRESHOLD_EX_GST * 1.1, FINANCE_TERM_MONTHS);
+
 type Provider = {
   name: string;
   logo: string;
-  comingSoon?: boolean;
   specs: { label: string; value: string }[];
 };
 
@@ -22,7 +34,6 @@ const providers: Provider[] = [
   {
     name: "Afterpay",
     logo: "/finance/afterpay.jpg",
-    comingSoon: true,
     specs: [
       { label: "Lending Limit", value: "Up to $2,000" },
       { label: "Loan type", value: "Personal" },
@@ -36,7 +47,6 @@ const providers: Provider[] = [
   {
     name: "Zip Money",
     logo: "/finance/zip-money.jpg",
-    comingSoon: true,
     specs: [
       { label: "Lending Limit", value: "Up to $8,000" },
       { label: "Loan type", value: "Personal" },
@@ -56,6 +66,18 @@ const providers: Provider[] = [
       { label: "Repayments", value: "Monthly or quarterly, 1-5 years" },
       { label: "Establishment Fee", value: "One-off account establishment fee" },
       { label: "Approval Process", value: "20 minutes or less" },
+      ...(example
+        ? [
+            {
+              label: "Example",
+              value: `${aud(example.financedExGst)} ex GST over ${example.termMonths} months is about ${aud(example.weekly)}/week (${aud(example.monthly)}/month) ex GST`,
+            },
+          ]
+        : []),
+      {
+        label: "At checkout",
+        value: `Orders over ${aud(FINANCE_THRESHOLD_EX_GST)} ex GST can choose GRENKE: pay a ${FINANCE_DEPOSIT_SHARE * 100}% deposit by card and we arrange the lease for the rest`,
+      },
       { label: "Other Benefits", value: "Possibly tax deductible, electronic signature" },
     ],
   },
@@ -96,10 +118,7 @@ export default function FinancePage() {
                 <Image src={p.logo} alt={`${p.name} logo`} fill className="object-contain p-6" sizes="(max-width:768px) 100vw, 33vw" />
               </div>
               <div className="p-6 flex-1">
-                <h2 className="text-xl font-bold">
-                  {p.name}
-                  {p.comingSoon && <span className="text-ash font-normal"> (coming soon)</span>}
-                </h2>
+                <h2 className="text-xl font-bold">{p.name}</h2>
                 <dl className="mt-4 space-y-2 text-sm leading-relaxed">
                   {p.specs.map((s) => (
                     <div key={s.label}>
