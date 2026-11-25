@@ -59,14 +59,14 @@ export const contentPages: Record<string, ContentPageData> = {
       "MasterKraft has researched the best financiers for fitness equipment and partnered with those that offer a range of flexible finance options, enabling you to get your equipment faster and at the most competitive finance rates. If you need assistance, contact us on +61 3 9044 9575 and we will provide advice on a tailored finance solution.",
     sections: [
       {
-        heading: "Afterpay (coming soon)",
+        heading: "Afterpay",
         body: [
           "Lending limit: up to $2,000. Loan type: personal. Interest terms: interest free. Repayments: four equal instalments paid fortnightly. Establishment fee: none. Approval: instant. Use online and in-store.",
           "Train hard now, pay later with Afterpay for purchases up to $2,000.",
         ],
       },
       {
-        heading: "Zip Money (coming soon)",
+        heading: "Zip Money",
         body: [
           "Lending limit: up to $8,000. Loan type: personal. Interest terms: interest free for the first 3 months. Repayments: weekly, fortnightly or monthly instalments. Establishment fee: one-off account establishment fee. Approval: 3 minute approval. Use online and in-store.",
           "Own it now, pay later. Zip Money is a smarter way to pay for larger purchases over time, on your terms. Every time you make a purchase Zip adds it to your account, then at the start of the month sends you a statement of what you spent and paid. Pay it back in full at the end of the month, or pay over time from as little as $40 a month, interest free.",
