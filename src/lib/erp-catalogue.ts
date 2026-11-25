@@ -301,6 +301,22 @@ const SEP = " - ";
 // two different products end up behind one picker.
 const GARMENT_SIZE = /\s*\((XS|S|M|L|XL|XXL|2XL|3XL)\)\s*$/i;
 
+// Surface finishes, which split a range into families (see splitUnitName).
+// Deliberately NOT any colour: "Power Bands - 21mm (Green)" is one product whose
+// colour marks the resistance, and splitting on colour would give one card per
+// band. Only "... Fleck" and "Plain ..." finishes qualify; on 25 Nov 2026 those
+// were exactly the 12 Impact-Lock tiles (MFRFRR0xG/P/B).
+const FINISH = /\s*\(((?:[A-Za-z]+ )*Fleck|Plain [A-Za-z]+)\)\s*$/i;
+
+// Legacy codes named without their finish. MFRFRR01/03 predate the colour
+// split and ARE the plain black tile (confirmed 25 Nov 2026); they hold the
+// warehouse stock and the open allocations, so they sell those sizes in place
+// of MFRFRR01B/03B rather than appearing as a second button of the same size.
+const FINISH_ALIASES: Record<string, string> = {
+  MFRFRR01: "Plain Black",
+  MFRFRR03: "Plain Black",
+};
+
 // How a product's name splits into range + size. Three shapes:
 //
 //   "Rubber Hex Dumbbell - 9kg"     the normal one
@@ -316,7 +332,13 @@ export function splitUnitName(full: string, brand?: string): { name: string; siz
   if (i < 0) return { name: full.trim(), size: "" };
   const head = full.slice(0, i).trim();
   if (brand && head.toUpperCase() === brand.toUpperCase()) return { name: full.trim(), size: "" };
-  return { name: head, size: full.slice(i + SEP.length).trim() };
+  const tail = full.slice(i + SEP.length).trim();
+  // A FINISH IS A PRODUCT, NOT A SIZE. "Impact-Lock Rubber Tiles - 20mm (Pink
+  // Fleck)" is the pink tile in 20mm: each finish is its own family with its
+  // own thicknesses, not one picker of 12 colour-and-size combinations.
+  const finish = tail.match(FINISH);
+  if (finish) return { name: `${head} (${finish[1]})`, size: tail.replace(FINISH, "").trim() };
+  return { name: head, size: tail };
 }
 
 export function slugify(name: string): string {
@@ -392,7 +414,8 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
     // Quote-only codes (custom turf) never reach an online freight quote, so an
     // unmeasured carton cannot strand them at checkout. See lib/custom-turf.
     if (hideUnshippable() && !codeIsShippable(code, entry) && !worthAnEnquiry(entry.price) && !isQuoteOnlyCode(code)) continue;
-    const { name, size } = splitUnitName(entry.name, entry.brand);
+    const alias = FINISH_ALIASES[code.toUpperCase()];
+    const { name, size } = splitUnitName(alias ? `${entry.name} (${alias})` : entry.name, entry.brand);
     if (!name) continue;
     // NUL-joined, not space-joined: "Mixed Implements" and "Rubber Hex
     // Dumbbell" both contain spaces, which would split the key wrongly.
@@ -412,6 +435,15 @@ export function erpUnits(map: UnleashedMap): Map<string, ErpUnit> {
     // shared one link and the page could only sell the first.
     if (members.length > 1 && members.some((m) => m.size)) {
       for (const m of members) if (!m.size) m.size = "Standard";
+    }
+    // An aliased legacy code takes its size from the finish-named twin, so the
+    // picker shows one "20mm", and it is the code the stock is held against.
+    const aliasedSizes = new Set(members.filter((m) => FINISH_ALIASES[m.code.toUpperCase()]).map((m) => m.size));
+    if (aliasedSizes.size) {
+      for (let k = members.length - 1; k >= 0; k--) {
+        const m = members[k];
+        if (!FINISH_ALIASES[m.code.toUpperCase()] && aliasedSizes.has(m.size)) members.splice(k, 1);
+      }
     }
     members.sort((a, b) => compareSizeLabels(a.size, b.size));
 
@@ -568,6 +600,24 @@ export function ownUnitForClearance(
  * A unit rendered as the WooCommerce-shaped product the listing components
  * already take, so ProductCard, sorting and the grids are untouched.
  */
+/**
+ * A snapshot page names the range as the old store did ("Impact Lock Rubber
+ * Tiles"), which says nothing once the range is split by finish: the page that
+ * kept the old URL sells only the plain black tile. When the ERP unit behind
+ * the page carries a finish the snapshot name lacks, the unit's name wins.
+ */
+export function withUnitFinish(product: WcProduct, map: UnleashedMap): WcProduct {
+  const unit = erpUnitBySlug(map, product.slug);
+  if (!unit) return product;
+  const name = nameWithFinish(product.name, unit.name);
+  return name === product.name ? product : { ...product, name };
+}
+
+/** The page's name, unless the unit names a finish the page does not. */
+export function nameWithFinish(pageName: string, unitName: string): string {
+  return FINISH.test(unitName) && !FINISH.test(pageName) ? unitName : pageName;
+}
+
 export function unitAsProduct(unit: ErpUnit, opts?: { withCopy?: boolean }): WcProduct {
   return {
     id: unit.wooId ?? -hash(unit.slug),

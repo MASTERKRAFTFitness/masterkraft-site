@@ -25,7 +25,7 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
-import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
+import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription, withUnitFinish } from "@/lib/erp-catalogue";
 import { authoredOverviewHtml, getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
 import { padDescription } from "@/lib/meta-description";
@@ -108,7 +108,7 @@ export async function generateMetadata({
   ]);
   const unit = wooProduct ? undefined : erpUnitBySlug(unleashed, slug);
   const p = wooProduct
-    ? withErpImages(wooProduct, unleashed, gallery)
+    ? withUnitFinish(withErpImages(wooProduct, unleashed, gallery), unleashed)
     : unit && unitAsProduct(unit, { withCopy: true });
   if (!p) return { title: "Product" };
   // Authored copy wins over the snapshot's. A WooCommerce short_description is
@@ -194,7 +194,7 @@ export default async function ProductPage({
   // for a unit — unitAsProduct is ERP-sourced already — and a no-op for the
   // products the ERP has no photograph of. See withErpImages.
   const base = wooProduct
-    ? withErpImages(wooProduct, unleashed, gallery)
+    ? withUnitFinish(withErpImages(wooProduct, unleashed, gallery), unleashed)
     : withErpImages(unitAsProduct(unit!, { withCopy: true }), unleashed, gallery);
 
   // The same override as in generateMetadata, field by field: `short` replaces
