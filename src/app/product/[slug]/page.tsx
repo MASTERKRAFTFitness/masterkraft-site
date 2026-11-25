@@ -40,6 +40,7 @@ import { SITE_URL, absoluteUrl, priceValidUntil, productUrl } from "@/lib/site";
 import { offerAvailability, productGroupSchema } from "@/lib/product-schema";
 import { merchantReturnPolicy } from "@/lib/return-policy";
 import { stockLabel } from "@/lib/stock-label";
+import { FINANCE_DEPOSIT_SHARE, financeSplit } from "@/lib/grenke-finance";
 
 // ISR: cache the rendered product page and refresh in the background every 10 min.
 export const revalidate = 600;
@@ -329,6 +330,8 @@ export default async function ProductPage({
       lookupBySku(unleashed, variants[0]?.code)?.brand
   );
 
+  // Business lease finance on a single item over $5,000 ex GST (grenke-finance.ts).
+  const financeFrom = !usesVariants && !isCustomTurf && enriched.priceValue > 0 ? financeSplit(enriched.priceValue) : null;
   const validUntil = priceValidUntil();
   // Read by Merchant Center's store quality score, and checked by Google
   // against /returns - see lib/return-policy. No shippingDetails beside it:
@@ -501,6 +504,18 @@ export default async function ProductPage({
                   {availability.text}{" "}
                   · Prices inc. GST
                 </p>
+                {/* GRENKE, shown before the cart (Michael, 2026-11-25): on
+                    anything over $5,000 ex GST, the weekly lease on the 80%
+                    left after the checkout deposit. Same maths as checkout. */}
+                {financeFrom && (
+                  <p className="mt-3 text-sm text-ash">
+                    Or from <span className="font-semibold text-ink">{formatPrice(financeFrom.weekly)}/week</span> ex GST with GRENKE
+                    lease finance, after a {Math.round(FINANCE_DEPOSIT_SHARE * 100)}% deposit.{" "}
+                    <Link href="/finance" className="underline decoration-accent-600 underline-offset-2">
+                      How it works
+                    </Link>
+                  </p>
+                )}
                 <div className="mt-8">
                   <AddToCartButton
                     product={{

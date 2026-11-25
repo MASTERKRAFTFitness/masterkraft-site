@@ -4,10 +4,18 @@ import Link from "next/link";
 import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import PageSchema from "@/components/seo/PageSchema";
+import { FINANCE_DEPOSIT_SHARE, FINANCE_TERM_MONTHS, FINANCE_THRESHOLD_EX_GST, financeSplit } from "@/lib/grenke-finance";
+
+const pct = Math.round(FINANCE_DEPOSIT_SHARE * 100);
+const money = (n: number) => `$${n.toLocaleString("en-AU", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+
+// Worked examples on GRENKE's 60-month rate (grenke-finance.ts), order totals
+// inc GST, so the page and checkout always agree.
+const examples = [10000, 25000, 50000, 75000].map((total) => ({ total, split: financeSplit(total)! }));
 
 export const metadata: Metadata = {
   title: "Equipment Finance | Afterpay, Zip & GRENKE",
-  description: "Flexible ways to fund your equipment and fitout — Afterpay, Zip Money and GRENKE.",
+  description: "Fund your equipment and fitout with Afterpay, Zip Money or GRENKE business lease finance, from a weekly repayment.",
   alternates: { canonical: "/finance" },
 };
 
@@ -22,7 +30,6 @@ const providers: Provider[] = [
   {
     name: "Afterpay",
     logo: "/finance/afterpay.jpg",
-    comingSoon: true,
     specs: [
       { label: "Lending Limit", value: "Up to $2,000" },
       { label: "Loan type", value: "Personal" },
@@ -36,7 +43,6 @@ const providers: Provider[] = [
   {
     name: "Zip Money",
     logo: "/finance/zip-money.jpg",
-    comingSoon: true,
     specs: [
       { label: "Lending Limit", value: "Up to $8,000" },
       { label: "Loan type", value: "Personal" },
@@ -54,6 +60,7 @@ const providers: Provider[] = [
       { label: "Lending limit", value: "Up to $75,000 low doc, and beyond" },
       { label: "Leasing Type", value: "Business (Leasing)" },
       { label: "Repayments", value: "Monthly or quarterly, 1-5 years" },
+      { label: "Online", value: `Orders over ${money(FINANCE_THRESHOLD_EX_GST)} ex GST: pay a ${pct}% deposit at checkout and lease the rest` },
       { label: "Establishment Fee", value: "One-off account establishment fee" },
       { label: "Approval Process", value: "20 minutes or less" },
       { label: "Other Benefits", value: "Possibly tax deductible, electronic signature" },
@@ -62,10 +69,10 @@ const providers: Provider[] = [
 ];
 
 const process = [
-  "Obtain a quote from MasterKraft for your required gym and fitness equipment.",
+  `Order online and choose GRENKE finance at checkout (orders over ${money(FINANCE_THRESHOLD_EX_GST)} ex GST), paying the ${pct}% deposit by card. Or get a quote from MasterKraft for your gym and fitness equipment.`,
   "Contact us to apply today — the application is done over the phone in approximately 10 minutes.",
   "Once approved, the paperwork is sent via DocuSign for signature.",
-  "Once signed, the equipment is released to you (pending availability).",
+  "Once GRENKE approves and the lease is signed, the equipment is released to you (pending availability).",
 ];
 
 export default function FinancePage() {
@@ -111,6 +118,43 @@ export default function FinancePage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="border-t border-line">
+        <div className="container-mk py-16 max-w-3xl">
+          <Eyebrow className="mb-6">GRENKE: what it costs a week</Eyebrow>
+          <p className="text-ash leading-relaxed">
+            For businesses, on orders over {money(FINANCE_THRESHOLD_EX_GST)} ex GST. You pay a {pct}% deposit by card at checkout and
+            GRENKE leases the rest over {FINANCE_TERM_MONTHS / 12} years. We call you to do the application, and dispatch once GRENKE
+            approves it.
+          </p>
+          <div className="mt-8 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left font-mono text-xs uppercase tracking-widest text-ash">
+                  <th className="py-3 pr-4 font-normal">Order total inc GST</th>
+                  <th className="py-3 pr-4 font-normal">Deposit at checkout</th>
+                  <th className="py-3 pr-4 font-normal">Leased</th>
+                  <th className="py-3 font-normal">From, per week ex GST</th>
+                </tr>
+              </thead>
+              <tbody>
+                {examples.map(({ total, split }) => (
+                  <tr key={total} className="border-b border-line">
+                    <td className="py-3 pr-4 font-mono text-ink">{money(total)}</td>
+                    <td className="py-3 pr-4 font-mono text-ash">{money(split.deposit)}</td>
+                    <td className="py-3 pr-4 font-mono text-ash">{money(split.balance)}</td>
+                    <td className="py-3 font-mono font-semibold text-ink">{money(split.weekly)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-4 text-xs text-ash leading-relaxed">
+            Indicative only, on GRENKE&apos;s {FINANCE_TERM_MONTHS}-month rate. GRENKE bills monthly or quarterly; weekly figures are the
+            monthly repayment shown per week. Subject to GRENKE&apos;s approval. Business use only.
+          </p>
         </div>
       </section>
 
