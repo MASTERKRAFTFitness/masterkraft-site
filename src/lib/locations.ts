@@ -73,11 +73,16 @@ export const locations: Location[] = [
     meta: "Gym fitouts in Sydney by MasterKraft. Complete commercial and boutique fitouts designed, supplied and installed across Sydney and New South Wales.",
     intro: [
       "MasterKraft delivers complete gym fitouts across Sydney and New South Wales, designed, supplied and installed as one coordinated project.",
-      "We know the NSW market. We delivered REVL's Bondi studio end to end, matching the exact spec and branding REVL runs interstate. Whether it is a boutique studio in the Inner West or a commercial floor in Western Sydney, you get one accountable partner from design to handover.",
+      "We know the NSW market. We delivered REVL's Bondi studio end to end, matching the exact spec and branding REVL runs interstate, and most recently supplied and installed the new floor, branded turf track and training rigs at Fernwood Hornsby. Whether it is a boutique studio in the Inner West or a commercial floor in Western Sydney, you get one accountable partner from design to handover.",
     ],
     delivery:
       "Your entire fitout ships to Sydney in a single container and is installed by one coordinated crew, so there is no juggling separate suppliers across the build.",
     projects: [
+      {
+        name: "Fernwood Fitness Hornsby",
+        href: "/fitout/franchise-gym-fitout#fernwood-hornsby",
+        blurb: "280 m² of rubber flooring, a Fernwood-branded turf track and two pink-accented training rigs, supplied and installed by our crew in Sydney's upper north shore.",
+      },
       {
         name: "REVL Bondi",
         href: "/revl-fitouts/revl-bondi",
@@ -91,7 +96,7 @@ export const locations: Location[] = [
       },
       {
         q: "Have you delivered Sydney projects?",
-        a: "REVL Bondi was delivered by MasterKraft end to end, on the same spec sheet and branding REVL uses across its network.",
+        a: "REVL Bondi was delivered by MasterKraft end to end, on the same spec sheet and branding REVL uses across its network. At Fernwood Hornsby our crew laid the rubber flooring, the Fernwood-branded turf track and two functional training rigs.",
       },
       {
         q: "Do you deliver to regional NSW?",

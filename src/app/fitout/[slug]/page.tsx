@@ -8,6 +8,7 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
+import FernwoodHornsbyCaseStudy from "@/components/marketing/FernwoodHornsbyCaseStudy";
 import IndieIronCallout from "@/components/indie-iron/IndieIronCallout";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { locations } from "@/lib/locations";
@@ -158,6 +159,8 @@ export default async function FitoutTypePage({
           The commercial page carries both, since a commercial fitout is what
           each of them is; the 12 Nov page audit found it had no proof at all. */}
       {(f.slug === "franchise-gym-fitout" || f.slug === "commercial-gym-fitout") && <FernwoodPakenhamCaseStudy />}
+      {/* Fernwood Hornsby: a supply-and-install refit (floor, branded turf, rigs) in NSW. */}
+      {(f.slug === "franchise-gym-fitout" || f.slug === "commercial-gym-fitout") && <FernwoodHornsbyCaseStudy />}
 
       {/* The buying group, on the pages independent gym owners land on. */}
       {INDIE_IRON_FITOUTS.has(f.slug) && <IndieIronCallout />}
