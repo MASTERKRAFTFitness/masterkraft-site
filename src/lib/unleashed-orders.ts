@@ -13,6 +13,7 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { getUnleashedMapLive, lookupBySku, type UnleashedEntry } from "@/lib/unleashed";
 import type { OrderLine } from "@/lib/order-lines";
+import { financeComment, type FinanceSplit } from "@/lib/grenke-finance";
 import { resolveBuyerCustomer } from "@/lib/unleashed-customers";
 
 const BASE = "https://api.unleashedsoftware.com";
@@ -181,6 +182,8 @@ export type CreateUnleashedOrderInput = {
   freight?: { amount: number; service?: string; carrier?: string };
   /** A promo code's discount, inc GST. */
   discount?: { code: string; amount: number };
+  /** Set when the card paid a GRENKE deposit: the balance is not paid yet. */
+  finance?: FinanceSplit;
   /**
    * "web" books it to the shared web account whatever the strategy. Quote
    * requests pass it: a lead is not a customer yet.
@@ -198,6 +201,8 @@ export type UnleashedOrderResult = {
 };
 
 type PayloadLine = Record<string, unknown>;
+
+const LINE_COMMENT_MAX = 200;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 /** GST-inclusive in, ex-GST out. Four places: Unleashed stores unit prices at 4dp. */
@@ -234,6 +239,7 @@ export function buildComments(input: CreateUnleashedOrderInput): string {
     input.discount && input.discount.amount > 0
       ? `Promo code ${input.discount.code}: ${input.discount.amount.toFixed(2)} off inc GST`
       : "",
+    input.finance ? financeComment(input.finance) : "",
     input.customerNote ? `Customer note: ${input.customerNote}` : "",
     input.bookingNote ?? "",
   ];
@@ -275,6 +281,9 @@ export function buildSalesOrderPayload(
       TaxRate: TAX_RATE,
       LineTax: round2(lineEx * TAX_RATE),
       XeroTaxCode: XERO_TAX_CODE,
+      // A note on the line itself (custom turf's size), where whoever picks or
+      // cuts it reads it. Kept short; Unleashed line comments are not essays.
+      ...(l.comment?.trim() ? { Comments: l.comment.trim().slice(0, LINE_COMMENT_MAX) } : {}),
     };
   });
 

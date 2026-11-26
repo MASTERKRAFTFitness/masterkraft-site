@@ -33,6 +33,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Returns",
     seoTitle: "Returns | Eligibility, Timeframes & Process",
     subtitle: "Straightforward returns on eligible items.",
+    seoDescription: "Return or exchange unused items in new, resellable condition within 30 days of delivery. How MasterKraft returns, refunds and exchanges work.",
     sections: [
       {
         heading: "Eligibility",
@@ -58,14 +59,14 @@ export const contentPages: Record<string, ContentPageData> = {
       "MasterKraft has researched the best financiers for fitness equipment and partnered with those that offer a range of flexible finance options, enabling you to get your equipment faster and at the most competitive finance rates. If you need assistance, contact us on +61 3 9044 9575 and we will provide advice on a tailored finance solution.",
     sections: [
       {
-        heading: "Afterpay (coming soon)",
+        heading: "Afterpay",
         body: [
           "Lending limit: up to $2,000. Loan type: personal. Interest terms: interest free. Repayments: four equal instalments paid fortnightly. Establishment fee: none. Approval: instant. Use online and in-store.",
           "Train hard now, pay later with Afterpay for purchases up to $2,000.",
         ],
       },
       {
-        heading: "Zip Money (coming soon)",
+        heading: "Zip Money",
         body: [
           "Lending limit: up to $8,000. Loan type: personal. Interest terms: interest free for the first 3 months. Repayments: weekly, fortnightly or monthly instalments. Establishment fee: one-off account establishment fee. Approval: 3 minute approval. Use online and in-store.",
           "Own it now, pay later. Zip Money is a smarter way to pay for larger purchases over time, on your terms. Every time you make a purchase Zip adds it to your account, then at the start of the month sends you a statement of what you spent and paid. Pay it back in full at the end of the month, or pay over time from as little as $40 a month, interest free.",
@@ -97,6 +98,7 @@ export const contentPages: Record<string, ContentPageData> = {
     eyebrow: "Support",
     title: "Shipping & Delivery",
     subtitle: "Global capability, local delivery.",
+    seoDescription: "MasterKraft ships Australia-wide from its Melbourne warehouse, usually dispatching within 1-3 business days. Transit times and tracking by state.",
     intro:
       "With warehousing near your markets and streamlined logistics, MasterKraft delivers equipment where you need it - often in weeks, not months.",
     sections: [
@@ -140,6 +142,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "FitPass",
     seoTitle: "FitPass | Partner Benefits from MasterKraft",
     subtitle: "Partner benefits from MasterKraft.",
+    seoDescription: "FitPass is MasterKraft's partner program for gyms and operators. Talk to our team about the benefits it can add to your business.",
     sections: [
       {
         body: [
@@ -154,6 +157,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Forms",
     seoTitle: "Forms | Downloadable Documentation",
     subtitle: "Downloadable forms and documentation.",
+    seoDescription: "Warranty claims, credit applications and other MasterKraft forms and documentation, available on request from our team.",
     sections: [
       {
         body: [
@@ -168,6 +172,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Become a Member",
     seoTitle: "Become a Member | Trade & Wholesale Access",
     subtitle: "Trade and wholesale access to the MasterKraft range.",
+    seoDescription: "MasterKraft membership gives qualifying trade customers wholesale pricing and access to the MasterKraft ordering portal.",
     sections: [
       {
         body: [
@@ -194,6 +199,7 @@ export const contentPages: Record<string, ContentPageData> = {
     eyebrow: "How We Work",
     title: "Process Overview",
     subtitle: "From first survey to final commissioning.",
+    seoDescription: "How a MasterKraft fitout runs, from site survey and floor layout to staged supply, install, commissioning and our 72-hour service SLA.",
     sections: [
       { heading: "01 · Scope", body: ["Site survey and floor layout for your footprint."] },
       { heading: "02 · Spec", body: ["A standardised equipment schedule in your colours, with custom branding."] },
@@ -206,6 +212,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Our Process",
     seoTitle: "Our Process | From Survey to Commissioning",
     subtitle: "One accountable partner, every step of the way.",
+    seoDescription: "One accountable partner from survey to commissioning: how MasterKraft scopes, specs, supplies and supports single sites and multi-site groups.",
     intro:
       "Whether you're outfitting a single space or a multi-site group, our process is the same: understand how you operate, then build the equipment, fitout, branding and support around it.",
     sections: [
@@ -248,6 +255,7 @@ export const contentPages: Record<string, ContentPageData> = {
     title: "Privacy Policy",
     seoTitle: "Privacy Policy | How We Handle Your Data",
     subtitle: "How MasterKraft collects, uses and protects your information.",
+    seoDescription: "How MasterKraft collects, uses, stores and protects your personal information, how cookies are used, and how to access or correct your details.",
     sections: [
       {
         heading: "Information we collect",

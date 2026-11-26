@@ -33,11 +33,12 @@
 // "backorder-made-to-order" rather than "freight-verified", so no paid campaign
 // filtering on that label can bid on one: a click on a backorder buys a
 // customer a wait, not a sale.
-import { erpUnits, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
+import { erpUnits, nameWithFinish, unitAsProduct, unitDescription, codeIsShippable, shipsAsParcel, brandDisplayName, type ErpUnit } from "@/lib/erp-catalogue";
 import { lookupBySku, type UnleashedEntry, type UnleashedMap } from "@/lib/unleashed";
 import { productBySlug } from "@/lib/catalogue";
 import { decodeEntities, plainText } from "@/lib/woocommerce";
 import { resolveCopy, type ContentMap } from "@/lib/product-content";
+import { productCopy } from "@/lib/product-copy";
 import { SITE_URL, absoluteUrl, productUrl } from "@/lib/site";
 import { FREIGHT_VERIFIED_SLUGS } from "@/lib/merchant-feed-allowlist";
 import { regionLabel } from "@/lib/landed-price";
@@ -161,7 +162,8 @@ export function displayName(unit: ErpUnit): string {
   // that for XML without decoding it first produces "&amp;amp;", and Merchant
   // Center advertises a product with a literal "&amp;" in its name. Same
   // decoder the category names go through; see woocommerce.ts.
-  const name = page?.name ? decodeEntities(page.name).trim() : unit.name;
+  // A snapshot name predates the split by finish; see nameWithFinish.
+  const name = page?.name ? nameWithFinish(decodeEntities(page.name).trim(), unit.name) : unit.name;
   return unit.isRange ? withoutSizeSuffix(name, unit.sizes) : name;
 }
 
@@ -228,10 +230,31 @@ function descriptionFor(unit: ErpUnit, content: ContentMap | undefined): string 
   // the slug we advertise is what guarantees the description belongs to the
   // page the shopper lands on.
   const snapshot = productBySlug(unit.slug)?.short_description;
-  const text = plainText(resolved.short ?? "") || plainText(snapshot ?? "");
+  const short = plainText(resolved.short ?? "") || plainText(snapshot ?? "");
+  const text = [short, authoredBody(unit.slug, content)].filter(Boolean).join(" ");
   // 5000 is Merchant Center's limit. Nothing in this catalogue is close, but a
   // description that silently overruns is rejected rather than truncated.
   return (text || unitDescription(unit)).slice(0, 5000);
+}
+
+/**
+ * The body copy a person wrote for this page, as prose, or "".
+ *
+ * THE ONE-LINE SUMMARY WAS ALL GOOGLE SAW. The feed sent only `short`, so a page
+ * with three written paragraphs advertised one sentence of twenty words, and
+ * Merchant Center scores that as thin. Only AUTHORED bodies are appended: an
+ * editor's row, then product-copy.json. The snapshot's long description is left
+ * out on purpose, because it is the per-family copy that sometimes describes
+ * the wrong weight (an 8kg kettlebell on a 250kg set), and the feed should not
+ * spread it further than the page already does.
+ */
+function authoredBody(slug: string, content: ContentMap | undefined): string {
+  const row = content?.[slug]?.html;
+  if (row) return plainText(row.replace(/<\/li>/g, "; ").replace(/<\/(p|h\d)>/g, " ")).replace(/;$/, ".");
+  const copy = productCopy(slug);
+  if (!copy) return "";
+  const features = copy.features?.length ? `Features: ${copy.features.join("; ")}.` : "";
+  return [...(copy.body ?? []), features].filter(Boolean).join(" ");
 }
 
 /**

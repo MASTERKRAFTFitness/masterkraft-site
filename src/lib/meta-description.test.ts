@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DESCRIPTION_MAX, fitDescription } from "./meta-description";
+import { DESCRIPTION_MAX, DESCRIPTION_MIN, fitDescription, padDescription } from "./meta-description";
 
 describe("fitDescription", () => {
   it("leaves a description that fits alone", () => {
@@ -26,5 +26,29 @@ describe("fitDescription", () => {
     const out = fitDescription(text)!;
     expect(out.length).toBeGreaterThan(100);
     expect(out.endsWith("…")).toBe(true);
+  });
+});
+
+describe("padDescription", () => {
+  const tail = "Wholesale pricing available to qualifying trade customers.";
+
+  it("leaves a description that is long enough alone", () => {
+    const text = "Twelve competition kettlebells totalling 250kg, supplied with a rack for a commercial floor.";
+    expect(padDescription(text, tail)).toBe(text);
+  });
+
+  it("tops up one under the floor", () => {
+    const out = padDescription("Buy Pro Bumper Plates at MASTERKRAFT. $64.00 inc. GST.", tail)!;
+    expect(out).toBe(`Buy Pro Bumper Plates at MASTERKRAFT. $64.00 inc. GST. ${tail}`);
+    expect(out.length).toBeGreaterThanOrEqual(DESCRIPTION_MIN);
+  });
+
+  it("still fits the result to a snippet", () => {
+    const out = padDescription("A compact studio.", "x ".repeat(200))!;
+    expect(out.length).toBeLessThanOrEqual(DESCRIPTION_MAX);
+  });
+
+  it("passes nothing through as nothing", () => {
+    expect(padDescription(undefined, tail)).toBeUndefined();
   });
 });

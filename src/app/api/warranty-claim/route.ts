@@ -5,6 +5,8 @@ import { internalRecipients } from "@/lib/notify-recipients";
 import { ENQUIRY_KIND, portalEnquiryType } from "@/lib/enquiry-type";
 import { scheduleBlockedLog } from "@/lib/blocked-log";
 import { visitorKey } from "@/lib/agent/rate-limit";
+import { humanBytes } from "@/lib/warranty-evidence";
+import { confirmEvidence, type StoredEvidence } from "@/lib/warranty-evidence-store";
 
 // Warranty claims.
 //
@@ -18,6 +20,10 @@ import { visitorKey } from "@/lib/agent/rate-limit";
 // HUBSPOT_FORM_WARRANTY does not exist yet. With no GUID `submitHubspotForm`
 // returns "skipped", which is exactly the case the email fallback covers, so
 // the form is safe to ship before the HubSpot side is built.
+//
+// A PHOTO OR VIDEO IS MANDATORY. The browser uploads it to Supabase first (see
+// lib/warranty-evidence.ts) and sends only the storage paths in `evidence`; a
+// claim whose files are not actually in the bucket is refused with a 400.
 
 const escape = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -63,7 +69,21 @@ async function sendEmail(
   }
 }
 
-function internalNotification(c: Claim, why: string): string {
+function evidenceList(files: StoredEvidence[]): string {
+  return `<h3>Photos and videos</h3>
+    <ul>${files
+      .map(
+        (f) =>
+          `<li><a href="${escape(f.url)}">${escape(f.name)}</a>` +
+          `${f.size ? ` (${escape(humanBytes(f.size))})` : ""}</li>`
+      )
+      .join("")}</ul>
+    <p style="color:#666">Links expire in a year. The files stay in the Supabase bucket
+    <code>warranty-evidence</code>.</p>`;
+}
+
+function internalNotification(c: Claim, why: string, files: StoredEvidence[]): string {
+  const inHubspot = why === "submitted";
   return `<h2>Warranty claim</h2>
     <table cellpadding="6" style="border-collapse:collapse">
       <tr><td><strong>Name</strong></td><td>${escape(c.fullName)}</td></tr>
@@ -77,22 +97,28 @@ function internalNotification(c: Claim, why: string): string {
     </table>
     <h3>Reported fault</h3>
     <p style="white-space:pre-wrap">${escape(c.fault)}</p>
-    <p style="color:#666">This arrived by email because HubSpot did not record it
-    (${escape(why)}). Log it manually, and check <code>HUBSPOT_FORM_WARRANTY</code> is set.</p>`;
+    ${evidenceList(files)}
+    ${
+      inHubspot
+        ? `<p style="color:#666">Also recorded in HubSpot.</p>`
+        : `<p style="color:#666">HubSpot did not record this claim (${escape(why)}). Log it
+    manually, and check <code>HUBSPOT_FORM_WARRANTY</code> is set.</p>`
+    }`;
 }
 
-function confirmation(firstName: string, c: Claim): string {
+function confirmation(firstName: string, c: Claim, files: StoredEvidence[]): string {
   return `<p>Hi ${escape(firstName)},</p>
     <p>We have received your warranty claim and it is with our team.</p>
     <table cellpadding="6" style="border-collapse:collapse">
       <tr><td><strong>Product</strong></td><td>${escape(c.product)}</td></tr>
       ${c.sku ? `<tr><td><strong>Product code</strong></td><td>${escape(c.sku)}</td></tr>` : ""}
       ${c.orderRef ? `<tr><td><strong>Order reference</strong></td><td>${escape(c.orderRef)}</td></tr>` : ""}
+      <tr><td><strong>Photos and videos</strong></td><td>${files.length} received</td></tr>
     </table>
     <p>What happens next: we will review the fault against the warranty terms and come
-    back to you. If we need photographs or more detail to assess it, we will ask.</p>
-    <p>If anything changes in the meantime, or you have images to send, just reply to
-    this email and it comes straight to us.</p>
+    back to you. If we need more detail to assess it, we will ask.</p>
+    <p>If anything changes in the meantime, or you have more images to send, just reply
+    to this email and it comes straight to us.</p>
     <p>MasterKraft<br><em>Engineered for Fitness.</em></p>`;
 }
 
@@ -166,6 +192,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, hubspot: "skipped", confirmed: "skipped" });
   }
 
+  // After the bot filter, so a blocked submission still gets the silent success
+  // shape; the form enforces this before submitting, so a real person only
+  // lands here if an upload went missing.
+  const evidence = await confirmEvidence(body.evidence);
+  if (!evidence) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Please add at least one photo or video of the fault. If you already did, the upload " +
+          "did not reach us: please try attaching it again.",
+      },
+      { status: 400 }
+    );
+  }
+
   const { first, last } = splitName(claim.fullName);
 
   const hubspot = await submitHubspotForm(
@@ -181,7 +223,8 @@ export async function POST(request: Request) {
         name: "message",
         value:
           `Product: ${claim.product}\nCode: ${claim.sku || "-"}\n` +
-          `Order ref: ${claim.orderRef || "-"}\nPurchased: ${claim.purchaseDate || "-"}\n\n${claim.fault}`,
+          `Order ref: ${claim.orderRef || "-"}\nPurchased: ${claim.purchaseDate || "-"}\n\n${claim.fault}` +
+          `\n\nPhotos/videos:\n${evidence.map((f) => f.url).join("\n")}`,
       },
     ],
     { pageName: "Warranty Claim", pageUri: "/warranty" }
@@ -191,25 +234,33 @@ export async function POST(request: Request) {
   });
 
   const to = internalRecipients();
-  const fallback =
-    hubspot === "submitted"
-      ? "not_needed"
-      : await sendEmail(
-          `Warranty claim: ${claim.fullName} - ${claim.product}`,
-          internalNotification(claim, hubspot),
-          to,
-          claim.email
-        );
+  // HubSpot only holds the links as text in `message`, so the team is emailed
+  // on every claim now, not just when HubSpot fails: the email is where the
+  // photos are one click away. It still decides whether the claim was captured
+  // only when HubSpot did not confirm it.
+  const fallback = await sendEmail(
+    `Warranty claim: ${claim.fullName} - ${claim.product}`,
+    internalNotification(claim, hubspot, evidence),
+    to,
+    claim.email
+  );
 
   // Sent regardless of where the claim was recorded; its failure must not fail
   // the claim itself.
   const confirmed = await sendEmail(
     "We have received your warranty claim",
-    confirmation(first, claim),
+    confirmation(first, claim, evidence),
     claim.email
   );
 
-  console.log("[warranty] received", { email: claim.email, product: claim.product, hubspot, fallback, confirmed });
+  console.log("[warranty] received", {
+    email: claim.email,
+    product: claim.product,
+    evidence: evidence.length,
+    hubspot,
+    fallback,
+    confirmed,
+  });
 
   if (hubspot !== "submitted" && fallback !== "sent") {
     console.error("[warranty] NOT CAPTURED", { claim, hubspot, fallback });

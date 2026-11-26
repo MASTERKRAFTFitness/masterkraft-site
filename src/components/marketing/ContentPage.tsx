@@ -19,6 +19,12 @@ export type ContentPageData = {
    * Unset means the H1 is already carrying its own weight.
    */
   seoTitle?: string;
+  /**
+   * The meta description, where `subtitle` is too short to be one. A subtitle
+   * reads well under an H1 at 35 characters; as a search snippet it is thin
+   * enough that Google writes its own. Unset means the subtitle is used.
+   */
+  seoDescription?: string;
   subtitle?: string;
   intro?: string;
   sections: ContentSection[];

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   // `seoTitle` where the H1 is too short to be a search result on its own; see
   // the field on ContentPageData.
   title: data.seoTitle ?? data.title,
-  description: data.subtitle,
+  description: data.seoDescription ?? data.subtitle,
   alternates: { canonical: "/returns" },
 };
 

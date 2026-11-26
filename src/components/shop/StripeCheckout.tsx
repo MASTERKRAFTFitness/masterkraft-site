@@ -11,6 +11,7 @@ import StoppingQuestion from "@/components/shop/StoppingQuestion";
 import { useLeaveIntent } from "@/components/shop/useLeaveIntent";
 import { HoneypotField, guardValues, useFillTimer } from "@/components/forms/guard";
 import { readAdClick } from "@/lib/ad-click";
+import { FINANCE_TERM_MONTHS, financeSplit, type FinanceSplit } from "@/lib/grenke-finance";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 const fieldClass =
@@ -103,7 +104,7 @@ export default function StripeCheckout({
   onPaid,
   onQuoted,
 }: {
-  onPaid?: (orderNumber: string, buyer: PaidBuyer) => void;
+  onPaid?: (orderNumber: string, buyer: PaidBuyer, finance: FinanceSplit | null) => void;
   // Called when freight could not be priced and the cart went to the team as a
   // quote - automatically, or from the button. Called BEFORE the cart is
   // cleared, for the same reason as onPaid: clearing unmounts this component, so
@@ -167,6 +168,15 @@ export default function StripeCheckout({
   // nothing off and says why, rather than vanishing.
   const promoActive = promo !== null && subtotal > promo.minSpendOver;
   const discount = promoActive ? Math.min(promo.discount, subtotal) : 0;
+  // GRENKE FINANCE (2026-11-23), for orders over $5,000 ex GST: a 20% deposit by
+  // card today, the rest leased through GRENKE - see lib/grenke-finance. The
+  // figures shown before payment are worked out here from the same total as the
+  // summary; once the intent exists, the server's figures replace them.
+  const [payWith, setPayWith] = useState<"full" | "grenke">("full");
+  const [serverFinance, setServerFinance] = useState<FinanceSplit | null>(null);
+  const shownTotal = subtotal - discount + (freight?.price ?? 0);
+  const financeOffer = financeSplit(shownTotal);
+  const financing = payWith === "grenke" && financeOffer !== null;
 
   // Safety net: never leave the cart locked if the customer navigates away
   // mid-payment (unmount) without going back or completing.
@@ -357,6 +367,7 @@ export default function StripeCheckout({
         checkoutId,
         billing: b,
         promoCode: promoActive ? promo.code : undefined,
+        finance: financing ? "grenke" : undefined,
       }),
     });
     const data = await res.json();
@@ -367,6 +378,7 @@ export default function StripeCheckout({
         setPromo(null);
         setPromoError(data.error ?? null);
       }
+      if (data.finance === false) setPayWith("full");
       throw new Error(data.error || "Could not start payment.");
     }
     setBilling(b);
@@ -375,6 +387,7 @@ export default function StripeCheckout({
     setServerTotal(typeof data.amount === "number" ? data.amount : null);
     setServerGoods(typeof data.goodsTotal === "number" ? data.goodsTotal : null);
     setFreight(data.freight ?? null);
+    setServerFinance(data.finance ?? null);
     setPhase("payment");
     lock(); // freeze the cart while this payment is in flight
   }
@@ -550,6 +563,40 @@ export default function StripeCheckout({
               </select>
               <input name="postcode" required aria-label="Postcode" placeholder="Postcode" className={fieldClass} />
             </div>
+            {canContinue && financeOffer && (
+              <fieldset className="border border-line">
+                <legend className="sr-only">How would you like to pay?</legend>
+                <label className="flex items-start gap-3 px-4 py-3 text-sm cursor-pointer border-b border-line">
+                  <input
+                    type="radio"
+                    name="pay_with"
+                    checked={payWith === "full"}
+                    onChange={() => setPayWith("full")}
+                    className="mt-[3px] h-4 w-4 flex-none accent-accent"
+                  />
+                  <span className="font-medium">Pay in full today ({aud.format(financeOffer.orderTotal)})</span>
+                </label>
+                <label className="flex items-start gap-3 px-4 py-3 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pay_with"
+                    checked={payWith === "grenke"}
+                    onChange={() => setPayWith("grenke")}
+                    className="mt-[3px] h-4 w-4 flex-none accent-accent"
+                  />
+                  <span>
+                    <span className="font-medium">
+                      GRENKE lease finance: from {aud.format(financeOffer.weekly)}/week
+                    </span>
+                    <span className="block text-xs text-ash mt-0.5">
+                      Pay a 20% deposit of {aud.format(financeOffer.deposit)} today. We call you to arrange
+                      a GRENKE lease for the remaining {aud.format(financeOffer.balance)} over{" "}
+                      {FINANCE_TERM_MONTHS} months. Repayments ex GST, for businesses, subject to approval.
+                    </span>
+                  </span>
+                </label>
+              </fieldset>
+            )}
             {(error || freightNotice) && (
               <p className="text-accent-600 text-sm">{error ?? freightNotice}</p>
             )}
@@ -655,6 +702,7 @@ export default function StripeCheckout({
               billing={billing}
               orderRefs={orderRefs}
               checkoutId={checkoutId}
+              finance={serverFinance}
               subtotal={subtotal}
               serverTotal={serverTotal}
               serverGoods={serverGoods}
@@ -763,8 +811,29 @@ export default function StripeCheckout({
           {/* serverTotal is authoritative once the intent exists. Before that,
               show the quoted freight added on, so the number the customer agrees
               to is the number on screen. */}
-          <span>{aud.format(serverTotal ?? subtotal - discount + (freight?.price ?? 0))}</span>
+          <span>{aud.format(serverFinance?.orderTotal ?? serverTotal ?? shownTotal)}</span>
         </div>
+        {(serverFinance ?? (financing ? financeOffer : null)) && (
+          <div className="font-mono text-sm space-y-1">
+            <div className="flex justify-between">
+              <span className="text-ash">Deposit today (20%)</span>
+              <span>{aud.format((serverFinance ?? financeOffer)!.deposit)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-ash">GRENKE finance</span>
+              <span>{aud.format((serverFinance ?? financeOffer)!.balance)}</span>
+            </div>
+            <p className="font-sans text-xs text-ash pt-1">
+              From {aud.format((serverFinance ?? financeOffer)!.weekly)}/week ex GST over {FINANCE_TERM_MONTHS} months,
+              subject to GRENKE approval.
+            </p>
+          </div>
+        )}
+        {!financing && !serverFinance && financeOffer && (
+          <p className="text-xs text-ash">
+            Or lease it through GRENKE from {aud.format(financeOffer.weekly)}/week with a 20% deposit.
+          </p>
+        )}
       </aside>
     </div>
   );
@@ -774,6 +843,7 @@ function PayForm({
   billing,
   orderRefs,
   checkoutId,
+  finance,
   subtotal,
   serverTotal,
   serverGoods,
@@ -783,10 +853,11 @@ function PayForm({
   billing: Billing;
   orderRefs: OrderRef[];
   checkoutId: string;
+  finance: FinanceSplit | null;
   subtotal: number;
   serverTotal: number | null;
   serverGoods: number | null;
-  onPaid?: (orderNumber: string, buyer: PaidBuyer) => void;
+  onPaid?: (orderNumber: string, buyer: PaidBuyer, finance: FinanceSplit | null) => void;
   onBack: () => void;
 }) {
   const stripe = useStripe();
@@ -870,11 +941,11 @@ function PayForm({
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Order could not be recorded.");
-      trackPurchase({ id: String(data.orderNumber), value: charge, email: billing.email });
+      trackPurchase({ id: String(data.orderNumber), value: finance?.orderTotal ?? charge, email: billing.email });
       // Hand the confirmation up to the page BEFORE clearing the cart: clearing
       // flips the page's canPay gate and unmounts this component, so the page
       // must own the "order confirmed" screen for it to survive.
-      onPaid?.(String(data.orderNumber), { email: billing.email, state: billing.state });
+      onPaid?.(String(data.orderNumber), { email: billing.email, state: billing.state }, finance);
       forgetCheckoutId();
       clear();
       setDone({ number: data.orderNumber });
@@ -892,6 +963,7 @@ function PayForm({
         <p className="mt-3 text-ash">
           Thanks, your order <strong>#{done.number}</strong>{" "}is in. You&apos;ll get a confirmation email shortly.
         </p>
+
         <Link href="/all-equipment" className="btn btn-accent mt-8">
           Keep Shopping
         </Link>
@@ -920,7 +992,7 @@ function PayForm({
       {error && <p className="text-accent-600 text-sm">{error}</p>}
       <div className="flex flex-wrap gap-4">
         <button type="submit" disabled={!stripe || paying} className="btn btn-accent disabled:opacity-60">
-          {paying ? "Processing…" : `Pay ${aud.format(charge)}`}
+          {paying ? "Processing…" : finance ? `Pay deposit ${aud.format(charge)}` : `Pay ${aud.format(charge)}`}
         </button>
         <button type="button" onClick={onBack} className="btn btn-out !text-ink">
           ← Back

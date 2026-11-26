@@ -10,6 +10,7 @@
 
 import { getUnleashedMapLive, lookupBySku } from "@/lib/unleashed";
 import { isQuoteOnlyCode } from "@/lib/custom-turf";
+import type { FinanceSplit } from "@/lib/grenke-finance";
 
 export type CartRef = {
   productId: number;
@@ -101,6 +102,8 @@ export type OrderLine = {
   quantity: number;
   unitPrice: number; // GST-inclusive unit price (from Unleashed/cart)
   name: string;
+  /** Written to the Unleashed sales order line's Comments (custom turf's size). */
+  comment?: string;
 };
 
 export type OrderAddress = {
@@ -129,5 +132,7 @@ export type CreateOrderInput = {
   freight?: { amount: number; service?: string; carrier?: string };
   /** A promo code's discount, inc GST, as the card was charged less it. */
   discount?: { code: string; amount: number };
+  /** Set when the card paid a GRENKE deposit, not the whole order. */
+  finance?: FinanceSplit;
 };
 

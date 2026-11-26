@@ -104,6 +104,32 @@ describe("lines identify a product the warehouse can pick", () => {
   });
 });
 
+describe("a line can carry its own comment", () => {
+  const turfErp: UnleashedMap = { ...erp, MFATCT01: { price: 75, stock: 0, name: "Custom Turf", sellable: true } };
+  const buildTurf = (comment?: string) =>
+    buildSalesOrderPayload(
+      { ...base, lines: [{ productId: 0, sku: "MFATCT01", quantity: 1, unitPrice: 2644.4, name: "x", comment }] },
+      { CustomerCode: "WEB" },
+      turfErp,
+      { guid: "order-guid", now: new Date("2026-09-04T00:00:00.000Z") }
+    ) as Record<string, unknown>;
+
+  it("writes custom turf's size into the sales order line's Comments", () => {
+    const p = buildTurf("Custom Turf size: 2.35m x 10.8m (25.38 m²)");
+    const line = (p.SalesOrderLines as Record<string, unknown>[])[0];
+    expect(line.Comments).toBe("Custom Turf size: 2.35m x 10.8m (25.38 m²)");
+    // $2,404 ex GST, back out of the inc-GST price the map uses
+    expect(line.UnitPrice).toBe(2404);
+    expect(p.Total).toBe(2644.4);
+  });
+
+  it("sends no Comments on a line without one, and keeps a long one short", () => {
+    expect((buildTurf().SalesOrderLines as Record<string, unknown>[])[0]).not.toHaveProperty("Comments");
+    const long = (buildTurf("x".repeat(500)).SalesOrderLines as Record<string, string>[])[0].Comments;
+    expect(long).toHaveLength(200);
+  });
+});
+
 describe("freight is a line, and never a free one", () => {
   it("adds a freight line when freight was charged", () => {
     process.env.UNLEASHED_FREIGHT_CODE = "FREIGHT01";

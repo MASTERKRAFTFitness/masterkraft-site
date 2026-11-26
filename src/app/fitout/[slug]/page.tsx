@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { padDescription } from "@/lib/meta-description";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import { recordNotFound } from "@/lib/not-found-log";
@@ -7,6 +8,7 @@ import PageHero from "@/components/marketing/PageHero";
 import Eyebrow from "@/components/ui/Eyebrow";
 import RevlFeature from "@/components/marketing/RevlFeature";
 import FernwoodPakenhamCaseStudy from "@/components/marketing/FernwoodPakenhamCaseStudy";
+import FernwoodHornsbyCaseStudy from "@/components/marketing/FernwoodHornsbyCaseStudy";
 import IndieIronCallout from "@/components/indie-iron/IndieIronCallout";
 import { fitouts, getFitout } from "@/lib/fitouts";
 import { locations } from "@/lib/locations";
@@ -36,7 +38,8 @@ export async function generateMetadata({
     // "Schools & University" run past what a search result shows with it.
     // See lib/page-title.
     title: withQualifier(`${f.name} Fitouts`, "Design, Supply & Install"),
-    description: f.blurb,
+    // The card blurb, topped up with the intro where it is too short for a snippet.
+    description: padDescription(f.blurb, f.intro),
     alternates: { canonical: `/fitout/${f.slug}` },
   };
 }
@@ -156,6 +159,8 @@ export default async function FitoutTypePage({
           The commercial page carries both, since a commercial fitout is what
           each of them is; the 12 Nov page audit found it had no proof at all. */}
       {(f.slug === "franchise-gym-fitout" || f.slug === "commercial-gym-fitout") && <FernwoodPakenhamCaseStudy />}
+      {/* Fernwood Hornsby: a supply-and-install refit (floor, branded turf, rigs) in NSW. */}
+      {(f.slug === "franchise-gym-fitout" || f.slug === "commercial-gym-fitout") && <FernwoodHornsbyCaseStudy />}
 
       {/* The buying group, on the pages independent gym owners land on. */}
       {INDIE_IRON_FITOUTS.has(f.slug) && <IndieIronCallout />}

@@ -25,10 +25,10 @@ import VariantSelector, { type Variant } from "@/components/shop/VariantSelector
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
 import { getRange, sizesFromCodes } from "@/lib/ranges";
-import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription } from "@/lib/erp-catalogue";
-import { getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
+import { brandDisplayName, erpUnitBySlug, erpUnitsInGroup, ownUnitForClearance, unitAsProduct, unitCard, unitDescription, withUnitFinish } from "@/lib/erp-catalogue";
+import { authoredOverviewHtml, getProductContent, resolveCopy, resolveDocuments, resolveSpecs } from "@/lib/product-content";
 import { renderedLength, withoutBrandIfLong, TITLE_ADD_FLOOR, TITLE_ADD_MAX } from "@/lib/page-title";
-import { fitDescription } from "@/lib/meta-description";
+import { padDescription } from "@/lib/meta-description";
 
 // The cart key for a size with no WooCommerce variation id. Shared with the
 // Merchant Center checkout link so both build the same line; see lib/checkout-link.
@@ -108,7 +108,7 @@ export async function generateMetadata({
   ]);
   const unit = wooProduct ? undefined : erpUnitBySlug(unleashed, slug);
   const p = wooProduct
-    ? withErpImages(wooProduct, unleashed, gallery)
+    ? withUnitFinish(withErpImages(wooProduct, unleashed, gallery), unleashed)
     : unit && unitAsProduct(unit, { withCopy: true });
   if (!p) return { title: "Product" };
   // Authored copy wins over the snapshot's. A WooCommerce short_description is
@@ -137,10 +137,15 @@ export async function generateMetadata({
     // plainText on `short` too: resolveCopy's third level is the database row's
     // WooCommerce short description, which is HTML, and 127 pages were sending
     // "<p>Upgrade your gym&#8217;s…" to Google as their description.
-    description: fitDescription(
+    //
+    // padDescription: the ERP fallback ("Buy X at MASTERKRAFT. $64.00 inc.
+    // GST.") and a few one-line shorts land under 70 characters, where Google
+    // tends to ignore the tag. The tail is true of every product.
+    description: padDescription(
       plainText(authored?.short) ||
         plainText(p.short_description) ||
-        (unit ? unitDescription(unit) : undefined)
+        (unit ? unitDescription(unit) : undefined),
+      "Wholesale pricing available to qualifying trade customers."
     ),
     alternates: { canonical: `/product/${canonicalSlug}` },
     openGraph: {
@@ -189,7 +194,7 @@ export default async function ProductPage({
   // for a unit — unitAsProduct is ERP-sourced already — and a no-op for the
   // products the ERP has no photograph of. See withErpImages.
   const base = wooProduct
-    ? withErpImages(wooProduct, unleashed, gallery)
+    ? withUnitFinish(withErpImages(wooProduct, unleashed, gallery), unleashed)
     : withErpImages(unitAsProduct(unit!, { withCopy: true }), unleashed, gallery);
 
   // The same override as in generateMetadata, field by field: `short` replaces
@@ -231,6 +236,10 @@ export default async function ProductPage({
     .map((c) => siteCategoryFor(c, categoryTerms()))
     .find(Boolean);
   const detail = parseProductDetail(product);
+  // Written copy (an editor's row or product-copy.json) replaces the snapshot's
+  // WooCommerce overview AND its feature list: the authored HTML carries its
+  // own Features. See authoredOverviewHtml.
+  const authoredOverview = authoredOverviewHtml(slug, content);
   // The spec table, human-edited row first. Same map and same rule as
   // resolveCopy above: a loader-owned row is the snapshot copied and is skipped,
   // so this is a no-op until somebody edits one — at which point their value
@@ -537,10 +546,15 @@ export default async function ProductPage({
           {/* The overview reads directly under the price rather than as a
               full-width band below the fold, so the copy that sells the thing
               is beside the control that buys it. */}
-          {(detail.overviewDescription || detail.features.length > 0 || product.description) && (
+          {(authoredOverview || detail.overviewDescription || detail.features.length > 0 || product.description) && (
             <div className="mt-12">
               <h2 className="text-xl font-bold border-b border-line pb-3 mb-6">Product Overview</h2>
-              {detail.overviewDescription ? (
+              {authoredOverview ? (
+                <div
+                  className="text-ash leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_p]:mb-4 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:font-semibold [&_h3]:text-ink [&_strong]:text-ink [&_img]:my-4"
+                  dangerouslySetInnerHTML={{ __html: authoredOverview }}
+                />
+              ) : detail.overviewDescription ? (
                 <p className="text-ash leading-relaxed mb-6">{detail.overviewDescription}</p>
               ) : (
                 product.description && (
@@ -550,7 +564,7 @@ export default async function ProductPage({
                   />
                 )
               )}
-              {detail.features.length > 0 && (
+              {!authoredOverview && detail.features.length > 0 && (
                 <>
                   <h3 className="font-semibold text-ink mt-8 mb-3">Features</h3>
                   <ul className="list-disc pl-5 space-y-2 text-ash leading-relaxed">

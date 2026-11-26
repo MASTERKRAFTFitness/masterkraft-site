@@ -60,7 +60,8 @@ export type BlogRoute = Awaited<ReturnType<typeof loadRoute>>;
 
 // The title the index has carried since launch; kept so its search listing does not change.
 const INDEX_TITLE = "MASTERKRAFT Blog";
-const INDEX_DESCRIPTION = "Equipment, fitouts and how commercial gyms actually get built.";
+const INDEX_DESCRIPTION =
+  "Equipment buying guides, fitout planning and the real costs: how commercial gyms actually get built, from the MasterKraft team.";
 
 /**
  * The page's metadata. The root layout's title template appends the site name,
