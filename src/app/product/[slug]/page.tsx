@@ -21,6 +21,8 @@ import { getGallery } from "@/lib/product-gallery";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 import CustomTurfCalculator from "@/components/shop/CustomTurfCalculator";
 import { CUSTOM_TURF_CODE } from "@/lib/custom-turf";
+import { installShowcaseFor } from "@/lib/installed-at";
+import InstalledAt from "@/components/shop/InstalledAt";
 import VariantSelector, { type Variant } from "@/components/shop/VariantSelector";
 import { VariantSelectionProvider } from "@/components/shop/VariantSelection";
 import SizeTable from "@/components/shop/SizeTable";
@@ -289,6 +291,8 @@ export default async function ProductPage({
   }));
   const usesVariants = variants.length > 0;
   const isCustomTurf = product.sku?.trim().toUpperCase() === CUSTOM_TURF_CODE;
+  // Club photos of this product in use, when a case study has them (below the gallery, not in it).
+  const installShowcase = installShowcaseFor([product.sku, ...(unit?.codes ?? []), ...variants.map((v) => v.code)]);
   const variantPrices = variants.map((v) => v.priceValue).filter((v) => v > 0);
 
   // Every size's photograph, from Unleashed's own CDN, with the snapshot's
@@ -633,6 +637,8 @@ export default async function ProductPage({
 
       </section>
       </VariantSelectionProvider>
+
+      {installShowcase && <InstalledAt showcase={installShowcase} />}
 
       {related.length > 0 && (
         <section className="bg-smoke">
