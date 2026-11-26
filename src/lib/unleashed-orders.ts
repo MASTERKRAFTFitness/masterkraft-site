@@ -445,6 +445,31 @@ export async function createUnleashedOrder(
   };
 }
 
+/**
+ * Complete a sales order, which in Unleashed raises and completes an invoice for
+ * whatever on it is not yet invoiced. That invoice is what goes to Xero.
+ *
+ * POST /SalesOrders/{guid}/Complete, from the API's operations list. The docs
+ * give no body and no preconditions, and do not say the API invoices the way
+ * the UI's Complete does: complete-on-ship.ts reads the invoices back rather
+ * than trusting a 200. NOT YET EXERCISED AGAINST THE LIVE ACCOUNT (2026-11-19).
+ */
+export async function completeSalesOrder(guid: string): Promise<{ status: string | null }> {
+  if (!/^[0-9a-f-]{36}$/i.test(guid)) throw new Error(`not an order Guid: ${guid}`);
+  const res = await fetch(`${BASE}/SalesOrders/${guid}/Complete`, {
+    method: "POST",
+    headers: unleashedWriteHeaders(),
+    body: "{}",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Unleashed SalesOrder complete ${res.status}: ${text.slice(0, 300)}`);
+  }
+  const order = (await res.json().catch(() => ({}))) as { OrderStatus?: string };
+  return { status: order.OrderStatus ?? null };
+}
+
 // Signing lives here rather than being exported from unleashed.ts because a POST
 // signs the QUERY STRING, which is empty on this endpoint — the body is not part
 // of the signature. Confirmed against the API's own docs; the first live write

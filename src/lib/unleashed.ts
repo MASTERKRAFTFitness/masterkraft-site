@@ -818,6 +818,8 @@ function parseUnleashedDate(value?: string): string | null {
 
 export type SalesOrder = {
   orderNumber: string;
+  /** Unleashed's key for the order, which every write to it needs. */
+  guid: string | null;
   status: string | null;
   orderedAt: string | null;
   total: number | null;
@@ -857,6 +859,7 @@ export type SalesOrder = {
 };
 
 type RawSalesOrder = {
+  Guid?: string;
   OrderNumber?: string;
   OrderStatus?: string;
   OrderDate?: string;
@@ -928,6 +931,7 @@ export async function getSalesOrder(orderNumber: string): Promise<SalesOrder | n
 
   return {
     orderNumber: String(exact.OrderNumber),
+    guid: exact.Guid ?? null,
     status: exact.OrderStatus ?? null,
     orderedAt: parseUnleashedDate(exact.OrderDate),
     total: typeof exact.Total === "number" ? exact.Total : null,
@@ -940,6 +944,42 @@ export async function getSalesOrder(orderNumber: string): Promise<SalesOrder | n
     stripeRef: stripeRefOn(exact),
     buyer: buyerOn(exact),
   };
+}
+
+export type OrderInvoice = { invoiceNumber: string; status: string | null; total: number | null };
+
+/**
+ * The invoices Unleashed holds against one sales order.
+ *
+ * `orderNumber` IS honoured on Invoices (checked 2026-11-19: SO-00000909 gave
+ * INV-00000909 alone, a number with no order gave nothing), but it is matched
+ * exactly here anyway, as getSalesOrder does, because the filter is prefix-ish.
+ * A split invoice is numbered "INV-00000770/1".
+ */
+export async function getInvoicesForOrder(orderNumber: string): Promise<OrderInvoice[]> {
+  const wanted = orderNumber.trim();
+  if (!wanted) return [];
+  const query = `pageSize=200&orderNumber=${encodeURIComponent(wanted)}`;
+  const res = await fetch(`${BASE}/Invoices/1?${query}`, {
+    headers: {
+      "api-auth-id": process.env.UNLEASHED_API_ID ?? "",
+      "api-auth-signature": sign(query),
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0",
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Unleashed ${res.status} on Invoices/${wanted}`);
+  const data = (await res.json()) as {
+    Items?: { InvoiceNumber?: string; OrderNumber?: string; InvoiceStatus?: string; Total?: number | null }[];
+  };
+  return (data.Items ?? [])
+    .filter((i) => String(i.OrderNumber ?? "").trim() === wanted && i.InvoiceNumber)
+    .map((i) => ({
+      invoiceNumber: String(i.InvoiceNumber),
+      status: i.InvoiceStatus ?? null,
+      total: typeof i.Total === "number" ? i.Total : null,
+    }));
 }
 
 /** The labelled Buyer/Email lines only, for the same reason as stripeRefOn. */
